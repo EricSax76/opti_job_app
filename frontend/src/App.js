@@ -7,7 +7,7 @@ import LandingPage from "./pages/LandingPage";
 import CompanyLogin from "./pages/auth/CompanyLogin";
 import Companyregister from "./pages/auth/Companyregister";
 import Candidateregister from "./pages/auth/Candidateregister.js";
-import CandidateDashboard from "./pages/CandidateDashboard";
+import CandidateDashboard from "./pages/DashboardCandidate.js";
 import { AuthProvider } from './context/AuthContext'; // Asegúrate de importar el AuthProvider
 
 
