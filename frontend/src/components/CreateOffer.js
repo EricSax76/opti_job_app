@@ -31,6 +31,7 @@ const CreateOffer = () => {
           user_id: '',
           location: '',
           salary_min: '',
+          salary_max: '',
           education: '',
           job_type: '',
         });
@@ -96,6 +97,13 @@ const CreateOffer = () => {
           value={formData.salary_min}
           onChange={handleChange}
           placeholder="Salario mínimo"
+        />
+        <input
+          type="number"
+          name="salary_max"
+          value={formData.salary_max}
+          onChange={handleChange}
+          placeholder="Salario máximo"
         />
       </label>
       <label>

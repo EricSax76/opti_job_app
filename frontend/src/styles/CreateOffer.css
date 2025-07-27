@@ -7,12 +7,13 @@
     padding: 1rem;
     border: 1px solid #ccc;
     border-radius: 8px;
-    background-color: hwb(219 20% 20%);
+    background-color: rgb(170, 189, 225);
   }
   
   label {
     color: #ccc;
     font-weight: bold;
+    
   }
   h2{
     color: hsl(258, 63%, 95%);
@@ -22,7 +23,7 @@
     padding: 0.5rem;
     border: 1px solid hsl(0, 2%, 67%);
     border-radius: 4px;
-    inline-size: 100%;
+    inline-size: 96%;
   }
   
   textarea {
@@ -34,6 +35,7 @@
     color: white;
     border: none;
     cursor: pointer;
+    inline-size: 100%;
   }
   
   button:hover {
