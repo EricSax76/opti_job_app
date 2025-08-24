@@ -24,10 +24,10 @@
   }
   
   .offer-item img {
-    width: 50px;
-    height: 50px;
+    inline-size: 50px;
+    block-size: 50px;
     border-radius: 50%;
-    margin-right: 20px;
+    margin-inline-end: 20px;
   }
   
   .offer-item .details {

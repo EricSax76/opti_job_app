@@ -7,14 +7,13 @@ const CandidateDashboard = () => {
     const [candidate, setCandidate] = useState({});
     const [jobOffers, setJobOffers] = useState([]);
 
-    // Simula el usuario autenticado (puedes reemplazar con contexto o localStorage)
-    const candidateId = 1; // Cambiar dinámicamente según el usuario autenticado
+    
 
     useEffect(() => {
         // Cargar información del candidato
         const fetchCandidate = async () => {
             try {
-                const response = await axios.get(`/api/candidates/${candidateId}`);
+                const response = await axios.get(`/api/candidates/${candidate}`);
                 setCandidate(response.data);
             } catch (error) {
                 console.error('Error al obtener la información del candidato:', error);
@@ -33,12 +32,12 @@ const CandidateDashboard = () => {
 
         fetchCandidate();
         fetchJobOffers();
-    }, [candidateId]);
+    }, [candidate]);
 
     return (
         <div className="Candidatedashboard-container">
             <header className="Candidatedashboard-header">
-                <h1>Bienvenido, {candidate.full_name || 'Candidato'}</h1>
+                <h1>Bienvenido, {candidate.name || 'Candidato'}</h1>
                 <p>Explora ofertas de trabajo y gestiona tus postulaciones</p>
             </header>
 

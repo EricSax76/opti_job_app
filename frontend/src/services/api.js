@@ -1,9 +1,15 @@
 const API_BASE_URL = 'http://localhost:5001'; // Cambia esta URL según tu configuración
 
 // Función genérica para solicitudes GET
-const fetchGet = async (endpoint) => {
+const fetchGet = async (endpoint, data) => {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`);
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
         if (!response.ok) {
             throw new Error(`Error: ${response.status} - ${response.statusText}`);
         }
@@ -13,6 +19,7 @@ const fetchGet = async (endpoint) => {
         throw error;
     }
 };
+
 
 // Función genérica para solicitudes POST
 const fetchPost = async (endpoint, data) => {

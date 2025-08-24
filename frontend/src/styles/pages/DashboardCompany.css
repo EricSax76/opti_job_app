@@ -4,7 +4,7 @@
     grid-template-columns: 1fr 3fr;
     gap: 1rem;
     padding: 2rem;
-    background-color: hwb(196 11% 15%);
+    background-color: rgb(197, 223, 233);
     min-block-size: 100vh;
 }
 
@@ -17,17 +17,17 @@
 
 /* Contenedor principal */
 .job-offers-section {
-    padding: 20px;
-    background-color: hsl(0, 41%, 97%);
+    padding: 30px;
+    background-color: hsl(178, 24%, 71%);
     border-radius: 8px;
-    box-shadow: 0 4px 6px #2265ca;
+    box-shadow: 0 4px 6px hsl(216, 56%, 77%);
     max-inline-size: 800px;
     margin: 0 auto;
 }
 
 /* Lista de ofertas */
 .job-offers-list {
-    color: hwb(219 11% 19%);
+    color: rgb(27, 44, 77);
     padding: 0;
     margin: 0;
 }

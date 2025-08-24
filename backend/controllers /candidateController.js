@@ -23,6 +23,7 @@ export const loginCandidateController = async (req, res) => {
     res.status(200).json({
       id: user.id,
       name: user.name,
+      apellidos: user.name,
       email: user.email,
       role: user.role
     });
@@ -34,8 +35,8 @@ export const loginCandidateController = async (req, res) => {
 
 export const createCandidateController = async (req, res) => {
   try {
-    const { name, email, password} = req.body;
-    const user = await createUser({ name, email, password });
+    const { name, apellidos, email, password} = req.body;
+    const user = await createUser({ name, apellidos, email, password });
     const candidate = await createCandidate({
       userId: user.id,
     });

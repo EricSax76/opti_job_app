@@ -5,6 +5,7 @@ import "./register.css"
 const Candidateregister = () => {
   const [candidato, setCandidato] = useState({
     nombre: "",
+    apellidos: "",
     email: "",
     password: "",
   });
@@ -58,8 +59,8 @@ const Candidateregister = () => {
           Apellidos:
           <input
             type="text"
-            name="nombre"
-            value={candidato.nombre}
+            name="apellidos"
+            value={candidato.apellidos}
             onChange={handleChange}
             required
           />

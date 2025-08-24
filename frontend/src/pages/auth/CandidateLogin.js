@@ -15,7 +15,7 @@ const CandidateLogin = () => {
     try {
       const data = await login({ email, password }); // ✅ Usando authService
       console.log("Login exitoso:", data);
-      localStorage.setItem("candidato", JSON.stringify(data));
+      localStorage.setItem("candidate", JSON.stringify(data));
       navigate("/CandidateDashboard");
     } catch (err) {
       console.error(err.message);
