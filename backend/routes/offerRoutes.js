@@ -4,7 +4,7 @@ import express from 'express';
 const router = express.Router();
 
 // Ruta para obtener todas las ofertas
-router.get('/', (_req, res) => {
+router.get('/api/job_offers', (_req, res) => {
     // Lógica para listar ofertas
     res.status(200).json([
         {
@@ -13,14 +13,7 @@ router.get('/', (_req, res) => {
             description: "Work on React projects",
             location: "Remote",
             salary: 60000
-        },
-        {
-            id: 2,
-            title: "Backend Developer",
-            description: "Build scalable APIs",
-            location: "New York",
-            salary: 80000
-        }
+        }, 
     ]);
 });
 

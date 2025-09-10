@@ -11,6 +11,8 @@ const LandingPage = () => {
         <Link to="/CandidateLogin" className="btn btn-login">
           Inicia Sesión como Candidato
         </Link>
+        <Link to="/JobOfferPage" className="btn btn-login">
+        Ofertas de Trabajo</Link>
         <Link to="/CompanyLogin" className="btn btn-login">
           Inicia Sesión como Empresa
         </Link>

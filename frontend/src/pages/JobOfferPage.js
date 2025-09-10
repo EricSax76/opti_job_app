@@ -36,12 +36,12 @@ const JobOfferPage = () => {
                 ) : error ? (
                     <p className="error-message">{error}</p>
                 ) : jobOffers.length > 0 ? (
-                    jobOffers.map((offer) => (
-                        <div key={offer.id} className="job-offer-card">
-                            <h2>{offer.title}</h2>
-                            <p>{offer.description}</p>
-                            <p><strong>Location:</strong> {offer.location}</p>
-                            <p><strong>Salary:</strong> ${offer.salary}</p>
+                    jobOffers.map((job_offers) => (
+                        <div key={job_offers.id} className="job-offer-card">
+                            <h2>{job_offers.title}</h2>
+                            <p>{job_offers.description}</p>
+                            <p><strong>Location:</strong> {job_offers.location}</p>
+                            <p><strong>Salary:</strong> ${job_offers.salary}</p>
                             <button className="apply-button">Apply Now</button>
                         </div>
                     ))

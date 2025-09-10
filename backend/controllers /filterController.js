@@ -1,4 +1,3 @@
-// filterController.js
 import Offer from '../models/jobOfferModel.js';
 
 const filterOffers = async (req, res) => {

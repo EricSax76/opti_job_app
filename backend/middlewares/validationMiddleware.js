@@ -1,6 +1,3 @@
-// validationMiddleware.js
-
-// Middleware para validar los datos de entrada
 export const validationMiddleware = (schema) => {
     return (req, res, next) => {
         try {
