@@ -1,4 +1,3 @@
-// candidateModel.js
 import dbClient from './dbClient.js';
 
 export const createCandidate = async ({ userId, skills, experience }) => {

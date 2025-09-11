@@ -6,7 +6,7 @@ const pool = new Pool({
     host: 'localhost',
     database: 'concertador_db',
     password: 'Megustaelsaxo.76',
-    port: 5432, // Default PostgreSQL port
+    port: 5432, 
 });
 
 const query = async (text, params) => {

@@ -1,4 +1,3 @@
-// jobOfferModel.js
 import dbClient from './dbClient.js';
 
 export const getAllJobOffers = async () => {
@@ -8,7 +7,7 @@ export const getAllJobOffers = async () => {
         ORDER BY id DESC;
     `;
     const result = await dbClient.query(query);
-    return result.rows;
+    return result.rows [0];
 };
 
 

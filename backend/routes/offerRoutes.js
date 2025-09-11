@@ -1,39 +1,39 @@
-// offerRoutes.js
-import express from 'express';
+// routes/offerRoutes.js
+import { Router } from 'express';
+import { getAllJobOffers, getJobOfferById, createJobOffer } from '../models/jobOffersModel.js';
 
-const router = express.Router();
+const router = Router();
 
-// Ruta para obtener todas las ofertas
-router.get('/api/job_offers', (_req, res) => {
-    // Lógica para listar ofertas
-    res.status(200).json([
-        {
-            id: 1,
-            title: "Frontend Developer",
-            description: "Work on React projects",
-            location: "Remote",
-            salary: 60000
-        }, 
-    ]);
+// GET /api/job_offers
+router.get('/', async (req, res, next) => {
+  try {
+    const offers = await getAllJobOffers();
+    res.json(offers);
+  } catch (err) {
+    next(err);
+  }
 });
 
-// Ruta para crear una nueva oferta
-router.post('/', (_req, res) => {
-    // Lógica para crear una oferta
-    res.status(201).json({ message: 'Oferta creada' });
+// GET /api/job_offers/:id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const offer = await getJobOfferById(req.params.id);
+    if (!offer) return res.status(404).json({ error: 'Offer not found' });
+    res.json(offer);
+  } catch (err) {
+    next(err);
+  }
 });
 
-// Ruta para obtener una oferta por ID
-router.get('/:id', (req, res) => {
-    const { id } = req.params;
-    // Lógica para obtener una oferta específica
-    res.status(200).json({
-        id: id,
-        title: "Frontend Developer",
-        description: "Work on React projects",
-        location: "Remote",
-        salary: 60000
-    });
+// POST /api/job_offers
+router.post('/', async (req, res, next) => {
+  try {
+    const newOffer = await createJobOffer(req.body);
+    res.status(201).json(newOffer);
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;
+

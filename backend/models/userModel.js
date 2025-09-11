@@ -1,4 +1,3 @@
-// userModel.js
 import dbClient from './dbClient.js';
 import bcrypt from 'bcrypt'; // asegúrate de tener esto arriba
 
