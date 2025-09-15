@@ -1,4 +1,9 @@
 /* globals.css */
+@import './variables.css';
+@import './utilities.css';
+@import './mixins.css';
+@import './responsive.css';
+@import './auth.css';
 /* Reset básico */
 *,
 *::before,
@@ -45,9 +50,4 @@ button {
 
 ul, ol {
     list-style: none;
-}
-
-:root {
-    /* Incluye las variables CSS desde variables.css */
-    @import './variables.css';
 }

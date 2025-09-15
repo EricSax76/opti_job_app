@@ -1,7 +1,7 @@
 // CandidateDetails.js - Vista detallada de un candidato
 
 import React from 'react';
-import './CandidateDetails.css'; // Archivo de estilos para CandidateDetails
+import '../../styles/features/company/CandidateDetails.css'; // Archivo de estilos para CandidateDetails
 
 const CandidateDetails = ({ candidate }) => {
     return (

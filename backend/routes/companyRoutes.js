@@ -1,6 +1,6 @@
 import express from 'express';
 import pool from '../database/connection.js'; // usa el pool directamente
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 

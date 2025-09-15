@@ -1,6 +1,6 @@
 // FilterForm.js
 import React, { useState } from 'react';
-import "./FilterForm.css";
+import "../styles/components/FilterForm.css";
 
 const FilterForm = ({ onFilter }) => {
     const [keywords, setKeywords] = useState("");

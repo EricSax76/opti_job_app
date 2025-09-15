@@ -1,6 +1,6 @@
 // CandidateCard.js
 import React from 'react';
-import "./CandidateCard.css";
+import "../styles/components/CandidateCard.css";
 
 const CandidateCard = ({ candidate }) => {
     return (

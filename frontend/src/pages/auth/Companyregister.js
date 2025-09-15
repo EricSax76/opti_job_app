@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { register as registerCompany } from "../../services/authService";
 import "./register.css"
 
 const Companyregister = () => {
@@ -23,25 +24,13 @@ const Companyregister = () => {
     e.preventDefault();
   
     try {
-      const response = await fetch("http://localhost:5001/api/companies", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(empresa), // Asegúrate de que 'empresa' contiene los datos correctos
-      });
-  
-      if (!response.ok) {
-        throw new Error("Error al enviar los datos al backend");
-      }
-  
-      const data = await response.json();
-      console.log("Respuesta del backend:", data);
+      const data = await registerCompany(empresa);
+      console.log("Empresa registrada:", data);
   
       // Redirigir al usuario después de un envío exitoso
       navigate("/CompanyLogin");
     } catch (error) {
-      console.error("Hubo un problema con la solicitud:", error);
+      console.error("Hubo un problema con el registro:", error);
     }
   };
   

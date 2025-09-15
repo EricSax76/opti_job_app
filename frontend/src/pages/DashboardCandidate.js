@@ -5,7 +5,7 @@ import '../styles/pages/CandidateDasboard.css';
 
 const DashboardCandidate = () => {
   const [job_offers, setJobOffers] = useState([]);
-  const [candidate, setCandidate] = useState([]);
+  const [candidate, setCandidate] = useState({});
   const navigate = useNavigate();
 
   // Función para obtener las ofertas de trabajo

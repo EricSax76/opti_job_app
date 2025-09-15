@@ -15,7 +15,9 @@ const CompanyLogin = () => {
     try {
       const data = await login({ email, password }); // ✅ Usando authService
       console.log("Login exitoso:", data);
-      localStorage.setItem("empresa", JSON.stringify(data.empresa));
+      const empresa = data?.empresa || data;
+      // Guardar solo campos necesarios y no sensibles
+      localStorage.setItem("empresa", JSON.stringify({ id: empresa.id, nombre: empresa.nombre, email: empresa.email }));
       navigate("/DashboardCompany");
     } catch (err) {
       console.error(err.message);
@@ -49,4 +51,3 @@ const CompanyLogin = () => {
 };
 
 export default CompanyLogin;
-

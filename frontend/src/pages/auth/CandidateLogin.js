@@ -15,7 +15,9 @@ const CandidateLogin = () => {
     try {
       const data = await login({ email, password }); // ✅ Usando authService
       console.log("Login exitoso:", data);
-      localStorage.setItem("candidate", JSON.stringify(data));
+      // Guardar solo el objeto del candidato para que DashboardCandidate pueda leer name directamente
+      const candidatePayload = data?.candidato || data;
+      localStorage.setItem("candidate", JSON.stringify(candidatePayload));
       navigate("/CandidateDashboard");
     } catch (err) {
       console.error(err.message);

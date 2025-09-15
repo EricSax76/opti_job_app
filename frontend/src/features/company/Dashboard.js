@@ -1,7 +1,7 @@
 // Dashboard.js - Dashboard de empresas
 
 import React from 'react';
-import './Dashboard.css'; // Archivo de estilos para el Dashboard
+import '../../styles/features/company/Dashboard.css'; // Archivo de estilos para el Dashboard
 
 const Dashboard = () => {
     return (

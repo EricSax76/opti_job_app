@@ -27,7 +27,7 @@ const DashboardCompany = () => {
     if (storedEmpresa) {
       setEmpresa(JSON.parse(storedEmpresa));
     } else {
-      navigate('/login');
+      navigate('/CompanyLogin');
     }
   }, [navigate]); 
 
@@ -67,5 +67,4 @@ const DashboardCompany = () => {
 };
 
 export default DashboardCompany;
-
 

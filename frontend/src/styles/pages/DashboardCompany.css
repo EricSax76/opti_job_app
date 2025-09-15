@@ -1,74 +1,79 @@
-/* DashboardCompany.css */
-.dashboard-company-container{
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    gap: 1rem;
-    padding: 2rem;
-    background-color: rgb(197, 223, 233);
-    min-block-size: 100vh;
+/* DashboardCompany.css – Minimal & clean */
+.dashboard-company-container {
+  max-inline-size: 1100px;
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 32px);
+  min-block-size: 100vh;
 }
 
 .dashboard-header {
-    background-color: hwb(215 20% 38%);
-    color: #d0d3b6;
-    padding: 1rem;
-    border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: clamp(16px, 2.5vw, 24px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  color: #111827;
+  margin-block-end: 16px;
+}
+.dashboard-header h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+}
+.dashboard-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.975rem;
 }
 
-/* Contenedor principal */
+/* Secciones (tarjetas) */
+.create-job-offer-section,
 .job-offers-section {
-    padding: 30px;
-    background-color: hsl(178, 24%, 71%);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px hsl(216, 56%, 77%);
-    max-inline-size: 800px;
-    margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: clamp(16px, 2.5vw, 24px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
 }
+.create-job-offer-section { margin-block-end: 16px; }
 
 /* Lista de ofertas */
 .job-offers-list {
-    color: rgb(27, 44, 77);
-    padding: 0;
-    margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
-/* Elemento individual de la oferta */
+/* Tarjeta de oferta */
 .job-offer-item {
-    inline-size: 500px;
-    background-color: #f7ebeb;
-    color: #080707;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-block-end: 15px;
-    padding: 15px;
-    transition: box-shadow 0.3s ease;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  transition: box-shadow .2s ease, transform .12s ease;
 }
-
 .job-offer-item:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 24px rgba(0,0,0,.08);
+  transform: translateY(-1px);
 }
-
-/* Título de la oferta */
 .job-offer-item h2 {
-    font-size: 20px;
-    margin: 0 0 10px;
-    color: #333;
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #111827;
+  font-weight: 600;
 }
-
-/* Descripción de la oferta */
 .job-offer-item p {
-    font-size: 16px;
-    margin: 0 0 10px;
-    color: #555;
-    line-height: 1.5;
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: #4b5563;
 }
-
-/* Información adicional */
 .job-offer-item span {
-    font-size: 14px;
-    color: #777;
-    display: block;
-    margin-block-start: 10px;
+  display: block;
+  margin-block-start: 8px;
+  font-size: 0.85rem;
+  color: #6b7280;
 }
-
 

@@ -178,3 +178,26 @@ body{
   --shadow:0 8px 30px rgba(18,31,68,.06), inset 0 1px 0 rgba(255,255,255,.9);
 }
 
+/* Scroll reveal – efectos modernos */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px) scale(.98);
+  filter: blur(4px) saturate(.9);
+  transition: opacity .6s ease, transform .6s ease, filter .6s ease;
+  will-change: transform, opacity;
+}
+.reveal.is-visible { opacity: 1; transform: none; filter: none; }
+.fade-up { transform: translateY(18px); }
+.fade-left { transform: translateX(-18px); }
+.fade-right { transform: translateX(18px); }
+
+/* Mejora sutil al entrar */
+.benefit,
+.section-optimization li,
+.section-candidates li,
+.section-how-it-works li { transition: transform .2s ease; }
+.benefit:hover { transform: translateY(-2px); }
+
+/* Imagen con leve parallax al hover/focus */
+.section-image { transition: transform .6s cubic-bezier(.2,.6,.2,1), box-shadow .6s; }
+.section-image:hover { transform: translateY(-2px) scale(1.01); }

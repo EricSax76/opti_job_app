@@ -1,13 +1,4 @@
-import pkg from 'pg'; // Importa el módulo completo como un objeto
-const { Pool } = pkg; // Extrae Pool del objeto importado
-
-const pool = new Pool({
-    user: 'ericmoscoso',
-    host: 'localhost',
-    database: 'concertador_db',
-    password: 'Megustaelsaxo.76',
-    port: 5432, 
-});
+import pool from '../database/connection.js';
 
 const query = async (text, params) => {
     const client = await pool.connect();

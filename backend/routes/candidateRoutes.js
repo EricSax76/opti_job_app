@@ -1,5 +1,5 @@
 import express from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import pool from '../models/dbClient.js';
 
 const router = express.Router();
@@ -61,11 +61,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
+    const displayName = (user.name && user.name.trim()) || (user.email ? user.email.split('@')[0] : 'Candidato');
+
     res.status(200).json({
       message: 'Login exitoso',
       candidato: {
         id: user.id,
-        name: user.name,
+        name: displayName,
         email: user.email,
         role: user.role
       }

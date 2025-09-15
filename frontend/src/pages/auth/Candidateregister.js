@@ -21,12 +21,17 @@ const Candidateregister = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch("http://localhost:5001/api/candidates", { // Cambia la URL por la de tu backend
+      const response = await fetch("http://localhost:5001/api/candidates", { // registro de candidato
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(candidato),
+        // El backend espera { name, email, password }. Unificamos aquí.
+        body: JSON.stringify({
+          name: `${candidato.nombre} ${candidato.apellidos}`.trim(),
+          email: candidato.email,
+          password: candidato.password,
+        }),
       });
       
       if (response.ok) {

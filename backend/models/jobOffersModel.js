@@ -7,7 +7,7 @@ export const getAllJobOffers = async () => {
         ORDER BY id DESC;
     `;
     const result = await dbClient.query(query);
-    return result.rows [0];
+    return result.rows;
 };
 
 
@@ -28,4 +28,3 @@ export const createJobOffer = async (jobOffer) => {
     const result = await dbClient.query(query, values);
     return result.rows[0];
 }; 
-

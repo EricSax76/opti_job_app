@@ -8,15 +8,16 @@
     justify-content: flex-start;
     min-block-size: 100vh;
     padding: 30px;
-    background-color: var(--background-color); /* Usa variables CSS definidas en los estilos globales */
-    font-family: var(--font-family); /* Estilo general del proyecto */
-  }
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
   
   /* Estilos de navegación (si se incluye en App.js) */
   .app-navbar {
     inline-size: 100%;
-    background-color: var(--primary-color);
-    color: var(--text-light);
+    background-color: var(--color-primary);
+    color: #fff;
     padding: 10px 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
@@ -27,7 +28,8 @@
     inline-size: 100%;
     max-inline-size: 1200px;
     padding: 20px;
-    background-color: var(--content-background-color);
+    background-color: #ffffff;
+    color: #333;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
   }
@@ -37,8 +39,8 @@
     inline-size: 100%;
     text-align: center;
     padding: 10px 0;
-    background-color: var(--secondary-color);
-    color: var(--text-light);
+    background-color: var(--color-secondary);
+    color: #fff;
     font-size: 0.9rem;
   }
   
