@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/general.css";
 
@@ -45,7 +45,7 @@ const LandingPage = () => {
       </nav>
 
       <main className="landing-main">
-  {/* Optimización con IA */}
+ 
   <section className="section-optimization reveal fade-up" data-stagger="children">
     <h2>Optimización con IA</h2>
     <p>
@@ -59,7 +59,7 @@ const LandingPage = () => {
 
   </section>
 
-  {/* Beneficios para Empresas */}
+
   <section className="section-benefits reveal fade-up" data-stagger="children">
     <h2>Beneficios para Empresas</h2>
     <p>
@@ -84,7 +84,7 @@ const LandingPage = () => {
     </div>
   </section>
 
-  {/* Beneficios para Candidatos */}
+
   <section className="section-candidates reveal fade-up" data-stagger="children">
     <h2>Beneficios para Candidatos</h2>
     <p>
@@ -98,7 +98,6 @@ const LandingPage = () => {
     
   </section>
 
-  {/* Cómo Funciona */}
   <section className="section-how-it-works reveal fade-up" data-stagger="children">
     <h2>¿Cómo Funciona?</h2>
     <p>
@@ -117,7 +116,7 @@ const LandingPage = () => {
     />
   </section>
 
-        {/* Call to Action */}
+        
         <div className="cta-buttons">
           <Link to="/companyregister" className="btn btn-register-empresa">
             Regístrate como Empresa

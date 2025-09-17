@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getJobOffers } from '../services/api';
 import CreateJobOffer from '../components/CreateOffer';
 import '../styles/pages/DashboardCompany.css';
+
+
 
 const DashboardCompany = () => {
   const [jobOffers, setJobOffers] = useState([]);

@@ -1,5 +1,5 @@
 // JobOfferPage.js
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchJobOffers } from '../services/api';
 import '../styles/pages/JobOfferPage.css';
 
@@ -27,12 +27,12 @@ const JobOfferPage = () => {
     return (
         <div className="job-offer-page">
             <header className="job-offer-header">
-                <h1>Available Job Offers</h1>
-                <p>Browse and apply to the offers that suit you best.</p>
+                <h1>OFERTAS ACTIVAS</h1>
+                <p>Encuentra tu próximo trabajo</p>
             </header>
-            <main className="job-offer-list">
+            <main className="job-offer-card">
                 {isLoading ? (
-                    <p>Loading job offers...</p>
+                    <p>Cargando ofertas...</p>
                 ) : error ? (
                     <p className="error-message">{error}</p>
                 ) : jobOffers.length > 0 ? (
@@ -40,8 +40,8 @@ const JobOfferPage = () => {
                         <div key={job_offers.id} className="job-offer-card">
                             <h2>{job_offers.title}</h2>
                             <p>{job_offers.description}</p>
-                            <p><strong>Location:</strong> {job_offers.location}</p>
-                            <p><strong>Salary:</strong> ${job_offers.salary}</p>
+                            <p><strong>Ubicación</strong> {job_offers.location}</p>
+                            <p><strong>Salario</strong> {job_offers.salary}</p>
                             <button className="apply-button">Apply Now</button>
                         </div>
                     ))
