@@ -2,7 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { AuthProvider } from './context/AuthContext'; // Assuming you have an AuthContext
+import { AuthProvider } from './context/AuthContext'; 
 import './styles/global.css';
 
 // One-time storage cleanup to avoid stale sessions after schema changes

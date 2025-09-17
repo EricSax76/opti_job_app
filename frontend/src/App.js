@@ -9,7 +9,7 @@ import Companyregister from "./pages/auth/Companyregister.js";
 import Candidateregister from "./pages/auth/Candidateregister.js";
 import CandidateDashboard from "./pages/DashboardCandidate.js";
 import Navbar from './components/common/Navbar.js';
-import './App.css';
+
 
 
 function App() {

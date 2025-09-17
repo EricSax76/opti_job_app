@@ -1,8 +1,6 @@
-/* variables.css */
-
 /* Colores globales */
 :root {
-    --color-bg: hsl(0, 69%, 48%); /* Fondo principal, claro y limpio */
+    --color-bg: hsl(205, 69%, 48%); /* Fondo principal, claro y limpio */
     --color-text: #333333; /* Texto principal, oscuro pero suave */
     --color-primary: #007BFF; /* Azul principal para destacar elementos */
     --color-secondary: #6C757D; /* Gris para texto y botones secundarios */

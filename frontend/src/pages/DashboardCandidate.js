@@ -38,7 +38,7 @@ const DashboardCandidate = () => {
       </header>
 
 
-      {/* Sección para listar las ofertas de trabajo */}
+      
       <section className="job-offers-section">
         <h2>Tus Ofertas de Trabajo</h2>
         {job_offers.length > 0 ? (
@@ -57,7 +57,8 @@ const DashboardCandidate = () => {
             ))}
           </ul>
         ) : (
-          <p>No hay ofertas publicadas aún. ¡Crea una nueva para comenzar!</p>
+          <p>No hay ofertas publicadas aún.
+          </p>
         )}
       </section>
     </div>

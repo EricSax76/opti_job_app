@@ -3,7 +3,7 @@
 @import './utilities.css';
 @import './mixins.css';
 @import './responsive.css';
-@import './auth.css';
+@import '../styles/pages/login.css';
 /* Reset básico */
 *,
 *::before,

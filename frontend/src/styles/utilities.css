@@ -1,7 +1,3 @@
-/* utilities.css */
-
-/* Clases utilitarias globales */
-
 /* Ocultar elementos visualmente pero mantenerlos accesibles para lectores de pantalla */
 .sr-only {
     position: absolute;

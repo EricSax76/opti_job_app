@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from "../../services/authService";
-import "../../styles/pages/login.css";
+import "../../styles/pages/login.css"
 
 const CompanyLogin = () => {
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ const CompanyLogin = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className="auth-container">
       <h2>Login de Empresa</h2>
       <form onSubmit={handleLogin}>
         <input

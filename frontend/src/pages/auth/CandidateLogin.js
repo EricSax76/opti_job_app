@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login } from "../../services/authServiceCandidato"; // ✅
-import "../../styles/pages/login.css";
+import { login } from "../../services/authServiceCandidato"; 
+import "../../styles/pages/login.css"
 
 const CandidateLogin = () => {
   const [email, setEmail] = useState("");
@@ -13,10 +13,10 @@ const CandidateLogin = () => {
     e.preventDefault();
 
     try {
-      const data = await login({ email, password }); // ✅ Usando authService
+      const data = await login({ email, password }); 
       console.log("Login exitoso:", data);
       // Guardar solo el objeto del candidato para que DashboardCandidate pueda leer name directamente
-      const candidatePayload = data?.candidato || data;
+      const candidatePayload = data?.candidate || data;
       localStorage.setItem("candidate", JSON.stringify(candidatePayload));
       navigate("/CandidateDashboard");
     } catch (err) {
@@ -26,9 +26,9 @@ const CandidateLogin = () => {
   };
 
   return (
-    <div className="login-container">
-      <h2>Nombre del Candidato</h2>
+    <div className="auth-container">
       <form onSubmit={handleLogin}>
+        <h2>INICIA SESION</h2>
         <input
           type="email"
           placeholder="Correo electrónico"

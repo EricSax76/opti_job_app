@@ -1,8 +1,3 @@
-/* responsive.css */
-
-/* Estilos responsivos globales */
-
-/* Breakpoints */
 @media (max-width: 1200px) {
     /* Estilos para dispositivos grandes */
     .container {
