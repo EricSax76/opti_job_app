@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
-import '../styles/CreateOffer.css'; // Asegúrate de tener este archivo CSS para los estilos
+import '../styles/CreateOffer.css'; 
 
 const CreateOffer = () => {
   const [formData, setFormData] = useState({
@@ -48,7 +48,7 @@ const CreateOffer = () => {
     <form onSubmit={handleSubmit} className="create-offer-form">
       <h2>Crear Oferta de Trabajo</h2>
       <label>
-        Título:
+        <h3 className='label_form'>Título:</h3>
         <input
           type="text"
           name="title"
@@ -56,20 +56,24 @@ const CreateOffer = () => {
           onChange={handleChange}
           placeholder="Título de la oferta"
           required
+          className='input_create_offer'
         />
       </label>
       <label>
-        Descripción:
-        <textarea
+        <h3 className='label_form'>Descripción:</h3>
+        
+        <input
+          type='text'
           name="description"
           value={formData.description}
           onChange={handleChange}
           placeholder="Descripción de la oferta"
           required
+          className='input_create_offer'
         />
       </label>
       <label>
-        ID del Usuario:
+        <h3 className='label_form'>ID del Usuario:</h3>
         <input
           type="number"
           name="user_id"
@@ -77,26 +81,29 @@ const CreateOffer = () => {
           onChange={handleChange}
           placeholder="ID del usuario creador"
           required
+          className='input_create_offer'
         />
       </label>
       <label>
-        Ubicación:
+        <h3 className='label_form'>Ubicación:</h3>
         <input
           type="text"
           name="location"
           value={formData.location}
           onChange={handleChange}
           placeholder="Ubicación de la oferta"
+          className='input_create_offer'
         />
       </label>
       <label>
-        Salario Mínimo:
+        <h3 className='label_form'>Salario Mínimo:</h3>
         <input
           type="number"
           name="salary_min"
           value={formData.salary_min}
           onChange={handleChange}
           placeholder="Salario mínimo"
+          className='input_create_offer'
         />
         <input
           type="number"
@@ -104,24 +111,27 @@ const CreateOffer = () => {
           value={formData.salary_max}
           onChange={handleChange}
           placeholder="Salario máximo"
+          className='input_create_offer'
         />
       </label>
       <label>
-        Educación Requerida:
+        <h3 className='label_form'>Educación Requerida:</h3>
         <input
           type="text"
           name="education"
           value={formData.education}
           onChange={handleChange}
           placeholder="Educación requerida"
+          className='input_create_offer'
         />
       </label>
       <label>
-        Tipo de Trabajo:
+        <h3 className='label_form'>Tipo de trabajo:</h3>
         <select
           name="job_type"
           value={formData.job_type}
           onChange={handleChange}
+          className='select_offer'
         >
           <option value="">Seleccionar</option>
           <option value="Full-time">Full-time</option>

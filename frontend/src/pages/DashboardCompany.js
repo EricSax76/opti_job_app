@@ -6,6 +6,7 @@ import '../styles/pages/DashboardCompany.css';
 
 
 
+
 const DashboardCompany = () => {
   const [jobOffers, setJobOffers] = useState([]);
   const [empresa, setEmpresa] = useState(null);

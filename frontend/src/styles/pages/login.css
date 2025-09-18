@@ -1,5 +1,5 @@
 .auth-container {
-    max-inline-size: 400px;
+    max-inline-size: 500px;
     margin:  auto;
     margin-top: 150px;
     padding: 20px;
@@ -57,11 +57,11 @@
     box-shadow: 0 0 8px rgba(91, 141, 239, 0.3);
   }
   
-  .btn {
+  .auth-container.submit {
     padding: 12px;
     border-radius: 8px;
     border: none;
-    background-color: #5b8def;
+    background-color: #3967c3;
     color: #fff;
     font-size: 1rem;
     cursor: pointer;
