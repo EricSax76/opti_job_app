@@ -1,4 +1,3 @@
-// dashboardController.js
 import Offer from '../models/jobOffersModel.js';
 import Candidate from '../models/candidateModel.js';
 

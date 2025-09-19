@@ -1,11 +1,11 @@
 import pkg from 'pg';
 import dotenv from 'dotenv';
 
-dotenv.config(); // Carga las variables del archivo .env
+dotenv.config(); 
 
 const { Pool } = pkg;
 
-// Configura el pool usando process.env
+
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,

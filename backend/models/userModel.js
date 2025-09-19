@@ -1,5 +1,5 @@
 import dbClient from './dbClient.js';
-import bcrypt from 'bcryptjs'; // asegúrate de tener esto arriba
+import bcrypt from 'bcryptjs'; 
 
 export const createUser = async ({ name, email, password, role = 'candidate' }) => {
   const hashedPassword = await bcrypt.hash(password, 10);

@@ -28,7 +28,7 @@ const Navbar = () => {
 
     return (
         <nav className="navbar" role="navigation">
-            <Link to="/" className="navbar-logo">Infojobs</Link>
+            <Link to="/CandidateDashboard" className="navbar-logo">OPTIJOB</Link>
             <ul className="navbar-links">
                 <li><Link to="/">Home</Link></li>
                 <li><Link to="/job-offer">Job Offers</Link></li>

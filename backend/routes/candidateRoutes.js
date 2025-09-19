@@ -4,7 +4,7 @@ import pool from '../models/dbClient.js';
 
 const router = express.Router();
 
-// Registro de candidato
+
 router.post('/', async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Login de candidato
+
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -78,7 +78,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Obtener todos los candidatos
+
 router.get('/', async (_req, res) => {
   try {
     const result = await pool.query(`
@@ -93,7 +93,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// Obtener un candidato por ID
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
 

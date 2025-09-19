@@ -1,10 +1,9 @@
-// routes/offerRoutes.js
 import { Router } from 'express';
 import { getAllJobOffers, getJobOfferById, createJobOffer } from '../models/jobOffersModel.js';
 
 const router = Router();
 
-// GET /api/job_offers
+
 router.get('/', async (req, res, next) => {
   try {
     const offers = await getAllJobOffers();
@@ -14,7 +13,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// GET /api/job_offers/:id
 router.get('/:id', async (req, res, next) => {
   try {
     const offer = await getJobOfferById(req.params.id);
@@ -25,7 +23,7 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// POST /api/job_offers
+
 router.post('/', async (req, res, next) => {
   try {
     const newOffer = await createJobOffer(req.body);

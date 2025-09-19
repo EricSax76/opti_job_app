@@ -1,10 +1,9 @@
-// routes/users.js
 import express from 'express';
 import { createUser, getAllUsers, getUserById } from '../models/userModel.js';
 
 const router = express.Router();
 
-// Crear un nuevo usuario
+
 router.post('/', async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
@@ -16,7 +15,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Obtener todos los usuarios
+
 router.get('/', async (_req, res) => {
   try {
     const users = await getAllUsers();
@@ -27,7 +26,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// Obtener un usuario por ID
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {

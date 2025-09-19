@@ -1,14 +1,22 @@
 import express from 'express';
 const router = express.Router();
 
-// Ruta para obtener estadísticas del dashboard
+
 router.get('/stats', (_req, _res) => {
-    // Lógica para estadísticas del dashboard
+    
 });
 
-// Ruta para obtener la lista de empresas
+
 router.get('/companies', (_req, _res) => {
-    // Lógica para obtener empresas
+    
+});
+
+router.get('/candidates', (_req, _res) => {
+    
+});
+
+router.get('/users', (_req, _res) => {
+    
 });
 
 export default router;

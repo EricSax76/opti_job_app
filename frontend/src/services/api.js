@@ -82,6 +82,11 @@ export const getJobOffers = async () => {
     return await fetchGet('/api/job_offers');
 };
 
+// Función para obtener los detalles de una oferta específica
+export const getJobOfferById = async (offerId) => {
+    return await fetchGet(`/api/job_offers/${offerId}`);
+};
+
 // Función para crear una oferta de trabajo
 export const createJobOffer = async (offerData) => {
     return await fetchPost('/api/job_offers', offerData);
@@ -101,4 +106,3 @@ export const deleteJobOffer = async (offerId) => {
 export const fetchJobOffers = async (params = '') => {
     return await fetchGet(`/api/job_offers${params}`);
 };
-

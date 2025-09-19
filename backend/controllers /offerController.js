@@ -1,6 +1,6 @@
 import { createJobOffer } from '../models/jobOfferModel.js';
 
-// Controlador para obtener todas las ofertas
+
 export const getOffers = async (_req, res) => {
     try {
         const offers = await getAllJobOffers();
@@ -13,15 +13,15 @@ export const getOffers = async (_req, res) => {
 
 export const createOffer = async (req, res) => {
     try {
-        const newOffer = await createJobOffer(req.body); // Guarda la oferta en la base de datos
-        res.status(201).json(newOffer); // Devuelve la nueva oferta creada
+        const newOffer = await createJobOffer(req.body); 
+        res.status(201).json(newOffer); 
     } catch (error) {
         console.error('Error al crear oferta:', error);
         res.status(500).json({ error: 'Error al crear oferta' });
     }
 };
 
-// Controlador para obtener una oferta por ID
+
 export const getOfferById = async (req, res) => {
     try {
         const offer = await getJobOfferById(req.params.id);

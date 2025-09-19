@@ -25,6 +25,37 @@
     color: #555;
 }
 
+.job-offer-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.filter-label {
+    font-weight: 600;
+    color: #1a202c;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e0;
+    background-color: #fff;
+    font-size: 14px;
+    color: #2d3748;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #5393d8;
+    box-shadow: 0 0 0 2px rgba(83, 147, 216, 0.2);
+}
+
 /* Contenedor de la lista de ofertas */
 .job-offer-list {
     background-color: #668b8b;

@@ -1,5 +1,5 @@
 import express from 'express';
-import pool from '../database/connection.js'; // usa el pool directamente
+import pool from '../database/connection.js'; 
 import bcrypt from 'bcryptjs';
 
 const router = express.Router();
@@ -8,7 +8,7 @@ router.post('/', async (req, res) => {
   const { nombre, cif, sector, tamano, email, password } = req.body;
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10); // ← aquí
+    const hashedPassword = await bcrypt.hash(password, 10); 
 
     const result = await pool.query(
       `INSERT INTO companies (nombre, cif, sector, tamano, email, password)

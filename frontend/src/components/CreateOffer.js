@@ -9,6 +9,7 @@ const CreateOffer = () => {
     user_id: '', // ID del usuario que crea la oferta
     location: '',
     salary_min: '',
+    salary_max: '',
     education: '',
     job_type: '',
   });
@@ -145,4 +146,3 @@ const CreateOffer = () => {
 };
 
 export default CreateOffer;
-

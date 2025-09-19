@@ -3,9 +3,9 @@ import { createJobOffer } from '../models/jobOffersModel.js';
 
 const router = express.Router();
 
-// Endpoint para crear una oferta de trabajo
+
 router.post('/', async (req, res) => {
-    const newJobOffer = req.body; // Obtenemos los datos desde el cliente
+    const newJobOffer = req.body; 
     try {
         const createdOffer = await createJobOffer(newJobOffer);
         res.status(201).json(createdOffer); // Devolvemos la oferta creada
