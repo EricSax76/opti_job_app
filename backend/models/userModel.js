@@ -8,6 +8,7 @@ export const createUser = async ({ name, email, password, role = 'candidate' }) 
     VALUES ($1, $2, $3, $4)
     RETURNING *;
   `;
+
   const values = [name, email, hashedPassword, role];
   const result = await dbClient.query(query, values);
   return result.rows[0];

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001//filters'; // Reemplaza con tu URL base
+const API_URL = 'http://localhost:5001/api/filter_activity'; // Reemplaza con tu URL base
 
 export const getFilters = async () => {
   try {

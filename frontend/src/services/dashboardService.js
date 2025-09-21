@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://http://localhost:5001'; // Reemplaza con tu URL base
+const API_URL = 'https://http://localhost:5001'; 
 
 export const getDashboardData = async () => {
   try {

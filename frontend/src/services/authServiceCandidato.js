@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001/api/candidates'; // ✅ login de candidato
+const API_URL = 'http://localhost:5001/api/candidates'; 
 
 export const login = async (credentials) => {
   try {

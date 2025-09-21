@@ -14,17 +14,17 @@ const CompanyLogin = () => {
     e.preventDefault();
 
     try {
-      const data = await login({ email, password }); // ✅ Usando authService
-      console.log("Login exitoso:", data);
-      const empresa = data?.empresa || data;
-      // Guardar solo campos necesarios y no sensibles
-      localStorage.setItem("empresa", JSON.stringify({ id: empresa.id, nombre: empresa.nombre, email: empresa.email }));
-      navigate("/DashboardCompany");
-    } catch (err) {
-      console.error(err.message);
-      setError("Email o contraseña incorrectos.");
-    }
-  };
+          const data = await login({ email, password }); 
+          console.log("Login exitoso:", data);
+          // Guardar solo el objeto del candidato para que DashboardCandidate pueda leer name directamente
+          const companyPayload = data?.company || data;
+          localStorage.setItem("company", JSON.stringify(companyPayload));
+          navigate("/DashboardCompany");
+        } catch (err) {
+          console.error(err.message);
+          setError("Email o contraseña incorrectos.");
+        }
+      };
 
   return (
     <div className="auth-container">

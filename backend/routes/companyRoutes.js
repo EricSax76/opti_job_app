@@ -30,25 +30,33 @@ router.post('/', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const result = await pool.query(
-      'SELECT * FROM companies WHERE email = $1',
-      [email]
-    );
+   try {
+      const result = await pool.query(
+        'SELECT * FROM users WHERE email = $1 AND role = $2',
+        [email, 'company']
+      );
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
     const empresa = result.rows[0];
+    const storedHash = empresa.password_hash;
 
-    const isMatch = await bcrypt.compare(password, empresa.password);
+    if (!storedHash) {
+      console.error('Company user missing password hash for email:', email);
+      return res.status(500).json({ error: 'Error interno del servidor' });
+    }
+
+    const isMatch = await bcrypt.compare(password, storedHash);
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
-    res.status(200).json({ message: 'Login exitoso', empresa });
+    const { password_hash, ...empresaSinPassword } = empresa;
+
+    res.status(200).json({ message: 'Login exitoso', empresa: empresaSinPassword });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
