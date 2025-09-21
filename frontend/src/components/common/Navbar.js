@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../../styles/components/Navbar.css';
 
@@ -31,7 +31,7 @@ const Navbar = () => {
             <Link to="/CandidateDashboard" className="navbar-logo">OPTIJOB</Link>
             <ul className="navbar-links">
                 <li><Link to="/">Home</Link></li>
-                <li><Link to="/job-offer">Job Offers</Link></li>
+                <li><Link to="/job-offer">Solicitudes de talento</Link></li>
                 {displayName && <li aria-label="Usuario autenticado">Hola, {displayName}</li>}
                 <li>
                     <button className="navbar-toggle" onClick={handleLogout} aria-label="Cerrar sesión">

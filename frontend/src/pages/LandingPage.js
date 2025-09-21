@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import "../styles/general.css";
+import "../styles/global.css";
 
 const LandingPage = () => {
   useEffect(() => {
@@ -127,9 +127,6 @@ const LandingPage = () => {
         </div>
       </main>
 
-      <footer className="landing-footer">
-        <p>© 2025 Tu Empresa. Todos los derechos reservados.</p>
-      </footer>
     </div>
   );
 };

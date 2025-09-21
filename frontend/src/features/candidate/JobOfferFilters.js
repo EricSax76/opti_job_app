@@ -1,6 +1,4 @@
-// JobOfferFilters.js - Página principal con filtros
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import '../../styles/features/candidate/JobOfferFilters.css'; // Archivo de estilos para los filtros
 
 const JobOfferFilters = ({ onFilter }) => {

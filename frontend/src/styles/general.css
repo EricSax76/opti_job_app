@@ -38,10 +38,10 @@ body{
   inset-block-start:0; 
   z-index:50;
   display:flex; 
-  align-items:center; 
-  gap:12px; 
-  justify-content:space-between;
-  padding:14px clamp(16px,4vw,40px);
+  flex-direction:column;
+  align-items:stretch; 
+  gap:10px; 
+  padding:14px 16px;
   background:rgba(10, 16, 47, 0.75);
   backdrop-filter:saturate(130%) blur(10px);
   border-block-end:1px solid var(--line);
@@ -89,8 +89,8 @@ body{
   display:flex; 
   flex-direction:column; 
   align-items:center; 
-  gap:32px;
-  padding:clamp(18px,3vw,34px);
+  gap:24px;
+  padding:24px 16px;
   max-inline-size:1100px; 
   margin-inline:auto;
   background-color: #e4e5eb;
@@ -105,7 +105,7 @@ body{
   background:var(--panel);
   border:1px solid var(--line);
   border-radius:var(--r);
-  padding:clamp(18px,3vw,36px);
+  padding:20px;
   box-shadow:var(--shadow);
 }
 
@@ -146,8 +146,8 @@ body{
 /* Beneficios (grid) */
 .benefits-container{
   display:grid; 
-  gap:16px;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:14px;
+  grid-template-columns:1fr;
 }
 .benefit{
   background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
@@ -163,10 +163,11 @@ body{
 /* Cómo funciona (ol) */
 .section-how-it-works ol{
   list-style:none; padding:0; margin:1.2em 0 0;
-  display:flex; flex-direction:column; gap:12px;
+  display:flex; flex-direction:column; gap:14px;
 }
 .section-how-it-works li{
   display:flex; 
+  flex-direction:column;
   gap:12px; 
   align-items:flex-start;
   background:var(--elev); 
@@ -188,32 +189,86 @@ body{
 /* CTA */
 .cta-buttons{
   display:flex; 
-  justify-content:center; 
-  gap:14px; 
+  flex-direction:column;
+  align-items:stretch;
+  gap:12px; 
   margin-block:6px 0;
+}
+
+.cta-buttons .btn,
+.cta-buttons .btn-login,
+.cta-buttons .btn-register-empresa,
+.cta-buttons .btn-register-candidato{
+  inline-size:100%;
 }
 
 /* Footer */
 .landing-footer{
-  color:#9aa2ce; 
+  color:#f4f5f7; 
   font-size:.95rem;
-  border-block-start:1px solid var(--line);
   padding:18px clamp(16px,4vw,40px);
+  align-items: center;
   
 }
 
 /* Responsive */
-@media (max-width: 950px){
-  .landing-main{padding:24px 12px}
+@media (min-width: 600px){
+  .landing-nav{
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px clamp(20px,4vw,36px);
+  }
+
+  .cta-buttons{
+    flex-direction:row;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .cta-buttons .btn,
+  .cta-buttons .btn-login,
+  .cta-buttons .btn-register-empresa,
+  .cta-buttons .btn-register-candidato{
+    inline-size:auto;
+  }
+
+  .landing-main{
+    padding:clamp(24px,4vw,32px);
+    gap:28px;
+  }
+
   .section-optimization,
   .section-benefits,
   .section-candidates,
-  .section-how-it-works{padding:18px}
+  .section-how-it-works{
+    padding:clamp(22px,4vw,36px);
+  }
+
+  .benefits-container{
+    gap:16px;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  }
+
+  .section-how-it-works li{
+    flex-direction:row;
+    align-items:flex-start;
+  }
 }
-@media (max-width: 720px){
-  .landing-nav{flex-direction:column; gap:10px}
-  .cta-buttons{flex-direction:column}
-  .section-how-it-works li{flex-direction:column}
+
+@media (min-width: 960px){
+  .landing-main{
+    padding:clamp(28px,3vw,40px);
+    gap:32px;
+  }
+
+  .section-optimization,
+  .section-benefits,
+  .section-candidates,
+  .section-how-it-works{
+    padding:clamp(24px,3vw,40px);
+  }
 }
 
 /* Modo claro opcional */

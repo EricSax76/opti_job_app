@@ -6,7 +6,7 @@
 @import '../styles/pages/login.css';
 @import '../styles/general.css';
 @import '../styles/CreateOffer.css';
-/* Reset básico */
+@import '../styles/pages/JobOfferPage.css';
 *,
 *::before,
 *::after {

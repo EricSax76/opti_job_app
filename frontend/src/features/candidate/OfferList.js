@@ -1,6 +1,4 @@
-// OfferList.js - Lista de ofertas filtradas
 
-import React from 'react';
 import '../../styles/features/candidate/OfferList.css'; // Archivo de estilos para OfferList
 
 const OfferList = ({ offers }) => {

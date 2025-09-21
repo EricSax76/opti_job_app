@@ -3,7 +3,7 @@
     margin: 0 auto;
     padding: 20px;
     font-family: Arial, sans-serif;
-    background-color: rgb(212, 227, 238); /* Fondo claro */
+    background-color: rgb(122, 183, 227); /* Fondo claro */
     color: #333; /* Color de texto */
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
@@ -58,7 +58,7 @@
 
 /* Contenedor de la lista de ofertas */
 .job-offer-list {
-    background-color: #668b8b;
+    background-color: transparent;
     gap: 20px; /* Espaciado entre las tarjetas */
     margin-block-start: 30px;
 }
@@ -84,15 +84,16 @@
     font-size: 25px;
     align-items: left;
     color: #2b6cb0;
-    position:absolute; 
+    
+    
 }
 
 .job-offer-card p {
-    
+    margin-top: 40px;
     font-size: 16px;
     color: #555;
-    line-height: 1.5;
-    padding-top: 40px;
+    line-height: 0.5;
+    
 }
 
 /* Botón de aplicación */
@@ -104,6 +105,7 @@
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
+    margin-top: 25px;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 

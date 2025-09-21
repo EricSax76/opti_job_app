@@ -1,5 +1,5 @@
 // FilterForm.js
-import React, { useState } from 'react';
+import { useState } from 'react';
 import "../styles/components/FilterForm.css";
 
 const FilterForm = ({ onFilter }) => {

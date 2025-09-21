@@ -1,4 +1,4 @@
-import { createJobOffer } from '../models/jobOfferModel.js';
+import { createJobOffer, getAllJobOffers, getJobOfferById } from '../models/jobOfferModel.js';
 
 
 export const getOffers = async (_req, res) => {

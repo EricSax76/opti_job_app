@@ -32,9 +32,17 @@
 }
 
 .navbar-toggle {
-    display: none;
-    font-size: 1.5rem;
-    color: #333333;
+    display: flex;
+    font-size: 1rem;
+    color: #080707;
+    background-color: #cfe0f3;
+    padding: 6px;
+    border-radius: 8px;
+}
+
+.navbar-toggle:hover {
+    background-color: #007bff;
+    color: #ffffff;
 }
 
 @media (max-width: 768px) {

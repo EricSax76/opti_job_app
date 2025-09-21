@@ -1,5 +1,3 @@
-// CandidateCard.js
-import React from 'react';
 import "../styles/components/CandidateCard.css";
 
 const CandidateCard = ({ candidate }) => {

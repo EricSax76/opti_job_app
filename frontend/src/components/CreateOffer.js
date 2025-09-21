@@ -9,9 +9,13 @@ const CreateOffer = () => {
     user_id: '', // ID del usuario que crea la oferta
     location: '',
     salary_min: '',
-    salary_max: '',
     education: '',
     job_type: '',
+    key_indicators: '',
+    created_at: '',
+    salary_max: '',
+    
+    
   });
 
   const handleChange = (e) => {
