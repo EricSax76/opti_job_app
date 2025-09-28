@@ -9,13 +9,14 @@ import Companyregister from "./pages/auth/Companyregister.js";
 import Candidateregister from "./pages/auth/Candidateregister.js";
 import CandidateDashboard from "./pages/DashboardCandidate.js";
 import Footer from "./components/common/Footer.js";
+import Navbar from  "./components/common/Navbar.js";
 
 
 
 function App() {
     return (
         <Router>
-            
+            <Navbar /> 
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/job-offer" element={<JobOfferPage />} />

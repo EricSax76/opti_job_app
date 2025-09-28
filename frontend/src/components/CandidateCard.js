@@ -1,4 +1,4 @@
-import "../styles/components/CandidateCard.css";
+
 
 const CandidateCard = ({ candidate }) => {
     return (

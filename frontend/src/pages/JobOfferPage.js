@@ -1,7 +1,7 @@
 // JobOfferPage.js
 import { useEffect, useMemo, useState } from 'react';
 import { fetchJobOffers } from '../services/api';
-import '../styles/pages/JobOfferPage.css';
+
 
 const JobOfferPage = () => {
     const [jobOffers, setJobOffers] = useState([]);

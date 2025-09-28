@@ -1,12 +1,13 @@
-/* globals.css */
 @import './variables.css';
 @import './utilities.css';
 @import './mixins.css';
 @import './responsive.css';
 @import '../styles/pages/login.css';
 @import '../styles/general.css';
-@import '../styles/CreateOffer.css';
+@import '../styles/components/CreateOffer.css';
 @import '../styles/pages/JobOfferPage.css';
+@import "../styles/components/CandidateCard.css";
+@import "../styles/components/FilterForm.css";
 *,
 *::before,
 *::after {
