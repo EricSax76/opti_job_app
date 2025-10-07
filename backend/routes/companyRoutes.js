@@ -7,23 +7,52 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   const { nombre, cif, sector, tamano, email, password } = req.body;
 
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10); 
+  const client = await pool.connect();
 
-    const result = await pool.query(
-      `INSERT INTO companies (nombre, cif, sector, tamano, email, password)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, nombre, email`,
-      [nombre, cif, sector, tamano, email, hashedPassword]
+  try {
+    // Wrap inserts in a transaction to avoid orphan rows on failure
+    await client.query('BEGIN');
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const userInsert = await client.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, 'company')
+       RETURNING id, name, email, role`,
+      [nombre, email, hashedPassword]
     );
+
+    const user = userInsert.rows[0];
+
+    const companyInsert = await client.query(
+      `INSERT INTO companies (nombre, cif, sector, tamano, email, password, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, nombre, email, user_id`,
+      [nombre, cif, sector, tamano, email, hashedPassword, user.id]
+    );
+
+    await client.query('COMMIT');
 
     res.status(201).json({
       message: 'Empresa registrada correctamente',
-      empresa: result.rows[0]
+      empresa: {
+        ...companyInsert.rows[0],
+        user
+      }
     });
   } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Error al hacer rollback del registro de empresa:', rollbackError);
+    }
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'El email ya está registrado' });
+    }
     console.error('Error al registrar la empresa:', error);
     res.status(500).json({ error: 'Error al registrar la empresa' });
+  } finally {
+    client.release();
   }
 });
 

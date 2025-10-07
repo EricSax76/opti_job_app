@@ -16,9 +16,10 @@ const CompanyLogin = () => {
     try {
           const data = await login({ email, password }); 
           console.log("Login exitoso:", data);
-          // Guardar solo el objeto del candidato para que DashboardCandidate pueda leer name directamente
-          const companyPayload = data?.company || data;
-          localStorage.setItem("company", JSON.stringify(companyPayload));
+          // Guardar el payload de empresa para que el dashboard la detecte en localStorage
+          const companyPayload = data?.empresa || data?.company || data;
+          localStorage.setItem("empresa", JSON.stringify(companyPayload));
+          localStorage.removeItem("company");
           navigate("/DashboardCompany");
         } catch (err) {
           console.error(err.message);

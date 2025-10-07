@@ -6,7 +6,6 @@ const CreateOffer = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    user_id: '', // ID del usuario que crea la oferta
     location: '',
     salary_min: '',
     education: '',
@@ -33,7 +32,6 @@ const CreateOffer = () => {
         setFormData({
           title: '',
           description: '',
-          user_id: '',
           location: '',
           salary_min: '',
           salary_max: '',
@@ -74,21 +72,9 @@ const CreateOffer = () => {
           onChange={handleChange}
           placeholder="Descripción de la oferta"
           required
-          className='input_create_offer'
-        />
-      </label>
-      <label>
-        <h3 className='label_form'>ID del Usuario:</h3>
-        <input
-          type="number"
-          name="user_id"
-          value={formData.user_id}
-          onChange={handleChange}
-          placeholder="ID del usuario creador"
-          required
-          className='input_create_offer'
-        />
-      </label>
+      className='input_create_offer'
+    />
+  </label>
       <label>
         <h3 className='label_form'>Ubicación:</h3>
         <input
