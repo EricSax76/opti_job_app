@@ -56,7 +56,7 @@ class CandidatesRouter {
         },
         statusCode: 201,
       );
-    } on PostgreSQLException catch (error) {
+    } on ServerException catch (error) {
       final message = error.code == '23505'
           ? 'El email ya está registrado'
           : 'Error al registrar el candidato';

@@ -30,27 +30,27 @@ Future<void> main(List<String> args) async {
     ..get('/', (request) => jsonResponse({'status': 'ok'}))
     ..mount(
       '/api/job_offers/',
-      JobOffersRouter(jobOfferRepository).router,
+      JobOffersRouter(jobOfferRepository).router.call,
     )
     ..mount(
       '/api/candidates/',
       CandidatesRouter(
         candidatesRepository,
         jwtSecret: env.jwtSecret,
-      ).router,
+      ).router.call,
     )
     ..mount(
       '/api/companies/',
       CompaniesRouter(
         companiesRepository,
         jwtSecret: env.jwtSecret,
-      ).router,
+      ).router.call,
     );
 
   final handler = Pipeline()
       .addMiddleware(requestLoggingMiddleware())
       .addMiddleware(createCorsMiddleware())
-      .addHandler(router);
+      .addHandler(router.call);
 
   final server = await shelf_io.serve(
     handler,

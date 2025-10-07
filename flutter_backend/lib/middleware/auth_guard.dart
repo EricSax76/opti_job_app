@@ -18,9 +18,9 @@ Middleware authGuardMiddleware({required String secret}) {
           'auth': jwt.payload,
         });
         return innerHandler(updatedRequest);
-      } on JWTExpiredError {
+      } on JWTExpiredException {
         return jsonError('Token expirado', statusCode: 401);
-      } on JWTError catch (error) {
+      } on JWTException catch (error) {
         return jsonError('Token inválido: ${error.message}', statusCode: 401);
       }
     };
