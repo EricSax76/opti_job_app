@@ -1,0 +1,8 @@
+.dart_tool/
+.packages
+build/
+.env
+.idea/
+.vscode/
+*.iml
+logs/
