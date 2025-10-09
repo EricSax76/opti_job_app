@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/candidate.dart';
-import '../data/models/company.dart';
-import '../data/repositories/auth_repository.dart';
+import 'package:infojobs_flutter_app/data/models/candidate.dart';
+import 'package:infojobs_flutter_app/data/models/company.dart';
+import 'package:infojobs_flutter_app/data/repositories/auth_repository.dart';
+import 'package:infojobs_flutter_app/utils/app_exception.dart';
 
 final authControllerProvider =
     ChangeNotifierProvider<AuthController>((ref) {
@@ -40,6 +41,8 @@ class AuthController extends ChangeNotifier {
       _candidate = result;
       _company = null;
       _errorMessage = null;
+    } on AuthException catch (error) {
+      _errorMessage = error.message;
     } catch (error, stackTrace) {
       debugPrint('Candidate login failed: $error\n$stackTrace');
       _errorMessage = 'No se pudo iniciar sesión. Verifica tus credenciales.';
@@ -63,6 +66,8 @@ class AuthController extends ChangeNotifier {
       _candidate = result;
       _company = null;
       _errorMessage = null;
+    } on AuthException catch (error) {
+      _errorMessage = error.message;
     } catch (error, stackTrace) {
       debugPrint('Candidate register failed: $error\n$stackTrace');
       _errorMessage = 'No se pudo completar el registro.';
@@ -84,6 +89,8 @@ class AuthController extends ChangeNotifier {
       _company = result;
       _candidate = null;
       _errorMessage = null;
+    } on AuthException catch (error) {
+      _errorMessage = error.message;
     } catch (error, stackTrace) {
       debugPrint('Company login failed: $error\n$stackTrace');
       _errorMessage = 'No se pudo iniciar sesión.';
@@ -107,6 +114,8 @@ class AuthController extends ChangeNotifier {
       _company = result;
       _candidate = null;
       _errorMessage = null;
+    } on AuthException catch (error) {
+      _errorMessage = error.message;
     } catch (error, stackTrace) {
       debugPrint('Company register failed: $error\n$stackTrace');
       _errorMessage = 'No se pudo completar el registro.';

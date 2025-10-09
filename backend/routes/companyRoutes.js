@@ -5,16 +5,41 @@ import bcrypt from 'bcrypt';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { nombre, cif, sector, tamano, email, password } = req.body;
+  const {
+    nombre,
+    name,
+    cif,
+    sector,
+    tamano,
+    size,
+    email,
+    password
+  } = req.body;
+
+  const companyName = nombre ?? name;
+  const companySize = tamano ?? size;
+  const companyCif = (cif ?? '').toString().trim();
+  const companySector = (sector ?? '').toString().trim();
+  const normalizedSize = companySize != null && companySize.toString().trim().isNotEmpty
+      ? companySize.toString().trim()
+      : 'N/D';
 
   try {
+    if (!companyName) {
+      return res.status(400).json({ error: 'El nombre de la empresa es obligatorio.' });
+    }
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email y contraseña son obligatorios.' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10); // ← aquí
 
     const result = await pool.query(
       `INSERT INTO companies (nombre, cif, sector, tamano, email, password)
        VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, nombre, email`,
-      [nombre, cif, sector, tamano, email, hashedPassword]
+       RETURNING id, nombre AS name, email, 'company' AS role`,
+      [companyName, companyCif, companySector, normalizedSize, email, hashedPassword]
     );
 
     res.status(201).json({
@@ -23,7 +48,21 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error al registrar la empresa:', error);
-    res.status(500).json({ error: 'Error al registrar la empresa' });
+
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'La empresa ya existe.' });
+    }
+
+    if (error.code === '23502') {
+      return res.status(400).json({
+        error: `Falta el campo obligatorio: ${error.column ?? 'desconocido'}`,
+      });
+    }
+
+    res.status(500).json({
+      error: 'Error al registrar la empresa',
+      detail: error.message,
+    });
   }
 });
 
@@ -32,7 +71,9 @@ router.post('/login', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT * FROM companies WHERE email = $1',
+      `SELECT id, nombre AS name, email, 'company' AS role, password
+         FROM companies
+        WHERE email = $1`,
       [email]
     );
 
@@ -48,7 +89,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
-    res.status(200).json({ message: 'Login exitoso', empresa });
+    const { password: _password, ...safeEmpresa } = empresa;
+
+    res.status(200).json({ message: 'Login exitoso', empresa: safeEmpresa });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error interno del servidor' });

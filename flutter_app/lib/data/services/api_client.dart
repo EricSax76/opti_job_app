@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/config_providers.dart';
+import 'package:infojobs_flutter_app/providers/config_providers.dart';
 
 final apiClientProvider = Provider<Dio>((ref) {
   final baseUrl = ref.watch(apiBaseUrlProvider);

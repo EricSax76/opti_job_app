@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/job_offer_providers.dart';
-import '../shared/widgets/app_nav_bar.dart';
+import 'package:infojobs_flutter_app/providers/job_offer_providers.dart';
+import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
 
 class JobOfferListScreen extends ConsumerStatefulWidget {
   const JobOfferListScreen({super.key});
@@ -16,6 +16,7 @@ class JobOfferListScreen extends ConsumerStatefulWidget {
 class _JobOfferListScreenState
     extends ConsumerState<JobOfferListScreen> {
   String? _selectedJobType;
+  final _jobTypeFieldKey = GlobalKey<FormFieldState<String>>();
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +44,8 @@ class _JobOfferListScreenState
               data: (offers) {
                 final jobTypes = offers
                     .map((offer) => offer.jobType)
-                    .where((jobType) => jobType != null && jobType!.isNotEmpty)
-                    .cast<String>()
+                    .whereType<String>()
+                    .where((jobType) => jobType.isNotEmpty)
                     .toSet()
                     .toList()
                   ..sort();
@@ -55,18 +56,19 @@ class _JobOfferListScreenState
                       Row(
                         children: [
                           Expanded(
-                            child: DropdownButtonFormField<String?>(
-                              value: _selectedJobType,
+                            child: DropdownButtonFormField<String>(
+                              key: _jobTypeFieldKey,
+                              initialValue: _selectedJobType ?? '',
                               decoration: const InputDecoration(
                                 labelText: 'Filtrar por tipología',
                               ),
                               items: [
-                                const DropdownMenuItem<String?>(
-                                  value: null,
+                                const DropdownMenuItem<String>(
+                                  value: '',
                                   child: Text('Todas'),
                                 ),
                                 ...jobTypes.map(
-                                  (type) => DropdownMenuItem<String?>(
+                                  (type) => DropdownMenuItem<String>(
                                     value: type,
                                     child: Text(type),
                                   ),
@@ -74,7 +76,10 @@ class _JobOfferListScreenState
                               ],
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedJobType = value;
+                                  _selectedJobType =
+                                      (value == null || value.isEmpty)
+                                          ? null
+                                          : value;
                                 });
                               },
                             ),
@@ -84,6 +89,7 @@ class _JobOfferListScreenState
                               onPressed: () {
                                 setState(() {
                                   _selectedJobType = null;
+                                  _jobTypeFieldKey.currentState?.reset();
                                 });
                               },
                               child: const Text('Limpiar'),

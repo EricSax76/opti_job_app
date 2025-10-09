@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/job_offer.dart';
-import 'api_client.dart';
+import 'package:infojobs_flutter_app/data/models/job_offer.dart';
+import 'package:infojobs_flutter_app/data/services/api_client.dart';
 
 final jobOfferServiceProvider = Provider<JobOfferService>((ref) {
   final client = ref.watch(apiClientProvider);
