@@ -66,8 +66,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/job-offer/:id',
         name: 'job-offer-detail',
         builder: (context, state) {
-          final idParam = state.pathParameters['id'] ?? '0';
-          final id = int.tryParse(idParam) ?? 0;
+          final id = state.pathParameters['id'] ?? '';
           return JobOfferDetailScreen(offerId: id);
         },
       ),

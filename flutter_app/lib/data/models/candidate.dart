@@ -3,23 +3,28 @@ class Candidate {
     required this.id,
     required this.name,
     required this.email,
-    required this.role,
-    this.token,
+    this.headline,
+    this.location,
+    this.skills = const [],
   });
 
-  final int id;
+  final String id;
   final String name;
   final String email;
-  final String role;
-  final String? token;
+  final String? headline;
+  final String? location;
+  final List<String> skills;
 
   factory Candidate.fromJson(Map<String, dynamic> json) {
     return Candidate(
-      id: json['id'] is int ? json['id'] as int : int.parse(json['id'].toString()),
+      id: json['id']?.toString() ?? '',
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      role: json['role'] as String? ?? 'candidate',
-      token: json['token'] as String?,
+      headline: json['headline'] as String?,
+      location: json['location'] as String?,
+      skills: (json['skills'] as List<dynamic>? ?? [])
+          .map((skill) => skill.toString())
+          .toList(),
     );
   }
 
@@ -28,24 +33,27 @@ class Candidate {
       'id': id,
       'name': name,
       'email': email,
-      'role': role,
-      'token': token,
+      'headline': headline,
+      'location': location,
+      'skills': skills,
     };
   }
 
   Candidate copyWith({
-    int? id,
+    String? id,
     String? name,
     String? email,
-    String? role,
-    String? token,
+    String? headline,
+    String? location,
+    List<String>? skills,
   }) {
     return Candidate(
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
-      role: role ?? this.role,
-      token: token ?? this.token,
+      headline: headline ?? this.headline,
+      location: location ?? this.location,
+      skills: skills ?? this.skills,
     );
   }
 }

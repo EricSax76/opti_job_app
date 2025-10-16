@@ -2,6 +2,8 @@
 
 Contratos TypeScript/Dart compartidos entre el BFF, agentes y la app Flutter.
 
-- Definir DTOs de eventos (`OfferCreated`, `MatchingComputed`, etc.).
-- Generar clientes typed (p. ej. con `openapi-typescript` o `ts-json-schema-generator`).
-- Exportar tipos reutilizables para que los agentes y el frontend mantengan sincronía.
+- DTOs de dominios (`Offer`, `Candidate`, `Application`, etc.).
+- Tipos para eventos y jobs de BullMQ (`OfferCreated`, `matching:compute`, ...).
+- Interfaces serializables pensadas para generar clientes en Dart/TypeScript.
+
+Los tipos viven en `src/` y se distribuyen como paquete npm local.

@@ -51,4 +51,8 @@ class AuthRepository {
       password: password,
     );
   }
+
+  Future<void> logout() {
+    return _service.logout();
+  }
 }

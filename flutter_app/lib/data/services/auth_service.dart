@@ -1,42 +1,40 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:infojobs_flutter_app/data/models/auth_session.dart';
 import 'package:infojobs_flutter_app/data/models/candidate.dart';
 import 'package:infojobs_flutter_app/data/models/company.dart';
 import 'package:infojobs_flutter_app/data/services/api_client.dart';
+import 'package:infojobs_flutter_app/data/services/token_storage.dart';
 import 'package:infojobs_flutter_app/utils/app_exception.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   final client = ref.watch(apiClientProvider);
-  return AuthService(client);
+  final storage = ref.watch(tokenStorageProvider);
+  return AuthService(client, storage);
 });
 
 class AuthService {
-  AuthService(this._client);
+  AuthService(this._client, this._tokenStorage);
 
   final Dio _client;
+  final TokenStorage _tokenStorage;
 
   Future<Candidate> loginCandidate({
     required String email,
     required String password,
   }) async {
     try {
-      final response = await _client.post<Map<String, dynamic>>(
-        '/candidates/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+      final result = await _login(
+        email: email,
+        password: password,
+        role: 'candidate',
       );
-      final data = response.data ?? <String, dynamic>{};
-      final candidateJson = data['candidate'] as Map<String, dynamic>? ??
-          data['candidato'] as Map<String, dynamic>?;
-
-      if (candidateJson == null || candidateJson.isEmpty) {
-        throw const FormatException('Missing candidate payload');
-      }
-
-      return Candidate.fromJson(candidateJson);
+      await _tokenStorage.save(result.session);
+      final profile = result.profile ?? <String, dynamic>{};
+      return Candidate.fromJson(
+        profile['profile'] as Map<String, dynamic>? ?? profile,
+      );
     } on DioException catch (error) {
       throw AuthException(
         _extractErrorMessage(
@@ -53,7 +51,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await _client.post<Map<String, dynamic>>(
+      await _client.post<Map<String, dynamic>>(
         '/candidates',
         data: {
           'name': name,
@@ -61,19 +59,7 @@ class AuthService {
           'password': password,
         },
       );
-
-      final data = response.data ?? <String, dynamic>{};
-      final candidateEnvelope = data['candidate'] as Map<String, dynamic>? ??
-          data['candidato'] as Map<String, dynamic>?;
-      final candidateJson =
-          candidateEnvelope?['user'] as Map<String, dynamic>? ??
-              candidateEnvelope;
-
-      if (candidateJson == null || candidateJson.isEmpty) {
-        throw const FormatException('Missing candidate payload');
-      }
-
-      return Candidate.fromJson(candidateJson);
+      return loginCandidate(email: email, password: password);
     } on DioException catch (error) {
       throw AuthException(
         _extractErrorMessage(
@@ -89,22 +75,16 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await _client.post<Map<String, dynamic>>(
-        '/companies/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+      final result = await _login(
+        email: email,
+        password: password,
+        role: 'recruiter',
       );
-      final data = response.data ?? <String, dynamic>{};
-      final companyJson = data['company'] as Map<String, dynamic>? ??
-          data['empresa'] as Map<String, dynamic>?;
-
-      if (companyJson == null || companyJson.isEmpty) {
-        throw const FormatException('Missing company payload');
-      }
-
-      return Company.fromJson(companyJson);
+      await _tokenStorage.save(result.session);
+      final profile = result.profile ?? <String, dynamic>{};
+      return Company.fromJson(
+        profile['profile'] as Map<String, dynamic>? ?? profile,
+      );
     } on DioException catch (error) {
       throw AuthException(
         _extractErrorMessage(
@@ -121,7 +101,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await _client.post<Map<String, dynamic>>(
+      await _client.post<Map<String, dynamic>>(
         '/companies',
         data: {
           'name': name,
@@ -129,17 +109,7 @@ class AuthService {
           'password': password,
         },
       );
-      final data = response.data ?? <String, dynamic>{};
-      final companyEnvelope = data['company'] as Map<String, dynamic>? ??
-          data['empresa'] as Map<String, dynamic>?;
-      final companyJson =
-          companyEnvelope?['user'] as Map<String, dynamic>? ?? companyEnvelope;
-
-      if (companyJson == null || companyJson.isEmpty) {
-        throw const FormatException('Missing company payload');
-      }
-
-      return Company.fromJson(companyJson);
+      return loginCompany(email: email, password: password);
     } on DioException catch (error) {
       throw AuthException(
         _extractErrorMessage(
@@ -166,5 +136,61 @@ class AuthService {
     }
 
     return fallback;
+  }
+
+  Future<void> logout() async {
+    await _tokenStorage.clear();
+  }
+
+  Future<({AuthSession session, Map<String, dynamic>? profile})> _login({
+    required String email,
+    required String password,
+    required String role,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: {
+        'email': email,
+        'password': password,
+        'role': role,
+      },
+    );
+
+    final data = response.data ?? <String, dynamic>{};
+    final accessToken = data['accessToken'] as String?;
+    final refreshToken = data['refreshToken'] as String?;
+    final expiresIn = (data['expiresIn'] as num?)?.toInt() ?? 0;
+
+    if (accessToken == null || refreshToken == null) {
+      throw const FormatException('Missing token payload');
+    }
+
+    final profileResponse = await _client.get<Map<String, dynamic>>(
+      '/auth/me',
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+      ),
+    );
+    final profileData = profileResponse.data ?? <String, dynamic>{};
+    final userId = profileData['sub'] as String? ??
+        (profileData['profile'] as Map<String, dynamic>?)?['id'] as String? ??
+        '';
+
+    if (userId.isEmpty) {
+      throw const FormatException('Missing user identifier');
+    }
+
+    return (
+      session: AuthSession(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        expiresIn: expiresIn,
+        role: role,
+        userId: userId,
+      ),
+      profile: profileData,
+    );
   }
 }

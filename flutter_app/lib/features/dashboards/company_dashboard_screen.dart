@@ -20,10 +20,9 @@ class _CompanyDashboardScreenState
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
-  final _salaryMinController = TextEditingController();
-  final _salaryMaxController = TextEditingController();
-  final _educationController = TextEditingController();
-  final _jobTypeController = TextEditingController();
+  final _skillsController = TextEditingController();
+  final _seniorityController = TextEditingController(text: 'mid');
+  bool _isRemote = false;
 
   bool _isSubmitting = false;
   String? _message;
@@ -33,10 +32,8 @@ class _CompanyDashboardScreenState
     _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
-    _salaryMinController.dispose();
-    _salaryMaxController.dispose();
-    _educationController.dispose();
-    _jobTypeController.dispose();
+    _skillsController.dispose();
+    _seniorityController.dispose();
     super.dispose();
   }
 
@@ -138,39 +135,27 @@ class _CompanyDashboardScreenState
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
-                                controller: _jobTypeController,
+                                controller: _seniorityController,
                                 decoration: const InputDecoration(
-                                  labelText: 'Tipología',
+                                  labelText: 'Seniority (junior/mid/senior)',
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _salaryMinController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Salario mínimo',
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _salaryMaxController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Salario máximo',
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
-                                controller: _educationController,
+                                controller: _skillsController,
                                 decoration: const InputDecoration(
-                                  labelText: 'Educación requerida',
+                                  labelText: 'Skills (separados por coma)',
                                 ),
+                              ),
+                              SwitchListTile.adaptive(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('Permite trabajo remoto'),
+                                value: _isRemote,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isRemote = value;
+                                  });
+                                },
                               ),
                               const SizedBox(height: 24),
                               FilledButton(
@@ -231,38 +216,45 @@ class _CompanyDashboardScreenState
     });
 
     final service = ref.read(jobOfferServiceProvider);
+    final auth = ref.read(authControllerProvider);
+    final companyId = auth.company?.id;
+
+    if (companyId == null || companyId.isEmpty) {
+      setState(() {
+        _message = 'No se pudo identificar la empresa. Vuelve a iniciar sesión.';
+        _isSubmitting = false;
+      });
+      return;
+    }
 
     try {
       await service.createJobOffer(
         JobOfferPayload(
+          companyId: companyId,
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           location: _locationController.text.trim(),
-          jobType: _jobTypeController.text.trim().isEmpty
-              ? null
-              : _jobTypeController.text.trim(),
-          salaryMin: _salaryMinController.text.trim().isEmpty
-              ? null
-              : _salaryMinController.text.trim(),
-          salaryMax: _salaryMaxController.text.trim().isEmpty
-              ? null
-              : _salaryMaxController.text.trim(),
-          education: _educationController.text.trim().isEmpty
-              ? null
-              : _educationController.text.trim(),
+          seniority: _seniorityController.text.trim().isEmpty
+              ? 'mid'
+              : _seniorityController.text.trim(),
+          remote: _isRemote,
+          skills: _skillsController.text
+              .split(',')
+              .map((skill) => skill.trim())
+              .where((skill) => skill.isNotEmpty)
+              .toList(),
         ),
       );
       setState(() {
         _message = 'Oferta publicada con éxito.';
+        _isRemote = false;
       });
       _formKey.currentState!.reset();
       _titleController.clear();
       _descriptionController.clear();
       _locationController.clear();
-      _jobTypeController.clear();
-      _salaryMinController.clear();
-      _salaryMaxController.clear();
-      _educationController.clear();
+      _seniorityController.text = 'mid';
+      _skillsController.clear();
     } catch (error, stackTrace) {
       debugPrint('Error al crear oferta: $error\n$stackTrace');
       setState(() {

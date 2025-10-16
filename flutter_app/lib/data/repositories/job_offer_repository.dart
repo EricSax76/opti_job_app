@@ -13,11 +13,11 @@ class JobOfferRepository {
 
   final JobOfferService _service;
 
-  Future<List<JobOffer>> fetchAll({String? jobType}) {
-    return _service.fetchJobOffers(jobType: jobType);
+  Future<List<JobOffer>> fetchAll({String? query}) {
+    return _service.fetchJobOffers(seniority: query);
   }
 
-  Future<JobOffer> fetchById(int id) {
+  Future<JobOffer> fetchById(String id) {
     return _service.fetchJobOffer(id);
   }
 

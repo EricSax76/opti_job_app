@@ -2,6 +2,8 @@
 
 Configuraciones comunes (p. ej. clientes BullMQ, parámetros de observabilidad, claves de feature flags).
 
-- Exportar helpers para leer `Idempotency-Key`, `trace-id` y demás cabeceras estándar.
-- Centralizar carga de `.env` y validaciones de configuración.
-- Evitar duplicar lógica en BFF, agentes y workers.
+- `loadConfig` valida variables de entorno críticas.
+- `headers.ts` contiene helpers para `Idempotency-Key`, `trace-id`, etc.
+- `bullmq.ts` expone opciones de conexión compartidas.
+
+Evita duplicar lógica en BFF, agentes y workers.

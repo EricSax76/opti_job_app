@@ -15,13 +15,13 @@ class JobOfferListScreen extends ConsumerStatefulWidget {
 
 class _JobOfferListScreenState
     extends ConsumerState<JobOfferListScreen> {
-  String? _selectedJobType;
-  final _jobTypeFieldKey = GlobalKey<FormFieldState<String>>();
+  String? _selectedSeniority;
+  final _seniorityFieldKey = GlobalKey<FormFieldState<String>>();
 
   @override
   Widget build(BuildContext context) {
     final jobOffersAsync =
-        ref.watch(jobOffersProvider(_selectedJobType));
+        ref.watch(jobOffersProvider(_selectedSeniority));
 
     return Scaffold(
       appBar: const AppNavBar(),
@@ -42,10 +42,10 @@ class _JobOfferListScreenState
             const SizedBox(height: 16),
             jobOffersAsync.when(
               data: (offers) {
-                final jobTypes = offers
-                    .map((offer) => offer.jobType)
+                final seniorities = offers
+                    .map((offer) => offer.seniority)
                     .whereType<String>()
-                    .where((jobType) => jobType.isNotEmpty)
+                    .where((value) => value.isNotEmpty)
                     .toSet()
                     .toList()
                   ..sort();
@@ -57,26 +57,26 @@ class _JobOfferListScreenState
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              key: _jobTypeFieldKey,
-                              initialValue: _selectedJobType ?? '',
+                              key: _seniorityFieldKey,
+                              initialValue: _selectedSeniority ?? '',
                               decoration: const InputDecoration(
-                                labelText: 'Filtrar por tipología',
+                                labelText: 'Filtrar por seniority',
                               ),
                               items: [
                                 const DropdownMenuItem<String>(
                                   value: '',
                                   child: Text('Todas'),
                                 ),
-                                ...jobTypes.map(
-                                  (type) => DropdownMenuItem<String>(
-                                    value: type,
-                                    child: Text(type),
+                                ...seniorities.map(
+                                  (seniority) => DropdownMenuItem<String>(
+                                    value: seniority,
+                                    child: Text(seniority),
                                   ),
                                 ),
                               ],
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedJobType =
+                                  _selectedSeniority =
                                       (value == null || value.isEmpty)
                                           ? null
                                           : value;
@@ -84,12 +84,12 @@ class _JobOfferListScreenState
                               },
                             ),
                           ),
-                          if (_selectedJobType != null)
+                          if (_selectedSeniority != null)
                             TextButton(
                               onPressed: () {
                                 setState(() {
-                                  _selectedJobType = null;
-                                  _jobTypeFieldKey.currentState?.reset();
+                                  _selectedSeniority = null;
+                                  _seniorityFieldKey.currentState?.reset();
                                 });
                               },
                               child: const Text('Limpiar'),
@@ -123,19 +123,24 @@ class _JobOfferListScreenState
                                       Text(offer.description),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${offer.location} · ${offer.jobType ?? 'Tipología no especificada'}',
+                                        '${offer.location} · ${offer.seniority}',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall,
                                       ),
-                                      if (offer.salaryMin != null ||
-                                          offer.salaryMax != null)
-                                        Text(
-                                          'Salario: ${offer.salaryMin ?? 'N/D'}'
-                                          '${offer.salaryMax != null ? ' - ${offer.salaryMax}' : ''}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
+                                      if (offer.skills.isNotEmpty)
+                                        Wrap(
+                                          spacing: 4,
+                                          children: offer.skills
+                                              .take(5)
+                                              .map(
+                                                (skill) => Chip(
+                                                  label: Text(skill),
+                                                  visualDensity:
+                                                      VisualDensity.compact,
+                                                ),
+                                              )
+                                              .toList(),
                                         ),
                                     ],
                                   ),

@@ -13,6 +13,7 @@ services:
     environment:
       DATABASE_URL: postgres://infojobs:infojobs@postgres:5432/infojobs
       REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret
     ports:
       - "3000:3000"
     volumes:

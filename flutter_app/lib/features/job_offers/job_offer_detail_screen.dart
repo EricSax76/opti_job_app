@@ -7,7 +7,7 @@ import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
 class JobOfferDetailScreen extends ConsumerWidget {
   const JobOfferDetailScreen({super.key, required this.offerId});
 
-  final int offerId;
+  final String offerId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,23 +39,17 @@ class JobOfferDetailScreen extends ConsumerWidget {
                       Text(offer.description),
                       const SizedBox(height: 16),
                       _InfoRow(
-                        label: 'Tipología',
-                        value: offer.jobType ?? 'No especificada',
+                        label: 'Seniority',
+                        value: offer.seniority,
                       ),
                       _InfoRow(
-                        label: 'Educación requerida',
-                        value: offer.education ?? 'No especificada',
+                        label: 'Modalidad',
+                        value: offer.remote ? 'Remoto' : 'Presencial',
                       ),
-                      if (offer.salaryMin != null || offer.salaryMax != null)
+                      if (offer.skills.isNotEmpty)
                         _InfoRow(
-                          label: 'Salario',
-                          value: '${offer.salaryMin ?? 'N/D'}'
-                              '${offer.salaryMax != null ? ' - ${offer.salaryMax}' : ''}',
-                        ),
-                      if (offer.keyIndicators != null)
-                        _InfoRow(
-                          label: 'Indicadores clave',
-                          value: offer.keyIndicators!,
+                          label: 'Skills clave',
+                          value: offer.skills.join(', '),
                         ),
                     ],
                   ),

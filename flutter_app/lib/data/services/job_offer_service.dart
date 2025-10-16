@@ -14,11 +14,12 @@ class JobOfferService {
 
   final Dio _client;
 
-  Future<List<JobOffer>> fetchJobOffers({String? jobType}) async {
+  Future<List<JobOffer>> fetchJobOffers({String? seniority}) async {
     final response = await _client.get<List<dynamic>>(
-      '/job_offers',
+      '/offers',
       queryParameters: {
-        if (jobType != null && jobType.isNotEmpty) 'job_type': jobType,
+        if (seniority != null && seniority.isNotEmpty)
+          'seniority': seniority,
       },
     );
 
@@ -28,16 +29,15 @@ class JobOfferService {
         .toList();
   }
 
-  Future<JobOffer> fetchJobOffer(int id) async {
-    final response =
-        await _client.get<Map<String, dynamic>>('/job_offers/$id');
+  Future<JobOffer> fetchJobOffer(String id) async {
+    final response = await _client.get<Map<String, dynamic>>('/offers/$id');
     final data = response.data ?? <String, dynamic>{};
     return JobOffer.fromJson(data);
   }
 
   Future<JobOffer> createJobOffer(JobOfferPayload payload) async {
     final response = await _client.post<Map<String, dynamic>>(
-      '/job_offers',
+      '/offers',
       data: payload.toJson(),
     );
     final data = response.data ?? <String, dynamic>{};
@@ -47,32 +47,32 @@ class JobOfferService {
 
 class JobOfferPayload {
   const JobOfferPayload({
+    required this.companyId,
     required this.title,
     required this.description,
     required this.location,
-    this.salaryMin,
-    this.salaryMax,
-    this.education,
-    this.jobType,
+    required this.seniority,
+    required this.remote,
+    required this.skills,
   });
 
+  final String companyId;
   final String title;
   final String description;
   final String location;
-  final String? salaryMin;
-  final String? salaryMax;
-  final String? education;
-  final String? jobType;
+  final String seniority;
+  final bool remote;
+  final List<String> skills;
 
   Map<String, dynamic> toJson() {
     return {
+      'companyId': companyId,
       'title': title,
       'description': description,
       'location': location,
-      'salary_min': salaryMin,
-      'salary_max': salaryMax,
-      'education': education,
-      'job_type': jobType,
+      'seniority': seniority,
+      'remote': remote,
+      'skills': skills,
     };
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _defaultBaseUrl = 'http://localhost:5001/api';
+const _defaultBaseUrl = 'http://localhost:3000/api';
 
 final apiBaseUrlProvider = Provider<String>(
   (ref) => const String.fromEnvironment(

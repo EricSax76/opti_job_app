@@ -125,6 +125,7 @@ class AuthController extends ChangeNotifier {
   }
 
   void logout() {
+    _repository.logout();
     _candidate = null;
     _company = null;
     _errorMessage = null;
