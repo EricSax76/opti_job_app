@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api_node/Dockerfile
+    command: npm run start:dev
+    working_dir: /usr/src/app/apps/api_node
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgres://infojobs:infojobs@postgres:5432/infojobs
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../:/usr/src/app
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: infojobs
+      POSTGRES_USER: infojobs
+      POSTGRES_PASSWORD: infojobs
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
