@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';    
+import bcrypt from 'bcryptjs';
 import { createUser } from '../models/userModel.js';
 import { createCandidate, getAllCandidates, getCandidateById } from '../models/candidateModel.js';
 
@@ -67,4 +67,3 @@ export const getCandidateByIdController = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving candidate', error });
   }
 };
-

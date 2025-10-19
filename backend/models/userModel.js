@@ -1,6 +1,6 @@
 // userModel.js
 import dbClient from './dbClient.js';
-import bcrypt from 'bcrypt'; // asegúrate de tener esto arriba
+import bcrypt from 'bcryptjs'; // se usa bcryptjs en este proyecto
 
 export const createUser = async ({ name, email, password, role = 'candidate' }) => {
   const hashedPassword = await bcrypt.hash(password, 10);
