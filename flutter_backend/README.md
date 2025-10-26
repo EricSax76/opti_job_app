@@ -10,10 +10,10 @@ Servidor HTTP que replica la API Node existente usando `shelf` y PostgreSQL.
   PORT=5001
   DB_HOST=localhost
   DB_PORT=5432
-  DB_NAME=infojobs
-  DB_USER=postgres
-  DB_PASSWORD=postgres
-  JWT_SECRET=change-me
+  DB_NAME=infojobs_new
+  DB_USER=ericmoscoso
+  DB_PASSWORD=Megustaelsaxo.76
+  JWT_SECRET=Melisa76
   ```
 
 ### Ejecución
