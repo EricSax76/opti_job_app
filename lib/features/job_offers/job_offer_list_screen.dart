@@ -1,27 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:infojobs_flutter_app/providers/job_offer_providers.dart';
+import 'package:infojobs_flutter_app/features/job_offers/cubit/job_offers_cubit.dart';
 import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
 
-class JobOfferListScreen extends ConsumerStatefulWidget {
+class JobOfferListScreen extends StatelessWidget {
   const JobOfferListScreen({super.key});
 
   @override
-  ConsumerState<JobOfferListScreen> createState() =>
-      _JobOfferListScreenState();
-}
-
-class _JobOfferListScreenState
-    extends ConsumerState<JobOfferListScreen> {
-  String? _selectedJobType;
-
-  @override
   Widget build(BuildContext context) {
-    final jobOffersAsync =
-        ref.watch(jobOffersProvider(_selectedJobType));
-
     return Scaffold(
       appBar: const AppNavBar(),
       body: Padding(
@@ -31,32 +19,45 @@ class _JobOfferListScreenState
           children: [
             Text(
               'Ofertas activas',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text('Encuentra tu próximo reto profesional.'),
             const SizedBox(height: 16),
-            jobOffersAsync.when(
-              data: (offers) {
-                final jobTypes = offers
-                    .map((offer) => offer.jobType)
-                    .whereType<String>()
-                    .where((jobType) => jobType.isNotEmpty)
-                    .toSet()
-                    .toList()
-                  ..sort();
+            Expanded(
+              child: BlocBuilder<JobOffersCubit, JobOffersState>(
+                builder: (context, state) {
+                  if (state.status == JobOffersStatus.loading ||
+                      state.status == JobOffersStatus.initial) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                return Expanded(
-                  child: Column(
+                  if (state.status == JobOffersStatus.failure) {
+                    return Center(
+                      child: Text(
+                        state.errorMessage ?? 'Error al cargar las ofertas.',
+                      ),
+                    );
+                  }
+
+                  final jobTypes =
+                      state.offers
+                          .map((offer) => offer.jobType)
+                          .whereType<String>()
+                          .where((jobType) => jobType.isNotEmpty)
+                          .toSet()
+                          .toList()
+                        ..sort();
+
+                  return Column(
                     children: [
                       Row(
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String?>(
-                              initialValue: _selectedJobType,
+                              initialValue: state.selectedJobType,
                               decoration: const InputDecoration(
                                 labelText: 'Filtrar por tipología',
                               ),
@@ -72,26 +73,22 @@ class _JobOfferListScreenState
                                   ),
                                 ),
                               ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedJobType = value;
-                                });
-                              },
+                              onChanged: (value) => context
+                                  .read<JobOffersCubit>()
+                                  .selectJobType(value),
                             ),
                           ),
-                          if (_selectedJobType != null)
+                          if (state.selectedJobType != null)
                             TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectedJobType = null;
-                                });
-                              },
+                              onPressed: () => context
+                                  .read<JobOffersCubit>()
+                                  .selectJobType(null),
                               child: const Text('Limpiar'),
                             ),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      if (offers.isEmpty)
+                      if (state.offers.isEmpty)
                         const Expanded(
                           child: Center(
                             child: Text('No hay ofertas disponibles.'),
@@ -100,11 +97,11 @@ class _JobOfferListScreenState
                       else
                         Expanded(
                           child: ListView.separated(
-                            itemCount: offers.length,
+                            itemCount: state.offers.length,
                             separatorBuilder: (context, index) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
-                              final offer = offers[index];
+                              final offer = state.offers[index];
                               return Card(
                                 elevation: 1,
                                 child: ListTile(
@@ -118,41 +115,32 @@ class _JobOfferListScreenState
                                       const SizedBox(height: 4),
                                       Text(
                                         '${offer.location} · ${offer.jobType ?? 'Tipología no especificada'}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
                                       ),
                                       if (offer.salaryMin != null ||
                                           offer.salaryMax != null)
                                         Text(
                                           'Salario: ${offer.salaryMin ?? 'N/D'}'
                                           '${offer.salaryMax != null ? ' - ${offer.salaryMax}' : ''}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
                                         ),
                                     ],
                                   ),
                                   trailing: const Icon(Icons.chevron_right),
-                                  onTap: () => context.go(
-                                    '/job-offer/${offer.id}',
-                                  ),
+                                  onTap: () =>
+                                      context.go('/job-offer/${offer.id}'),
                                 ),
                               );
                             },
                           ),
                         ),
                     ],
-                  ),
-                );
-              },
-              loading: () => const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, _) => Expanded(
-                child: Center(
-                  child: Text('Error al cargar ofertas: $error'),
-                ),
+                  );
+                },
               ),
             ),
           ],

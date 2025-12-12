@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:infojobs_flutter_app/providers/auth_providers.dart';
+import 'package:infojobs_flutter_app/features/auth/cubit/auth_cubit.dart';
 import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
 
-class CompanyLoginScreen extends ConsumerStatefulWidget {
+class CompanyLoginScreen extends StatefulWidget {
   const CompanyLoginScreen({super.key});
 
   @override
-  ConsumerState<CompanyLoginScreen> createState() =>
-      _CompanyLoginScreenState();
+  State<CompanyLoginScreen> createState() => _CompanyLoginScreenState();
 }
 
-class _CompanyLoginScreenState
-    extends ConsumerState<CompanyLoginScreen> {
+class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,86 +26,102 @@ class _CompanyLoginScreenState
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authControllerProvider);
+    final authState = context.watch<AuthCubit>().state;
+    final isLoading = authState.status == AuthStatus.authenticating;
 
-    return Scaffold(
-      appBar: const AppNavBar(),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Card(
-            margin: const EdgeInsets.all(16),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Inicia sesión como empresa',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Correo electrónico',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'El correo es obligatorio';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'Contraseña',
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'La contraseña es obligatoria';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FilledButton(
-                            onPressed:
-                                auth.isLoading ? null : () => _submit(),
-                            child: auth.isLoading
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
-                                              Colors.white),
-                                    ),
-                                  )
-                                : const Text('Entrar'),
-                          ),
+    return BlocListener<AuthCubit, AuthState>(
+      listenWhen: (previous, current) =>
+          previous.errorMessage != current.errorMessage,
+      listener: (context, state) {
+        final message = state.errorMessage;
+        if (message != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
+        } else if (state.isCompany &&
+            state.status == AuthStatus.authenticated &&
+            !state.needsOnboarding) {
+          context.go('/DashboardCompany');
+        }
+      },
+      child: Scaffold(
+        appBar: const AppNavBar(),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Card(
+              margin: const EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Inicia sesión como empresa',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () => context.go('/companyregister'),
-                      child: const Text('¿No tienes cuenta? Regístrate'),
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Correo electrónico',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'El correo es obligatorio';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: const InputDecoration(
+                          labelText: 'Contraseña',
+                        ),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'La contraseña es obligatoria';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: isLoading ? null : _submit,
+                              child: isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : const Text('Entrar'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => context.go('/companyregister'),
+                        child: const Text('¿No tienes cuenta? Regístrate'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -117,24 +131,12 @@ class _CompanyLoginScreenState
     );
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    final controller = ref.read(authControllerProvider);
-
-    await controller.loginCompany(
+    context.read<AuthCubit>().loginCompany(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
-
-    if (!mounted) return;
-
-    if (controller.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.errorMessage!)),
-      );
-    } else if (controller.company != null) {
-      context.go('/DashboardCompany');
-    }
   }
 }

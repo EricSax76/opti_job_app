@@ -1,35 +1,47 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:infojobs_flutter_app/data/models/candidate.dart';
 import 'package:infojobs_flutter_app/data/models/company.dart';
-import 'package:infojobs_flutter_app/data/services/api_client.dart';
-
-final authServiceProvider = Provider<AuthService>((ref) {
-  final client = ref.watch(apiClientProvider);
-  return AuthService(client);
-});
 
 class AuthService {
-  AuthService(this._client);
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    FirebaseFirestore? firestore,
+  })  : _auth = firebaseAuth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance;
 
-  final Dio _client;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  CollectionReference<Map<String, dynamic>> get _candidatesCollection =>
+      _firestore.collection('candidates');
+  CollectionReference<Map<String, dynamic>> get _companiesCollection =>
+      _firestore.collection('companies');
 
   Future<Candidate> loginCandidate({
     required String email,
     required String password,
   }) async {
-    final response = await _client.post<Map<String, dynamic>>(
-      '/candidates/login',
-      data: {
-        'email': email,
-        'password': password,
-      },
+    final credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
     );
-    final data = response.data ?? <String, dynamic>{};
-    final candidateJson =
-        data['candidate'] as Map<String, dynamic>? ?? data;
-    return Candidate.fromJson(candidateJson);
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'No se encontró el usuario solicitado.',
+      );
+    }
+    final doc = await _candidatesCollection.doc(user.uid).get();
+    if (!doc.exists) {
+      await _auth.signOut();
+      throw StateError('No existe un perfil de candidato asociado.');
+    }
+    final data = doc.data()!;
+    final token = await user.getIdToken();
+    return Candidate.fromJson({...data, 'token': token});
   }
 
   Future<Candidate> registerCandidate({
@@ -37,38 +49,59 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _client.post<Map<String, dynamic>>(
-      '/candidates',
-      data: {
-        'name': name,
-        'email': email,
-        'password': password,
-      },
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
     );
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-creation-failed',
+        message: 'No se pudo crear el usuario.',
+      );
+    }
 
-    final data = response.data ?? <String, dynamic>{};
-    final candidateJson = (data['candidate'] as Map<String, dynamic>? ?? {})
-        ['user'] as Map<String, dynamic>? ??
-        data['candidate'] as Map<String, dynamic>? ??
-        data;
-    return Candidate.fromJson(candidateJson);
+    final candidateId = DateTime.now().millisecondsSinceEpoch;
+    final candidateData = <String, dynamic>{
+      'id': candidateId,
+      'name': name,
+      'email': email.toLowerCase().trim(),
+      'role': 'candidate',
+      'uid': user.uid,
+    };
+
+    await _candidatesCollection.doc(user.uid).set({
+      ...candidateData,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+    final token = await user.getIdToken();
+    return Candidate.fromJson({...candidateData, 'token': token});
   }
 
   Future<Company> loginCompany({
     required String email,
     required String password,
   }) async {
-    final response = await _client.post<Map<String, dynamic>>(
-      '/companies/login',
-      data: {
-        'email': email,
-        'password': password,
-      },
+    final credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
     );
-    final data = response.data ?? <String, dynamic>{};
-    final companyJson =
-        data['company'] as Map<String, dynamic>? ?? data;
-    return Company.fromJson(companyJson);
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'No se encontró el usuario solicitado.',
+      );
+    }
+    final doc = await _companiesCollection.doc(user.uid).get();
+    if (!doc.exists) {
+      await _auth.signOut();
+      throw StateError('No existe un perfil de empresa asociado.');
+    }
+    final data = doc.data()!;
+    final token = await user.getIdToken();
+    return Company.fromJson({...data, 'token': token});
   }
 
   Future<Company> registerCompany({
@@ -76,19 +109,37 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _client.post<Map<String, dynamic>>(
-      '/companies',
-      data: {
-        'name': name,
-        'email': email,
-        'password': password,
-      },
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
     );
-    final data = response.data ?? <String, dynamic>{};
-    final companyJson = (data['company'] as Map<String, dynamic>? ?? {})
-        ['user'] as Map<String, dynamic>? ??
-        data['company'] as Map<String, dynamic>? ??
-        data;
-    return Company.fromJson(companyJson);
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-creation-failed',
+        message: 'No se pudo crear el usuario.',
+      );
+    }
+
+    final companyId = DateTime.now().millisecondsSinceEpoch;
+    final companyData = <String, dynamic>{
+      'id': companyId,
+      'name': name,
+      'email': email.toLowerCase().trim(),
+      'role': 'company',
+      'uid': user.uid,
+    };
+
+    await _companiesCollection.doc(user.uid).set({
+      ...companyData,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+    final token = await user.getIdToken();
+    return Company.fromJson({...companyData, 'token': token});
+  }
+
+  Future<void> logout() {
+    return _auth.signOut();
   }
 }

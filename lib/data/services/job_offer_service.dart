@@ -1,47 +1,60 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:infojobs_flutter_app/data/models/job_offer.dart';
-import 'package:infojobs_flutter_app/data/services/api_client.dart';
-
-final jobOfferServiceProvider = Provider<JobOfferService>((ref) {
-  final client = ref.watch(apiClientProvider);
-  return JobOfferService(client);
-});
 
 class JobOfferService {
-  JobOfferService(this._client);
+  JobOfferService({FirebaseFirestore? firestore})
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  final Dio _client;
+  final FirebaseFirestore _firestore;
+
+  CollectionReference<Map<String, dynamic>> get _collection =>
+      _firestore.collection('jobOffers');
 
   Future<List<JobOffer>> fetchJobOffers({String? jobType}) async {
-    final response = await _client.get<List<dynamic>>(
-      '/job_offers',
-      queryParameters: {
-        if (jobType != null && jobType.isNotEmpty) 'job_type': jobType,
-      },
+    Query<Map<String, dynamic>> query = _collection.orderBy(
+      'created_at',
+      descending: true,
     );
-
-    final data = response.data ?? <dynamic>[];
-    return data
-        .map((item) => JobOffer.fromJson(item as Map<String, dynamic>))
+    if (jobType != null && jobType.isNotEmpty) {
+      query = query.where('job_type', isEqualTo: jobType);
+    }
+    final snapshot = await query.get();
+    return snapshot.docs
+        .map((doc) => JobOffer.fromJson(doc.data()))
         .toList();
   }
 
   Future<JobOffer> fetchJobOffer(int id) async {
-    final response =
-        await _client.get<Map<String, dynamic>>('/job_offers/$id');
-    final data = response.data ?? <String, dynamic>{};
+    final snapshot = await _collection
+        .where('id', isEqualTo: id)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) {
+      throw StateError('Oferta no encontrada.');
+    }
+    final data = snapshot.docs.first.data();
     return JobOffer.fromJson(data);
   }
 
   Future<JobOffer> createJobOffer(JobOfferPayload payload) async {
-    final response = await _client.post<Map<String, dynamic>>(
-      '/job_offers',
-      data: payload.toJson(),
-    );
-    final data = response.data ?? <String, dynamic>{};
-    return JobOffer.fromJson(data);
+    final offerId = DateTime.now().millisecondsSinceEpoch;
+    final payloadData = payload.toJson();
+    final offerData = <String, dynamic>{
+      ...payloadData,
+      'id': offerId,
+      'created_at': FieldValue.serverTimestamp(),
+    };
+
+    final docRef = await _collection.add(offerData);
+    final storedDoc = await docRef.get();
+    final storedData = storedDoc.data() ??
+        {
+          ...payloadData,
+          'id': offerId,
+          'created_at': DateTime.now().toIso8601String(),
+        };
+    return JobOffer.fromJson(storedData);
   }
 }
 

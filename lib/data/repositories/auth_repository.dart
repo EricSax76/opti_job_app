@@ -1,13 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:infojobs_flutter_app/data/models/candidate.dart';
 import 'package:infojobs_flutter_app/data/models/company.dart';
 import 'package:infojobs_flutter_app/data/services/auth_service.dart';
-
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final service = ref.watch(authServiceProvider);
-  return AuthRepository(service);
-});
 
 class AuthRepository {
   AuthRepository(this._service);
@@ -50,5 +43,9 @@ class AuthRepository {
       email: email,
       password: password,
     );
+  }
+
+  Future<void> logout() {
+    return _service.logout();
   }
 }
