@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "675341167228",
+    "project_id": "opti-job",
+    "storage_bucket": "opti-job.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:675341167228:android:bbb3c3e3617a275d5d77f9",
+        "android_client_info": {
+          "package_name": "com.example.infojobs_flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgMYUpMqX9N0eq0DBMryl-tZuC_COTY-I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
