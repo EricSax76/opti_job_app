@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/job_offer.dart';
-import '../data/repositories/job_offer_repository.dart';
+import 'package:infojobs_flutter_app/data/models/job_offer.dart';
+import 'package:infojobs_flutter_app/data/repositories/job_offer_repository.dart';
 
 final jobOffersProvider = FutureProvider.autoDispose
     .family<List<JobOffer>, String?>((ref, jobType) async {

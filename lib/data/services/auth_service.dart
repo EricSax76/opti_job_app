@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/candidate.dart';
-import '../models/company.dart';
-import 'api_client.dart';
+import 'package:infojobs_flutter_app/data/models/candidate.dart';
+import 'package:infojobs_flutter_app/data/models/company.dart';
+import 'package:infojobs_flutter_app/data/services/api_client.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   final client = ref.watch(apiClientProvider);

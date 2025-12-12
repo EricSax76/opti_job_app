@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/job_offer_providers.dart';
-import '../shared/widgets/app_nav_bar.dart';
+import 'package:infojobs_flutter_app/providers/job_offer_providers.dart';
+import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
 
 class JobOfferListScreen extends ConsumerStatefulWidget {
   const JobOfferListScreen({super.key});
@@ -43,8 +43,8 @@ class _JobOfferListScreenState
               data: (offers) {
                 final jobTypes = offers
                     .map((offer) => offer.jobType)
-                    .where((jobType) => jobType != null && jobType!.isNotEmpty)
-                    .cast<String>()
+                    .whereType<String>()
+                    .where((jobType) => jobType.isNotEmpty)
                     .toSet()
                     .toList()
                   ..sort();
@@ -56,7 +56,7 @@ class _JobOfferListScreenState
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String?>(
-                              value: _selectedJobType,
+                              initialValue: _selectedJobType,
                               decoration: const InputDecoration(
                                 labelText: 'Filtrar por tipología',
                               ),

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/candidate.dart';
-import '../data/models/company.dart';
-import '../data/repositories/auth_repository.dart';
+import 'package:infojobs_flutter_app/data/models/candidate.dart';
+import 'package:infojobs_flutter_app/data/models/company.dart';
+import 'package:infojobs_flutter_app/data/repositories/auth_repository.dart';
 
 final authControllerProvider =
     ChangeNotifierProvider<AuthController>((ref) {

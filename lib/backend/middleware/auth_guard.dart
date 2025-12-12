@@ -1,7 +1,6 @@
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:infojobs_flutter_app/backend/utils/response.dart';
 import 'package:shelf/shelf.dart';
-
-import '../utils/response.dart';
 
 Middleware authGuardMiddleware({required String secret}) {
   return (innerHandler) {
@@ -18,9 +17,9 @@ Middleware authGuardMiddleware({required String secret}) {
           'auth': jwt.payload,
         });
         return innerHandler(updatedRequest);
-      } on JWTExpiredError {
+      } on JWTExpiredException {
         return jsonError('Token expirado', statusCode: 401);
-      } on JWTError catch (error) {
+      } on JWTException catch (error) {
         return jsonError('Token inválido: ${error.message}', statusCode: 401);
       }
     };

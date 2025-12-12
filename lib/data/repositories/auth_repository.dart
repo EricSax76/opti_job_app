@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/candidate.dart';
-import '../models/company.dart';
-import '../services/auth_service.dart';
+import 'package:infojobs_flutter_app/data/models/candidate.dart';
+import 'package:infojobs_flutter_app/data/models/company.dart';
+import 'package:infojobs_flutter_app/data/services/auth_service.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final service = ref.watch(authServiceProvider);

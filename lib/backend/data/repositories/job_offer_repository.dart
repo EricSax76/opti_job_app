@@ -1,8 +1,7 @@
+import 'package:infojobs_flutter_app/backend/config/logger.dart';
+import 'package:infojobs_flutter_app/backend/data/datasource/database.dart';
+import 'package:infojobs_flutter_app/backend/data/models/job_offer.dart';
 import 'package:postgres/postgres.dart';
-
-import '../../config/logger.dart';
-import '../datasource/database.dart';
-import '../models/job_offer.dart';
 
 class JobOfferRepository {
   JobOfferRepository(this._db);

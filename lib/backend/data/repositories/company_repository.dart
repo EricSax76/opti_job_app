@@ -1,9 +1,9 @@
 import 'package:postgres/postgres.dart';
 
-import '../../config/logger.dart';
-import '../datasource/database.dart';
-import '../models/company.dart';
-import '../models/user.dart';
+import 'package:infojobs_flutter_app/backend/config/logger.dart';
+import 'package:infojobs_flutter_app/backend/data/datasource/database.dart';
+import 'package:infojobs_flutter_app/backend/data/models/company.dart';
+import 'package:infojobs_flutter_app/backend/data/models/user.dart';
 
 class CompanyRepository {
   CompanyRepository(this._db);

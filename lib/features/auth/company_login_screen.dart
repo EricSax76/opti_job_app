@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/auth_providers.dart';
-import '../shared/widgets/app_nav_bar.dart';
+import 'package:infojobs_flutter_app/providers/auth_providers.dart';
+import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
 
 class CompanyLoginScreen extends ConsumerStatefulWidget {
   const CompanyLoginScreen({super.key});

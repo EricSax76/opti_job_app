@@ -2,12 +2,12 @@ import 'dart:convert';
 
 import 'package:bcrypt/bcrypt.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-import 'package:postgres/postgres.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-import '../../data/repositories/company_repository.dart';
-import '../../utils/response.dart';
+import 'package:infojobs_flutter_app/backend/data/repositories/company_repository.dart';
+import 'package:infojobs_flutter_app/backend/utils/response.dart';
+import 'package:postgres/postgres.dart';
 
 class CompaniesRouter {
   CompaniesRouter(
@@ -52,7 +52,7 @@ class CompaniesRouter {
         },
         statusCode: 201,
       );
-    } on PostgreSQLException catch (error) {
+    } on ServerException catch (error) {
       final message = error.code == '23505'
           ? 'El email ya está registrado'
           : 'Error al registrar la empresa';

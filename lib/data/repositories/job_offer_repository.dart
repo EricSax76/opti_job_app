@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/job_offer.dart';
-import '../services/job_offer_service.dart';
+import 'package:infojobs_flutter_app/data/models/job_offer.dart';
+import 'package:infojobs_flutter_app/data/services/job_offer_service.dart';
 
 final jobOfferRepositoryProvider = Provider<JobOfferRepository>((ref) {
   final service = ref.watch(jobOfferServiceProvider);

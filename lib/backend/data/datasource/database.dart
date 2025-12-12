@@ -1,38 +1,29 @@
+import 'package:infojobs_flutter_app/backend/config/env.dart';
 import 'package:postgres/postgres.dart';
 
-import '../../config/env.dart';
-import '../../config/logger.dart';
-
 class DatabaseManager {
-  DatabaseManager(this._env)
-      : _pool = ConnectionPool(
-          settings: ConnectionSettings(
-            host: _env.dbHost,
-            port: _env.dbPort,
-            database: _env.dbName,
-            user: _env.dbUser,
-            password: _env.dbPassword,
+  DatabaseManager(AppEnvironment env)
+      : _pool = Pool.withEndpoints(
+          [
+            Endpoint(
+              host: env.dbHost,
+              port: env.dbPort,
+              database: env.dbName,
+              username: env.dbUser,
+              password: env.dbPassword,
+            ),
+          ],
+          settings: const PoolSettings(
             sslMode: SslMode.disable,
+            maxConnectionCount: 5,
           ),
-          maxConnectionCount: 5,
         );
 
-  final AppEnvironment _env;
-  final ConnectionPool _pool;
+  final Pool _pool;
 
   Future<T> run<T>(Future<T> Function(Session session) operation) {
-    return _pool.withConnection<T>((connection) async {
-      return operation(connection);
-    });
+    return _pool.run(operation);
   }
 
   Future<void> close() => _pool.close();
-
-  void logStats() {
-    appLogger.info(
-      'Pool status -> total: ${_pool.totalConnections}, '
-      'idle: ${_pool.availableConnections}, '
-      'waiting: ${_pool.waitQueueLength}',
-    );
-  }
 }

@@ -5,14 +5,16 @@ class AppFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentYear = DateTime.now().year;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       color: Colors.indigo.shade900,
-      child: const Text(
-        '© ${DateTime.now().year} OPTIJOB · Conectando talento con oportunidades',
+      child: Text(
+        '© $currentYear OPTIJOB · Conectando talento con oportunidades',
         textAlign: TextAlign.center,
-        style: TextStyle(color: Colors.white70),
+        style: const TextStyle(color: Colors.white70),
       ),
     );
   }

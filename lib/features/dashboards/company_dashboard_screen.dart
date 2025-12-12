@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/services/job_offer_service.dart';
-import '../../providers/auth_providers.dart';
-import '../shared/widgets/app_nav_bar.dart';
+import 'package:infojobs_flutter_app/data/services/job_offer_service.dart';
+import 'package:infojobs_flutter_app/providers/auth_providers.dart';
+import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
 
 class CompanyDashboardScreen extends ConsumerStatefulWidget {
   const CompanyDashboardScreen({super.key});

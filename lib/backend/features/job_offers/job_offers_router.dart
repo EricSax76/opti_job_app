@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-import '../../data/repositories/job_offer_repository.dart';
-import '../../utils/response.dart';
+import 'package:infojobs_flutter_app/backend/data/repositories/job_offer_repository.dart';
+import 'package:infojobs_flutter_app/backend/utils/response.dart';
 
 class JobOffersRouter {
   JobOffersRouter(this._repository);

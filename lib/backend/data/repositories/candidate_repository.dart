@@ -2,6 +2,7 @@ import 'package:infojobs_flutter_app/backend/config/logger.dart';
 import 'package:infojobs_flutter_app/backend/data/datasource/database.dart';
 import 'package:infojobs_flutter_app/backend/data/models/candidate.dart';
 import 'package:infojobs_flutter_app/backend/data/models/user.dart';
+import 'package:postgres/postgres.dart';
 
 class CandidateRepository {
   CandidateRepository(this._db);
@@ -133,7 +134,7 @@ class CandidateRepository {
       (session) => session.execute(Sql.named(sql)),
     );
 
-    return result.map(Candidate.fromRow).toList();
+    return result.map<Candidate>(Candidate.fromRow).toList();
   }
 
   Future<Candidate?> findById(int id) async {

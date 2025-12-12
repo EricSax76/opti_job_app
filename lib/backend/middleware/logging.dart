@@ -1,6 +1,6 @@
 import 'package:shelf/shelf.dart';
 
-import '../config/logger.dart';
+import 'package:infojobs_flutter_app/backend/config/logger.dart';
 
 Middleware requestLoggingMiddleware() {
   return (innerHandler) {
