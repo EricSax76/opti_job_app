@@ -1,5 +1,3 @@
-import 'package:postgres/postgres.dart';
-
 class Candidate {
   const Candidate({
     required this.id,

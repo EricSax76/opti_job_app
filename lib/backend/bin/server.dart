@@ -8,7 +8,7 @@ import 'package:infojobs_flutter_backend/config/env.dart';
 import 'package:infojobs_flutter_backend/config/logger.dart';
 import 'package:infojobs_flutter_backend/data/datasource/database.dart';
 import 'package:infojobs_flutter_backend/data/repositories/candidate_repository.dart';
-import 'package:infojobs_flutter_backend/data/repositories/company_repository.dart';
+import 'package:infojobs-new/backend/repositories/company_repository.dart';
 import 'package:infojobs_flutter_backend/data/repositories/job_offer_repository.dart';
 import 'package:infojobs_flutter_backend/features/candidates/candidates_router.dart';
 import 'package:infojobs_flutter_backend/features/companies/companies_router.dart';
