@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:infojobs_flutter_app/data/models/candidate.dart';
-import 'package:infojobs_flutter_app/data/models/company.dart';
-import 'package:infojobs_flutter_app/data/repositories/profile_repository.dart';
-import 'package:infojobs_flutter_app/features/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/data/models/candidate.dart';
+import 'package:opti_job_app/data/models/company.dart';
+import 'package:opti_job_app/data/repositories/profile_repository.dart';
+import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
 
 enum ProfileStatus { initial, loading, loaded, failure, empty }
 

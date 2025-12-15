@@ -4,20 +4,21 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:infojobs_flutter_app/features/auth/candidate_login_screen.dart';
-import 'package:infojobs_flutter_app/features/auth/candidate_register_screen.dart';
-import 'package:infojobs_flutter_app/features/auth/company_login_screen.dart';
-import 'package:infojobs_flutter_app/features/auth/company_register_screen.dart';
-import 'package:infojobs_flutter_app/features/auth/onboarding_screen.dart';
-import 'package:infojobs_flutter_app/features/auth/cubit/auth_cubit.dart';
-import 'package:infojobs_flutter_app/features/dashboards/candidate_dashboard_screen.dart';
-import 'package:infojobs_flutter_app/features/dashboards/company_dashboard_screen.dart';
-import 'package:infojobs_flutter_app/features/job_offers/cubit/job_offer_detail_cubit.dart';
-import 'package:infojobs_flutter_app/features/job_offers/cubit/job_offer_form_cubit.dart';
-import 'package:infojobs_flutter_app/features/job_offers/job_offer_detail_screen.dart';
-import 'package:infojobs_flutter_app/features/job_offers/job_offer_list_screen.dart';
-import 'package:infojobs_flutter_app/features/landing/landing_screen.dart';
-import 'package:infojobs_flutter_app/data/repositories/job_offer_repository.dart';
+import 'package:opti_job_app/features/auth/candidate_login_screen.dart';
+import 'package:opti_job_app/features/auth/candidate_register_screen.dart';
+import 'package:opti_job_app/features/auth/company_login_screen.dart';
+import 'package:opti_job_app/features/auth/company_register_screen.dart';
+import 'package:opti_job_app/features/auth/onboarding_screen.dart';
+import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/features/dashboards/candidate_dashboard_screen.dart';
+import 'package:opti_job_app/features/dashboards/company_dashboard_screen.dart';
+import 'package:opti_job_app/data/services/application_service.dart';
+import 'package:opti_job_app/features/job_offers/cubit/job_offer_detail_cubit.dart';
+import 'package:opti_job_app/features/job_offers/cubit/job_offer_form_cubit.dart';
+import 'package:opti_job_app/features/job_offers/job_offer_detail_screen.dart';
+import 'package:opti_job_app/features/job_offers/job_offer_list_screen.dart';
+import 'package:opti_job_app/features/landing/landing_screen.dart';
+import 'package:opti_job_app/data/repositories/job_offer_repository.dart';
 
 class AppRouter {
   AppRouter({required AuthCubit authCubit}) : _authCubit = authCubit {
@@ -44,9 +45,10 @@ class AppRouter {
             final idParam = state.pathParameters['id'] ?? '0';
             final id = int.tryParse(idParam) ?? 0;
             return BlocProvider(
-              create: (context) =>
-                  JobOfferDetailCubit(context.read<JobOfferRepository>())
-                    ..loadOffer(id),
+              create: (context) => JobOfferDetailCubit(
+                context.read<JobOfferRepository>(),
+                context.read<ApplicationService>(),
+              )..loadOffer(id),
               child: JobOfferDetailScreen(offerId: id),
             );
           },

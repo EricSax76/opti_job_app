@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:infojobs_flutter_app/data/models/calendar_event.dart';
-import 'package:infojobs_flutter_app/data/repositories/calendar_repository.dart';
+import 'package:opti_job_app/data/models/calendar_event.dart';
+import 'package:opti_job_app/data/repositories/calendar_repository.dart';
 
 enum CalendarStatus { initial, loading, ready, failure }
 

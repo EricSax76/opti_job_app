@@ -9,7 +9,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:infojobs_flutter_app/app.dart';
+import 'package:opti_job_app/app.dart';
 
 void main() {
   testWidgets('InfoJobsApp renders', (tester) async {

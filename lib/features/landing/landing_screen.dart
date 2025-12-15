@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:infojobs_flutter_app/features/shared/widgets/app_footer.dart';
-import 'package:infojobs_flutter_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/features/shared/widgets/app_footer.dart';
+import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -154,9 +154,9 @@ class _HowItWorksSection extends StatelessWidget {
       children: [
         Text(
           '¿Cómo funciona?',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         ListView.builder(
@@ -196,9 +196,9 @@ class _CallToAction extends StatelessWidget {
           children: [
             Text(
               'Da el salto con OPTIJOB',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -241,8 +241,10 @@ class _HighlightList extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ',
-                      style: TextStyle(fontSize: 18, color: Colors.indigo)),
+                  const Text(
+                    '• ',
+                    style: TextStyle(fontSize: 18, color: Colors.indigo),
+                  ),
                   Expanded(child: Text(item)),
                 ],
               ),

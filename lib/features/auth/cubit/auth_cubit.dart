@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:infojobs_flutter_app/data/models/candidate.dart';
-import 'package:infojobs_flutter_app/data/models/company.dart';
-import 'package:infojobs_flutter_app/data/repositories/auth_repository.dart';
+import 'package:opti_job_app/data/models/candidate.dart';
+import 'package:opti_job_app/data/models/company.dart';
+import 'package:opti_job_app/data/repositories/auth_repository.dart';
 
 enum AuthStatus {
   unknown,

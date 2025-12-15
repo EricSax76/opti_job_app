@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:infojobs_flutter_app/data/models/job_offer.dart';
-import 'package:infojobs_flutter_app/data/repositories/job_offer_repository.dart';
+import 'package:opti_job_app/data/models/job_offer.dart';
+import 'package:opti_job_app/data/repositories/job_offer_repository.dart';
 
 enum JobOffersStatus { initial, loading, success, failure }
 

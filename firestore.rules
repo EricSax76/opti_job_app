@@ -16,6 +16,10 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/companies/$(request.auth.uid));
     }
 
+    function getJobOfferCompanyId(jobOfferId) {
+      return get(/databases/$(database)/documents/jobOffers/$(jobOfferId)).data.companyId;
+    }
+
     match /candidates/{candidateId} {
       allow create: if isSignedIn() && request.auth.uid == candidateId;
       allow read, update, delete: if isCandidate() && request.auth.uid == candidateId;
@@ -27,8 +31,15 @@ service cloud.firestore {
     }
 
     match /jobOffers/{offerId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow create, update, delete: if isCompany();
+    }
+
+    match /applications/{applicationId} {
+      allow create: if isCandidate() && request.auth.uid == request.resource.data.candidateId;
+      allow read: if true;
+      allow update: if isCompany() && getJobOfferCompanyId(resource.data.jobOfferId) == request.auth.uid;
+      allow delete: if false; // Deletion is not allowed for now.
     }
   }
 }

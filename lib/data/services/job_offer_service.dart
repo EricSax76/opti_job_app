@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:infojobs_flutter_app/data/models/job_offer.dart';
+import 'package:opti_job_app/data/models/job_offer.dart';
 
 class JobOfferService {
   JobOfferService({FirebaseFirestore? firestore})
