@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';

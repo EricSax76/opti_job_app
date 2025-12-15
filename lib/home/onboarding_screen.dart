@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart'
+    show CandidateAuthCubit;
+import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart'
+    show CompanyAuthCubit;
 import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
 import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
@@ -15,10 +19,8 @@ class OnboardingScreen extends StatelessWidget {
     final profileState = context.watch<ProfileCubit>().state;
 
     final name = authState.isCandidate
-        ? profileState.candidate?.name ??
-              authState.candidate?.name ??
-              'Candidato'
-        : profileState.company?.name ?? authState.company?.name ?? 'Empresa';
+        ? profileState.candidate?.name ?? 'Candidato'
+        : profileState.company?.name ?? 'Empresa';
 
     return Scaffold(
       appBar: const AppNavBar(),
@@ -47,10 +49,11 @@ class OnboardingScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: () {
-                      context.read<AuthCubit>().completeOnboarding();
                       if (authState.isCandidate) {
+                        context.read<CandidateAuthCubit>().completeOnboarding();
                         context.go('/CandidateDashboard');
                       } else {
+                        context.read<CompanyAuthCubit>().completeOnboarding();
                         context.go('/DashboardCompany');
                       }
                     },

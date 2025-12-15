@@ -22,7 +22,7 @@ abstract class AuthState extends Equatable {
   List<Object?> get props => [status, errorMessage, needsOnboarding];
 }
 
-abstract class AuthCubit extends Cubit<AuthState> {
+abstract class AuthCubit<T extends AuthState> extends Cubit<T> {
   AuthCubit(super.initialState);
 
   // Common authentication methods can be defined here if needed.

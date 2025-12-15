@@ -2,13 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/data/models/candidate.dart';
-import 'package:opti_job_app/data/models/company.dart';
 import 'package:opti_job_app/data/repositories/profile_repository.dart';
-import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
-import 'package:opti_job_app/auth/cubit/candidate_auth_state.dart';
-
-enum ProfileStatus { initial, loading, loaded, failure, empty }
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
+import 'package:opti_job_app/features/profiles/cubit/profile_state.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   ProfileCubit({
@@ -17,7 +14,9 @@ class ProfileCubit extends Cubit<ProfileState> {
   }) : _repository = repository,
        _candidateAuthCubit = candidateAuthCubit,
        super(const ProfileState()) {
-    _authSubscription = _candidateAuthCubit.stream.listen(_onAuthStateChanged);
+    _authSubscription = _candidateAuthCubit.stream.listen(
+      _onAuthStateChanged,
+    ); // ignore: avoid_types_on_closure_parameters
     _onAuthStateChanged(_candidateAuthCubit.state);
   }
 
@@ -28,7 +27,7 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> _onAuthStateChanged(CandidateAuthState authState) async {
     if (!authState.isAuthenticated) {
       emit(const ProfileState(status: ProfileStatus.empty));
-      return;
+      return; // ignore: avoid_returning_null_for_void
     }
 
     emit(state.copyWith(status: ProfileStatus.loading, clearError: true));
@@ -38,19 +37,9 @@ class ProfileCubit extends Cubit<ProfileState> {
         final profile = await _repository.fetchCandidateProfile(
           authState.candidate!.id,
         );
-        emit(
-          state.copyWith(
-            status: ProfileStatus.loaded,
-            candidate: profile,
-          ),
-        );
+        emit(state.copyWith(status: ProfileStatus.loaded, candidate: profile));
       } else {
-        emit(
-          state.copyWith(
-            status: ProfileStatus.empty,
-            clearCandidate: true,
-          ),
-        );
+        emit(state.copyWith(status: ProfileStatus.empty, clearCandidate: true));
       }
     } catch (error) {
       emit(

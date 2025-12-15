@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
-import 'package:opti_job_app/auth/cubit/company_auth_cubit.dart';
-import 'package:opti_job_app/auth/cubit/company_auth_state.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
 class CompanyLoginScreen extends StatefulWidget {

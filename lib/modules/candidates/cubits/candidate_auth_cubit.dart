@@ -1,15 +1,13 @@
-import 'package:opti_job_app/data/repositories/auth_repository.dart';
+// ignore_for_file: strict_top_level_inference
+
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthCubit
-import 'package:opti_job_app/auth/cubit/candidate_auth_state.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 
-class CandidateAuthCubit extends AuthCubit {
+class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
+  final _repository;
+
   CandidateAuthCubit(this._repository) : super(const CandidateAuthState());
-
-  final AuthRepository _repository;
-
-  @override
-  CandidateAuthState get state => super.state as CandidateAuthState;
 
   Future<void> loginCandidate({
     required String email,

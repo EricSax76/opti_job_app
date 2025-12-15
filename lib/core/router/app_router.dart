@@ -9,7 +9,8 @@ import 'package:opti_job_app/auth/cubit/ui/candidate_register_screen.dart';
 import 'package:opti_job_app/auth/cubit/ui/company_login_screen.dart';
 import 'package:opti_job_app/auth/cubit/ui/company_register_screen.dart';
 import 'package:opti_job_app/home/onboarding_screen.dart';
-import 'package:opti_job_app/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/candidate_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/ui/company_dashboard_screen.dart';
 import 'package:opti_job_app/data/services/application_service.dart';
@@ -20,12 +21,37 @@ import 'package:opti_job_app/modules/job_offers/ui/job_offer_list_screen.dart';
 import 'package:opti_job_app/home/landing_screen.dart';
 import 'package:opti_job_app/data/repositories/job_offer_repository.dart';
 
+/// Listens to a stream and notifies GoRouter when auth state changes.
+class GoRouterCombinedRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _candidateAuthSubscription;
+  late final StreamSubscription<dynamic> _companyAuthSubscription;
+
+  GoRouterCombinedRefreshStream(BuildContext context) {
+    final candidateAuthCubit = context.read<CandidateAuthCubit>();
+    final companyAuthCubit = context.read<CompanyAuthCubit>();
+
+    _candidateAuthSubscription = candidateAuthCubit.stream.listen(
+      (_) => notifyListeners(),
+    );
+    _companyAuthSubscription = companyAuthCubit.stream.listen(
+      (_) => notifyListeners(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _candidateAuthSubscription.cancel();
+    _companyAuthSubscription.cancel();
+    super.dispose();
+  }
+}
+
 class AppRouter {
-  AppRouter({required AuthCubit authCubit}) : _authCubit = authCubit {
+  AppRouter({required GoRouterCombinedRefreshStream routerRefreshStream}) {
     _router = GoRouter(
       initialLocation: '/',
       debugLogDiagnostics: true,
-      refreshListenable: GoRouterRefreshStream(_authCubit.stream),
+      refreshListenable: routerRefreshStream,
       redirect: _redirectLogic,
       routes: [
         GoRoute(
@@ -96,13 +122,19 @@ class AppRouter {
     );
   }
 
-  final AuthCubit _authCubit;
   late final GoRouter _router;
 
   GoRouter get router => _router;
 
   String? _redirectLogic(BuildContext context, GoRouterState state) {
-    final authState = _authCubit.state;
+    final candidateAuthState = context.watch<CandidateAuthCubit>().state;
+    final companyAuthState = context.watch<CompanyAuthCubit>().state;
+
+    // Determine the active auth state based on who is authenticated
+    final authState = candidateAuthState.isAuthenticated
+        ? candidateAuthState
+        : companyAuthState;
+
     final location = state.matchedLocation;
     final bool loggingInCandidate =
         location == '/CandidateLogin' || location == '/candidateregister';
@@ -144,20 +176,5 @@ class AppRouter {
     }
 
     return null;
-  }
-}
-
-/// Listens to a stream and notifies GoRouter when auth state changes.
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    _subscription = stream.listen((_) => notifyListeners());
-  }
-
-  late final StreamSubscription<dynamic> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
   }
 }

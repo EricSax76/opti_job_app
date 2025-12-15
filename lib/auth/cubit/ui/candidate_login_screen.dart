@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
-import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
-import 'package:opti_job_app/auth/cubit/candidate_auth_state.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
 class CandidateLoginScreen extends StatefulWidget {
@@ -28,7 +28,9 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final CandidateAuthState authState = context.watch<CandidateAuthCubit>().state;
+    final CandidateAuthState authState = context
+        .watch<CandidateAuthCubit>()
+        .state;
     final isLoading = authState.status == AuthStatus.authenticating;
 
     return BlocListener<CandidateAuthCubit, CandidateAuthState>(

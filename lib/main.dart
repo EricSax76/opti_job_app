@@ -15,8 +15,8 @@ import 'package:opti_job_app/data/repositories/profile_repository.dart';
 import 'package:opti_job_app/data/services/auth_service.dart';
 import 'package:opti_job_app/data/services/job_offer_service.dart';
 import 'package:opti_job_app/data/services/profile_service.dart';
-import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
-import 'package:opti_job_app/auth/cubit/company_auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
 import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
@@ -81,8 +81,12 @@ Future<void> main() async {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider<CandidateAuthCubit>(create: (_) => CandidateAuthCubit(authRepository)),
-          BlocProvider<CompanyAuthCubit>(create: (_) => CompanyAuthCubit(authRepository)),
+          BlocProvider<CandidateAuthCubit>(
+            create: (_) => CandidateAuthCubit(authRepository),
+          ),
+          BlocProvider<CompanyAuthCubit>(
+            create: (_) => CompanyAuthCubit(authRepository),
+          ),
           BlocProvider<JobOffersCubit>(
             create: (_) => JobOffersCubit(jobOfferRepository)..loadOffers(),
           ),
@@ -93,15 +97,16 @@ Future<void> main() async {
           BlocProvider<ProfileCubit>(
             create: (context) => ProfileCubit(
               repository: profileRepository,
-              candidateAuthCubit: context.read<CandidateAuthCubit>(), // Updated dependency
+              candidateAuthCubit: context
+                  .read<CandidateAuthCubit>(), // Updated dependency
             ),
           ),
         ],
         child: Builder(
           builder: (context) {
+            final routerRefreshStream = GoRouterCombinedRefreshStream(context);
             final appRouter = AppRouter(
-              candidateAuthCubit: context.read<CandidateAuthCubit>(), // Updated dependency
-              companyAuthCubit: context.read<CompanyAuthCubit>(), // New dependency
+              routerRefreshStream: routerRefreshStream,
             );
             return InfoJobsApp(router: appRouter.router);
           },

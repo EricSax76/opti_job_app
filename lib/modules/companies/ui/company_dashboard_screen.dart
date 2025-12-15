@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/data/services/job_offer_service.dart';
-import 'package:opti_job_app/auth/cubit/company_auth_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
 import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
