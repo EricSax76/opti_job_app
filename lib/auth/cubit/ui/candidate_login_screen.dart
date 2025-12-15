@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/auth/cubit/auth_status.dart';
+import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/candidate_auth_state.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
-class CompanyLoginScreen extends StatefulWidget {
-  const CompanyLoginScreen({super.key});
+class CandidateLoginScreen extends StatefulWidget {
+  const CandidateLoginScreen({super.key});
 
   @override
-  State<CompanyLoginScreen> createState() => _CompanyLoginScreenState();
+  State<CandidateLoginScreen> createState() => _CandidateLoginScreenState();
 }
 
-class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
+class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -26,10 +28,10 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
+    final CandidateAuthState authState = context.watch<CandidateAuthCubit>().state;
     final isLoading = authState.status == AuthStatus.authenticating;
 
-    return BlocListener<AuthCubit, AuthState>(
+    return BlocListener<CandidateAuthCubit, CandidateAuthState>(
       listenWhen: (previous, current) =>
           previous.errorMessage != current.errorMessage,
       listener: (context, state) {
@@ -38,10 +40,10 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));
-        } else if (state.isCompany &&
+        } else if (state.isAuthenticated &&
             state.status == AuthStatus.authenticated &&
             !state.needsOnboarding) {
-          context.go('/DashboardCompany');
+          context.go('/CandidateDashboard');
         }
       },
       child: Scaffold(
@@ -60,7 +62,7 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Inicia sesión como empresa',
+                        'Inicia sesión como candidato',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -71,6 +73,7 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Correo electrónico',
                         ),
+                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'El correo es obligatorio';
@@ -117,7 +120,7 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: () => context.go('/companyregister'),
+                        onPressed: () => context.go('/candidateregister'),
                         child: const Text('¿No tienes cuenta? Regístrate'),
                       ),
                     ],
@@ -134,7 +137,7 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<AuthCubit>().loginCompany(
+    context.read<CandidateAuthCubit>().loginCandidate(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );

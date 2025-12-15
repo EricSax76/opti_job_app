@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
 
-import 'package:opti_job_app/features/job_offers/cubit/job_offer_detail_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
 class JobOfferDetailScreen extends StatelessWidget {
   const JobOfferDetailScreen({super.key, required this.offerId});
@@ -12,7 +12,7 @@ class JobOfferDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
+    final authState = context.watch<CandidateAuthCubit>().state;
 
     return Scaffold(
       appBar: const AppNavBar(),
@@ -72,8 +72,8 @@ class JobOfferDetailScreen extends StatelessWidget {
                   Text(
                     offer.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(offer.location),
@@ -97,7 +97,8 @@ class JobOfferDetailScreen extends StatelessWidget {
                               offer.salaryMax != null)
                             _InfoRow(
                               label: 'Salario',
-                              value: '${offer.salaryMin ?? 'N/D'}'
+                              value:
+                                  '${offer.salaryMin ?? 'N/D'}'
                                   '${offer.salaryMax != null ? ' - ${offer.salaryMax}' : ''}',
                             ),
                           if (offer.keyIndicators != null)
@@ -113,7 +114,7 @@ class JobOfferDetailScreen extends StatelessWidget {
                   Wrap(
                     spacing: 12,
                     children: [
-                      if (authState.isCandidate)
+                      if (authState.isAuthenticated)
                         FilledButton(
                           onPressed: isApplying
                               ? null
@@ -121,9 +122,9 @@ class JobOfferDetailScreen extends StatelessWidget {
                                   final candidateId = authState.candidate?.id;
                                   if (candidateId != null) {
                                     context.read<JobOfferDetailCubit>().apply(
-                                          candidateId,
-                                          offer.id,
-                                        );
+                                      candidateId,
+                                      offer.id,
+                                    );
                                   }
                                 },
                           child: isApplying
@@ -136,7 +137,9 @@ class JobOfferDetailScreen extends StatelessWidget {
                               : const Text('Postularme'),
                         ),
                       OutlinedButton(
-                        onPressed: isApplying ? null : () => Navigator.of(context).maybePop(),
+                        onPressed: isApplying
+                            ? null
+                            : () => Navigator.of(context).maybePop(),
                         child: const Text('Volver'),
                       ),
                     ],

@@ -4,20 +4,20 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/features/auth/candidate_login_screen.dart';
-import 'package:opti_job_app/features/auth/candidate_register_screen.dart';
-import 'package:opti_job_app/features/auth/company_login_screen.dart';
-import 'package:opti_job_app/features/auth/company_register_screen.dart';
-import 'package:opti_job_app/features/auth/onboarding_screen.dart';
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
-import 'package:opti_job_app/features/dashboards/candidate_dashboard_screen.dart';
-import 'package:opti_job_app/features/dashboards/company_dashboard_screen.dart';
+import 'package:opti_job_app/auth/cubit/ui/candidate_login_screen.dart';
+import 'package:opti_job_app/auth/cubit/ui/candidate_register_screen.dart';
+import 'package:opti_job_app/auth/cubit/ui/company_login_screen.dart';
+import 'package:opti_job_app/auth/cubit/ui/company_register_screen.dart';
+import 'package:opti_job_app/home/onboarding_screen.dart';
+import 'package:opti_job_app/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/ui/candidate_dashboard_screen.dart';
+import 'package:opti_job_app/modules/companies/ui/company_dashboard_screen.dart';
 import 'package:opti_job_app/data/services/application_service.dart';
-import 'package:opti_job_app/features/job_offers/cubit/job_offer_detail_cubit.dart';
-import 'package:opti_job_app/features/job_offers/cubit/job_offer_form_cubit.dart';
-import 'package:opti_job_app/features/job_offers/job_offer_detail_screen.dart';
-import 'package:opti_job_app/features/job_offers/job_offer_list_screen.dart';
-import 'package:opti_job_app/features/landing/landing_screen.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/ui/job_offer_detail_screen.dart';
+import 'package:opti_job_app/modules/job_offers/ui/job_offer_list_screen.dart';
+import 'package:opti_job_app/home/landing_screen.dart';
 import 'package:opti_job_app/data/repositories/job_offer_repository.dart';
 
 class AppRouter {

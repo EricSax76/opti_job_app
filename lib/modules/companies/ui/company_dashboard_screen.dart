@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/data/services/job_offer_service.dart';
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
-import 'package:opti_job_app/features/job_offers/cubit/job_offer_form_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/auth/cubit/company_auth_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
 class CompanyDashboardScreen extends StatefulWidget {
   const CompanyDashboardScreen({super.key});
@@ -37,7 +37,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
+    final authState = context.watch<CompanyAuthCubit>().state;
 
     return BlocListener<JobOfferFormCubit, JobOfferFormState>(
       listenWhen: (previous, current) => previous.status != current.status,
@@ -66,7 +66,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         appBar: const AppNavBar(),
         floatingActionButton: authState.isAuthenticated
             ? FloatingActionButton.extended(
-                onPressed: () => context.read<AuthCubit>().logout(),
+                onPressed: () => context.read<CompanyAuthCubit>().logout(),
                 icon: const Icon(Icons.logout),
                 label: const Text('Cerrar sesión'),
               )

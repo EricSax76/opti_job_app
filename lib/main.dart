@@ -6,8 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/data/repositories/application_repository.dart';
 import 'package:opti_job_app/data/services/application_service.dart';
 
-import 'package:opti_job_app/app.dart';
-import 'package:opti_job_app/app_observer.dart';
+import 'package:opti_job_app/home/app.dart';
+import 'package:opti_job_app/home/app_observer.dart';
 import 'package:opti_job_app/data/repositories/auth_repository.dart';
 import 'package:opti_job_app/data/repositories/calendar_repository.dart';
 import 'package:opti_job_app/data/repositories/job_offer_repository.dart';
@@ -15,12 +15,13 @@ import 'package:opti_job_app/data/repositories/profile_repository.dart';
 import 'package:opti_job_app/data/services/auth_service.dart';
 import 'package:opti_job_app/data/services/job_offer_service.dart';
 import 'package:opti_job_app/data/services/profile_service.dart';
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/company_auth_cubit.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
-import 'package:opti_job_app/features/job_offers/cubit/job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
 import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
 import 'package:opti_job_app/firebase_options.dart';
-import 'package:opti_job_app/router/app_router.dart';
+import 'package:opti_job_app/core/router/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,7 +81,8 @@ Future<void> main() async {
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider<AuthCubit>(create: (_) => AuthCubit(authRepository)),
+          BlocProvider<CandidateAuthCubit>(create: (_) => CandidateAuthCubit(authRepository)),
+          BlocProvider<CompanyAuthCubit>(create: (_) => CompanyAuthCubit(authRepository)),
           BlocProvider<JobOffersCubit>(
             create: (_) => JobOffersCubit(jobOfferRepository)..loadOffers(),
           ),
@@ -91,13 +93,16 @@ Future<void> main() async {
           BlocProvider<ProfileCubit>(
             create: (context) => ProfileCubit(
               repository: profileRepository,
-              authCubit: context.read<AuthCubit>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(), // Updated dependency
             ),
           ),
         ],
         child: Builder(
           builder: (context) {
-            final appRouter = AppRouter(authCubit: context.read<AuthCubit>());
+            final appRouter = AppRouter(
+              candidateAuthCubit: context.read<CandidateAuthCubit>(), // Updated dependency
+              companyAuthCubit: context.read<CompanyAuthCubit>(), // New dependency
+            );
             return InfoJobsApp(router: appRouter.router);
           },
         ),

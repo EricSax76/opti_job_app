@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/auth/cubit/auth_status.dart';
+import 'package:opti_job_app/auth/cubit/company_auth_cubit.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
-class CandidateRegisterScreen extends StatefulWidget {
-  const CandidateRegisterScreen({super.key});
+class CompanyRegisterScreen extends StatefulWidget {
+  const CompanyRegisterScreen({super.key});
 
   @override
-  State<CandidateRegisterScreen> createState() =>
-      _CandidateRegisterScreenState();
+  State<CompanyRegisterScreen> createState() => _CompanyRegisterScreenState();
 }
 
-class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
+class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -29,10 +29,10 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
+    final authState = context.watch<CompanyAuthCubit>().state;
     final isLoading = authState.status == AuthStatus.authenticating;
 
-    return BlocListener<AuthCubit, AuthState>(
+    return BlocListener<CompanyAuthCubit, CompanyAuthState>(
       listenWhen: (previous, current) =>
           previous.errorMessage != current.errorMessage ||
           previous.needsOnboarding != current.needsOnboarding,
@@ -42,7 +42,7 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));
-        } else if (state.isCandidate && state.needsOnboarding) {
+        } else if (state.isAuthenticated && state.needsOnboarding) {
           context.go('/onboarding');
         }
       },
@@ -62,7 +62,7 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Regístrate como candidato',
+                        'Registra tu empresa',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -71,7 +71,7 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
                       TextFormField(
                         controller: _nameController,
                         decoration: const InputDecoration(
-                          labelText: 'Nombre completo',
+                          labelText: 'Nombre de la empresa',
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -86,7 +86,6 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Correo electrónico',
                         ),
-                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'El correo es obligatorio';
@@ -133,7 +132,7 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: () => context.go('/CandidateLogin'),
+                        onPressed: () => context.go('/CompanyLogin'),
                         child: const Text('¿Ya tienes cuenta? Inicia sesión'),
                       ),
                     ],
@@ -150,7 +149,7 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<AuthCubit>().registerCandidate(
+    context.read<CompanyAuthCubit>().registerCompany(
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,

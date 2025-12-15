@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/auth_cubit.dart';
 import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});

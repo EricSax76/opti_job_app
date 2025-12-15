@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/auth/cubit/auth_status.dart';
+import 'package:opti_job_app/auth/cubit/company_auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/company_auth_state.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
-class CandidateLoginScreen extends StatefulWidget {
-  const CandidateLoginScreen({super.key});
+class CompanyLoginScreen extends StatefulWidget {
+  const CompanyLoginScreen({super.key});
 
   @override
-  State<CandidateLoginScreen> createState() => _CandidateLoginScreenState();
+  State<CompanyLoginScreen> createState() => _CompanyLoginScreenState();
 }
 
-class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
+class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -26,10 +28,10 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
+    final authState = context.watch<CompanyAuthCubit>().state;
     final isLoading = authState.status == AuthStatus.authenticating;
 
-    return BlocListener<AuthCubit, AuthState>(
+    return BlocListener<CompanyAuthCubit, CompanyAuthState>(
       listenWhen: (previous, current) =>
           previous.errorMessage != current.errorMessage,
       listener: (context, state) {
@@ -38,10 +40,10 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));
-        } else if (state.isCandidate &&
+        } else if (state.isAuthenticated &&
             state.status == AuthStatus.authenticated &&
             !state.needsOnboarding) {
-          context.go('/CandidateDashboard');
+          context.go('/DashboardCompany');
         }
       },
       child: Scaffold(
@@ -60,7 +62,7 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Inicia sesión como candidato',
+                        'Inicia sesión como empresa',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -71,7 +73,6 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Correo electrónico',
                         ),
-                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'El correo es obligatorio';
@@ -118,7 +119,7 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: () => context.go('/candidateregister'),
+                        onPressed: () => context.go('/companyregister'),
                         child: const Text('¿No tienes cuenta? Regístrate'),
                       ),
                     ],
@@ -135,7 +136,7 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<AuthCubit>().loginCandidate(
+    context.read<CompanyAuthCubit>().loginCompany(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );

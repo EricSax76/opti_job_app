@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/auth/cubit/auth_status.dart';
+import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/candidate_auth_state.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
-class CompanyRegisterScreen extends StatefulWidget {
-  const CompanyRegisterScreen({super.key});
+class CandidateRegisterScreen extends StatefulWidget {
+  const CandidateRegisterScreen({super.key});
 
   @override
-  State<CompanyRegisterScreen> createState() => _CompanyRegisterScreenState();
+  State<CandidateRegisterScreen> createState() =>
+      _CandidateRegisterScreenState();
 }
 
-class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
+class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -28,10 +31,10 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
+    final CandidateAuthState authState = context.watch<CandidateAuthCubit>().state;
     final isLoading = authState.status == AuthStatus.authenticating;
 
-    return BlocListener<AuthCubit, AuthState>(
+    return BlocListener<CandidateAuthCubit, CandidateAuthState>(
       listenWhen: (previous, current) =>
           previous.errorMessage != current.errorMessage ||
           previous.needsOnboarding != current.needsOnboarding,
@@ -41,7 +44,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));
-        } else if (state.isCompany && state.needsOnboarding) {
+        } else if (state.isAuthenticated && state.needsOnboarding) {
           context.go('/onboarding');
         }
       },
@@ -61,7 +64,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Registra tu empresa',
+                        'Regístrate como candidato',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -70,7 +73,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                       TextFormField(
                         controller: _nameController,
                         decoration: const InputDecoration(
-                          labelText: 'Nombre de la empresa',
+                          labelText: 'Nombre completo',
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -85,6 +88,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Correo electrónico',
                         ),
+                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'El correo es obligatorio';
@@ -131,7 +135,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: () => context.go('/CompanyLogin'),
+                        onPressed: () => context.go('/CandidateLogin'),
                         child: const Text('¿Ya tienes cuenta? Inicia sesión'),
                       ),
                     ],
@@ -148,7 +152,7 @@ class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<AuthCubit>().registerCompany(
+    context.read<CandidateAuthCubit>().registerCandidate(
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,

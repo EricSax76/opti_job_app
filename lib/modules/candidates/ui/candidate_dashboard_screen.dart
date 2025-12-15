@@ -3,18 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/data/models/calendar_event.dart';
-import 'package:opti_job_app/features/auth/cubit/auth_cubit.dart';
+import 'package:opti_job_app/auth/cubit/candidate_auth_cubit.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
-import 'package:opti_job_app/features/job_offers/cubit/job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
 import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
-import 'package:opti_job_app/features/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
 class CandidateDashboardScreen extends StatelessWidget {
   const CandidateDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
+    final authState = context.watch<CandidateAuthCubit>().state;
     final profileState = context.watch<ProfileCubit>().state;
     final offersState = context.watch<JobOffersCubit>().state;
     final calendarState = context.watch<CalendarCubit>().state;
@@ -55,7 +55,7 @@ class CandidateDashboardScreen extends StatelessWidget {
       floatingActionButton: authState.isAuthenticated
           ? FloatingActionButton.extended(
               onPressed: () {
-                context.read<AuthCubit>().logout();
+                context.read<CandidateAuthCubit>().logout();
               },
               icon: const Icon(Icons.logout),
               label: const Text('Cerrar sesión'),
