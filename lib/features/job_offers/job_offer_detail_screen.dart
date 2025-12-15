@@ -136,7 +136,7 @@ class JobOfferDetailScreen extends StatelessWidget {
                               : const Text('Postularme'),
                         ),
                       OutlinedButton(
-                        onPressed: () => Navigator.of(context).maybePop(),
+                        onPressed: isApplying ? null : () => Navigator.of(context).maybePop(),
                         child: const Text('Volver'),
                       ),
                     ],
