@@ -1,11 +1,11 @@
 import 'package:opti_job_app/data/repositories/application_repository.dart';
+import 'package:opti_job_app/data/models/job_offer.dart';
 
 class ApplicationService {
-  ApplicationService({
-    required ApplicationRepository applicationRepository,
-  }) : _applicationRepository = applicationRepository;
-
   final ApplicationRepository _applicationRepository;
+
+  ApplicationService({required ApplicationRepository applicationRepository})
+    : _applicationRepository = applicationRepository;
 
   Future<void> createApplication({
     required int jobOfferId,
@@ -22,6 +22,12 @@ class ApplicationService {
 
     await _applicationRepository.createApplication(
       jobOfferId: jobOfferId,
+      candidateId: candidateId,
+    );
+  }
+
+  Future<List<JobOffer>> getApplicationsForCandidate(int candidateId) {
+    return _applicationRepository.getApplicationsForCandidate(
       candidateId: candidateId,
     );
   }

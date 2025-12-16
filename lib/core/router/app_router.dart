@@ -26,10 +26,10 @@ class GoRouterCombinedRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _candidateAuthSubscription;
   late final StreamSubscription<dynamic> _companyAuthSubscription;
 
-  GoRouterCombinedRefreshStream(BuildContext context) {
-    final candidateAuthCubit = context.read<CandidateAuthCubit>();
-    final companyAuthCubit = context.read<CompanyAuthCubit>();
-
+  GoRouterCombinedRefreshStream(
+    CandidateAuthCubit candidateAuthCubit,
+    CompanyAuthCubit companyAuthCubit,
+  ) {
     _candidateAuthSubscription = candidateAuthCubit.stream.listen(
       (_) => notifyListeners(),
     );
@@ -127,8 +127,8 @@ class AppRouter {
   GoRouter get router => _router;
 
   String? _redirectLogic(BuildContext context, GoRouterState state) {
-    final candidateAuthState = context.watch<CandidateAuthCubit>().state;
-    final companyAuthState = context.watch<CompanyAuthCubit>().state;
+    final candidateAuthState = context.read<CandidateAuthCubit>().state;
+    final companyAuthState = context.read<CompanyAuthCubit>().state;
 
     // Determine the active auth state based on who is authenticated
     final authState = candidateAuthState.isAuthenticated

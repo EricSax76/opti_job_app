@@ -1,16 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:opti_job_app/data/models/calendar_event.dart';
+import 'package:opti_job_app/data/models/job_offer.dart';
+import 'package:opti_job_app/data/services/application_service.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
 import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
-import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
 
-class CandidateDashboardScreen extends StatelessWidget {
+class CandidateDashboardScreen extends StatefulWidget {
   const CandidateDashboardScreen({super.key});
+
+  @override
+  State<CandidateDashboardScreen> createState() =>
+      _CandidateDashboardScreenState();
+}
+
+class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = context.watch<CandidateAuthCubit>().state;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Opti-Job'),
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        bottom: TabBar(
+          // The TabBar goes in the 'bottom' property of a standard AppBar
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.dashboard), text: 'Para ti'),
+            Tab(icon: Icon(Icons.work_history), text: 'Mis Ofertas'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          const _DashboardView(),
+          BlocProvider(
+            create: (context) => MyApplicationsCubit(
+              applicationService: context.read<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..loadMyApplications(),
+            child: const _MyApplicationsView(),
+          ),
+        ],
+      ),
+      floatingActionButton: authState.isAuthenticated
+          ? FloatingActionButton(
+              onPressed: () => context.read<CandidateAuthCubit>().logout(),
+              tooltip: 'Cerrar sesión',
+              child: const Icon(Icons.logout),
+            )
+          : null,
+    );
+  }
+}
+
+class _DashboardView extends StatelessWidget {
+  const _DashboardView();
 
   @override
   Widget build(BuildContext context) {
@@ -24,43 +91,89 @@ class CandidateDashboardScreen extends StatelessWidget {
         authState.candidate?.name ??
         'Candidato';
 
-    return Scaffold(
-      appBar: const AppNavBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hola, $candidateName',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hola, $candidateName',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          const Text('Aquí tienes ofertas seleccionadas para ti.'),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(child: _OffersList(state: offersState)),
+                const SizedBox(height: 16),
+                _CalendarPanel(state: calendarState),
+              ],
             ),
-            const SizedBox(height: 4),
-            const Text('Aquí tienes ofertas seleccionadas para ti.'),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Column(
-                children: [
-                  Expanded(child: _OffersList(state: offersState)),
-                  const SizedBox(height: 16),
-                  _CalendarPanel(state: calendarState),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-      floatingActionButton: authState.isAuthenticated
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                context.read<CandidateAuthCubit>().logout();
-              },
-              icon: const Icon(Icons.logout),
-              label: const Text('Cerrar sesión'),
-            )
-          : null,
+    );
+  }
+}
+
+class _MyApplicationsView extends StatelessWidget {
+  const _MyApplicationsView();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MyApplicationsCubit, MyApplicationsState>(
+      builder: (context, state) {
+        if (state.status == ApplicationsStatus.loading ||
+            state.status == ApplicationsStatus.initial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state.status == ApplicationsStatus.error) {
+          return Center(
+            child: Text(
+              state.errorMessage ?? 'Error al cargar tus postulaciones.',
+            ),
+          );
+        }
+
+        if (state.applications.isEmpty) {
+          return const Center(
+            child: Text('Aún no te has postulado a ninguna oferta.'),
+          );
+        }
+
+        return _ApplicationsList(offers: state.applications);
+      },
+    );
+  }
+}
+
+class _ApplicationsList extends StatelessWidget {
+  const _ApplicationsList({required this.offers});
+
+  final List<JobOffer> offers;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(8),
+      itemCount: offers.length,
+      itemBuilder: (context, index) {
+        final offer = offers[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: ListTile(
+            title: Text(offer.title),
+            subtitle: Text(offer.description),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => context.go('/job-offer/${offer.id}'),
+          ),
+        );
+      },
     );
   }
 }
@@ -126,6 +239,7 @@ class _CalendarPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final events = state.events[_normalize(state.selectedDay)] ?? const [];
+    final calendarState = context.watch<CalendarCubit>().state;
 
     return Card(
       child: Padding(
@@ -145,7 +259,7 @@ class _CalendarPanel extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.add),
                   onPressed: () {
-                    final date = state.selectedDay;
+                    final date = calendarState.selectedDay;
                     context.read<CalendarCubit>().addEvent(
                       date: date,
                       title: 'Seguimiento de oferta',
@@ -157,13 +271,13 @@ class _CalendarPanel extends StatelessWidget {
                 ),
               ],
             ),
-            if (state.status == CalendarStatus.loading)
+            if (calendarState.status == CalendarStatus.loading)
+              const LinearProgressIndicator(),
+            if (events.isEmpty)
               const Padding(
-                padding: EdgeInsets.all(8),
-                child: LinearProgressIndicator(),
+                padding: EdgeInsets.only(top: 8.0),
+                child: Text('No tienes recordatorios para este día.'),
               )
-            else if (events.isEmpty)
-              const Text('No tienes recordatorios para este día.')
             else
               ...events.map((event) => _CalendarEventTile(event: event)),
           ],

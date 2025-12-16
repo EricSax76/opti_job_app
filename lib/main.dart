@@ -82,7 +82,12 @@ Future<void> main() async {
       child: MultiBlocProvider(
         providers: [
           BlocProvider<CandidateAuthCubit>(
-            create: (_) => CandidateAuthCubit(authRepository),
+            create: (context) {
+              final cubit = CandidateAuthCubit(authRepository);
+              // TODO: Consider loading initial auth state here if needed
+              // cubit.checkInitialSession();
+              return cubit;
+            },
           ),
           BlocProvider<CompanyAuthCubit>(
             create: (_) => CompanyAuthCubit(authRepository),
@@ -104,7 +109,10 @@ Future<void> main() async {
         ],
         child: Builder(
           builder: (context) {
-            final routerRefreshStream = GoRouterCombinedRefreshStream(context);
+            final routerRefreshStream = GoRouterCombinedRefreshStream(
+              context.read<CandidateAuthCubit>(),
+              context.read<CompanyAuthCubit>(),
+            );
             final appRouter = AppRouter(
               routerRefreshStream: routerRefreshStream,
             );

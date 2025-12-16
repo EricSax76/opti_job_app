@@ -3,9 +3,10 @@
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthCubit
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
+import 'package:opti_job_app/data/repositories/auth_repository.dart';
 
 class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
-  final _repository;
+  final AuthRepository _repository;
 
   CandidateAuthCubit(this._repository) : super(const CandidateAuthState());
 
