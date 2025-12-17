@@ -6,6 +6,8 @@ class JobOffer {
     required this.title,
     required this.description,
     required this.location,
+    this.companyId,
+    this.companyUid,
     this.jobType,
     this.salaryMin,
     this.salaryMax,
@@ -18,6 +20,8 @@ class JobOffer {
   final String title;
   final String description;
   final String location;
+  final int? companyId;
+  final String? companyUid;
   final String? jobType;
   final String? salaryMin;
   final String? salaryMax;
@@ -33,6 +37,12 @@ class JobOffer {
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       location: json['location'] as String? ?? '',
+      companyId: _tryParseInt(
+        json['company_id'] ?? json['companyId'] ?? json['owner_id'],
+      ),
+      companyUid: json['company_uid'] as String? ??
+          json['companyUid'] as String? ??
+          json['owner_uid'] as String?,
       jobType: json['job_type'] as String? ?? json['jobType'] as String?,
       salaryMin: json['salary_min'] as String? ?? json['salaryMin'] as String?,
       salaryMax: json['salary_max'] as String? ?? json['salaryMax'] as String?,
@@ -49,6 +59,8 @@ class JobOffer {
       'title': title,
       'description': description,
       'location': location,
+      'company_id': companyId,
+      'company_uid': companyUid,
       'job_type': jobType,
       'salary_min': salaryMin,
       'salary_max': salaryMax,
@@ -63,6 +75,8 @@ class JobOffer {
     String? title,
     String? description,
     String? location,
+    int? companyId,
+    String? companyUid,
     String? jobType,
     String? salaryMin,
     String? salaryMax,
@@ -75,6 +89,8 @@ class JobOffer {
       title: title ?? this.title,
       description: description ?? this.description,
       location: location ?? this.location,
+      companyId: companyId ?? this.companyId,
+      companyUid: companyUid ?? this.companyUid,
       jobType: jobType ?? this.jobType,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
@@ -94,6 +110,18 @@ DateTime? _parseDate(dynamic value) {
   }
   if (value is String && value.isNotEmpty) {
     return DateTime.tryParse(value);
+  }
+  return null;
+}
+
+int? _tryParseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is String && value.isNotEmpty) {
+    return int.tryParse(value);
+  }
+  if (value is num) {
+    return value.toInt();
   }
   return null;
 }

@@ -20,6 +20,8 @@ import 'package:opti_job_app/modules/job_offers/ui/job_offer_detail_screen.dart'
 import 'package:opti_job_app/modules/job_offers/ui/job_offer_list_screen.dart';
 import 'package:opti_job_app/home/landing_screen.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
+import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 
 /// Listens to a stream and notifies GoRouter when auth state changes.
 class GoRouterCombinedRefreshStream extends ChangeNotifier {
@@ -87,9 +89,21 @@ class AppRouter {
         GoRoute(
           path: '/DashboardCompany',
           name: 'company-dashboard',
-          builder: (context, state) => BlocProvider(
-            create: (context) =>
-                JobOfferFormCubit(context.read<JobOfferRepository>()),
+          builder: (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) =>
+                    JobOfferFormCubit(context.read<JobOfferRepository>()),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    CompanyJobOffersCubit(context.read<JobOfferRepository>()),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    OfferApplicantsCubit(context.read<ApplicationService>()),
+              ),
+            ],
             child: const CompanyDashboardScreen(),
           ),
         ),

@@ -10,6 +10,10 @@ class JobOfferRepository {
     return _service.fetchJobOffers(jobType: jobType);
   }
 
+  Future<List<JobOffer>> fetchByCompanyUid(String companyUid) {
+    return _service.fetchJobOffersByCompanyUid(companyUid);
+  }
+
   Future<JobOffer> fetchById(int id) {
     return _service.fetchJobOffer(id);
   }

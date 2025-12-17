@@ -119,11 +119,11 @@ class JobOfferDetailScreen extends StatelessWidget {
                           onPressed: isApplying
                               ? null
                               : () {
-                                  final candidateId = authState.candidate?.id;
-                                  if (candidateId != null) {
+                                  final candidate = authState.candidate;
+                                  if (candidate != null) {
                                     context.read<JobOfferDetailCubit>().apply(
-                                      candidateId,
-                                      offer.id,
+                                      candidate: candidate,
+                                      offer: offer,
                                     );
                                   }
                                 },

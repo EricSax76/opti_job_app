@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/aplications/models/application_service.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 enum JobOfferDetailStatus { initial, loading, success, failure, applying }
 
@@ -68,7 +69,10 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
     }
   }
 
-  Future<void> apply(int candidateId, int jobOfferId) async {
+  Future<void> apply({
+    required Candidate candidate,
+    required JobOffer offer,
+  }) async {
     emit(
       state.copyWith(
         status: JobOfferDetailStatus.applying,
@@ -78,8 +82,9 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
     );
     try {
       await _applicationService.createApplication(
-        candidateId: candidateId,
-        jobOfferId: jobOfferId,
+        candidate: candidate,
+        jobOffer: offer,
+        candidateProfileId: candidate.id,
       );
       emit(
         state.copyWith(

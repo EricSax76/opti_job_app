@@ -3,6 +3,7 @@ class Candidate {
     required this.id,
     required this.name,
     required this.email,
+    required this.uid,
     required this.role,
     this.token,
   });
@@ -10,6 +11,7 @@ class Candidate {
   final int id;
   final String name;
   final String email;
+  final String uid;
   final String role;
   final String? token;
 
@@ -18,6 +20,7 @@ class Candidate {
       id: json['id'] is int ? json['id'] as int : int.parse(json['id'].toString()),
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      uid: json['uid'] as String? ?? '',
       role: json['role'] as String? ?? 'candidate',
       token: json['token'] as String?,
     );
@@ -28,6 +31,7 @@ class Candidate {
       'id': id,
       'name': name,
       'email': email,
+      'uid': uid,
       'role': role,
       'token': token,
     };
@@ -37,6 +41,7 @@ class Candidate {
     int? id,
     String? name,
     String? email,
+    String? uid,
     String? role,
     String? token,
   }) {
@@ -44,6 +49,7 @@ class Candidate {
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
+      uid: uid ?? this.uid,
       role: role ?? this.role,
       token: token ?? this.token,
     );

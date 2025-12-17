@@ -18,8 +18,9 @@ class MyApplicationsCubit extends Cubit<MyApplicationsState> {
   final CandidateAuthCubit _candidateAuthCubit;
 
   Future<void> loadMyApplications() async {
-    final candidateId = _candidateAuthCubit.state.candidate?.id;
-    if (candidateId == null) {
+    final candidate = _candidateAuthCubit.state.candidate;
+    final candidateUid = candidate?.uid;
+    if (candidateUid == null) {
       emit(
         state.copyWith(
           status: ApplicationsStatus.error,
@@ -32,7 +33,7 @@ class MyApplicationsCubit extends Cubit<MyApplicationsState> {
     emit(state.copyWith(status: ApplicationsStatus.loading));
     try {
       final applications = await _applicationService
-          .getApplicationsForCandidate(candidateId);
+          .getApplicationsForCandidate(candidateUid);
       emit(
         state.copyWith(
           status: ApplicationsStatus.success,
