@@ -1,5 +1,5 @@
-import 'package:opti_job_app/data/models/job_offer.dart';
-import 'package:opti_job_app/data/services/job_offer_service.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 
 class JobOfferRepository {
   JobOfferRepository(this._service);

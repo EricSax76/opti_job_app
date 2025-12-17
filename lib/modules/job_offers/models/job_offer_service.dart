@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:opti_job_app/data/models/job_offer.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class JobOfferService {
   JobOfferService({FirebaseFirestore? firestore})
@@ -20,9 +20,7 @@ class JobOfferService {
       query = query.where('job_type', isEqualTo: jobType);
     }
     final snapshot = await query.get();
-    return snapshot.docs
-        .map((doc) => JobOffer.fromJson(doc.data()))
-        .toList();
+    return snapshot.docs.map((doc) => JobOffer.fromJson(doc.data())).toList();
   }
 
   Future<JobOffer> fetchJobOffer(int id) async {
@@ -48,7 +46,8 @@ class JobOfferService {
 
     final docRef = await _collection.add(offerData);
     final storedDoc = await docRef.get();
-    final storedData = storedDoc.data() ??
+    final storedData =
+        storedDoc.data() ??
         {
           ...payloadData,
           'id': offerId,

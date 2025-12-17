@@ -5,25 +5,22 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
-import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 
-class CandidateRegisterScreen extends StatefulWidget {
-  const CandidateRegisterScreen({super.key});
+class CandidateLoginScreen extends StatefulWidget {
+  const CandidateLoginScreen({super.key});
 
   @override
-  State<CandidateRegisterScreen> createState() =>
-      _CandidateRegisterScreenState();
+  State<CandidateLoginScreen> createState() => _CandidateLoginScreenState();
 }
 
-class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
+class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -38,16 +35,17 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
 
     return BlocListener<CandidateAuthCubit, CandidateAuthState>(
       listenWhen: (previous, current) =>
-          previous.errorMessage != current.errorMessage ||
-          previous.needsOnboarding != current.needsOnboarding,
+          previous.errorMessage != current.errorMessage,
       listener: (context, state) {
         final message = state.errorMessage;
         if (message != null) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));
-        } else if (state.isAuthenticated && state.needsOnboarding) {
-          context.go('/onboarding');
+        } else if (state.isAuthenticated &&
+            state.status == AuthStatus.authenticated &&
+            !state.needsOnboarding) {
+          context.go('/CandidateDashboard');
         }
       },
       child: Scaffold(
@@ -66,25 +64,12 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Regístrate como candidato',
+                        'Inicia sesión como candidato',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre completo',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'El nombre es obligatorio';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -106,8 +91,8 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
                         ),
                         obscureText: true,
                         validator: (value) {
-                          if (value == null || value.length < 6) {
-                            return 'La contraseña debe tener al menos 6 caracteres';
+                          if (value == null || value.isEmpty) {
+                            return 'La contraseña es obligatoria';
                           }
                           return null;
                         },
@@ -130,15 +115,15 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
                                             ),
                                       ),
                                     )
-                                  : const Text('Crear cuenta'),
+                                  : const Text('Entrar'),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: () => context.go('/CandidateLogin'),
-                        child: const Text('¿Ya tienes cuenta? Inicia sesión'),
+                        onPressed: () => context.go('/candidateregister'),
+                        child: const Text('¿No tienes cuenta? Regístrate'),
                       ),
                     ],
                   ),
@@ -154,8 +139,7 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<CandidateAuthCubit>().registerCandidate(
-      name: _nameController.text.trim(),
+    context.read<CandidateAuthCubit>().loginCandidate(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );

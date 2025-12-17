@@ -1,6 +1,6 @@
-import 'package:opti_job_app/data/models/candidate.dart';
-import 'package:opti_job_app/data/models/company.dart';
-import 'package:opti_job_app/data/services/auth_service.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/auth/models/auth_service.dart';
 
 class AuthRepository {
   AuthRepository(this._service);

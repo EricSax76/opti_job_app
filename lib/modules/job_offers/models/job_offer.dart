@@ -27,7 +27,9 @@ class JobOffer {
 
   factory JobOffer.fromJson(Map<String, dynamic> json) {
     return JobOffer(
-      id: json['id'] is int ? json['id'] as int : int.parse(json['id'].toString()),
+      id: json['id'] is int
+          ? json['id'] as int
+          : int.parse(json['id'].toString()),
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       location: json['location'] as String? ?? '',
@@ -35,7 +37,8 @@ class JobOffer {
       salaryMin: json['salary_min'] as String? ?? json['salaryMin'] as String?,
       salaryMax: json['salary_max'] as String? ?? json['salaryMax'] as String?,
       education: json['education'] as String?,
-      keyIndicators: json['key_indicators'] as String? ?? json['keyIndicators'] as String?,
+      keyIndicators:
+          json['key_indicators'] as String? ?? json['keyIndicators'] as String?,
       createdAt: _parseDate(json['created_at'] ?? json['createdAt']),
     );
   }

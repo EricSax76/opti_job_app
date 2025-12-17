@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:opti_job_app/data/models/candidate.dart';
-import 'package:opti_job_app/data/models/company.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/companies/models/company.dart';
 
 class ProfileService {
   ProfileService({FirebaseFirestore? firestore})

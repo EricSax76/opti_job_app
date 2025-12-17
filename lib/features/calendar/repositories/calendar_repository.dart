@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:uuid/uuid.dart';
 
-import 'package:opti_job_app/data/models/calendar_event.dart';
+import 'package:opti_job_app/features/calendar/models/calendar_event.dart';
 
 class CalendarRepository {
   CalendarRepository({Uuid? uuid})

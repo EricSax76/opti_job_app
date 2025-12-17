@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/core/shared/widgets/app_footer.dart';
-import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/core/widgets/app_footer.dart';
+import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});

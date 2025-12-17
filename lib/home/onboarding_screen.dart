@@ -7,8 +7,8 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
     show CandidateAuthCubit;
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart'
     show CompanyAuthCubit;
-import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
-import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
+import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});

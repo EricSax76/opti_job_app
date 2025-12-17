@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/data/models/calendar_event.dart';
-import 'package:opti_job_app/data/models/job_offer.dart';
-import 'package:opti_job_app/data/services/application_service.dart';
+import 'package:opti_job_app/features/calendar/models/calendar_event.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/aplications/models/application_service.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
-import 'package:opti_job_app/modules/candidates/cubits/my_applications_cubit.dart';
+import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
-import 'package:opti_job_app/features/profiles/cubit/profile_cubit.dart';
+import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
 
 class CandidateDashboardScreen extends StatefulWidget {
   const CandidateDashboardScreen({super.key});

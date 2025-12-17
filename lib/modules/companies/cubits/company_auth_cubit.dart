@@ -1,7 +1,7 @@
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthCubit
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
-import 'package:opti_job_app/data/repositories/auth_repository.dart';
+import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 
 class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
   final AuthRepository _repository;

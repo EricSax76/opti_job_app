@@ -5,22 +5,24 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
-import 'package:opti_job_app/core/shared/widgets/app_nav_bar.dart';
+import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 
-class CompanyLoginScreen extends StatefulWidget {
-  const CompanyLoginScreen({super.key});
+class CompanyRegisterScreen extends StatefulWidget {
+  const CompanyRegisterScreen({super.key});
 
   @override
-  State<CompanyLoginScreen> createState() => _CompanyLoginScreenState();
+  State<CompanyRegisterScreen> createState() => _CompanyRegisterScreenState();
 }
 
-class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
+class _CompanyRegisterScreenState extends State<CompanyRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -33,17 +35,17 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
 
     return BlocListener<CompanyAuthCubit, CompanyAuthState>(
       listenWhen: (previous, current) =>
-          previous.errorMessage != current.errorMessage,
+          previous.errorMessage != current.errorMessage ||
+          previous.needsOnboarding != current.needsOnboarding,
       listener: (context, state) {
         final message = state.errorMessage;
         if (message != null) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(message)));
-        } else if (state.isAuthenticated &&
-            state.status == AuthStatus.authenticated &&
-            !state.needsOnboarding) {
-          context.go('/DashboardCompany');
+        } else if (state.isAuthenticated == true &&
+            state.needsOnboarding == true) {
+          context.go('/onboarding');
         }
       },
       child: Scaffold(
@@ -62,12 +64,25 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Inicia sesión como empresa',
+                        'Registra tu empresa',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre de la empresa',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'El nombre es obligatorio';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -88,8 +103,8 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
                         ),
                         obscureText: true,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'La contraseña es obligatoria';
+                          if (value == null || value.length < 6) {
+                            return 'La contraseña debe tener al menos 6 caracteres';
                           }
                           return null;
                         },
@@ -112,15 +127,15 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
                                             ),
                                       ),
                                     )
-                                  : const Text('Entrar'),
+                                  : const Text('Crear cuenta'),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       TextButton(
-                        onPressed: () => context.go('/companyregister'),
-                        child: const Text('¿No tienes cuenta? Regístrate'),
+                        onPressed: () => context.go('/CompanyLogin'),
+                        child: const Text('¿Ya tienes cuenta? Inicia sesión'),
                       ),
                     ],
                   ),
@@ -136,7 +151,8 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<CompanyAuthCubit>().loginCompany(
+    context.read<CompanyAuthCubit>().registerCompany(
+      name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );

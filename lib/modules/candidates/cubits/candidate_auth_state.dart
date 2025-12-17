@@ -1,4 +1,4 @@
-import 'package:opti_job_app/data/models/candidate.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthState
 
@@ -20,9 +20,9 @@ class CandidateAuthState extends AuthState {
 
   @override
   List<Object?> get props => [
-        super.props, // Include properties from the base class
-        candidate,
-      ];
+    super.props, // Include properties from the base class
+    candidate,
+  ];
 
   CandidateAuthState copyWith({
     AuthStatus? status,
