@@ -9,12 +9,12 @@ class AppFooter extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      color: Colors.indigo.shade900,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+      color: const Color(0xFFF8FAFC),
       child: Text(
         '© $currentYear OPTIJOB · Conectando talento con oportunidades',
         textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white70),
+        style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
       ),
     );
   }

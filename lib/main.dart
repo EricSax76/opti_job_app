@@ -7,7 +7,7 @@ import 'package:opti_job_app/modules/aplications/repositories/application_reposi
 import 'package:opti_job_app/modules/aplications/models/application_service.dart';
 
 import 'package:opti_job_app/home/app.dart';
-import 'package:opti_job_app/home/app_observer.dart';
+import 'package:opti_job_app/home/models/app_observer.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';

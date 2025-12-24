@@ -11,7 +11,7 @@ class InfoJobsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'InfoJobs Flutter',
+      title: 'Optijob App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,

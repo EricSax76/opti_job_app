@@ -51,6 +51,44 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
+  Future<void> refreshProfile() async {
+    await _onAuthStateChanged(_candidateAuthCubit.state);
+  }
+
+  Future<void> updateCandidateProfile({required String name}) async {
+    final candidate = state.candidate ?? _candidateAuthCubit.state.candidate;
+    if (candidate == null) {
+      emit(
+        state.copyWith(
+          status: ProfileStatus.failure,
+          errorMessage: 'No hay un candidato autenticado.',
+        ),
+      );
+      return;
+    }
+
+    emit(state.copyWith(status: ProfileStatus.saving, clearError: true));
+    try {
+      final updatedCandidate = await _repository.updateCandidateProfile(
+        uid: candidate.uid,
+        name: name,
+      );
+      emit(
+        state.copyWith(
+          status: ProfileStatus.loaded,
+          candidate: updatedCandidate,
+        ),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          status: ProfileStatus.failure,
+          errorMessage: 'No se pudo actualizar el perfil.',
+        ),
+      );
+    }
+  }
+
   @override
   Future<void> close() {
     _authSubscription?.cancel();

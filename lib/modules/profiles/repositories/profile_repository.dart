@@ -14,4 +14,11 @@ class ProfileRepository {
   Future<Company> fetchCompanyProfile(int id) {
     return _service.fetchCompanyProfile(id);
   }
+
+  Future<Candidate> updateCandidateProfile({
+    required String uid,
+    required String name,
+  }) {
+    return _service.updateCandidateProfile(uid: uid, name: name);
+  }
 }

@@ -34,4 +34,25 @@ class ProfileService {
     final data = query.docs.first.data();
     return Company.fromJson(data);
   }
+
+  Future<Candidate> updateCandidateProfile({
+    required String uid,
+    required String name,
+  }) async {
+    final docRef = _firestore.collection('candidates').doc(uid);
+    final snapshot = await docRef.get();
+    if (!snapshot.exists) {
+      throw StateError('Perfil de candidato no encontrado.');
+    }
+    await docRef.update({
+      'name': name,
+      'updated_at': FieldValue.serverTimestamp(),
+    });
+    final updatedSnapshot = await docRef.get();
+    final data = updatedSnapshot.data();
+    if (data == null) {
+      throw StateError('No se pudo actualizar el perfil.');
+    }
+    return Candidate.fromJson(data);
+  }
 }
