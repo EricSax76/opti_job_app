@@ -75,6 +75,55 @@ class _CandidateProfileContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Center(
+                      child: Stack(
+                        children: [
+                          Builder(
+                            builder: (context) {
+                              final ImageProvider? avatarImage;
+                              if (state.avatarBytes != null) {
+                                avatarImage = MemoryImage(state.avatarBytes!);
+                              } else if (state.avatarUrl != null &&
+                                  state.avatarUrl!.isNotEmpty) {
+                                avatarImage = NetworkImage(state.avatarUrl!);
+                              } else {
+                                avatarImage = null;
+                              }
+                              return CircleAvatar(
+                                radius: 44,
+                                backgroundColor: _profileBackground,
+                                backgroundImage: avatarImage,
+                                child: avatarImage == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 40,
+                                        color: _profileMuted,
+                                      )
+                                    : null,
+                              );
+                            },
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: InkWell(
+                              onTap: formCubit.pickAvatar,
+                              borderRadius: BorderRadius.circular(18),
+                              child: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: _profileInk,
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Text(
                       'Tu perfil',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -93,7 +142,14 @@ class _CandidateProfileContent extends StatelessWidget {
                     TextFormField(
                       controller: formCubit.nameController,
                       decoration: _inputDecoration(
-                        labelText: 'Nombre completo',
+                        labelText: 'Nombre',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: formCubit.lastNameController,
+                      decoration: _inputDecoration(
+                        labelText: 'Apellidos',
                       ),
                     ),
                     const SizedBox(height: 12),

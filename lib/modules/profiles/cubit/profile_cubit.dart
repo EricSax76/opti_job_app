@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -35,7 +36,7 @@ class ProfileCubit extends Cubit<ProfileState> {
     try {
       if (authState.candidate != null) {
         final profile = await _repository.fetchCandidateProfile(
-          authState.candidate!.id,
+          authState.candidate!.uid,
         );
         emit(state.copyWith(status: ProfileStatus.loaded, candidate: profile));
       } else {
@@ -55,7 +56,11 @@ class ProfileCubit extends Cubit<ProfileState> {
     await _onAuthStateChanged(_candidateAuthCubit.state);
   }
 
-  Future<void> updateCandidateProfile({required String name}) async {
+  Future<void> updateCandidateProfile({
+    required String name,
+    required String lastName,
+    Uint8List? avatarBytes,
+  }) async {
     final candidate = state.candidate ?? _candidateAuthCubit.state.candidate;
     if (candidate == null) {
       emit(
@@ -72,6 +77,8 @@ class ProfileCubit extends Cubit<ProfileState> {
       final updatedCandidate = await _repository.updateCandidateProfile(
         uid: candidate.uid,
         name: name,
+        lastName: lastName,
+        avatarBytes: avatarBytes,
       );
       emit(
         state.copyWith(

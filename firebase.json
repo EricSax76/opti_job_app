@@ -1,1 +1,37 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"opti-job","appId":"1:675341167228:android:bbb3c3e3617a275d5d77f9","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"opti-job","appId":"1:675341167228:ios:732c3247292d5ded5d77f9","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"opti-job","configurations":{"android":"1:675341167228:android:bbb3c3e3617a275d5d77f9","ios":"1:675341167228:ios:732c3247292d5ded5d77f9","web":"1:675341167228:web:01fdeba0dbb1f39e5d77f9"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "opti-job",
+          "appId": "1:675341167228:android:bbb3c3e3617a275d5d77f9",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "opti-job",
+          "appId": "1:675341167228:ios:732c3247292d5ded5d77f9",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "opti-job",
+          "configurations": {
+            "android": "1:675341167228:android:bbb3c3e3617a275d5d77f9",
+            "ios": "1:675341167228:ios:732c3247292d5ded5d77f9",
+            "web": "1:675341167228:web:01fdeba0dbb1f39e5d77f9"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

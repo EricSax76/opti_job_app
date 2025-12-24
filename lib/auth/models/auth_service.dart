@@ -63,6 +63,7 @@ class AuthService {
     final candidateData = <String, dynamic>{
       'id': candidateId,
       'name': name,
+      'last_name': '',
       'email': email.toLowerCase().trim(),
       'role': 'candidate',
       'uid': user.uid,

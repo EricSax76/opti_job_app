@@ -17,8 +17,15 @@ service cloud.firestore {
     }
 
     match /candidates/{candidateId} {
-      allow create: if isSignedIn() && request.auth.uid == candidateId;
-      allow read, update, delete: if isCandidate() && request.auth.uid == candidateId;
+      allow create: if isSignedIn()
+        && request.auth.uid == candidateId
+        && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn()
+        && request.auth.uid == candidateId
+        && resource.data.uid == request.auth.uid;
+      allow update, delete: if isSignedIn()
+        && request.auth.uid == candidateId
+        && resource.data.uid == request.auth.uid;
     }
 
     match /companies/{companyId} {

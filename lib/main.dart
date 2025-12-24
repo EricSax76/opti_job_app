@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/aplications/repositories/application_repository.dart';
@@ -26,6 +27,10 @@ import 'package:opti_job_app/core/router/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (kDebugMode) {
+    debugPrint('Firebase apps: ${Firebase.apps.map((app) => app.name).toList()}');
+    debugPrint('Firebase default options: ${Firebase.app().options}');
+  }
   const useFirebaseEmulators = bool.fromEnvironment(
     'USE_FIREBASE_EMULATORS',
     defaultValue: false,
@@ -55,6 +60,12 @@ Future<void> main() async {
       firestoreHost,
       firestorePort,
     );
+    if (kDebugMode) {
+      debugPrint(
+        'Firebase emulators enabled: auth=$authHost:$authPort '
+        'firestore=$firestoreHost:$firestorePort',
+      );
+    }
   }
   Bloc.observer = const AppBlocObserver();
 
@@ -68,6 +79,16 @@ Future<void> main() async {
   final applicationService = ApplicationService(
     applicationRepository: applicationRepository,
   );
+  if (kDebugMode) {
+    debugPrint(
+      'Locator: AuthRepository, JobOfferRepository, ProfileRepository, '
+      'CalendarRepository, ApplicationRepository, ApplicationService',
+    );
+    debugPrint(
+      'Firebase instances: auth=${FirebaseAuth.instance}, '
+      'firestore=${FirebaseFirestore.instance}',
+    );
+  }
 
   runApp(
     MultiRepositoryProvider(
