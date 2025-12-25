@@ -7,6 +7,7 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_view.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/my_applications_view.dart';
 import 'package:opti_job_app/modules/profiles/ui/pages/profile_screen.dart';
+import 'package:opti_job_app/modules/curriculum/ui/pages/curriculum_screen.dart';
 
 class CandidateDashboardScreen extends StatefulWidget {
   const CandidateDashboardScreen({super.key});
@@ -23,7 +24,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -70,6 +71,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
             Tab(icon: Icon(Icons.dashboard), text: 'Para ti'),
             Tab(icon: Icon(Icons.work_history), text: 'Mis Ofertas'),
             Tab(icon: Icon(Icons.person_outline), text: 'Perfil'),
+            Tab(icon: Icon(Icons.description_outlined), text: 'CV'),
           ],
         ),
       ),
@@ -85,6 +87,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
             child: const MyApplicationsView(),
           ),
           const ProfileScreen(),
+          const CurriculumScreen(),
         ],
       ),
       floatingActionButton: authState.isAuthenticated

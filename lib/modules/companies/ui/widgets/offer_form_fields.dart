@@ -8,15 +8,16 @@ class OfferFormFields extends StatelessWidget {
 
   final OfferFormControllers controllers;
 
+  static const _background = Color(0xFFF8FAFC);
+  static const _border = Color(0xFFE2E8F0);
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         TextFormField(
           controller: controllers.title,
-          decoration: const InputDecoration(
-            labelText: 'Título',
-          ),
+          decoration: _inputDecoration(labelText: 'Título'),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'El título es obligatorio';
@@ -28,9 +29,7 @@ class OfferFormFields extends StatelessWidget {
         TextFormField(
           controller: controllers.description,
           maxLines: 4,
-          decoration: const InputDecoration(
-            labelText: 'Descripción',
-          ),
+          decoration: _inputDecoration(labelText: 'Descripción'),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'La descripción es obligatoria';
@@ -41,9 +40,7 @@ class OfferFormFields extends StatelessWidget {
         const SizedBox(height: 12),
         TextFormField(
           controller: controllers.location,
-          decoration: const InputDecoration(
-            labelText: 'Ubicación',
-          ),
+          decoration: _inputDecoration(labelText: 'Ubicación'),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'La ubicación es obligatoria';
@@ -54,9 +51,7 @@ class OfferFormFields extends StatelessWidget {
         const SizedBox(height: 12),
         TextFormField(
           controller: controllers.jobType,
-          decoration: const InputDecoration(
-            labelText: 'Tipología',
-          ),
+          decoration: _inputDecoration(labelText: 'Tipología'),
         ),
         const SizedBox(height: 12),
         Row(
@@ -66,9 +61,7 @@ class OfferFormFields extends StatelessWidget {
                 controller: controllers.salaryMin,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: 'Salario mínimo',
-                ),
+                decoration: _inputDecoration(labelText: 'Salario mínimo'),
                 validator: (value) => _validateSalary(
                   value,
                   otherValue: controllers.salaryMax.text,
@@ -81,9 +74,7 @@ class OfferFormFields extends StatelessWidget {
                 controller: controllers.salaryMax,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                  labelText: 'Salario máximo',
-                ),
+                decoration: _inputDecoration(labelText: 'Salario máximo'),
                 validator: (value) => _validateSalary(
                   value,
                   otherValue: controllers.salaryMin.text,
@@ -96,11 +87,31 @@ class OfferFormFields extends StatelessWidget {
         const SizedBox(height: 12),
         TextFormField(
           controller: controllers.education,
-          decoration: const InputDecoration(
-            labelText: 'Educación requerida',
-          ),
+          decoration: _inputDecoration(labelText: 'Educación requerida'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: controllers.keyIndicators,
+          maxLines: 2,
+          decoration: _inputDecoration(labelText: 'Indicadores clave'),
         ),
       ],
+    );
+  }
+
+  static InputDecoration _inputDecoration({required String labelText}) {
+    return InputDecoration(
+      labelText: labelText,
+      filled: true,
+      fillColor: _background,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: _border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: _border),
+      ),
     );
   }
 

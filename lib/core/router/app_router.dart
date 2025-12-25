@@ -72,11 +72,13 @@ class AppRouter {
           builder: (context, state) {
             final idParam = state.pathParameters['id'] ?? '0';
             final id = int.tryParse(idParam) ?? 0;
+            final candidateUid =
+                context.read<CandidateAuthCubit>().state.candidate?.uid;
             return BlocProvider(
               create: (context) => JobOfferDetailCubit(
                 context.read<JobOfferRepository>(),
                 context.read<ApplicationService>(),
-              )..loadOffer(id),
+              )..loadOffer(id, candidateUid: candidateUid),
               child: JobOfferDetailScreen(offerId: id),
             );
           },

@@ -97,6 +97,7 @@ class JobOfferPayload {
     this.salaryMax,
     this.education,
     this.jobType,
+    this.keyIndicators,
   });
 
   final String title;
@@ -108,6 +109,7 @@ class JobOfferPayload {
   final String? salaryMax;
   final String? education;
   final String? jobType;
+  final String? keyIndicators;
 
   Map<String, dynamic> toJson() {
     return {
@@ -120,6 +122,7 @@ class JobOfferPayload {
       'salary_max': salaryMax,
       'education': education,
       'job_type': jobType,
+      'key_indicators': keyIndicators,
     };
   }
 }

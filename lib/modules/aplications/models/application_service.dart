@@ -1,4 +1,5 @@
 import 'package:opti_job_app/modules/aplications/models/application.dart';
+import 'package:opti_job_app/modules/aplications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/aplications/repositories/application_repository.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
@@ -30,8 +31,20 @@ class ApplicationService {
     );
   }
 
-  Future<List<JobOffer>> getApplicationsForCandidate(String candidateUid) {
+  Future<List<CandidateApplicationEntry>> getApplicationEntriesForCandidate(
+    String candidateUid,
+  ) {
     return _applicationRepository.getApplicationsForCandidate(
+      candidateUid: candidateUid,
+    );
+  }
+
+  Future<Application?> getApplicationForCandidateOffer({
+    required int jobOfferId,
+    required String candidateUid,
+  }) {
+    return _applicationRepository.getApplicationForCandidateOffer(
+      jobOfferId: jobOfferId,
       candidateUid: candidateUid,
     );
   }

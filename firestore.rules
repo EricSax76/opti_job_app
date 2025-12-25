@@ -26,6 +26,11 @@ service cloud.firestore {
       allow update, delete: if isSignedIn()
         && request.auth.uid == candidateId
         && resource.data.uid == request.auth.uid;
+
+      match /curriculum/{curriculumId} {
+        allow create, read, update, delete: if isSignedIn()
+          && request.auth.uid == candidateId;
+      }
     }
 
     match /companies/{companyId} {
@@ -51,6 +56,13 @@ service cloud.firestore {
         && request.auth.uid == resource.data.companyUid;
 
       allow delete: if false; // Deletion is not allowed for now.
+    }
+
+    match /calendarEvents/{eventId} {
+      allow create: if isSignedIn()
+        && request.resource.data.owner_uid == request.auth.uid;
+      allow read, update, delete: if isSignedIn()
+        && resource.data.owner_uid == request.auth.uid;
     }
   }
 }

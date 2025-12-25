@@ -10,12 +10,12 @@ class MyApplicationsState extends Equatable {
   });
 
   final ApplicationsStatus status;
-  final List<JobOffer> applications;
+  final List<CandidateApplicationEntry> applications;
   final String? errorMessage;
 
   MyApplicationsState copyWith({
     ApplicationsStatus? status,
-    List<JobOffer>? applications,
+    List<CandidateApplicationEntry>? applications,
     String? errorMessage,
   }) {
     return MyApplicationsState(

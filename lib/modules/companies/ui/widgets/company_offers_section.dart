@@ -9,32 +9,41 @@ class CompanyOffersSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const border = Color(0xFFE2E8F0);
+    const muted = Color(0xFF475569);
+
     return BlocBuilder<CompanyJobOffersCubit, CompanyJobOffersState>(
       builder: (context, state) {
         if (state.status == CompanyJobOffersStatus.loading ||
             state.status == CompanyJobOffersStatus.initial) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        Widget message(String text) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: border),
+            ),
+            child: Text(
+              text,
+              style: const TextStyle(color: muted, height: 1.4),
+            ),
           );
         }
 
         if (state.status == CompanyJobOffersStatus.failure) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              state.errorMessage ??
-                  'No se pudieron cargar tus ofertas. Intenta refrescar.',
-            ),
+          return message(
+            state.errorMessage ??
+                'No se pudieron cargar tus ofertas. Intenta refrescar.',
           );
         }
 
         if (state.offers.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'Aún no has publicado ofertas. Crea la primera para comenzar a recibir postulaciones.',
-            ),
+          return message(
+            'Aún no has publicado ofertas. Crea la primera para comenzar a recibir postulaciones.',
           );
         }
 
@@ -42,7 +51,7 @@ class CompanyOffersSection extends StatelessWidget {
           children: [
             for (final offer in state.offers)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: OfferCard(offer: offer),
               ),
           ],

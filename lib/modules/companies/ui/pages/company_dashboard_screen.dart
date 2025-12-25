@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
+import 'package:opti_job_app/modules/ai/models/ai_job_offer_draft.dart';
+import 'package:opti_job_app/modules/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
-import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_dashboard_widgets.dart';
 
@@ -19,6 +21,11 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
   final _formKey = GlobalKey<FormState>();
   final _formControllers = OfferFormControllers();
   String? _loadedCompanyUid;
+  var _isGeneratingOffer = false;
+
+  static const _background = Color(0xFFF8FAFC);
+  static const _ink = Color(0xFF0F172A);
+  static const _border = Color(0xFFE2E8F0);
 
   @override
   void dispose() {
@@ -61,39 +68,54 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         }
       },
       child: Scaffold(
-        appBar: const AppNavBar(),
+        backgroundColor: _background,
+        appBar: AppBar(
+          title: const Text(
+            'OPTIJOB',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2,
+            ),
+          ),
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          foregroundColor: _ink,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          shape: const Border(
+            bottom: BorderSide(color: _border, width: 1),
+          ),
+        ),
         floatingActionButton: authState.isAuthenticated
-            ? FloatingActionButton.extended(
+            ? FloatingActionButton(
+                backgroundColor: _ink,
+                foregroundColor: Colors.white,
                 onPressed: () => context.read<CompanyAuthCubit>().logout(),
-                icon: const Icon(Icons.logout),
-                label: const Text('Cerrar sesión'),
+                tooltip: 'Cerrar sesión',
+                child: const Icon(Icons.logout),
               )
             : null,
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: authState.company == null
-              ? const UnauthenticatedCompanyMessage()
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CompanyDashboardHeader(
-                        companyName: authState.company!.name,
-                      ),
-                      const SizedBox(height: 24),
-                      CreateOfferCard(
-                        formKey: _formKey,
-                        controllers: _formControllers,
-                        onSubmit: () => _submit(context),
-                      ),
-                      const SizedBox(height: 24),
-                      const CompanyOffersHeader(),
-                      const SizedBox(height: 8),
-                      const CompanyOffersSection(),
-                    ],
+        body: authState.company == null
+            ? const UnauthenticatedCompanyMessage()
+            : ListView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                children: [
+                  CompanyDashboardHeader(companyName: authState.company!.name),
+                  const SizedBox(height: 24),
+                  CreateOfferCard(
+                    formKey: _formKey,
+                    controllers: _formControllers,
+                    onSubmit: () => _submit(context),
+                    onGenerateWithAi: () => _generateWithAi(context),
+                    isGenerating: _isGeneratingOffer,
                   ),
-                ),
-        ),
+                  const SizedBox(height: 32),
+                  const CompanyOffersHeader(),
+                  const SizedBox(height: 12),
+                  const CompanyOffersSection(),
+                ],
+              ),
       ),
     );
   }
@@ -135,7 +157,243 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         education: _formControllers.education.text.trim().isEmpty
             ? null
             : _formControllers.education.text.trim(),
+        keyIndicators: _formControllers.keyIndicators.text.trim().isEmpty
+            ? null
+            : _formControllers.keyIndicators.text.trim(),
       ),
+    );
+  }
+
+  Future<void> _generateWithAi(BuildContext context) async {
+    if (_isGeneratingOffer) return;
+
+    final company = context.read<CompanyAuthCubit>().state.company;
+    if (company == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Debes iniciar sesión como empresa para generar ofertas.'),
+        ),
+      );
+      return;
+    }
+
+    final criteria = await _showGenerateOfferDialog(
+      context,
+      companyName: company.name,
+    );
+    if (criteria == null) return;
+    if (!context.mounted) return;
+
+    setState(() => _isGeneratingOffer = true);
+    try {
+      final locale = Localizations.localeOf(context).toLanguageTag();
+      final draft = await context.read<AiRepository>().generateJobOffer(
+        criteria: criteria,
+        locale: locale,
+        quality: (criteria['quality'] as String?) ?? 'flash',
+      );
+      if (!context.mounted) return;
+      _applyDraftToForm(draft);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Borrador generado. Revisa y publica.')),
+      );
+    } on AiConfigurationException catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } on AiRequestException catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo generar la oferta con IA.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isGeneratingOffer = false);
+    }
+  }
+
+  void _applyDraftToForm(AiJobOfferDraft draft) {
+    _formControllers.title.text = draft.title;
+    _formControllers.description.text = draft.description;
+    _formControllers.location.text = draft.location;
+    _formControllers.jobType.text = draft.jobType ?? _formControllers.jobType.text;
+    _formControllers.education.text =
+        draft.education ?? _formControllers.education.text;
+    _formControllers.salaryMin.text =
+        draft.salaryMin ?? _formControllers.salaryMin.text;
+    _formControllers.salaryMax.text =
+        draft.salaryMax ?? _formControllers.salaryMax.text;
+    _formControllers.keyIndicators.text =
+        draft.keyIndicators ?? _formControllers.keyIndicators.text;
+  }
+
+  Future<Map<String, dynamic>?> _showGenerateOfferDialog(
+    BuildContext context, {
+    required String companyName,
+  }) {
+    final formKey = GlobalKey<FormState>();
+    final role = TextEditingController(text: _formControllers.title.text.trim());
+    final seniority = TextEditingController();
+    final location = TextEditingController(
+      text: _formControllers.location.text.trim(),
+    );
+    final stack = TextEditingController();
+    final responsibilities = TextEditingController();
+    final requirements = TextEditingController();
+    final benefits = TextEditingController();
+    var quality = 'flash';
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Generar oferta con IA'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: role,
+                        decoration: const InputDecoration(
+                          labelText: 'Puesto (ej. Flutter Developer)',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'El puesto es obligatorio';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: seniority,
+                        decoration: const InputDecoration(
+                          labelText: 'Seniority (junior/mid/senior)',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: location,
+                        decoration: const InputDecoration(
+                          labelText: 'Ubicación (o remoto/híbrido)',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: stack,
+                        decoration: const InputDecoration(
+                          labelText: 'Stack / habilidades clave',
+                          hintText: 'Flutter, Firebase, BLoC, ...',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: responsibilities,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Responsabilidades (opcional)',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: requirements,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Requisitos (opcional)',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: benefits,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: 'Beneficios (opcional)',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+                        initialValue: quality,
+                        decoration: const InputDecoration(
+                          labelText: 'Calidad (costo)',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'flash',
+                            child: Text('Flash (más barato)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'pro',
+                            child: Text('Pro (mejor calidad)'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          quality = value;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    role.dispose();
+                    seniority.dispose();
+                    location.dispose();
+                    stack.dispose();
+                    responsibilities.dispose();
+                    requirements.dispose();
+                    benefits.dispose();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    if (!formKey.currentState!.validate()) return;
+                    final payload = <String, dynamic>{
+                      'companyName': companyName,
+                      'role': role.text.trim(),
+                      'seniority': seniority.text.trim(),
+                      'location': location.text.trim(),
+                      'mustHaveSkills': stack.text
+                          .split(',')
+                          .map((s) => s.trim())
+                          .where((s) => s.isNotEmpty)
+                          .toList(),
+                      'responsibilities': responsibilities.text.trim(),
+                      'requirements': requirements.text.trim(),
+                      'benefits': benefits.text.trim(),
+                      'quality': quality,
+                    };
+
+                    role.dispose();
+                    seniority.dispose();
+                    location.dispose();
+                    stack.dispose();
+                    responsibilities.dispose();
+                    requirements.dispose();
+                    benefits.dispose();
+
+                    Navigator.of(context).pop(payload);
+                  },
+                  child: const Text('Generar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

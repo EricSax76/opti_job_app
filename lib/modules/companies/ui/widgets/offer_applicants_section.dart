@@ -18,10 +18,15 @@ class OfferApplicantsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const background = Color(0xFFF8FAFC);
+    const muted = Color(0xFF475569);
+    const border = Color(0xFFE2E8F0);
+
     final resolvedCompanyUid = companyUid;
     if (resolvedCompanyUid == null) {
       return const Text(
         'No se pudieron cargar los aplicantes porque falta el identificador de empresa.',
+        style: TextStyle(color: muted, height: 1.4),
       );
     }
     return BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
@@ -44,9 +49,25 @@ class OfferApplicantsSection extends StatelessWidget {
         final applicants = state.applicants[offer.id] ?? const <Application>[];
         final error = state.errors[offer.id];
 
+        Widget message(String text) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: border),
+            ),
+            child: Text(
+              text,
+              style: const TextStyle(color: muted, height: 1.4),
+            ),
+          );
+        }
+
         switch (status) {
           case OfferApplicantsStatus.initial:
-            return const Text(
+            return message(
               'Expande la tarjeta para cargar los aplicantes de esta oferta.',
             );
           case OfferApplicantsStatus.loading:
@@ -55,16 +76,17 @@ class OfferApplicantsSection extends StatelessWidget {
               child: Center(child: CircularProgressIndicator()),
             );
           case OfferApplicantsStatus.failure:
-            return Text(error ?? 'No se pudieron cargar los aplicantes.');
+            return message(error ?? 'No se pudieron cargar los aplicantes.');
           case OfferApplicantsStatus.success:
             if (applicants.isEmpty) {
-              return const Text('Aún no hay postulaciones para esta oferta.');
+              return message('Aún no hay postulaciones para esta oferta.');
             }
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final application in applicants)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: ApplicantTile(
                       offerId: offer.id,
                       application: application,

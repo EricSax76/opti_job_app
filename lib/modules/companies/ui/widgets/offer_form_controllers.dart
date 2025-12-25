@@ -8,6 +8,7 @@ class OfferFormControllers {
   final TextEditingController salaryMax = TextEditingController();
   final TextEditingController education = TextEditingController();
   final TextEditingController jobType = TextEditingController();
+  final TextEditingController keyIndicators = TextEditingController();
 
   void clear() {
     title.clear();
@@ -17,6 +18,7 @@ class OfferFormControllers {
     salaryMax.clear();
     education.clear();
     jobType.clear();
+    keyIndicators.clear();
   }
 
   void dispose() {
@@ -27,5 +29,6 @@ class OfferFormControllers {
     salaryMax.dispose();
     education.dispose();
     jobType.dispose();
+    keyIndicators.dispose();
   }
 }

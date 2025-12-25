@@ -18,6 +18,11 @@ class ApplicantTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const background = Color(0xFFF8FAFC);
+    const ink = Color(0xFF0F172A);
+    const muted = Color(0xFF475569);
+    const border = Color(0xFFE2E8F0);
+
     final subtitleParts = <String>[];
     if (application.candidateEmail != null &&
         application.candidateEmail!.isNotEmpty) {
@@ -25,47 +30,67 @@ class ApplicantTile extends StatelessWidget {
     }
     subtitleParts.add('Estado: ${_statusLabel(application.status)}');
 
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(child: Text(_initials(application))),
-      title: Text(
-        application.candidateName ??
-            application.candidateEmail ??
-            application.candidateUid,
+    return Container(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: border),
       ),
-      subtitle: Text(subtitleParts.join(' • ')),
-      trailing: application.id == null
-          ? null
-          : PopupMenuButton<String>(
-              tooltip: 'Actualizar estado',
-              onSelected: (value) {
-                context.read<OfferApplicantsCubit>().updateApplicationStatus(
-                  offerId: offerId,
-                  applicationId: application.id!,
-                  newStatus: value,
-                  companyUid: companyUid,
-                );
-              },
-              itemBuilder: (context) {
-                return _applicationStatuses.map((status) {
-                  final isSelected = status == application.status;
-                  return PopupMenuItem<String>(
-                    value: status,
-                    child: Row(
-                      children: [
-                        if (isSelected)
-                          const Icon(Icons.check, size: 16)
-                        else
-                          const SizedBox(width: 16),
-                        Text(_statusLabel(status)),
-                      ],
-                    ),
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        leading: CircleAvatar(
+          backgroundColor: ink,
+          foregroundColor: Colors.white,
+          child: Text(_initials(application)),
+        ),
+        title: Text(
+          application.candidateName ??
+              application.candidateEmail ??
+              application.candidateUid,
+          style: const TextStyle(color: ink, fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          subtitleParts.join(' • '),
+          style: const TextStyle(color: muted, height: 1.35),
+        ),
+        trailing: application.id == null
+            ? null
+            : PopupMenuButton<String>(
+                tooltip: 'Actualizar estado',
+                onSelected: (value) {
+                  context.read<OfferApplicantsCubit>().updateApplicationStatus(
+                    offerId: offerId,
+                    applicationId: application.id!,
+                    newStatus: value,
+                    companyUid: companyUid,
                   );
-                }).toList();
-              },
-              child: Chip(label: Text(_statusLabel(application.status))),
-            ),
+                },
+                itemBuilder: (context) {
+                  return _applicationStatuses.map((status) {
+                    final isSelected = status == application.status;
+                    return PopupMenuItem<String>(
+                      value: status,
+                      child: Row(
+                        children: [
+                          if (isSelected)
+                            const Icon(Icons.check, size: 16)
+                          else
+                            const SizedBox(width: 16),
+                          Text(_statusLabel(status)),
+                        ],
+                      ),
+                    );
+                  }).toList();
+                },
+                child: Chip(
+                  label: Text(_statusLabel(application.status)),
+                  side: const BorderSide(color: border),
+                  backgroundColor: Colors.white,
+                  labelStyle: const TextStyle(color: ink),
+                ),
+              ),
+      ),
     );
   }
 }

@@ -13,51 +13,76 @@ class OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const ink = Color(0xFF0F172A);
+    const muted = Color(0xFF475569);
+    const border = Color(0xFFE2E8F0);
+
     final resolvedCompanyUid = _companyUid(context);
-    return Card(
-      elevation: 1,
-      child: ExpansionTile(
-        title: Text(offer.title),
-        subtitle: Text(
-          '${offer.location} • ${offer.jobType ?? 'Tipología no especificada'}',
-        ),
-        leading: const Icon(Icons.work_outline),
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-        onExpansionChanged: (expanded) {
-          if (expanded) {
-            final applicantsCubit = context.read<OfferApplicantsCubit>();
-            final currentStatus =
-                applicantsCubit.state.statuses[offer.id] ??
-                OfferApplicantsStatus.initial;
-            if (currentStatus == OfferApplicantsStatus.initial ||
-                currentStatus == OfferApplicantsStatus.failure) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Theme(
+          data: Theme.of(
+            context,
+          ).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 8,
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            leading: const Icon(Icons.work_outline, color: ink),
+            title: Text(
+              offer.title,
+              style: const TextStyle(
+                color: ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              '${offer.location} • ${offer.jobType ?? 'Tipología no especificada'}',
+              style: const TextStyle(color: muted, height: 1.4),
+            ),
+            onExpansionChanged: (expanded) {
+              if (!expanded) return;
+
+              final applicantsCubit = context.read<OfferApplicantsCubit>();
+              final currentStatus =
+                  applicantsCubit.state.statuses[offer.id] ??
+                  OfferApplicantsStatus.initial;
+              if (currentStatus != OfferApplicantsStatus.initial &&
+                  currentStatus != OfferApplicantsStatus.failure) {
+                return;
+              }
+
               final companyUid = _companyUid(context);
               if (companyUid == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text(
-                      'No se pudo determinar el usuario de empresa.',
-                    ),
+                    content: Text('No se pudo determinar el usuario de empresa.'),
                   ),
                 );
                 return;
               }
+
               applicantsCubit.loadApplicants(
                 offerId: offer.id,
                 companyUid: companyUid,
               );
-            }
-          }
-        },
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: OfferApplicantsSection(
-              offer: offer,
-              companyUid: resolvedCompanyUid,
-            ),
+            },
+            children: [
+              OfferApplicantsSection(
+                offer: offer,
+                companyUid: resolvedCompanyUid,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

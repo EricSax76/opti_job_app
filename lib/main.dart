@@ -21,6 +21,11 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum_service.dart';
+import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
+import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/ai/models/ai_service.dart';
+import 'package:opti_job_app/modules/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/firebase_options.dart';
 import 'package:opti_job_app/core/router/app_router.dart';
 
@@ -72,6 +77,7 @@ Future<void> main() async {
   final authRepository = AuthRepository(AuthService());
   final jobOfferRepository = JobOfferRepository(JobOfferService());
   final profileRepository = ProfileRepository(ProfileService());
+  final curriculumRepository = CurriculumRepository(CurriculumService());
   final calendarRepository = CalendarRepository();
   final applicationRepository = ApplicationRepository(
     firestore: FirebaseFirestore.instance,
@@ -79,6 +85,7 @@ Future<void> main() async {
   final applicationService = ApplicationService(
     applicationRepository: applicationRepository,
   );
+  final aiRepository = AiRepository(AiService());
   if (kDebugMode) {
     debugPrint(
       'Locator: AuthRepository, JobOfferRepository, ProfileRepository, '
@@ -96,9 +103,11 @@ Future<void> main() async {
         RepositoryProvider.value(value: authRepository),
         RepositoryProvider.value(value: jobOfferRepository),
         RepositoryProvider.value(value: profileRepository),
+        RepositoryProvider.value(value: curriculumRepository),
         RepositoryProvider.value(value: calendarRepository),
         RepositoryProvider.value(value: applicationRepository),
         RepositoryProvider.value(value: applicationService),
+        RepositoryProvider.value(value: aiRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -125,6 +134,12 @@ Future<void> main() async {
               repository: profileRepository,
               candidateAuthCubit: context
                   .read<CandidateAuthCubit>(), // Updated dependency
+            ),
+          ),
+          BlocProvider<CurriculumCubit>(
+            create: (context) => CurriculumCubit(
+              repository: context.read<CurriculumRepository>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
             ),
           ),
         ],
