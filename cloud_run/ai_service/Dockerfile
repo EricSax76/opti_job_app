@@ -3,7 +3,7 @@ FROM node:20-slim
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 COPY src ./src
 
@@ -13,4 +13,3 @@ ENV PORT=8080
 EXPOSE 8080
 
 CMD ["npm","start"]
-

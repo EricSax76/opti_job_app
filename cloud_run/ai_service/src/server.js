@@ -164,9 +164,26 @@ function extractJson(text) {
   return JSON.parse(slice);
 }
 
+function parseNumberEnv(name, fallback) {
+  const raw = env(name, '');
+  if (!raw.trim()) return fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function getSafetySettings() {
+  const threshold = env('AI_SAFETY_THRESHOLD', 'OFF');
+  return [
+    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold },
+    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold },
+    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold },
+    { category: 'HARM_CATEGORY_HARASSMENT', threshold },
+  ];
+}
+
 function getVertexModel(quality) {
-  const project = env('GCP_PROJECT', env('opti-job'));
-  const location = env('GCP_LOCATION', 'europe-southwest1');
+  const project = env('GCP_PROJECT', env('GOOGLE_CLOUD_PROJECT'));
+  const location = env('GCP_LOCATION', 'global');
   if (!project) {
     throw new Error('Missing GCP_PROJECT/GOOGLE_CLOUD_PROJECT');
   }
@@ -174,18 +191,26 @@ function getVertexModel(quality) {
   const modelName =
     quality === 'pro'
       ? env('AI_MODEL_PRO', 'gemini-1.5-pro')
-      : env('AI_MODEL_FLASH', 'gemini-1.5-flash');
+      : env('AI_MODEL_FLASH', 'gemini-2.0-flash-001');
   return vertex.getGenerativeModel({ model: modelName });
 }
 
-async function generateJson({ prompt, quality, maxOutputTokens }) {
+async function generateJson({ prompt, quality, maxOutputTokens, temperature, topP }) {
   const model = getVertexModel(quality);
   const result = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       maxOutputTokens,
-      temperature: 0.3,
+      temperature:
+        typeof temperature === 'number' && Number.isFinite(temperature)
+          ? temperature
+          : parseNumberEnv('AI_TEMPERATURE', 0.3),
+      topP:
+        typeof topP === 'number' && Number.isFinite(topP)
+          ? topP
+          : parseNumberEnv('AI_TOP_P', 0.95),
     },
+    safetySettings: getSafetySettings(),
   });
 
   const text =
@@ -197,6 +222,7 @@ async function generateJson({ prompt, quality, maxOutputTokens }) {
 }
 
 function requireAuth(req, res, next) {
+  initFirebaseAdmin();
   if (env('DISABLE_AUTH', 'false') === 'true') {
     req.user = { uid: 'dev' };
     return next();
@@ -257,7 +283,7 @@ app.post('/ai/improve-cv-summary', requireAuth, async (req, res) => {
 
   try {
     const out = await withTimeout(
-      generateJson({ prompt, quality, maxOutputTokens: 250 }),
+      generateJson({ prompt, quality, maxOutputTokens: 250, temperature: 0.2 }),
       20000,
     );
     const summary = truncate(out?.summary, 1200);
@@ -331,7 +357,7 @@ app.post('/ai/match-offer-candidate', requireAuth, async (req, res) => {
 
   try {
     const out = await withTimeout(
-      generateJson({ prompt, quality, maxOutputTokens: 300 }),
+      generateJson({ prompt, quality, maxOutputTokens: 300, temperature: 0.2 }),
       20000,
     );
     const score = Number.isFinite(out?.score) ? Math.max(0, Math.min(100, out.score)) : null;
@@ -407,7 +433,7 @@ app.post('/ai/generate-job-offer', requireAuth, async (req, res) => {
 
   try {
     const out = await withTimeout(
-      generateJson({ prompt, quality, maxOutputTokens: 450 }),
+      generateJson({ prompt, quality, maxOutputTokens: 600, temperature: 0.7 }),
       20000,
     );
 
