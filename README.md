@@ -44,6 +44,7 @@ En `cloud_run/ai_service` tienes un servicio Node listo para Cloud Run con:
 - Verificación de Firebase ID Token (Firebase Admin)
 - Gemini en Vertex AI (`flash` vs `pro`)
 - Caché en Firestore (`ai_cache_matches` y `ai_cache_cv_summary`) con `expiresAt` (TTL opcional)
+- Soporte CORS configurable para Flutter Web (`CORS_ORIGINS`)
 
 ## Configuración de Firebase
 1. Crea un proyecto en [Firebase Console](https://console.firebase.google.com/) y habilita Authentication (correo/contraseña) y Cloud Firestore.

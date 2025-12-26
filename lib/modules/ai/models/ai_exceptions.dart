@@ -15,4 +15,3 @@ class AiRequestException implements Exception {
   @override
   String toString() => 'AiRequestException: $message';
 }
-

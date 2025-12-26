@@ -16,6 +16,7 @@ Autenticación: `Authorization: Bearer <Firebase ID Token>` (verificado con Fire
 - `AI_MODEL_PRO`: modelo de mayor calidad (default `gemini-1.5-pro`)
 - `CACHE_TTL_DAYS`: TTL de caché (default `7`)
 - `DISABLE_AUTH`: `true` para desarrollo local sin token (no usar en prod)
+- `CORS_ORIGINS`: lista de orígenes permitidos para Flutter Web (separados por coma) o `*` (ej. `http://localhost:51234,https://tu-dominio.com`)
 
 ## Caché en Firestore
 
@@ -24,6 +25,15 @@ Autenticación: `Authorization: Bearer <Firebase ID Token>` (verificado con Fire
 - Generar oferta: colección `ai_cache_job_offers`, doc id `${uid}_${criteriaHash}` con `expiresAt`
 
 TTL opcional: en Firebase Console puedes habilitar TTL usando el campo `expiresAt`.
+
+## Requisitos en Google Cloud (Vertex AI + IAM)
+
+1. En el proyecto de GCP, habilita la API de Vertex AI.
+2. Asegura que la cuenta de servicio que ejecuta Cloud Run tenga permisos:
+   - Vertex AI: `roles/aiplatform.user`
+   - Firestore (cache): `roles/datastore.user` (o superior)
+
+Nota: Cloud Run provee credenciales por defecto (ADC) vía la cuenta de servicio del servicio; no necesitas API keys.
 
 ## Deploy (ejemplo)
 

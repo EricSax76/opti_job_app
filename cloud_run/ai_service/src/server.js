@@ -10,6 +10,39 @@ function env(name, fallback = '') {
   return process.env[name] ?? fallback;
 }
 
+function parseCorsOrigins(raw) {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  if (!value) return { mode: 'disabled', origins: [] };
+  if (value === '*') return { mode: 'any', origins: [] };
+  const origins = value
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+  return { mode: 'list', origins };
+}
+
+const cors = parseCorsOrigins(env('CORS_ORIGINS', ''));
+app.use((req, res, next) => {
+  const origin = req.get('Origin');
+  if (!origin || cors.mode === 'disabled') {
+    if (req.method === 'OPTIONS') return res.status(204).send('');
+    return next();
+  }
+
+  const allowOrigin =
+    cors.mode === 'any' ? '*' : cors.origins.includes(origin) ? origin : '';
+  if (allowOrigin) {
+    res.set('Access-Control-Allow-Origin', allowOrigin);
+    res.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Authorization,Content-Type');
+    res.set('Access-Control-Max-Age', '3600');
+    if (allowOrigin !== '*') res.set('Vary', 'Origin');
+  }
+
+  if (req.method === 'OPTIONS') return res.status(204).send('');
+  return next();
+});
+
 function nowPlusDays(days) {
   const ms = Date.now() + days * 24 * 60 * 60 * 1000;
   return new Date(ms);

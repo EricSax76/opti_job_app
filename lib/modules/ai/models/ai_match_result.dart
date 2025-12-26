@@ -42,4 +42,3 @@ class AiMatchResult {
     throw const FormatException('Missing score');
   }
 }
-
