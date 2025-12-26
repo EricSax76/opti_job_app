@@ -30,7 +30,12 @@ class AiJobOfferDraft {
     final description = s(json['description']) ?? '';
     final location = s(json['location']) ?? '';
     if (title.isEmpty || description.isEmpty || location.isEmpty) {
-      throw const FormatException('Missing required fields');
+      final missing = <String>[
+        if (title.isEmpty) 'title',
+        if (description.isEmpty) 'description',
+        if (location.isEmpty) 'location',
+      ];
+      throw FormatException('Missing required fields: ${missing.join(",")}');
     }
 
     return AiJobOfferDraft(

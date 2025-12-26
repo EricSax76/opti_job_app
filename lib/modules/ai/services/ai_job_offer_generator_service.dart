@@ -28,10 +28,44 @@ class AiJobOfferGeneratorService {
       payload: payload,
     );
 
+    final error = (decoded['error'] is String)
+        ? (decoded['error'] as String).trim()
+        : '';
+    if (error.isNotEmpty) {
+      throw AiRequestException(_mapError(error));
+    }
+
+    final draftJson = switch (decoded['draft']) {
+      final Map<String, dynamic> m => m,
+      _ => decoded,
+    };
+
     try {
-      return AiJobOfferDraft.fromJson(decoded);
+      return AiJobOfferDraft.fromJson(draftJson);
+    } on FormatException catch (e) {
+      final details = e.message.trim();
+      throw AiRequestException(
+        details.isEmpty
+            ? 'La IA devolvió un borrador incompleto. Intenta nuevamente.'
+            : 'La IA devolvió un borrador incompleto ($details).',
+      );
     } catch (_) {
-      throw const AiRequestException('Respuesta inválida del servicio de IA.');
+      throw const AiRequestException(
+        'Respuesta inválida del servicio de IA. Intenta nuevamente.',
+      );
+    }
+  }
+
+  String _mapError(String error) {
+    switch (error) {
+      case 'missing_role':
+        return 'Falta el puesto/rol para generar la oferta.';
+      case 'invalid_model_output':
+        return 'La IA devolvió una respuesta incompleta. Intenta nuevamente.';
+      case 'ai_failed':
+        return 'No se pudo generar la oferta con IA. Intenta nuevamente.';
+      default:
+        return 'Error del servicio de IA: $error';
     }
   }
 }

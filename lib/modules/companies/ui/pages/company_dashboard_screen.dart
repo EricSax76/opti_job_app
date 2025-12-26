@@ -177,6 +177,8 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
     final criteria = await _showGenerateOfferDialog(
       context,
       companyName: company.name,
+      initialRole: _formControllers.title.text.trim(),
+      initialLocation: _formControllers.location.text.trim(),
     );
     if (criteria == null) return;
     if (!context.mounted) return;
@@ -233,161 +235,195 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
   Future<Map<String, dynamic>?> _showGenerateOfferDialog(
     BuildContext context, {
     required String companyName,
-  }) async {
-    final formKey = GlobalKey<FormState>();
-    final role = TextEditingController(
-      text: _formControllers.title.text.trim(),
+    String initialRole = '',
+    String initialLocation = '',
+  }) {
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      useRootNavigator: false,
+      builder: (dialogContext) {
+        return _GenerateOfferDialog(
+          companyName: companyName,
+          initialRole: initialRole,
+          initialLocation: initialLocation,
+        );
+      },
     );
-    final seniority = TextEditingController();
-    final location = TextEditingController(
-      text: _formControllers.location.text.trim(),
-    );
-    final stack = TextEditingController();
-    final responsibilities = TextEditingController();
-    final requirements = TextEditingController();
-    final benefits = TextEditingController();
-    var quality = 'flash';
+  }
+}
 
-    try {
-      return await showDialog<Map<String, dynamic>>(
-        context: context,
-        useRootNavigator: false,
-        builder: (context) {
-          return StatefulBuilder(
-            builder: (context, setDialogState) {
-              return AlertDialog(
-                title: const Text('Generar oferta con IA'),
-                content: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          controller: role,
-                          decoration: const InputDecoration(
-                            labelText: 'Puesto (ej. Flutter Developer)',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'El puesto es obligatorio';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: seniority,
-                          decoration: const InputDecoration(
-                            labelText: 'Seniority (junior/mid/senior)',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: location,
-                          decoration: const InputDecoration(
-                            labelText: 'Ubicación (o remoto/híbrido)',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: stack,
-                          decoration: const InputDecoration(
-                            labelText: 'Stack / habilidades clave',
-                            hintText: 'Flutter, Firebase, BLoC, ...',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: responsibilities,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Responsabilidades (opcional)',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: requirements,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            labelText: 'Requisitos (opcional)',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: benefits,
-                          maxLines: 2,
-                          decoration: const InputDecoration(
-                            labelText: 'Beneficios (opcional)',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          initialValue: quality,
-                          decoration: const InputDecoration(
-                            labelText: 'Calidad (costo)',
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'flash',
-                              child: Text('Flash (más barato)'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'pro',
-                              child: Text('Pro (mejor calidad)'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setDialogState(() => quality = value);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+class _GenerateOfferDialog extends StatefulWidget {
+  const _GenerateOfferDialog({
+    required this.companyName,
+    required this.initialRole,
+    required this.initialLocation,
+  });
+
+  final String companyName;
+  final String initialRole;
+  final String initialLocation;
+
+  @override
+  State<_GenerateOfferDialog> createState() => _GenerateOfferDialogState();
+}
+
+class _GenerateOfferDialogState extends State<_GenerateOfferDialog> {
+  final _formKey = GlobalKey<FormState>();
+
+  late final TextEditingController _role;
+  late final TextEditingController _seniority;
+  late final TextEditingController _location;
+  late final TextEditingController _stack;
+  late final TextEditingController _responsibilities;
+  late final TextEditingController _requirements;
+  late final TextEditingController _benefits;
+
+  String _quality = 'flash';
+
+  @override
+  void initState() {
+    super.initState();
+    _role = TextEditingController(text: widget.initialRole);
+    _seniority = TextEditingController();
+    _location = TextEditingController(text: widget.initialLocation);
+    _stack = TextEditingController();
+    _responsibilities = TextEditingController();
+    _requirements = TextEditingController();
+    _benefits = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _role.dispose();
+    _seniority.dispose();
+    _location.dispose();
+    _stack.dispose();
+    _responsibilities.dispose();
+    _requirements.dispose();
+    _benefits.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Generar oferta con IA'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _role,
+                decoration: const InputDecoration(
+                  labelText: 'Puesto (ej. Flutter Developer)',
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El puesto es obligatorio';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _seniority,
+                decoration: const InputDecoration(
+                  labelText: 'Seniority (junior/mid/senior)',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _location,
+                decoration: const InputDecoration(
+                  labelText: 'Ubicación (o remoto/híbrido)',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _stack,
+                decoration: const InputDecoration(
+                  labelText: 'Stack / habilidades clave',
+                  hintText: 'Flutter, Firebase, BLoC, ...',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _responsibilities,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Responsabilidades (opcional)',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _requirements,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Requisitos (opcional)',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _benefits,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Beneficios (opcional)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _quality,
+                decoration: const InputDecoration(labelText: 'Calidad (costo)'),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'flash',
+                    child: Text('Flash (más barato)'),
                   ),
-                  FilledButton(
-                    onPressed: () {
-                      if (!formKey.currentState!.validate()) return;
-                      final payload = <String, dynamic>{
-                        'companyName': companyName,
-                        'role': role.text.trim(),
-                        'seniority': seniority.text.trim(),
-                        'location': location.text.trim(),
-                        'mustHaveSkills': stack.text
-                            .split(',')
-                            .map((s) => s.trim())
-                            .where((s) => s.isNotEmpty)
-                            .toList(),
-                        'responsibilities': responsibilities.text.trim(),
-                        'requirements': requirements.text.trim(),
-                        'benefits': benefits.text.trim(),
-                        'quality': quality,
-                      };
-
-                      Navigator.of(context).pop(payload);
-                    },
-                    child: const Text('Generar'),
+                  DropdownMenuItem(
+                    value: 'pro',
+                    child: Text('Pro (mejor calidad)'),
                   ),
                 ],
-              );
-            },
-          );
-        },
-      );
-    } finally {
-      role.dispose();
-      seniority.dispose();
-      location.dispose();
-      stack.dispose();
-      responsibilities.dispose();
-      requirements.dispose();
-      benefits.dispose();
-    }
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() => _quality = value);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
+            final payload = <String, dynamic>{
+              'companyName': widget.companyName,
+              'role': _role.text.trim(),
+              'seniority': _seniority.text.trim(),
+              'location': _location.text.trim(),
+              'mustHaveSkills': _stack.text
+                  .split(',')
+                  .map((s) => s.trim())
+                  .where((s) => s.isNotEmpty)
+                  .toList(),
+              'responsibilities': _responsibilities.text.trim(),
+              'requirements': _requirements.text.trim(),
+              'benefits': _benefits.text.trim(),
+              'quality': _quality,
+            };
+
+            Navigator.of(context).pop(payload);
+          },
+          child: const Text('Generar'),
+        ),
+      ],
+    );
   }
 }

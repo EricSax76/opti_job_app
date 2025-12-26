@@ -55,12 +55,6 @@ class AiApiClient {
       );
     }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AiRequestException(
-        'Error del servicio de IA (${response.statusCode}).',
-      );
-    }
-
     final raw = response.body.trim();
     if (raw.isEmpty) {
       throw const AiRequestException('Respuesta vacía del servicio de IA.');
@@ -70,11 +64,35 @@ class AiApiClient {
     try {
       decoded = jsonDecode(raw);
     } catch (_) {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw AiRequestException(
+          'Error del servicio de IA (${response.statusCode}).',
+        );
+      }
       throw const AiRequestException('Respuesta inválida del servicio de IA.');
     }
 
     if (decoded is! Map<String, dynamic>) {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw AiRequestException(
+          'Error del servicio de IA (${response.statusCode}).',
+        );
+      }
       throw const AiRequestException('Respuesta inválida del servicio de IA.');
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final error = (decoded['error'] is String)
+          ? (decoded['error'] as String).trim()
+          : '';
+      if (error.isNotEmpty) {
+        throw AiRequestException(
+          'Error del servicio de IA (${response.statusCode}): $error',
+        );
+      }
+      throw AiRequestException(
+        'Error del servicio de IA (${response.statusCode}).',
+      );
     }
 
     return decoded;
