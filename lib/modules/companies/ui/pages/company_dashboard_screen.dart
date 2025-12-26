@@ -179,6 +179,11 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
       companyName: company.name,
       initialRole: _formControllers.title.text.trim(),
       initialLocation: _formControllers.location.text.trim(),
+      initialJobType: _formControllers.jobType.text.trim(),
+      initialSalaryMin: _formControllers.salaryMin.text.trim(),
+      initialSalaryMax: _formControllers.salaryMax.text.trim(),
+      initialEducation: _formControllers.education.text.trim(),
+      initialKeyIndicators: _formControllers.keyIndicators.text.trim(),
     );
     if (criteria == null) return;
     if (!context.mounted) return;
@@ -189,7 +194,6 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
       final draft = await context.read<AiRepository>().generateJobOffer(
         criteria: criteria,
         locale: locale,
-        quality: (criteria['quality'] as String?) ?? 'flash',
       );
       if (!context.mounted) return;
       _applyDraftToForm(draft);
@@ -237,6 +241,11 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
     required String companyName,
     String initialRole = '',
     String initialLocation = '',
+    String initialJobType = '',
+    String initialSalaryMin = '',
+    String initialSalaryMax = '',
+    String initialEducation = '',
+    String initialKeyIndicators = '',
   }) {
     return showDialog<Map<String, dynamic>>(
       context: context,
@@ -246,6 +255,11 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
           companyName: companyName,
           initialRole: initialRole,
           initialLocation: initialLocation,
+          initialJobType: initialJobType,
+          initialSalaryMin: initialSalaryMin,
+          initialSalaryMax: initialSalaryMax,
+          initialEducation: initialEducation,
+          initialKeyIndicators: initialKeyIndicators,
         );
       },
     );
@@ -257,11 +271,21 @@ class _GenerateOfferDialog extends StatefulWidget {
     required this.companyName,
     required this.initialRole,
     required this.initialLocation,
+    required this.initialJobType,
+    required this.initialSalaryMin,
+    required this.initialSalaryMax,
+    required this.initialEducation,
+    required this.initialKeyIndicators,
   });
 
   final String companyName;
   final String initialRole;
   final String initialLocation;
+  final String initialJobType;
+  final String initialSalaryMin;
+  final String initialSalaryMax;
+  final String initialEducation;
+  final String initialKeyIndicators;
 
   @override
   State<_GenerateOfferDialog> createState() => _GenerateOfferDialogState();
@@ -270,37 +294,38 @@ class _GenerateOfferDialog extends StatefulWidget {
 class _GenerateOfferDialogState extends State<_GenerateOfferDialog> {
   final _formKey = GlobalKey<FormState>();
 
-  late final TextEditingController _role;
-  late final TextEditingController _seniority;
-  late final TextEditingController _location;
-  late final TextEditingController _stack;
-  late final TextEditingController _responsibilities;
-  late final TextEditingController _requirements;
-  late final TextEditingController _benefits;
+  static const _fieldBackground = Color(0xFFF8FAFC);
+  static const _fieldBorder = Color(0xFFE2E8F0);
 
-  String _quality = 'flash';
+  late final TextEditingController _role;
+  late final TextEditingController _location;
+  late final TextEditingController _jobType;
+  late final TextEditingController _salaryMin;
+  late final TextEditingController _salaryMax;
+  late final TextEditingController _education;
+  late final TextEditingController _keyIndicators;
 
   @override
   void initState() {
     super.initState();
     _role = TextEditingController(text: widget.initialRole);
-    _seniority = TextEditingController();
     _location = TextEditingController(text: widget.initialLocation);
-    _stack = TextEditingController();
-    _responsibilities = TextEditingController();
-    _requirements = TextEditingController();
-    _benefits = TextEditingController();
+    _jobType = TextEditingController(text: widget.initialJobType);
+    _salaryMin = TextEditingController(text: widget.initialSalaryMin);
+    _salaryMax = TextEditingController(text: widget.initialSalaryMax);
+    _education = TextEditingController(text: widget.initialEducation);
+    _keyIndicators = TextEditingController(text: widget.initialKeyIndicators);
   }
 
   @override
   void dispose() {
     _role.dispose();
-    _seniority.dispose();
     _location.dispose();
-    _stack.dispose();
-    _responsibilities.dispose();
-    _requirements.dispose();
-    _benefits.dispose();
+    _jobType.dispose();
+    _salaryMin.dispose();
+    _salaryMax.dispose();
+    _education.dispose();
+    _keyIndicators.dispose();
     super.dispose();
   }
 
@@ -316,80 +341,60 @@ class _GenerateOfferDialogState extends State<_GenerateOfferDialog> {
             children: [
               TextFormField(
                 controller: _role,
-                decoration: const InputDecoration(
-                  labelText: 'Puesto (ej. Flutter Developer)',
-                ),
+                decoration: _inputDecoration(labelText: 'Título'),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'El puesto es obligatorio';
+                    return 'El título es obligatorio';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 10),
               TextFormField(
-                controller: _seniority,
-                decoration: const InputDecoration(
-                  labelText: 'Seniority (junior/mid/senior)',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
                 controller: _location,
-                decoration: const InputDecoration(
-                  labelText: 'Ubicación (o remoto/híbrido)',
-                ),
+                decoration: _inputDecoration(labelText: 'Ubicación'),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'La ubicación es obligatoria';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 10),
               TextFormField(
-                controller: _stack,
-                decoration: const InputDecoration(
-                  labelText: 'Stack / habilidades clave',
-                  hintText: 'Flutter, Firebase, BLoC, ...',
-                ),
+                controller: _jobType,
+                decoration: _inputDecoration(labelText: 'Tipología'),
               ),
               const SizedBox(height: 10),
-              TextFormField(
-                controller: _responsibilities,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Responsabilidades (opcional)',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _requirements,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Requisitos (opcional)',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _benefits,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Beneficios (opcional)',
-                ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _quality,
-                decoration: const InputDecoration(labelText: 'Calidad (costo)'),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'flash',
-                    child: Text('Flash (más barato)'),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _salaryMin,
+                      keyboardType: TextInputType.number,
+                      decoration: _inputDecoration(labelText: 'Salario mínimo'),
+                    ),
                   ),
-                  DropdownMenuItem(
-                    value: 'pro',
-                    child: Text('Pro (mejor calidad)'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _salaryMax,
+                      keyboardType: TextInputType.number,
+                      decoration: _inputDecoration(labelText: 'Salario máximo'),
+                    ),
                   ),
                 ],
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() => _quality = value);
-                },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _education,
+                decoration: _inputDecoration(labelText: 'Educación requerida'),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _keyIndicators,
+                maxLines: 2,
+                decoration: _inputDecoration(labelText: 'Indicadores clave'),
               ),
             ],
           ),
@@ -406,17 +411,12 @@ class _GenerateOfferDialogState extends State<_GenerateOfferDialog> {
             final payload = <String, dynamic>{
               'companyName': widget.companyName,
               'role': _role.text.trim(),
-              'seniority': _seniority.text.trim(),
               'location': _location.text.trim(),
-              'mustHaveSkills': _stack.text
-                  .split(',')
-                  .map((s) => s.trim())
-                  .where((s) => s.isNotEmpty)
-                  .toList(),
-              'responsibilities': _responsibilities.text.trim(),
-              'requirements': _requirements.text.trim(),
-              'benefits': _benefits.text.trim(),
-              'quality': _quality,
+              'jobType': _jobType.text.trim(),
+              'salaryMin': _salaryMin.text.trim(),
+              'salaryMax': _salaryMax.text.trim(),
+              'education': _education.text.trim(),
+              'keyIndicators': _keyIndicators.text.trim(),
             };
 
             Navigator.of(context).pop(payload);
@@ -424,6 +424,22 @@ class _GenerateOfferDialogState extends State<_GenerateOfferDialog> {
           child: const Text('Generar'),
         ),
       ],
+    );
+  }
+
+  static InputDecoration _inputDecoration({required String labelText}) {
+    return InputDecoration(
+      labelText: labelText,
+      filled: true,
+      fillColor: _fieldBackground,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: _fieldBorder),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: _fieldBorder),
+      ),
     );
   }
 }

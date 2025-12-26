@@ -165,8 +165,8 @@ function extractJson(text) {
 }
 
 function getVertexModel(quality) {
-  const project = env('GCP_PROJECT', env('GOOGLE_CLOUD_PROJECT'));
-  const location = env('GCP_LOCATION', 'us-central1');
+  const project = env('GCP_PROJECT', env('opti-job'));
+  const location = env('GCP_LOCATION', 'europe-southwest1');
   if (!project) {
     throw new Error('Missing GCP_PROJECT/GOOGLE_CLOUD_PROJECT');
   }

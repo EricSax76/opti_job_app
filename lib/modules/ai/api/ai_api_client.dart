@@ -60,6 +60,12 @@ class AiApiClient {
       throw const AiRequestException('Respuesta vacía del servicio de IA.');
     }
 
+    String snippet(String input, {int max = 220}) {
+      final compact = input.replaceAll(RegExp(r'\s+'), ' ').trim();
+      if (compact.length <= max) return compact;
+      return '${compact.substring(0, max)}…';
+    }
+
     dynamic decoded;
     try {
       decoded = jsonDecode(raw);
@@ -69,7 +75,20 @@ class AiApiClient {
           'Error del servicio de IA (${response.statusCode}).',
         );
       }
-      throw const AiRequestException('Respuesta inválida del servicio de IA.');
+      throw AiRequestException(
+        'Respuesta inválida del servicio de IA: ${snippet(raw)}',
+      );
+    }
+
+    if (decoded is String) {
+      final inner = decoded.trim();
+      if (inner.startsWith('{') || inner.startsWith('[')) {
+        try {
+          decoded = jsonDecode(inner);
+        } catch (_) {
+          // Keep original decoded value; validation below will throw.
+        }
+      }
     }
 
     if (decoded is! Map<String, dynamic>) {
@@ -78,7 +97,9 @@ class AiApiClient {
           'Error del servicio de IA (${response.statusCode}).',
         );
       }
-      throw const AiRequestException('Respuesta inválida del servicio de IA.');
+      throw AiRequestException(
+        'Respuesta inválida del servicio de IA: ${snippet(raw)}',
+      );
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
