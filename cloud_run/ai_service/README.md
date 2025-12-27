@@ -53,11 +53,14 @@ Recomendado: Node 20 (el `Dockerfile` usa `node:20-slim`).
 ## Deploy (ejemplo)
 
 ```bash
+gcloud config set project TU_PROJECT_ID
+
 gcloud run deploy opti-ai \
   --source . \
+  --project TU_PROJECT_ID \
   --region europe-west1 \
   --allow-unauthenticated \
-  --set-env-vars GCP_LOCATION=europe-west1
+  --set-env-vars GCP_LOCATION=europe-west1,GOOGLE_CLOUD_PROJECT=TU_PROJECT_ID
 ```
 
 Nota: aunque el servicio sea público, igual requiere Firebase ID Token (salvo `DISABLE_AUTH=true`).

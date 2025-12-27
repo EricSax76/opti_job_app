@@ -19,6 +19,7 @@ Firebase se inicializa automáticamente con las credenciales de `firebase_option
 La app incluye un botón "Mejorar con IA" en el módulo de Curriculum que llama a un backend propio (no expongas API keys en Flutter).
 
 - Configura el endpoint con `--dart-define=AI_BASE_URL=https://tu-backend.com`
+- Nota: en Android emulator, usa `http://10.0.2.2:<puerto>` en vez de `http://localhost:<puerto>` para apuntar a tu máquina.
 - La app envía `Authorization: Bearer <Firebase ID Token>` y un JSON `{ "cv": {...}, "locale": "es-ES" }` a `POST /ai/improve-cv-summary`
 - El backend debe responder `200` con `{ "summary": "..." }` (puede incluir `cached: true/false`)
 

@@ -1,6 +1,22 @@
 {
     "version": "0.2.0",
+    "inputs": [
+        {
+            "id": "aiBaseUrl",
+            "type": "promptString",
+            "description": "AI_BASE_URL (URL del backend de IA)",
+            "default": "http://localhost:8080"
+        }
+    ],
     "configurations": [
+        {
+            "name": "Flutter (Chrome) - con IA",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "--dart-define=AI_BASE_URL=${input:aiBaseUrl}"
+            ]
+        },
         {
             "type": "node",
             "request": "launch",
