@@ -190,10 +190,8 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
 
     setState(() => _isGeneratingOffer = true);
     try {
-      final locale = Localizations.localeOf(context).toLanguageTag();
       final draft = await context.read<AiRepository>().generateJobOffer(
         criteria: criteria,
-        locale: locale,
       );
       if (!context.mounted) return;
       _applyDraftToForm(draft);

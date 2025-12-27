@@ -1,165 +1,19 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:opti_job_app/firebase_options.dart';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/modules/aplications/repositories/application_repository.dart';
-import 'package:opti_job_app/modules/aplications/models/application_service.dart';
 
-import 'package:opti_job_app/home/app.dart';
+import 'package:opti_job_app/app/app_scope.dart';
+import 'package:opti_job_app/bootstrap/app_dependencies.dart';
+import 'package:opti_job_app/bootstrap/firebase_bootstrap.dart';
 import 'package:opti_job_app/home/models/app_observer.dart';
-import 'package:opti_job_app/auth/repositories/auth_repository.dart';
-import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
-import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
-import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
-import 'package:opti_job_app/auth/models/auth_service.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
-import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
-import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
-import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
-import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_service.dart';
-import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
-import 'package:opti_job_app/modules/ai/models/ai_service.dart';
-import 'package:opti_job_app/modules/ai/repositories/ai_repository.dart';
-
-import 'package:opti_job_app/core/router/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  if (kDebugMode) {
-    debugPrint(
-      'Firebase apps: ${Firebase.apps.map((app) => app.name).toList()}',
-    );
-    debugPrint('Firebase default options: ${Firebase.app().options}');
-  }
-  const useFirebaseEmulators = bool.fromEnvironment(
-    'USE_FIREBASE_EMULATORS',
-    defaultValue: false,
-  );
-  if (useFirebaseEmulators) {
-    const authHostEnv = String.fromEnvironment(
-      'FIREBASE_AUTH_EMULATOR_HOST',
-      defaultValue: 'localhost:9099',
-    );
-    final authHostParts = authHostEnv.split(':');
-    final authHost = authHostParts.first;
-    final authPort = authHostParts.length > 1
-        ? int.tryParse(authHostParts[1]) ?? 9099
-        : 9099;
-    const firestoreHostEnv = String.fromEnvironment(
-      'FIRESTORE_EMULATOR_HOST',
-      defaultValue: 'localhost:8080',
-    );
-    final firestoreHostParts = firestoreHostEnv.split(':');
-    final firestoreHost = firestoreHostParts.first;
-    final firestorePort = firestoreHostParts.length > 1
-        ? int.tryParse(firestoreHostParts[1]) ?? 8080
-        : 8080;
-
-    await FirebaseAuth.instance.useAuthEmulator(authHost, authPort);
-    FirebaseFirestore.instance.useFirestoreEmulator(
-      firestoreHost,
-      firestorePort,
-    );
-    if (kDebugMode) {
-      debugPrint(
-        'Firebase emulators enabled: auth=$authHost:$authPort '
-        'firestore=$firestoreHost:$firestorePort',
-      );
-    }
-  }
+  await initFirebase();
+  await maybeActivateFirebaseAppCheck();
+  await maybeUseFirebaseEmulators();
   Bloc.observer = const AppBlocObserver();
 
-  final authRepository = AuthRepository(AuthService());
-  final jobOfferRepository = JobOfferRepository(JobOfferService());
-  final profileRepository = ProfileRepository(ProfileService());
-  final curriculumRepository = CurriculumRepository(CurriculumService());
-  final calendarRepository = CalendarRepository();
-  final applicationRepository = ApplicationRepository(
-    firestore: FirebaseFirestore.instance,
-  );
-  final applicationService = ApplicationService(
-    applicationRepository: applicationRepository,
-  );
-  final aiRepository = AiRepository(AiService());
-  if (kDebugMode) {
-    debugPrint(
-      'Locator: AuthRepository, JobOfferRepository, ProfileRepository, '
-      'CalendarRepository, ApplicationRepository, ApplicationService',
-    );
-    debugPrint(
-      'Firebase instances: auth=${FirebaseAuth.instance}, '
-      'firestore=${FirebaseFirestore.instance}',
-    );
-  }
+  final dependencies = AppDependencies.create();
 
-  runApp(
-    MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider.value(value: authRepository),
-        RepositoryProvider.value(value: jobOfferRepository),
-        RepositoryProvider.value(value: profileRepository),
-        RepositoryProvider.value(value: curriculumRepository),
-        RepositoryProvider.value(value: calendarRepository),
-        RepositoryProvider.value(value: applicationRepository),
-        RepositoryProvider.value(value: applicationService),
-        RepositoryProvider.value(value: aiRepository),
-      ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider<CandidateAuthCubit>(
-            create: (context) {
-              final cubit = CandidateAuthCubit(authRepository);
-              // TODO: Consider loading initial auth state here if needed
-              // cubit.checkInitialSession();
-              return cubit;
-            },
-          ),
-          BlocProvider<CompanyAuthCubit>(
-            create: (_) => CompanyAuthCubit(authRepository),
-          ),
-          BlocProvider<JobOffersCubit>(
-            create: (_) => JobOffersCubit(jobOfferRepository)..loadOffers(),
-          ),
-          BlocProvider<CalendarCubit>(
-            create: (_) =>
-                CalendarCubit(calendarRepository)..loadMonth(DateTime.now()),
-          ),
-          BlocProvider<ProfileCubit>(
-            create: (context) => ProfileCubit(
-              repository: profileRepository,
-              candidateAuthCubit: context
-                  .read<CandidateAuthCubit>(), // Updated dependency
-            ),
-          ),
-          BlocProvider<CurriculumCubit>(
-            create: (context) => CurriculumCubit(
-              repository: context.read<CurriculumRepository>(),
-              candidateAuthCubit: context.read<CandidateAuthCubit>(),
-            ),
-          ),
-        ],
-        child: Builder(
-          builder: (context) {
-            final routerRefreshStream = GoRouterCombinedRefreshStream(
-              context.read<CandidateAuthCubit>(),
-              context.read<CompanyAuthCubit>(),
-            );
-            final appRouter = AppRouter(
-              routerRefreshStream: routerRefreshStream,
-            );
-            return InfoJobsApp(router: appRouter.router);
-          },
-        ),
-      ),
-    ),
-  );
+  runApp(AppScope(dependencies: dependencies));
 }

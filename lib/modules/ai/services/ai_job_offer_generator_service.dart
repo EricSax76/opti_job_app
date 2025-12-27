@@ -1,4 +1,8 @@
-import 'package:opti_job_app/modules/ai/api/ai_api_client.dart';
+import 'dart:convert';
+
+import 'package:firebase_ai/firebase_ai.dart';
+
+import 'package:opti_job_app/modules/ai/api/firebase_ai_client.dart';
 import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/modules/ai/models/ai_job_offer_draft.dart';
 import 'package:opti_job_app/modules/ai/mappers/ai_criteria_sanitizer.dart';
@@ -9,7 +13,7 @@ class AiJobOfferGeneratorService {
     AiCriteriaSanitizer? criteriaSanitizer,
   }) : _criteriaSanitizer = criteriaSanitizer ?? const AiCriteriaSanitizer();
 
-  final AiApiClient _client;
+  final FirebaseAiClient _client;
   final AiCriteriaSanitizer _criteriaSanitizer;
 
   Future<AiJobOfferDraft> generateJobOffer({
@@ -17,31 +21,21 @@ class AiJobOfferGeneratorService {
     String locale = 'es-ES',
     String quality = 'flash',
   }) async {
-    final payload = <String, dynamic>{
-      'criteria': _criteriaSanitizer.compact(criteria),
-      'locale': locale,
-      'quality': quality,
-    };
-
-    final decoded = await _client.postJson(
-      '/ai/generate-job-offer',
-      payload: payload,
-    );
-
-    final error = (decoded['error'] is String)
-        ? (decoded['error'] as String).trim()
-        : '';
-    if (error.isNotEmpty) {
-      throw AiRequestException(_mapError(error));
-    }
-
-    final draftJson = switch (decoded['draft']) {
-      final Map<String, dynamic> m => m,
-      _ => decoded,
-    };
-
     try {
-      return AiJobOfferDraft.fromJson(draftJson);
+      final compactCriteria = _criteriaSanitizer.compact(criteria);
+      final prompt = _buildPrompt(
+        criteria: compactCriteria,
+        locale: locale,
+        quality: quality,
+      );
+
+      final decoded = await _client.generateJson(
+        prompt,
+        responseSchema: _jobOfferSchema(),
+        generationConfig: _jsonConfigForQuality(quality),
+      );
+
+      return AiJobOfferDraft.fromJson(decoded);
     } on FormatException catch (e) {
       final details = e.message.trim();
       throw AiRequestException(
@@ -56,16 +50,65 @@ class AiJobOfferGeneratorService {
     }
   }
 
-  String _mapError(String error) {
-    switch (error) {
-      case 'missing_role':
-        return 'Falta el puesto/rol para generar la oferta.';
-      case 'invalid_model_output':
-        return 'La IA devolvió una respuesta incompleta. Intenta nuevamente.';
-      case 'ai_failed':
-        return 'No se pudo generar la oferta con IA. Intenta nuevamente.';
-      default:
-        return 'Error del servicio de IA: $error';
-    }
+  String _buildPrompt({
+    required Map<String, dynamic> criteria,
+    required String locale,
+    required String quality,
+  }) {
+    return '''
+Genera un borrador de oferta de empleo en base a los criterios.
+
+Requisitos:
+- Idioma/locale: $locale (escribe todo el texto en este idioma; para es-ES, en castellano)
+- Calidad: $quality
+- Devuelve JSON válido con los campos:
+  - title (string, requerido)
+  - description (string, requerido)
+  - location (string, requerido)
+  - job_type, salary_min, salary_max, education, key_indicators (opcionales)
+- No inventes datos concretos (salario, ubicación exacta, tecnologías) si no están en los criterios.
+- description debe ser clara y lista para publicar (puede incluir secciones y bullets en texto).
+
+Criterios (JSON): ${jsonEncode(criteria)}
+''';
+  }
+
+  Schema _jobOfferSchema() {
+    return Schema.object(
+      properties: {
+        'title': Schema.string(),
+        'description': Schema.string(),
+        'location': Schema.string(),
+        'job_type': Schema.string(nullable: true),
+        'salary_min': Schema.string(nullable: true),
+        'salary_max': Schema.string(nullable: true),
+        'education': Schema.string(nullable: true),
+        'key_indicators': Schema.string(nullable: true),
+      },
+      optionalProperties: [
+        'job_type',
+        'salary_min',
+        'salary_max',
+        'education',
+        'key_indicators',
+      ],
+      propertyOrdering: [
+        'title',
+        'description',
+        'location',
+        'job_type',
+        'salary_min',
+        'salary_max',
+        'education',
+        'key_indicators',
+      ],
+    );
+  }
+
+  GenerationConfig _jsonConfigForQuality(String quality) {
+    return switch (quality) {
+      'pro' => GenerationConfig(maxOutputTokens: 1536, temperature: 0.4),
+      _ => GenerationConfig(maxOutputTokens: 1024, temperature: 0.4),
+    };
   }
 }

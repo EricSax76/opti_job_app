@@ -1,4 +1,8 @@
-import 'package:opti_job_app/modules/ai/api/ai_api_client.dart';
+import 'dart:convert';
+
+import 'package:firebase_ai/firebase_ai.dart';
+
+import 'package:opti_job_app/modules/ai/api/firebase_ai_client.dart';
 import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/modules/ai/models/ai_match_result.dart';
 import 'package:opti_job_app/modules/ai/mappers/curriculum_compactor.dart';
@@ -15,7 +19,7 @@ class AiMatchService {
            curriculumCompactor ?? const CurriculumCompactor(),
        _jobOfferCompactor = jobOfferCompactor ?? const JobOfferCompactor();
 
-  final AiApiClient _client;
+  final FirebaseAiClient _client;
   final CurriculumCompactor _curriculumCompactor;
   final JobOfferCompactor _jobOfferCompactor;
 
@@ -25,22 +29,71 @@ class AiMatchService {
     String locale = 'es-ES',
     String quality = 'flash',
   }) async {
-    final payload = <String, dynamic>{
-      'cv': _curriculumCompactor.compact(curriculum),
-      'offer': _jobOfferCompactor.compact(offer),
-      'locale': locale,
-      'quality': quality,
-    };
-
-    final decoded = await _client.postJson(
-      '/ai/match-offer-candidate',
-      payload: payload,
-    );
-
     try {
+      final cv = _curriculumCompactor.compact(curriculum);
+      final offerJson = _jobOfferCompactor.compact(offer);
+      final prompt = _buildPrompt(
+        cv: cv,
+        offer: offerJson,
+        locale: locale,
+        quality: quality,
+      );
+
+      final decoded = await _client.generateJson(
+        prompt,
+        responseSchema: _matchSchema(),
+        generationConfig: _jsonConfigForQuality(quality),
+      );
+
       return AiMatchResult.fromJson(decoded);
     } catch (_) {
       throw const AiRequestException('Respuesta inválida del servicio de IA.');
     }
+  }
+
+  String _buildPrompt({
+    required Map<String, dynamic> cv,
+    required Map<String, dynamic> offer,
+    required String locale,
+    required String quality,
+  }) {
+    return '''
+Evalúa el encaje entre un candidato y una oferta de empleo.
+
+Requisitos:
+- Idioma/locale: $locale
+- Calidad: $quality
+- Devuelve JSON válido con:
+  - score (0..100)
+  - reasons (3..7 strings)
+  - summary (opcional, 1-2 frases)
+- No inventes habilidades/experiencias no presentes en el CV o la oferta.
+
+CV (JSON): ${jsonEncode(cv)}
+Oferta (JSON): ${jsonEncode(offer)}
+''';
+  }
+
+  Schema _matchSchema() {
+    return Schema.object(
+      properties: {
+        'score': Schema.integer(minimum: 0, maximum: 100),
+        'reasons': Schema.array(
+          items: Schema.string(),
+          minItems: 3,
+          maxItems: 7,
+        ),
+        'summary': Schema.string(nullable: true),
+      },
+      optionalProperties: ['summary'],
+      propertyOrdering: ['score', 'reasons', 'summary'],
+    );
+  }
+
+  GenerationConfig _jsonConfigForQuality(String quality) {
+    return switch (quality) {
+      'pro' => GenerationConfig(maxOutputTokens: 768, temperature: 0.2),
+      _ => GenerationConfig(maxOutputTokens: 512, temperature: 0.2),
+    };
   }
 }

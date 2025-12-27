@@ -65,15 +65,25 @@ class CreateOfferCard extends StatelessWidget {
             const SizedBox(height: 24),
             Align(
               alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: isGenerating ? null : onGenerateWithAi,
-                icon: isGenerating
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.auto_awesome_outlined),
-                label: Text(isGenerating ? 'Generando...' : 'Generar con IA'),
+                child: Wrap(
+                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    isGenerating
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.auto_awesome_outlined),
+                    Text(isGenerating ? 'Generando...' : 'Generar con IA'),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 12),
