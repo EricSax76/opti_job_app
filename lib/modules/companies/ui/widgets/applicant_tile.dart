@@ -43,7 +43,7 @@ class ApplicantTile extends StatelessWidget {
         onTap: application.candidateUid.trim().isEmpty
             ? null
             : () => context.push(
-              '/company/applicants/${application.candidateUid}/cv',
+              '/company/offers/$offerId/applicants/${application.candidateUid}/cv',
             ),
         leading: CircleAvatar(
           backgroundColor: ink,

@@ -111,11 +111,16 @@ class AppRouter {
           ),
         ),
         GoRoute(
-          path: '/company/applicants/:uid/cv',
+          path: '/company/offers/:offerId/applicants/:uid/cv',
           name: 'company-applicant-cv',
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
-            return ApplicantCurriculumScreen(candidateUid: uid);
+            final offerId =
+                int.tryParse(state.pathParameters['offerId'] ?? '') ?? 0;
+            return ApplicantCurriculumScreen(
+              candidateUid: uid,
+              offerId: offerId,
+            );
           },
         ),
         GoRoute(

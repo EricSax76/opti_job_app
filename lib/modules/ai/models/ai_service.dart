@@ -52,6 +52,20 @@ class AiService {
     );
   }
 
+  Future<AiMatchResult> matchOfferCandidateForCompany({
+    required Curriculum curriculum,
+    required JobOffer offer,
+    String locale = 'es-ES',
+    String quality = 'flash',
+  }) async {
+    return _matchService.matchOfferCandidateForCompany(
+      curriculum: curriculum,
+      offer: offer,
+      locale: locale,
+      quality: quality,
+    );
+  }
+
   Future<AiJobOfferDraft> generateJobOffer({
     required Map<String, dynamic> criteria,
     String locale = 'es-ES',

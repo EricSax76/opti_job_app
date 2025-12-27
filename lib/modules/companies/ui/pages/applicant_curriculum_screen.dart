@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
+import 'package:opti_job_app/modules/ai/models/ai_match_result.dart';
+import 'package:opti_job_app/modules/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_pdf_service.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_share_service.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
 class ApplicantCurriculumScreen extends StatefulWidget {
-  const ApplicantCurriculumScreen({super.key, required this.candidateUid});
+  const ApplicantCurriculumScreen({
+    super.key,
+    required this.candidateUid,
+    required this.offerId,
+  });
 
   final String candidateUid;
+  final int offerId;
 
   @override
   State<ApplicantCurriculumScreen> createState() =>
@@ -21,17 +31,21 @@ class _ApplicantCurriculumScreenState extends State<ApplicantCurriculumScreen> {
   late final Future<_ApplicantCurriculumPayload> _payloadFuture =
       _loadPayload();
   var _isExporting = false;
+  var _isMatching = false;
 
   Future<_ApplicantCurriculumPayload> _loadPayload() async {
     final profileRepository = context.read<ProfileRepository>();
     final curriculumRepository = context.read<CurriculumRepository>();
+    final jobOfferRepository = context.read<JobOfferRepository>();
     final results = await Future.wait([
       profileRepository.fetchCandidateProfile(widget.candidateUid),
       curriculumRepository.fetchCurriculum(widget.candidateUid),
+      jobOfferRepository.fetchById(widget.offerId),
     ]);
     return _ApplicantCurriculumPayload(
       candidate: results[0] as Candidate,
       curriculum: results[1] as Curriculum,
+      offer: results[2] as JobOffer,
     );
   }
 
@@ -70,6 +84,140 @@ class _ApplicantCurriculumScreenState extends State<ApplicantCurriculumScreen> {
     return trimmed.replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_');
   }
 
+  Future<void> _showOfferMatchForCompany({
+    required Curriculum curriculum,
+    required JobOffer offer,
+  }) async {
+    if (_isMatching) return;
+    setState(() => _isMatching = true);
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text('Analizando candidato'),
+          content: Row(
+            children: [
+              SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Calculando match y señales clave para la empresa...',
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      final aiRepository = context.read<AiRepository>();
+      const locale = 'es-ES';
+      final result = await aiRepository.matchOfferCandidateForCompany(
+        curriculum: curriculum,
+        offer: offer,
+        locale: locale,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(); // loading
+      await _showCompanyMatchResultDialog(context, result);
+    } on AiConfigurationException catch (error) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } on AiRequestException catch (error) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo calcular el match.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isMatching = false);
+    }
+  }
+
+  Future<void> _showCompanyMatchResultDialog(
+    BuildContext context,
+    AiMatchResult result,
+  ) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Match (Empresa): ${result.score}/100'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (result.summary != null) ...[
+                  Text(result.summary!),
+                  const SizedBox(height: 12),
+                ],
+                if (result.reasons.isNotEmpty) ...[
+                  const Text(
+                    'Puntos clave',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final reason in result.reasons)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• '),
+                          Expanded(child: Text(reason)),
+                        ],
+                      ),
+                    ),
+                ],
+                if (result.recommendations.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Preguntas y validaciones',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final recommendation in result.recommendations)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• '),
+                          Expanded(child: Text(recommendation)),
+                        ],
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const background = Color(0xFFF8FAFC);
@@ -101,6 +249,7 @@ class _ApplicantCurriculumScreenState extends State<ApplicantCurriculumScreen> {
 
           final candidate = snapshot.data!.candidate;
           final curriculum = snapshot.data!.curriculum;
+          final offer = snapshot.data!.offer;
           final hasCurriculum = curriculum.headline.trim().isNotEmpty ||
               curriculum.summary.trim().isNotEmpty ||
               curriculum.phone.trim().isNotEmpty ||
@@ -180,6 +329,29 @@ class _ApplicantCurriculumScreenState extends State<ApplicantCurriculumScreen> {
                               _isExporting ? 'Exportando...' : 'Exportar PDF',
                             ),
                           ),
+                          const SizedBox(width: 10),
+                          OutlinedButton.icon(
+                            onPressed:
+                                _isMatching || !hasCurriculum
+                                    ? null
+                                    : () => _showOfferMatchForCompany(
+                                      curriculum: curriculum,
+                                      offer: offer,
+                                    ),
+                            icon:
+                                _isMatching
+                                    ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                    : const Icon(Icons.auto_awesome_outlined),
+                            label: Text(
+                              _isMatching ? 'Analizando...' : 'Match IA',
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -222,10 +394,12 @@ class _ApplicantCurriculumPayload {
   const _ApplicantCurriculumPayload({
     required this.candidate,
     required this.curriculum,
+    required this.offer,
   });
 
   final Candidate candidate;
   final Curriculum curriculum;
+  final JobOffer offer;
 }
 
 class _CurriculumReadOnlyView extends StatelessWidget {

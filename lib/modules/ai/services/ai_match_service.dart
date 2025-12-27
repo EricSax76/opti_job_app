@@ -51,6 +51,34 @@ class AiMatchService {
     }
   }
 
+  Future<AiMatchResult> matchOfferCandidateForCompany({
+    required Curriculum curriculum,
+    required JobOffer offer,
+    String locale = 'es-ES',
+    String quality = 'flash',
+  }) async {
+    try {
+      final cv = _curriculumCompactor.compact(curriculum);
+      final offerJson = _jobOfferCompactor.compact(offer);
+      final prompt = _buildCompanyPrompt(
+        cv: cv,
+        offer: offerJson,
+        locale: locale,
+        quality: quality,
+      );
+
+      final decoded = await _client.generateJson(
+        prompt,
+        responseSchema: _matchSchema(),
+        generationConfig: _jsonConfigForQuality(quality),
+      );
+
+      return AiMatchResult.fromJson(decoded);
+    } catch (_) {
+      throw const AiRequestException('Respuesta inválida del servicio de IA.');
+    }
+  }
+
   String _buildPrompt({
     required Map<String, dynamic> cv,
     required Map<String, dynamic> offer,
@@ -72,6 +100,32 @@ Requisitos:
     (qué mejorar, qué destacar, qué añadir al CV/portfolio, cómo adaptar la postulación).
 - No inventes habilidades/experiencias no presentes en el CV o la oferta.
 - Enfócate en ayudar al candidato: identifica gaps y acciones sugeridas.
+
+CV (JSON): ${jsonEncode(cv)}
+Oferta (JSON): ${jsonEncode(offer)}
+''';
+  }
+
+  String _buildCompanyPrompt({
+    required Map<String, dynamic> cv,
+    required Map<String, dynamic> offer,
+    required String locale,
+    required String quality,
+  }) {
+    return '''
+Evalúa el encaje entre un candidato y una oferta de empleo desde la perspectiva de una empresa (reclutador).
+
+Requisitos:
+- Idioma: Español (es-ES). Responde SIEMPRE en castellano y NO uses inglés.
+- Locale de referencia: $locale
+- Calidad: $quality
+- Devuelve JSON válido con (en castellano):
+  - score (0..100)
+  - reasons (3..7 strings): puntos clave del encaje para la empresa (fortalezas, fit con requisitos, evidencias).
+  - recommendations (3..6 strings): acciones para la empresa (preguntas de entrevista, validaciones, red flags a comprobar).
+  - summary (opcional, 1-2 frases).
+- No inventes habilidades/experiencias no presentes en el CV o la oferta.
+- Enfócate en lo importante para la empresa: impacto, seniority, señales de riesgo, gaps críticos, y verificaciones concretas.
 
 CV (JSON): ${jsonEncode(cv)}
 Oferta (JSON): ${jsonEncode(offer)}
