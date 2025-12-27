@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 
 class MyApplicationsView extends StatelessWidget {
   const MyApplicationsView({super.key});
@@ -47,8 +49,9 @@ class _ApplicationsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const background = Color(0xFFF8FAFC);
     return ListView.builder(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(16),
       itemCount: applications.length,
       itemBuilder: (context, index) {
         final entry = applications[index];
@@ -59,31 +62,43 @@ class _ApplicationsList extends StatelessWidget {
             ((fallbackTitle != null && fallbackTitle.trim().isNotEmpty)
                 ? fallbackTitle
                 : 'Oferta');
-        final description = offer?.description ?? '';
         final statusChip = applicationStatusChip(entry.application.status);
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: ListTile(
-            title: Text(title),
-            subtitle: Text(
-              [
-                'Estado: ${applicationStatusLabel(entry.application.status)}',
-                if (description.isNotEmpty) description,
-              ].join('\n'),
+        final company = offer?.companyName ?? 'Empresa no especificada';
+        final salary = offer == null ? null : _formatSalary(offer);
+        final modality =
+            offer == null ? null : (offer.jobType ?? 'Modalidad no especificada');
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: DecoratedBox(
+            decoration: const BoxDecoration(color: background),
+            child: JobOfferSummaryCard(
+              title: title,
+              company: company,
+              salary: salary,
+              modality: modality,
+              trailing: statusChip,
+              onTap:
+                  offer == null
+                      ? null
+                      : () => context.go('/job-offer/${offer.id}'),
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                statusChip,
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_ios, size: 16),
-              ],
-            ),
-            onTap:
-                offer == null ? null : () => context.go('/job-offer/${offer.id}'),
           ),
         );
       },
     );
   }
+}
+
+String? _formatSalary(JobOffer offer) {
+  final min = offer.salaryMin?.trim();
+  final max = offer.salaryMax?.trim();
+
+  final hasMin = min != null && min.isNotEmpty;
+  final hasMax = max != null && max.isNotEmpty;
+
+  if (hasMin && hasMax) return '$min - $max';
+  if (hasMin) return 'Desde $min';
+  if (hasMax) return 'Hasta $max';
+  return null;
 }

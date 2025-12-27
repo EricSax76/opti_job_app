@@ -2,12 +2,14 @@ class AiMatchResult {
   const AiMatchResult({
     required this.score,
     required this.reasons,
+    required this.recommendations,
     this.summary,
   });
 
   /// 0..100
   final int score;
   final List<String> reasons;
+  final List<String> recommendations;
   final String? summary;
 
   factory AiMatchResult.fromJson(Map<String, dynamic> json) {
@@ -18,10 +20,17 @@ class AiMatchResult {
         .map((value) => value.trim())
         .where((value) => value.isNotEmpty)
         .toList();
+    final recommendations =
+        (json['recommendations'] as List<dynamic>? ?? const [])
+            .whereType<String>()
+            .map((value) => value.trim())
+            .where((value) => value.isNotEmpty)
+            .toList();
     final summary = (json['summary'] as String?)?.trim();
     return AiMatchResult(
       score: score,
       reasons: reasons,
+      recommendations: recommendations,
       summary: (summary?.isEmpty ?? true) ? null : summary,
     );
   }

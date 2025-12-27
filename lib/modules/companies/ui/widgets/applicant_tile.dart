@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/application.dart';
@@ -39,6 +40,11 @@ class ApplicantTile extends StatelessWidget {
       child: ListTile(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        onTap: application.candidateUid.trim().isEmpty
+            ? null
+            : () => context.push(
+              '/company/applicants/${application.candidateUid}/cv',
+            ),
         leading: CircleAvatar(
           backgroundColor: ink,
           foregroundColor: Colors.white,

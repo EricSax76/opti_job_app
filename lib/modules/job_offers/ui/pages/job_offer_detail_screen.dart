@@ -13,11 +13,13 @@ class JobOfferDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<CandidateAuthCubit>().state;
+    const background = Color(0xFFF8FAFC);
 
     return Scaffold(
+      backgroundColor: background,
       appBar: const AppNavBar(),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
         child: BlocListener<JobOfferDetailCubit, JobOfferDetailState>(
           listener: (context, state) {
             handleJobOfferDetailMessages(context, state);

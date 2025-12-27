@@ -13,6 +13,7 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
+import 'package:opti_job_app/modules/companies/ui/pages/applicant_curriculum_screen.dart';
 import 'package:opti_job_app/modules/aplications/models/application_service.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
@@ -110,6 +111,14 @@ class AppRouter {
           ),
         ),
         GoRoute(
+          path: '/company/applicants/:uid/cv',
+          name: 'company-applicant-cv',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            return ApplicantCurriculumScreen(candidateUid: uid);
+          },
+        ),
+        GoRoute(
           path: '/CandidateLogin',
           name: 'candidate-login',
           builder: (context, state) => const CandidateLoginScreen(),
@@ -157,11 +166,13 @@ class AppRouter {
     final bool loggingInCompany =
         location == '/CompanyLogin' || location == '/companyregister';
     final bool onboardingRoute = location == '/onboarding';
+    final bool companyArea = location.startsWith('/company');
 
     if (!authState.isAuthenticated) {
       if (onboardingRoute) return '/';
       if (location == '/CandidateDashboard') return '/CandidateLogin';
       if (location == '/DashboardCompany') return '/CompanyLogin';
+      if (companyArea) return '/CompanyLogin';
       return null;
     }
 
@@ -181,6 +192,10 @@ class AppRouter {
 
     if (authState.isCompany && location == '/CandidateDashboard') {
       return '/DashboardCompany';
+    }
+
+    if (authState.isCandidate && companyArea) {
+      return '/CandidateDashboard';
     }
 
     if (authState.isCandidate && (loggingInCandidate || loggingInCompany)) {

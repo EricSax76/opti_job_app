@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/calendar_panel.dart';
@@ -78,29 +80,37 @@ class _OffersList extends StatelessWidget {
 
     return ListView.builder(
       itemCount: state.offers.length,
+      padding: const EdgeInsets.symmetric(vertical: 8),
       itemBuilder: (context, index) {
         final offer = state.offers[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListTile(
-            title: Text(offer.title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text(offer.description),
-                const SizedBox(height: 4),
-                Text(
-                  offer.location,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-            trailing: const Icon(Icons.open_in_new),
+        final companyName =
+            offer.companyId == null
+                ? null
+                : state.companyNamesById[offer.companyId!];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: JobOfferSummaryCard(
+            title: offer.title,
+            company: offer.companyName ?? companyName ?? 'Empresa no especificada',
+            salary: _formatSalary(offer),
+            modality: offer.jobType ?? 'Modalidad no especificada',
             onTap: () => context.go('/job-offer/${offer.id}'),
           ),
         );
       },
     );
   }
+}
+
+String? _formatSalary(JobOffer offer) {
+  final min = offer.salaryMin?.trim();
+  final max = offer.salaryMax?.trim();
+
+  final hasMin = min != null && min.isNotEmpty;
+  final hasMax = max != null && max.isNotEmpty;
+
+  if (hasMin && hasMax) return '$min - $max';
+  if (hasMin) return 'Desde $min';
+  if (hasMax) return 'Hasta $max';
+  return null;
 }

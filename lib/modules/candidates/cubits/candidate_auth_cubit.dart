@@ -1,5 +1,8 @@
 // ignore_for_file: strict_top_level_inference
 
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthCubit
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
@@ -7,8 +10,26 @@ import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 
 class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
   final AuthRepository _repository;
+  StreamSubscription<User?>? _authSubscription;
 
-  CandidateAuthCubit(this._repository) : super(const CandidateAuthState());
+  CandidateAuthCubit(this._repository) : super(const CandidateAuthState()) {
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      user,
+    ) {
+      final currentCandidateUid = state.candidate?.uid;
+      if (!state.isAuthenticated || currentCandidateUid == null) return;
+      if (user == null || user.uid != currentCandidateUid) {
+        emit(
+          state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearCandidate: true,
+            clearError: true,
+            needsOnboarding: false,
+          ),
+        );
+      }
+    });
+  }
 
   Future<void> loginCandidate({
     required String email,
@@ -92,5 +113,11 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
         needsOnboarding: false,
       ),
     );
+  }
+
+  @override
+  Future<void> close() async {
+    await _authSubscription?.cancel();
+    return super.close();
   }
 }

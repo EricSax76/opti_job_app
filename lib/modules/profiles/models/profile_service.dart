@@ -38,6 +38,24 @@ class ProfileService {
     return Company.fromJson(data);
   }
 
+  Future<Map<int, Company>> fetchCompaniesByIds(List<int> ids) async {
+    final uniqueIds = ids.where((id) => id > 0).toSet().toList();
+    if (uniqueIds.isEmpty) return {};
+
+    final companiesById = <int, Company>{};
+    for (final chunk in _chunk(uniqueIds, 10)) {
+      final query = await _firestore
+          .collection('companies')
+          .where('id', whereIn: chunk)
+          .get();
+      for (final doc in query.docs) {
+        final company = Company.fromJson(doc.data());
+        companiesById[company.id] = company;
+      }
+    }
+    return companiesById;
+  }
+
   Future<Candidate> updateCandidateProfile({
     required String uid,
     required String name,
@@ -73,4 +91,14 @@ class ProfileService {
     }
     return Candidate.fromJson(data);
   }
+}
+
+List<List<T>> _chunk<T>(List<T> items, int size) {
+  if (items.isEmpty) return const [];
+  final chunks = <List<T>>[];
+  for (var i = 0; i < items.length; i += size) {
+    final end = i + size > items.length ? items.length : i + size;
+    chunks.add(items.sublist(i, end));
+  }
+  return chunks;
 }

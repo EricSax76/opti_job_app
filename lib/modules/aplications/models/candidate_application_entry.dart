@@ -10,4 +10,3 @@ class CandidateApplicationEntry {
   final Application application;
   final JobOffer? offer;
 }
-

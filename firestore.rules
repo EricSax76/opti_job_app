@@ -20,16 +20,19 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.auth.uid == candidateId
         && request.resource.data.uid == request.auth.uid;
-      allow read: if isSignedIn()
-        && request.auth.uid == candidateId
-        && resource.data.uid == request.auth.uid;
+      allow read: if (isSignedIn()
+          && request.auth.uid == candidateId
+          && resource.data.uid == request.auth.uid)
+        || isCompany();
       allow update, delete: if isSignedIn()
         && request.auth.uid == candidateId
         && resource.data.uid == request.auth.uid;
 
       match /curriculum/{curriculumId} {
-        allow create, read, update, delete: if isSignedIn()
+        allow create, update, delete: if isSignedIn()
           && request.auth.uid == candidateId;
+        allow read: if (isSignedIn() && request.auth.uid == candidateId)
+          || isCompany();
       }
     }
 

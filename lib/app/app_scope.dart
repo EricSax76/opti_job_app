@@ -39,7 +39,10 @@ class AppScope extends StatelessWidget {
           ),
           BlocProvider<JobOffersCubit>(
             create: (_) =>
-                JobOffersCubit(dependencies.jobOfferRepository)..loadOffers(),
+                JobOffersCubit(
+                  dependencies.jobOfferRepository,
+                  profileRepository: dependencies.profileRepository,
+                )..loadOffers(),
           ),
           BlocProvider<CalendarCubit>(
             create: (_) =>

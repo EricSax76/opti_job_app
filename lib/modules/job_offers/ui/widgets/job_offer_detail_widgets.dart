@@ -51,19 +51,44 @@ class JobOfferDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const muted = Color(0xFF64748B);
+    const border = Color(0xFFE2E8F0);
+
     if (state.status == JobOfferDetailStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (state.status == JobOfferDetailStatus.failure && state.offer == null) {
+      final message = state.errorMessage ?? 'No se pudo cargar la oferta.';
       return Center(
-        child: Text(state.errorMessage ?? 'No se pudo cargar la oferta.'),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: border),
+          ),
+          child: Text(message, style: const TextStyle(color: muted, height: 1.4)),
+        ),
       );
     }
 
     final offer = state.offer;
     if (offer == null) {
-      return const Center(child: Text('Oferta no encontrada.'));
+      return Center(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: border),
+          ),
+          child: const Text(
+            'Oferta no encontrada.',
+            style: TextStyle(color: muted, height: 1.4),
+          ),
+        ),
+      );
     }
 
     final isApplying = state.status == JobOfferDetailStatus.applying;
@@ -72,14 +97,15 @@ class JobOfferDetailBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        OfferHeader(title: offer.title, location: offer.location),
-        if (application != null) ...[
-          const SizedBox(height: 10),
-          applicationStatusChip(application.status),
-        ],
-        const SizedBox(height: 16),
+        OfferHeader(
+          offer: offer,
+          statusChip: application == null
+              ? null
+              : applicationStatusChip(application.status),
+        ),
+        const SizedBox(height: 14),
         Expanded(child: OfferDetails(offer: offer)),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         OfferActions(
           isAuthenticated: authState.isAuthenticated,
           isApplying: isApplying,
@@ -129,7 +155,7 @@ class JobOfferDetailBody extends StatelessWidget {
     try {
       final curriculumRepository = context.read<CurriculumRepository>();
       final aiRepository = context.read<AiRepository>();
-      final locale = Localizations.localeOf(context).toLanguageTag();
+      const locale = 'es-ES';
 
       final curriculum = await curriculumRepository.fetchCurriculum(
         candidate.uid,
@@ -202,6 +228,25 @@ class JobOfferDetailBody extends StatelessWidget {
                       ),
                     ),
                 ],
+                if (result.recommendations.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Recomendaciones',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final recommendation in result.recommendations)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• '),
+                          Expanded(child: Text(recommendation)),
+                        ],
+                      ),
+                    ),
+                ],
               ],
             ),
           ),
@@ -218,25 +263,100 @@ class JobOfferDetailBody extends StatelessWidget {
 }
 
 class OfferHeader extends StatelessWidget {
-  const OfferHeader({super.key, required this.title, required this.location});
+  const OfferHeader({
+    super.key,
+    required this.offer,
+    this.statusChip,
+  });
 
-  final String title;
-  final String location;
+  final JobOffer offer;
+  final Widget? statusChip;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(location),
-      ],
+    const ink = Color(0xFF0F172A);
+    const muted = Color(0xFF64748B);
+    const border = Color(0xFFE2E8F0);
+
+    final title = offer.title.trim().isEmpty ? 'Oferta' : offer.title.trim();
+    final company =
+        offer.companyName?.trim().isNotEmpty == true
+            ? offer.companyName!.trim()
+            : 'Empresa no especificada';
+    final salary = _formatSalary(offer);
+    final modality =
+        offer.jobType?.trim().isNotEmpty == true
+            ? offer.jobType!.trim()
+            : 'Modalidad no especificada';
+    final location =
+        offer.location.trim().isEmpty ? 'Ubicación no especificada' : offer.location;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: Icon(Icons.work_outline, color: ink),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: ink,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
+                  ),
+                ),
+              ),
+              if (statusChip != null) ...[
+                const SizedBox(width: 12),
+                statusChip!,
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.business_outlined, size: 18, color: muted),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  company,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: muted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (salary != null) _InfoPill(icon: Icons.payments_outlined, label: salary),
+              _InfoPill(icon: Icons.home_work_outlined, label: modality),
+              _InfoPill(icon: Icons.place_outlined, label: location),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -248,29 +368,65 @@ class OfferDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const ink = Color(0xFF0F172A);
+    const muted = Color(0xFF64748B);
+    const border = Color(0xFFE2E8F0);
+
+    final description =
+        offer.description.trim().isEmpty ? 'Sin descripción.' : offer.description.trim();
+    final salary = _formatSalary(offer) ?? 'No especificado';
+    final education =
+        offer.education?.trim().isNotEmpty == true ? offer.education!.trim() : 'No especificada';
+    final keyIndicators =
+        offer.keyIndicators?.trim().isNotEmpty == true ? offer.keyIndicators!.trim() : null;
+
     return SingleChildScrollView(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(offer.description),
-          const SizedBox(height: 16),
-          _InfoRow(
-            label: 'Tipología',
-            value: offer.jobType ?? 'No especificada',
-          ),
-          _InfoRow(
-            label: 'Educación requerida',
-            value: offer.education ?? 'No especificada',
-          ),
-          if (offer.salaryMin != null || offer.salaryMax != null)
-            _InfoRow(
-              label: 'Salario',
-              value:
-                  '${offer.salaryMin ?? 'N/D'}'
-                  '${offer.salaryMax != null ? ' - ${offer.salaryMax}' : ''}',
+          _SectionCard(
+            title: 'Descripción',
+            child: Text(
+              description,
+              style: const TextStyle(color: ink, height: 1.5),
             ),
-          if (offer.keyIndicators != null)
-            _InfoRow(label: 'Indicadores clave', value: offer.keyIndicators!),
+          ),
+          const SizedBox(height: 12),
+          _SectionCard(
+            title: 'Detalles',
+            child: Column(
+              children: [
+                _DetailRow(label: 'Salario', value: salary),
+                _DetailRow(
+                  label: 'Modalidad',
+                  value: offer.jobType ?? 'No especificada',
+                ),
+                _DetailRow(label: 'Educación', value: education),
+                if (keyIndicators != null)
+                  _DetailRow(label: 'Indicadores clave', value: keyIndicators),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: border),
+            ),
+            child: Row(
+              children: const [
+                Icon(Icons.info_outline, color: muted),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Revisa los detalles y postúlate cuando estés listo.',
+                    style: TextStyle(color: muted, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -297,13 +453,16 @@ class OfferActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const ink = Color(0xFF0F172A);
     final hasApplied = applicationStatus != null;
     return Wrap(
       spacing: 12,
+      runSpacing: 12,
       children: [
         if (isAuthenticated)
           FilledButton(
             onPressed: (isApplying || hasApplied) ? null : onApply,
+            style: FilledButton.styleFrom(backgroundColor: ink),
             child: isApplying
                 ? const SizedBox.square(
                     dimension: 24,
@@ -330,28 +489,136 @@ class OfferActions extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = Color(0xFF0F172A);
+    const border = Color(0xFFE2E8F0);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: ink,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
 
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
+    const ink = Color(0xFF0F172A);
+    const muted = Color(0xFF64748B);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: RichText(
-        text: TextSpan(
-          style: Theme.of(context).textTheme.bodyLarge,
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: muted,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            TextSpan(text: value),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: ink, height: 1.35),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = Color(0xFF0F172A);
+    const muted = Color(0xFF64748B);
+    const border = Color(0xFFE2E8F0);
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 320),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: muted),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: ink,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+String? _formatSalary(JobOffer offer) {
+  final min = offer.salaryMin?.trim();
+  final max = offer.salaryMax?.trim();
+
+  final hasMin = min != null && min.isNotEmpty;
+  final hasMax = max != null && max.isNotEmpty;
+
+  if (hasMin && hasMax) return '$min - $max';
+  if (hasMin) return 'Desde $min';
+  if (hasMax) return 'Hasta $max';
+  return null;
 }

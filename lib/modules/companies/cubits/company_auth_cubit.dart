@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthCubit
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
@@ -5,8 +8,26 @@ import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 
 class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
   final AuthRepository _repository;
+  StreamSubscription<User?>? _authSubscription;
 
-  CompanyAuthCubit(this._repository) : super(const CompanyAuthState());
+  CompanyAuthCubit(this._repository) : super(const CompanyAuthState()) {
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
+      user,
+    ) {
+      final currentCompanyUid = state.company?.uid;
+      if (!state.isAuthenticated || currentCompanyUid == null) return;
+      if (user == null || user.uid != currentCompanyUid) {
+        emit(
+          state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearCompany: true,
+            clearError: true,
+            needsOnboarding: false,
+          ),
+        );
+      }
+    });
+  }
 
   Future<void> loginCompany({
     required String email,
@@ -88,5 +109,11 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         needsOnboarding: false,
       ),
     );
+  }
+
+  @override
+  Future<void> close() async {
+    await _authSubscription?.cancel();
+    return super.close();
   }
 }

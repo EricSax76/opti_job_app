@@ -140,6 +140,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         location: _formControllers.location.text.trim(),
         companyId: company.id,
         companyUid: company.uid,
+        companyName: company.name,
         jobType: _formControllers.jobType.text.trim().isEmpty
             ? null
             : _formControllers.jobType.text.trim(),

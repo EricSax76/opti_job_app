@@ -61,13 +61,17 @@ class AiMatchService {
 Evalúa el encaje entre un candidato y una oferta de empleo.
 
 Requisitos:
-- Idioma/locale: $locale
+- Idioma: Español (es-ES). Responde SIEMPRE en castellano y NO uses inglés.
+- Locale de referencia: $locale
 - Calidad: $quality
-- Devuelve JSON válido con:
+- Devuelve JSON válido con (en castellano):
   - score (0..100)
   - reasons (3..7 strings)
   - summary (opcional, 1-2 frases)
+  - recommendations (3..6 strings): recomendaciones concretas para el candidato
+    (qué mejorar, qué destacar, qué añadir al CV/portfolio, cómo adaptar la postulación).
 - No inventes habilidades/experiencias no presentes en el CV o la oferta.
+- Enfócate en ayudar al candidato: identifica gaps y acciones sugeridas.
 
 CV (JSON): ${jsonEncode(cv)}
 Oferta (JSON): ${jsonEncode(offer)}
@@ -83,10 +87,15 @@ Oferta (JSON): ${jsonEncode(offer)}
           minItems: 3,
           maxItems: 7,
         ),
+        'recommendations': Schema.array(
+          items: Schema.string(),
+          minItems: 3,
+          maxItems: 6,
+        ),
         'summary': Schema.string(nullable: true),
       },
       optionalProperties: ['summary'],
-      propertyOrdering: ['score', 'reasons', 'summary'],
+      propertyOrdering: ['score', 'reasons', 'recommendations', 'summary'],
     );
   }
 

@@ -17,6 +17,10 @@ class ProfileRepository {
     return _service.fetchCompanyProfile(id);
   }
 
+  Future<Map<int, Company>> fetchCompaniesByIds(List<int> ids) {
+    return _service.fetchCompaniesByIds(ids);
+  }
+
   Future<Candidate> updateCandidateProfile({
     required String uid,
     required String name,
