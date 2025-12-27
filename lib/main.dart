@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_ai/firebase_ai.dart';
+import 'package:opti_job_app/firebase_options.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,14 +29,16 @@ import 'package:opti_job_app/modules/curriculum/repositories/curriculum_reposito
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/ai/models/ai_service.dart';
 import 'package:opti_job_app/modules/ai/repositories/ai_repository.dart';
-import 'package:opti_job_app/firebase_options.dart';
+
 import 'package:opti_job_app/core/router/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (kDebugMode) {
-    debugPrint('Firebase apps: ${Firebase.apps.map((app) => app.name).toList()}');
+    debugPrint(
+      'Firebase apps: ${Firebase.apps.map((app) => app.name).toList()}',
+    );
     debugPrint('Firebase default options: ${Firebase.app().options}');
   }
   const useFirebaseEmulators = bool.fromEnvironment(
