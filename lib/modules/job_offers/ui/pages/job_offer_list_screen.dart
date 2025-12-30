@@ -132,7 +132,7 @@ class JobOfferListScreen extends StatelessWidget {
                                   ),
                                   trailing: const Icon(Icons.chevron_right),
                                   onTap: () =>
-                                      context.go('/job-offer/${offer.id}'),
+                                      context.push('/job-offer/${offer.id}'),
                                 ),
                               );
                             },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/modules/ai/models/ai_match_result.dart';
@@ -122,7 +123,13 @@ class JobOfferDetailBody extends StatelessWidget {
           onMatch: authState.candidate == null
               ? null
               : () => _showOfferMatch(context, offer),
-          onBack: () => Navigator.of(context).maybePop(),
+          onBack: () {
+            if (context.canPop()) {
+              context.pop();
+              return;
+            }
+            context.go('/job-offer');
+          },
         ),
       ],
     );

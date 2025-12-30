@@ -6,6 +6,24 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const CandidateProfileView();
+    const background = Color(0xFFF8FAFC);
+    const ink = Color(0xFF0F172A);
+    const border = Color(0xFFE2E8F0);
+
+    return Scaffold(
+      backgroundColor: background,
+      appBar: AppBar(
+        title: const Text('Perfil'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        foregroundColor: ink,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: border, width: 1),
+        ),
+      ),
+      body: const CandidateProfileView(),
+    );
   }
 }

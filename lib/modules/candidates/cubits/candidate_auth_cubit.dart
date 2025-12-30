@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthCubit
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
@@ -42,7 +43,11 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
         return;
       }
       emit(state.copyWith(status: AuthStatus.authenticated, candidate: candidate));
-    } catch (_) {
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('[Auth] restoreSession failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
       emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
   }
@@ -60,11 +65,15 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
       emit(
         state.copyWith(status: AuthStatus.authenticated, candidate: candidate),
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('[Auth] loginCandidate failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
       emit(
         state.copyWith(
           status: AuthStatus.failure,
-          errorMessage: 'No se pudo iniciar sesión. Verifica tus credenciales.',
+          errorMessage: _userFacingAuthErrorMessage(error),
           clearCandidate: true,
         ),
       );
@@ -91,11 +100,15 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
           needsOnboarding: true,
         ),
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('[Auth] registerCandidate failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
       emit(
         state.copyWith(
           status: AuthStatus.failure,
-          errorMessage: 'No se pudo completar el registro.',
+          errorMessage: _userFacingAuthErrorMessage(error),
           clearCandidate: true,
         ),
       );
@@ -129,6 +142,47 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
         needsOnboarding: false,
       ),
     );
+  }
+
+  String _userFacingAuthErrorMessage(Object error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'invalid-email':
+          return 'Email inválido.';
+        case 'user-disabled':
+          return 'Tu cuenta está deshabilitada.';
+        case 'user-not-found':
+          return 'Usuario no encontrado.';
+        case 'wrong-password':
+          return 'Contraseña incorrecta.';
+        case 'invalid-credential':
+          return 'Credenciales inválidas.';
+        case 'too-many-requests':
+          return 'Demasiados intentos. Intenta más tarde.';
+        case 'network-request-failed':
+          return 'Error de red. Revisa tu conexión.';
+        default:
+          return error.message ?? 'No se pudo iniciar sesión.';
+      }
+    }
+
+    if (error is FirebaseException) {
+      if (error.plugin == 'cloud_firestore' && error.code == 'permission-denied') {
+        return 'Permiso denegado al leer tu perfil. '
+            'Si tienes App Check habilitado/enforced en Firestore, '
+            'actívalo en la app (--dart-define=USE_FIREBASE_APP_CHECK=true) '
+            'y registra el debug token en Firebase Console.';
+      }
+      if (error.message != null && error.message!.trim().isNotEmpty) {
+        return error.message!;
+      }
+    }
+
+    if (error is StateError) {
+      return error.message.toString();
+    }
+
+    return 'Ocurrió un error. Intenta nuevamente.';
   }
 
   @override

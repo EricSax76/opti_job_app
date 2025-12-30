@@ -35,15 +35,15 @@ class MyApplicationsView extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: () => context.read<MyApplicationsCubit>().loadMyApplications(),
-          child: _ApplicationsList(applications: state.applications),
+          child: ApplicationsList(applications: state.applications),
         );
       },
     );
   }
 }
 
-class _ApplicationsList extends StatelessWidget {
-  const _ApplicationsList({required this.applications});
+class ApplicationsList extends StatelessWidget {
+  const ApplicationsList({super.key, required this.applications});
 
   final List<CandidateApplicationEntry> applications;
 
@@ -81,7 +81,7 @@ class _ApplicationsList extends StatelessWidget {
               onTap:
                   offer == null
                       ? null
-                      : () => context.go('/job-offer/${offer.id}'),
+                      : () => context.push('/job-offer/${offer.id}'),
             ),
           ),
         );

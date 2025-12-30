@@ -94,7 +94,7 @@ class _OffersList extends StatelessWidget {
             company: offer.companyName ?? companyName ?? 'Empresa no especificada',
             salary: _formatSalary(offer),
             modality: offer.jobType ?? 'Modalidad no especificada',
-            onTap: () => context.go('/job-offer/${offer.id}'),
+            onTap: () => context.push('/job-offer/${offer.id}'),
           ),
         );
       },
