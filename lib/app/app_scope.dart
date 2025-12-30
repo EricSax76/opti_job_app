@@ -32,17 +32,19 @@ class AppScope extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider<CandidateAuthCubit>(
-            create: (_) => CandidateAuthCubit(dependencies.authRepository),
+            create: (_) =>
+                CandidateAuthCubit(dependencies.authRepository)..restoreSession(),
           ),
           BlocProvider<CompanyAuthCubit>(
-            create: (_) => CompanyAuthCubit(dependencies.authRepository),
+            create: (_) =>
+                CompanyAuthCubit(dependencies.authRepository)..restoreSession(),
           ),
           BlocProvider<JobOffersCubit>(
             create: (_) =>
                 JobOffersCubit(
                   dependencies.jobOfferRepository,
                   profileRepository: dependencies.profileRepository,
-                )..loadOffers(),
+                ),
           ),
           BlocProvider<CalendarCubit>(
             create: (_) =>
@@ -62,7 +64,29 @@ class AppScope extends StatelessWidget {
             ),
           ),
         ],
-        child: const _AppRouterHost(),
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<CandidateAuthCubit, CandidateAuthState>(
+              listenWhen: (previous, current) =>
+                  previous.isAuthenticated != current.isAuthenticated,
+              listener: (context, state) {
+                if (state.isAuthenticated) {
+                  context.read<JobOffersCubit>().loadOffers();
+                }
+              },
+            ),
+            BlocListener<CompanyAuthCubit, CompanyAuthState>(
+              listenWhen: (previous, current) =>
+                  previous.isAuthenticated != current.isAuthenticated,
+              listener: (context, state) {
+                if (state.isAuthenticated) {
+                  context.read<JobOffersCubit>().loadOffers();
+                }
+              },
+            ),
+          ],
+          child: const _AppRouterHost(),
+        ),
       ),
     );
   }

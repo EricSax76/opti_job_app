@@ -48,4 +48,12 @@ class AuthRepository {
   Future<void> logout() {
     return _service.logout();
   }
+
+  Future<Candidate?> restoreCandidateSession() {
+    return _service.restoreCandidateSession();
+  }
+
+  Future<Company?> restoreCompanySession() {
+    return _service.restoreCompanySession();
+  }
 }

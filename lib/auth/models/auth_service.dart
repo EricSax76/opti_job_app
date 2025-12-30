@@ -141,4 +141,32 @@ class AuthService {
   Future<void> logout() {
     return _auth.signOut();
   }
+
+  Future<Candidate?> restoreCandidateSession() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final doc = await _candidatesCollection.doc(user.uid).get();
+    if (!doc.exists) return null;
+
+    final data = doc.data();
+    if (data == null) return null;
+
+    final token = await user.getIdToken();
+    return Candidate.fromJson({...data, 'token': token});
+  }
+
+  Future<Company?> restoreCompanySession() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final doc = await _companiesCollection.doc(user.uid).get();
+    if (!doc.exists) return null;
+
+    final data = doc.data();
+    if (data == null) return null;
+
+    final token = await user.getIdToken();
+    return Company.fromJson({...data, 'token': token});
+  }
 }

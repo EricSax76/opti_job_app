@@ -31,6 +31,22 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
     });
   }
 
+  Future<void> restoreSession() async {
+    if (state.isAuthenticated) return;
+
+    emit(state.copyWith(status: AuthStatus.authenticating, clearError: true));
+    try {
+      final candidate = await _repository.restoreCandidateSession();
+      if (candidate == null) {
+        emit(state.copyWith(status: AuthStatus.unauthenticated));
+        return;
+      }
+      emit(state.copyWith(status: AuthStatus.authenticated, candidate: candidate));
+    } catch (_) {
+      emit(state.copyWith(status: AuthStatus.unauthenticated));
+    }
+  }
+
   Future<void> loginCandidate({
     required String email,
     required String password,
