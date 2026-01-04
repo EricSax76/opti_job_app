@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
@@ -10,21 +11,21 @@ class JobOffersState {
   const JobOffersState({
     this.status = JobOffersStatus.initial,
     this.offers = const [],
-    this.companyNamesById = const {},
+    this.companiesById = const {},
     this.errorMessage,
     this.selectedJobType,
   });
 
   final JobOffersStatus status;
   final List<JobOffer> offers;
-  final Map<int, String> companyNamesById;
+  final Map<int, Company> companiesById;
   final String? errorMessage;
   final String? selectedJobType;
 
   JobOffersState copyWith({
     JobOffersStatus? status,
     List<JobOffer>? offers,
-    Map<int, String>? companyNamesById,
+    Map<int, Company>? companiesById,
     String? errorMessage,
     String? selectedJobType,
     bool clearError = false,
@@ -32,7 +33,7 @@ class JobOffersState {
     return JobOffersState(
       status: status ?? this.status,
       offers: offers ?? this.offers,
-      companyNamesById: companyNamesById ?? this.companyNamesById,
+      companiesById: companiesById ?? this.companiesById,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
       selectedJobType: selectedJobType ?? this.selectedJobType,
     );
@@ -58,12 +59,12 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     );
     try {
       final offers = await _repository.fetchAll(jobType: filter);
-      final companyNamesById = await _loadCompanyNames(offers);
+      final companiesById = await _loadCompanies(offers);
       emit(
         state.copyWith(
           status: JobOffersStatus.success,
           offers: offers,
-          companyNamesById: companyNamesById,
+          companiesById: companiesById,
         ),
       );
     } catch (error) {
@@ -81,18 +82,13 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     loadOffers(jobType: jobType);
   }
 
-  Future<Map<int, String>> _loadCompanyNames(List<JobOffer> offers) async {
+  Future<Map<int, Company>> _loadCompanies(List<JobOffer> offers) async {
     final companyIds =
         offers.map((offer) => offer.companyId).whereType<int>().toSet().toList();
     if (companyIds.isEmpty) return const {};
 
     try {
-      final companiesById = await _profileRepository.fetchCompaniesByIds(
-        companyIds,
-      );
-      return {
-        for (final entry in companiesById.entries) entry.key: entry.value.name,
-      };
+      return await _profileRepository.fetchCompaniesByIds(companyIds);
     } catch (_) {
       return const {};
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:file_picker/file_picker.dart';
 
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
@@ -7,8 +8,7 @@ import 'package:opti_job_app/modules/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_pdf_service.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_share_service.dart';
+import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 
 const _cvBackground = Color(0xFFF8FAFC);
 const _cvInk = Color(0xFF0F172A);
@@ -40,6 +40,7 @@ class _CandidateCurriculumContent extends StatefulWidget {
 class _CandidateCurriculumContentState extends State<_CandidateCurriculumContent> {
   final _skillController = TextEditingController();
   var _isImprovingSummary = false;
+  var _isManagingAttachment = false;
 
   @override
   void dispose() {
@@ -121,6 +122,7 @@ class _CandidateCurriculumContentState extends State<_CandidateCurriculumContent
   @override
   Widget build(BuildContext context) {
     final formCubit = context.read<CurriculumFormCubit>();
+    final attachment = context.watch<CurriculumCubit>().state.curriculum?.attachment;
 
     return BlocConsumer<CurriculumFormCubit, CurriculumFormState>(
       listener: (context, state) {
@@ -179,12 +181,35 @@ class _CandidateCurriculumContentState extends State<_CandidateCurriculumContent
                           ),
                         ),
                         OutlinedButton.icon(
-                          onPressed: () => _exportPdf(context),
-                          icon: const Icon(Icons.picture_as_pdf_outlined),
-                          label: const Text('Exportar PDF'),
+                          onPressed: state.isSaving || _isManagingAttachment
+                              ? null
+                              : () => _pickAndUploadAttachment(context),
+                          icon: _isManagingAttachment
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.upload_file_outlined),
+                          label: Text(
+                            _isManagingAttachment
+                                ? 'Subiendo...'
+                                : 'Importar PDF/DOCX',
+                          ),
                         ),
                       ],
                     ),
+                    if (attachment != null) ...[
+                      const SizedBox(height: 16),
+                      _AttachmentTile(
+                        attachment: attachment,
+                        isBusy: state.isSaving || _isManagingAttachment,
+                        onDelete: () => _confirmAndDeleteAttachment(
+                          context,
+                          attachment,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Text(
                       'Completa tu CV para postular más rápido.',
@@ -367,52 +392,214 @@ class _CandidateCurriculumContentState extends State<_CandidateCurriculumContent
     );
   }
 
-  Future<void> _exportPdf(BuildContext context) async {
-    final authState = context.read<CandidateAuthCubit>().state;
-    final candidate = authState.candidate;
+  Future<void> _pickAndUploadAttachment(BuildContext context) async {
+    if (_isManagingAttachment) return;
+    final candidate = context.read<CandidateAuthCubit>().state.candidate;
     if (candidate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes iniciar sesión para exportar.')),
+        const SnackBar(content: Text('Debes iniciar sesión para importar.')),
       );
       return;
     }
-    final formState = context.read<CurriculumFormCubit>().state;
-    final curriculum = Curriculum(
-      headline: context.read<CurriculumFormCubit>().headlineController.text.trim(),
-      summary: context.read<CurriculumFormCubit>().summaryController.text.trim(),
-      phone: context.read<CurriculumFormCubit>().phoneController.text.trim(),
-      location: context.read<CurriculumFormCubit>().locationController.text.trim(),
-      skills: formState.skills,
-      experiences: formState.experiences,
-      education: formState.education,
-    );
 
+    final repository = context.read<CurriculumRepository>();
+    final curriculumCubit = context.read<CurriculumCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['pdf', 'doc', 'docx'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.single;
+    final bytes = file.bytes;
+    final extension = file.extension?.toLowerCase();
+    final contentType = _contentTypeForExtension(extension);
+
+    if (bytes == null || contentType == null) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Selecciona un PDF o DOCX válido.')),
+      );
+      return;
+    }
+
+    setState(() => _isManagingAttachment = true);
     try {
-      final pdfBytes = await CurriculumPdfService().buildPdf(
-        candidate: candidate,
-        curriculum: curriculum,
+      await repository.uploadAttachment(
+        candidateUid: candidate.uid,
+        bytes: bytes,
+        fileName: file.name,
+        contentType: contentType,
       );
-      final safeName = _safeFileName(
-        '${candidate.name}_${candidate.lastName}'.trim(),
-      );
-      await CurriculumShareService().sharePdf(
-        bytes: pdfBytes,
-        fileName: 'CV_$safeName.pdf',
-        subject: 'Curriculum - ${candidate.name}',
+      if (!mounted) return;
+      await curriculumCubit.refresh();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Archivo importado correctamente.')),
       );
     } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo exportar el PDF.')),
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No se pudo importar el archivo.')),
       );
+    } finally {
+      if (mounted) setState(() => _isManagingAttachment = false);
     }
   }
 
-  String _safeFileName(String input) {
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) return 'candidato';
-    return trimmed.replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_');
+  Future<void> _confirmAndDeleteAttachment(
+    BuildContext context,
+    CurriculumAttachment attachment,
+  ) async {
+    if (_isManagingAttachment) return;
+    final candidate = context.read<CandidateAuthCubit>().state.candidate;
+    if (candidate == null) return;
+
+    final repository = context.read<CurriculumRepository>();
+    final curriculumCubit = context.read<CurriculumCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Eliminar archivo'),
+          content: const Text(
+            'Se eliminará el archivo importado de tu curriculum.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+    if (shouldDelete != true || !mounted) return;
+
+    setState(() => _isManagingAttachment = true);
+    try {
+      await repository.deleteAttachment(
+        candidateUid: candidate.uid,
+        attachment: attachment,
+      );
+      if (!mounted) return;
+      await curriculumCubit.refresh();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Archivo eliminado.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No se pudo eliminar el archivo.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isManagingAttachment = false);
+    }
   }
+}
+
+String? _contentTypeForExtension(String? extension) {
+  switch (extension) {
+    case 'pdf':
+      return 'application/pdf';
+    case 'doc':
+      return 'application/msword';
+    case 'docx':
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+  return null;
+}
+
+class _AttachmentTile extends StatelessWidget {
+  const _AttachmentTile({
+    required this.attachment,
+    required this.onDelete,
+    required this.isBusy,
+  });
+
+  final CurriculumAttachment attachment;
+  final VoidCallback onDelete;
+  final bool isBusy;
+
+  @override
+  Widget build(BuildContext context) {
+    final sizeLabel = _formatBytes(attachment.sizeBytes);
+    final updatedLabel = attachment.updatedAt == null
+        ? null
+        : 'Actualizado: ${_formatDate(attachment.updatedAt!)}';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _cvBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cvBorder),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.description_outlined, color: _cvMuted),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  attachment.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: _cvInk,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  [sizeLabel, if (updatedLabel != null) updatedLabel].join(' · '),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: _cvMuted),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Eliminar',
+            onPressed: isBusy ? null : onDelete,
+            icon: const Icon(Icons.delete_outline),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatBytes(int bytes) {
+  if (bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  var size = bytes.toDouble();
+  var unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+  final fixed = unitIndex == 0 ? size.toStringAsFixed(0) : size.toStringAsFixed(1);
+  return '$fixed ${units[unitIndex]}';
+}
+
+String _formatDate(DateTime date) {
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(date.day)}/${two(date.month)}/${date.year}';
 }
 
 InputDecoration _inputDecoration({required String labelText}) {

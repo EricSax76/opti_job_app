@@ -8,10 +8,31 @@ service firebase.storage {
 
     match /candidates/{candidateId}/{allPaths=**} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn()
+      allow create, update: if isSignedIn()
         && request.auth.uid == candidateId
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
+      allow delete: if isSignedIn() && request.auth.uid == candidateId;
+    }
+
+    match /candidates/{candidateId}/curriculum/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.auth.uid == candidateId
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches(
+          'application/pdf|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
+      allow delete: if isSignedIn() && request.auth.uid == candidateId;
+    }
+
+    match /companies/{companyId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.auth.uid == companyId
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isSignedIn() && request.auth.uid == companyId;
     }
   }
 }

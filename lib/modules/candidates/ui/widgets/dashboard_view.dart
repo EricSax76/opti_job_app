@@ -83,15 +83,14 @@ class _OffersList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemBuilder: (context, index) {
         final offer = state.offers[index];
-        final companyName =
-            offer.companyId == null
-                ? null
-                : state.companyNamesById[offer.companyId!];
+        final company =
+            offer.companyId == null ? null : state.companiesById[offer.companyId!];
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: JobOfferSummaryCard(
             title: offer.title,
-            company: offer.companyName ?? companyName ?? 'Empresa no especificada',
+            company: offer.companyName ?? company?.name ?? 'Empresa no especificada',
+            avatarUrl: offer.companyAvatarUrl ?? company?.avatarUrl,
             salary: _formatSalary(offer),
             modality: offer.jobType ?? 'Modalidad no especificada',
             onTap: () => context.push('/job-offer/${offer.id}'),

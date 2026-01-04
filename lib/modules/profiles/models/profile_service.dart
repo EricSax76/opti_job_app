@@ -91,6 +91,64 @@ class ProfileService {
     }
     return Candidate.fromJson(data);
   }
+
+  Future<Company> updateCompanyProfile({
+    required String uid,
+    required String name,
+    Uint8List? avatarBytes,
+  }) async {
+    final docRef = _firestore.collection('companies').doc(uid);
+    final snapshot = await docRef.get();
+    if (!snapshot.exists) {
+      throw StateError('Perfil de empresa no encontrado.');
+    }
+    final snapshotData = snapshot.data();
+    final existingAvatarUrl = snapshotData?['avatar_url'] as String?;
+
+    final updateData = <String, dynamic>{
+      'name': name,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+    String? newAvatarUrl;
+
+    if (avatarBytes != null) {
+      final avatarRef = _storage.ref().child('companies/$uid/avatar.jpg');
+      await avatarRef.putData(
+        avatarBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      newAvatarUrl = await avatarRef.getDownloadURL();
+      updateData['avatar_url'] = newAvatarUrl;
+    }
+
+    await docRef.update(updateData);
+
+    final avatarUrlForOffers = (newAvatarUrl != null && newAvatarUrl.isNotEmpty)
+        ? newAvatarUrl
+        : existingAvatarUrl;
+    final offersQuery = await _firestore
+        .collection('jobOffers')
+        .where('company_uid', isEqualTo: uid)
+        .get();
+    if (offersQuery.docs.isNotEmpty) {
+      final batch = _firestore.batch();
+      for (final doc in offersQuery.docs) {
+        final update = <String, dynamic>{'company_name': name};
+        if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty) {
+          update['company_avatar_url'] = avatarUrlForOffers;
+        }
+        batch.update(doc.reference, update);
+      }
+      await batch.commit();
+    }
+
+    final updatedSnapshot = await docRef.get();
+    final data = updatedSnapshot.data();
+    if (data == null) {
+      throw StateError('No se pudo actualizar el perfil.');
+    }
+    return Company.fromJson(data);
+  }
 }
 
 List<List<T>> _chunk<T>(List<T> items, int size) {

@@ -9,6 +9,7 @@ import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 void handleJobOfferDetailMessages(
@@ -98,11 +99,23 @@ class JobOfferDetailBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        OfferHeader(
-          offer: offer,
-          statusChip: application == null
-              ? null
-              : applicationStatusChip(application.status),
+        Builder(
+          builder: (context) {
+            String? avatarUrl = offer.companyAvatarUrl;
+            if ((avatarUrl == null || avatarUrl.trim().isEmpty) &&
+                offer.companyId != null) {
+              final jobOffersState = context.read<JobOffersCubit>().state;
+              avatarUrl =
+                  jobOffersState.companiesById[offer.companyId!]?.avatarUrl;
+            }
+            return OfferHeader(
+              offer: offer,
+              companyAvatarUrl: avatarUrl,
+              statusChip: application == null
+                  ? null
+                  : applicationStatusChip(application.status),
+            );
+          },
         ),
         const SizedBox(height: 14),
         Expanded(child: OfferDetails(offer: offer)),
@@ -273,10 +286,12 @@ class OfferHeader extends StatelessWidget {
   const OfferHeader({
     super.key,
     required this.offer,
+    this.companyAvatarUrl,
     this.statusChip,
   });
 
   final JobOffer offer;
+  final String? companyAvatarUrl;
   final Widget? statusChip;
 
   @override
@@ -336,7 +351,22 @@ class OfferHeader extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.business_outlined, size: 18, color: muted),
+              CircleAvatar(
+                radius: 10,
+                backgroundColor: const Color(0xFFF8FAFC),
+                backgroundImage: (companyAvatarUrl != null &&
+                        companyAvatarUrl!.trim().isNotEmpty)
+                    ? NetworkImage(companyAvatarUrl!.trim())
+                    : null,
+                child: (companyAvatarUrl == null ||
+                        companyAvatarUrl!.trim().isEmpty)
+                    ? const Icon(
+                        Icons.business_outlined,
+                        size: 14,
+                        color: muted,
+                      )
+                    : null,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

@@ -16,8 +16,10 @@ class OfferCard extends StatelessWidget {
     const ink = Color(0xFF0F172A);
     const muted = Color(0xFF475569);
     const border = Color(0xFFE2E8F0);
+    const background = Color(0xFFF8FAFC);
 
     final resolvedCompanyUid = _companyUid(context);
+    final avatarUrl = context.watch<CompanyAuthCubit>().state.company?.avatarUrl;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -36,7 +38,16 @@ class OfferCard extends StatelessWidget {
               vertical: 8,
             ),
             childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-            leading: const Icon(Icons.work_outline, color: ink),
+            leading: CircleAvatar(
+              radius: 18,
+              backgroundColor: background,
+              backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: (avatarUrl == null || avatarUrl.isEmpty)
+                  ? const Icon(Icons.business_outlined, color: muted)
+                  : null,
+            ),
             title: Text(
               offer.title,
               style: const TextStyle(

@@ -1,6 +1,10 @@
 export 'company_dashboard_header.dart';
+export 'company_home_dashboard.dart';
+export 'company_candidates_header.dart';
+export 'company_candidates_section.dart';
 export 'company_offers_section.dart';
 export 'company_offers_header.dart';
+export 'company_offers_repository_section.dart';
 export 'create_offer_card.dart';
 export 'offer_form_controllers.dart';
 export 'offer_form_fields.dart';

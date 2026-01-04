@@ -94,6 +94,7 @@ class JobOfferPayload {
     required this.companyId,
     required this.companyUid,
     required this.companyName,
+    this.companyAvatarUrl,
     this.salaryMin,
     this.salaryMax,
     this.education,
@@ -107,6 +108,7 @@ class JobOfferPayload {
   final int companyId;
   final String companyUid;
   final String companyName;
+  final String? companyAvatarUrl;
   final String? salaryMin;
   final String? salaryMax;
   final String? education;
@@ -121,6 +123,7 @@ class JobOfferPayload {
       'company_id': companyId,
       'company_uid': companyUid,
       'company_name': companyName,
+      'company_avatar_url': companyAvatarUrl,
       'salary_min': salaryMin,
       'salary_max': salaryMax,
       'education': education,

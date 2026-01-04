@@ -9,6 +9,7 @@ class JobOffer {
     this.companyId,
     this.companyUid,
     this.companyName,
+    this.companyAvatarUrl,
     this.jobType,
     this.salaryMin,
     this.salaryMax,
@@ -24,6 +25,7 @@ class JobOffer {
   final int? companyId;
   final String? companyUid;
   final String? companyName;
+  final String? companyAvatarUrl;
   final String? jobType;
   final String? salaryMin;
   final String? salaryMax;
@@ -47,6 +49,8 @@ class JobOffer {
           json['owner_uid'] as String?,
       companyName:
           json['company_name'] as String? ?? json['companyName'] as String?,
+      companyAvatarUrl: json['company_avatar_url'] as String? ??
+          json['companyAvatarUrl'] as String?,
       jobType: json['job_type'] as String? ?? json['jobType'] as String?,
       salaryMin: json['salary_min'] as String? ?? json['salaryMin'] as String?,
       salaryMax: json['salary_max'] as String? ?? json['salaryMax'] as String?,
@@ -66,6 +70,7 @@ class JobOffer {
       'company_id': companyId,
       'company_uid': companyUid,
       'company_name': companyName,
+      'company_avatar_url': companyAvatarUrl,
       'job_type': jobType,
       'salary_min': salaryMin,
       'salary_max': salaryMax,
@@ -83,6 +88,7 @@ class JobOffer {
     int? companyId,
     String? companyUid,
     String? companyName,
+    String? companyAvatarUrl,
     String? jobType,
     String? salaryMin,
     String? salaryMax,
@@ -98,6 +104,7 @@ class JobOffer {
       companyId: companyId ?? this.companyId,
       companyUid: companyUid ?? this.companyUid,
       companyName: companyName ?? this.companyName,
+      companyAvatarUrl: companyAvatarUrl ?? this.companyAvatarUrl,
       jobType: jobType ?? this.jobType,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,

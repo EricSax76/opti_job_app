@@ -268,93 +268,127 @@ class _ApplicantCurriculumScreenState extends State<ApplicantCurriculumScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: border),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: ink,
-                            foregroundColor: Colors.white,
-                            child: Text(
-                              _initial(candidate),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${candidate.name} ${candidate.lastName}'
-                                      .trim(),
-                                  style: const TextStyle(
-                                    color: ink,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  candidate.email,
-                                  style: const TextStyle(
-                                    color: muted,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed:
-                                _isExporting || !hasCurriculum
-                                    ? null
-                                    : () => _exportPdf(
-                                      candidate: candidate,
-                                      curriculum: curriculum,
-                                    ),
-                            icon:
-                                _isExporting
-                                    ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : const Icon(Icons.picture_as_pdf_outlined),
-                            label: Text(
-                              _isExporting ? 'Exportando...' : 'Exportar PDF',
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          OutlinedButton.icon(
-                            onPressed:
-                                _isMatching || !hasCurriculum
-                                    ? null
-                                    : () => _showOfferMatchForCompany(
-                                      curriculum: curriculum,
-                                      offer: offer,
-                                    ),
-                            icon:
-                                _isMatching
-                                    ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : const Icon(Icons.auto_awesome_outlined),
-                            label: Text(
-                              _isMatching ? 'Analizando...' : 'Match IA',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+	                      decoration: BoxDecoration(
+	                        color: Colors.white,
+	                        borderRadius: BorderRadius.circular(24),
+	                        border: Border.all(color: border),
+	                      ),
+	                      child: LayoutBuilder(
+	                        builder: (context, constraints) {
+	                          final isNarrow = constraints.maxWidth < 520;
+
+	                          final header = Row(
+	                            children: [
+	                              CircleAvatar(
+	                                backgroundColor: ink,
+	                                foregroundColor: Colors.white,
+	                                child: Text(_initial(candidate)),
+	                              ),
+	                              const SizedBox(width: 12),
+	                              Expanded(
+	                                child: Column(
+	                                  crossAxisAlignment:
+	                                      CrossAxisAlignment.start,
+	                                  children: [
+	                                    Text(
+	                                      '${candidate.name} ${candidate.lastName}'
+	                                          .trim(),
+	                                      maxLines: 2,
+	                                      overflow: TextOverflow.ellipsis,
+	                                      style: const TextStyle(
+	                                        color: ink,
+	                                        fontWeight: FontWeight.w700,
+	                                        fontSize: 16,
+	                                      ),
+	                                    ),
+	                                    const SizedBox(height: 2),
+	                                    Text(
+	                                      candidate.email,
+	                                      maxLines: 1,
+	                                      overflow: TextOverflow.ellipsis,
+	                                      style: const TextStyle(
+	                                        color: muted,
+	                                        height: 1.3,
+	                                      ),
+	                                    ),
+	                                  ],
+	                                ),
+	                              ),
+	                            ],
+	                          );
+
+	                          final exportButton = OutlinedButton.icon(
+	                            onPressed: _isExporting || !hasCurriculum
+	                                ? null
+	                                : () => _exportPdf(
+	                                      candidate: candidate,
+	                                      curriculum: curriculum,
+	                                    ),
+	                            icon: _isExporting
+	                                ? const SizedBox(
+	                                    width: 18,
+	                                    height: 18,
+	                                    child: CircularProgressIndicator(
+	                                      strokeWidth: 2,
+	                                    ),
+	                                  )
+	                                : const Icon(Icons.picture_as_pdf_outlined),
+	                            label: Text(
+	                              _isExporting ? 'Exportando...' : 'Exportar PDF',
+	                            ),
+	                          );
+
+	                          final matchButton = OutlinedButton.icon(
+	                            onPressed: _isMatching || !hasCurriculum
+	                                ? null
+	                                : () => _showOfferMatchForCompany(
+	                                      curriculum: curriculum,
+	                                      offer: offer,
+	                                    ),
+	                            icon: _isMatching
+	                                ? const SizedBox(
+	                                    width: 18,
+	                                    height: 18,
+	                                    child: CircularProgressIndicator(
+	                                      strokeWidth: 2,
+	                                    ),
+	                                  )
+	                                : const Icon(Icons.auto_awesome_outlined),
+	                            label: Text(
+	                              _isMatching ? 'Analizando...' : 'Match IA',
+	                            ),
+	                          );
+
+	                          if (isNarrow) {
+	                            return Column(
+	                              crossAxisAlignment: CrossAxisAlignment.start,
+	                              children: [
+	                                header,
+	                                const SizedBox(height: 12),
+	                                Align(
+	                                  alignment: Alignment.centerRight,
+	                                  child: Wrap(
+	                                    spacing: 10,
+	                                    runSpacing: 10,
+	                                    children: [exportButton, matchButton],
+	                                  ),
+	                                ),
+	                              ],
+	                            );
+	                          }
+
+	                          return Row(
+	                            children: [
+	                              Expanded(child: header),
+	                              const SizedBox(width: 10),
+	                              exportButton,
+	                              const SizedBox(width: 10),
+	                              matchButton,
+	                            ],
+	                          );
+	                        },
+	                      ),
+	                    ),
                     const SizedBox(height: 16),
                     Container(
                       width: double.infinity,

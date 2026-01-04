@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_service.dart';
 
@@ -19,5 +20,28 @@ class CurriculumRepository {
       curriculum: curriculum,
     );
   }
-}
 
+  Future<Curriculum> uploadAttachment({
+    required String candidateUid,
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) {
+    return _service.uploadAttachment(
+      candidateUid: candidateUid,
+      bytes: bytes,
+      fileName: fileName,
+      contentType: contentType,
+    );
+  }
+
+  Future<Curriculum> deleteAttachment({
+    required String candidateUid,
+    required CurriculumAttachment attachment,
+  }) {
+    return _service.deleteAttachment(
+      candidateUid: candidateUid,
+      attachment: attachment,
+    );
+  }
+}

@@ -5,6 +5,7 @@ class JobOfferSummaryCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.company,
+    this.avatarUrl,
     this.salary,
     this.modality,
     this.trailing,
@@ -13,6 +14,7 @@ class JobOfferSummaryCard extends StatelessWidget {
 
   final String title;
   final String company;
+  final String? avatarUrl;
   final String? salary;
   final String? modality;
   final Widget? trailing;
@@ -111,10 +113,21 @@ class JobOfferSummaryCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.business_outlined,
-                              size: 16,
-                              color: muted,
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: const Color(0xFFF8FAFC),
+                              backgroundImage:
+                                  (avatarUrl != null && avatarUrl!.isNotEmpty)
+                                      ? NetworkImage(avatarUrl!)
+                                      : null,
+                              child:
+                                  (avatarUrl == null || avatarUrl!.isEmpty)
+                                      ? const Icon(
+                                          Icons.business_outlined,
+                                          size: 12,
+                                          color: muted,
+                                        )
+                                      : null,
                             ),
                             const SizedBox(width: 6),
                             Expanded(

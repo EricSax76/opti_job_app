@@ -6,6 +6,7 @@ class Company {
     required this.uid,
     this.role = 'company',
     this.token,
+    this.avatarUrl,
   });
 
   final int id;
@@ -14,6 +15,7 @@ class Company {
   final String uid;
   final String role;
   final String? token;
+  final String? avatarUrl;
 
   factory Company.fromJson(Map<String, dynamic> json) {
     return Company(
@@ -23,6 +25,7 @@ class Company {
       uid: json['uid'] as String? ?? '',
       role: json['role'] as String? ?? 'company',
       token: json['token'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 
@@ -34,6 +37,7 @@ class Company {
       'uid': uid,
       'role': role,
       'token': token,
+      'avatar_url': avatarUrl,
     };
   }
 }

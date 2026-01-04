@@ -34,4 +34,16 @@ class ProfileRepository {
       avatarBytes: avatarBytes,
     );
   }
+
+  Future<Company> updateCompanyProfile({
+    required String uid,
+    required String name,
+    Uint8List? avatarBytes,
+  }) {
+    return _service.updateCompanyProfile(
+      uid: uid,
+      name: name,
+      avatarBytes: avatarBytes,
+    );
+  }
 }

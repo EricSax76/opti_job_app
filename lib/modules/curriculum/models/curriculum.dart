@@ -9,6 +9,7 @@ class Curriculum {
     required this.skills,
     required this.experiences,
     required this.education,
+    this.attachment,
     this.updatedAt,
   });
 
@@ -19,6 +20,7 @@ class Curriculum {
   final List<String> skills;
   final List<CurriculumItem> experiences;
   final List<CurriculumItem> education;
+  final CurriculumAttachment? attachment;
   final DateTime? updatedAt;
 
   factory Curriculum.empty() {
@@ -41,6 +43,7 @@ class Curriculum {
     List<String>? skills,
     List<CurriculumItem>? experiences,
     List<CurriculumItem>? education,
+    CurriculumAttachment? attachment,
     DateTime? updatedAt,
   }) {
     return Curriculum(
@@ -51,6 +54,7 @@ class Curriculum {
       skills: skills ?? this.skills,
       experiences: experiences ?? this.experiences,
       education: education ?? this.education,
+      attachment: attachment ?? this.attachment,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -72,6 +76,9 @@ class Curriculum {
           .whereType<Map<String, dynamic>>()
           .map(CurriculumItem.fromJson)
           .toList(),
+      attachment: CurriculumAttachment.fromJson(
+        json['attachment'] as Map<String, dynamic>?,
+      ),
       updatedAt: _parseDateTime(json['updated_at']),
     );
   }
@@ -85,6 +92,7 @@ class Curriculum {
       'skills': skills,
       'experiences': experiences.map((item) => item.toJson()).toList(),
       'education': education.map((item) => item.toJson()).toList(),
+      if (attachment != null) 'attachment': attachment!.toJson(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
   }
@@ -95,6 +103,47 @@ class Curriculum {
     if (raw is DateTime) return raw;
     if (raw is String) return DateTime.tryParse(raw);
     return null;
+  }
+}
+
+class CurriculumAttachment {
+  const CurriculumAttachment({
+    required this.fileName,
+    required this.downloadUrl,
+    required this.storagePath,
+    required this.contentType,
+    required this.sizeBytes,
+    this.updatedAt,
+  });
+
+  final String fileName;
+  final String downloadUrl;
+  final String storagePath;
+  final String contentType;
+  final int sizeBytes;
+  final DateTime? updatedAt;
+
+  static CurriculumAttachment? fromJson(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    return CurriculumAttachment(
+      fileName: json['file_name'] as String? ?? '',
+      downloadUrl: json['download_url'] as String? ?? '',
+      storagePath: json['storage_path'] as String? ?? '',
+      contentType: json['content_type'] as String? ?? '',
+      sizeBytes: (json['size_bytes'] as num?)?.toInt() ?? 0,
+      updatedAt: Curriculum._parseDateTime(json['updated_at']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'file_name': fileName,
+      'download_url': downloadUrl,
+      'storage_path': storagePath,
+      'content_type': contentType,
+      'size_bytes': sizeBytes,
+      if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
+    };
   }
 }
 

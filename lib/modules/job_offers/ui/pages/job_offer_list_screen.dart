@@ -102,14 +102,44 @@ class JobOfferListScreen extends StatelessWidget {
                                 const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final offer = state.offers[index];
+                              final company = offer.companyId == null
+                                  ? null
+                                  : state.companiesById[offer.companyId!];
+                              final companyName = offer.companyName ??
+                                  company?.name ??
+                                  'Empresa no especificada';
+                              final avatarUrl =
+                                  offer.companyAvatarUrl ?? company?.avatarUrl;
                               return Card(
                                 elevation: 1,
                                 child: ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: const Color(0xFFF8FAFC),
+                                    backgroundImage:
+                                        (avatarUrl != null && avatarUrl.isNotEmpty)
+                                            ? NetworkImage(avatarUrl)
+                                            : null,
+                                    child: (avatarUrl == null ||
+                                            avatarUrl.isEmpty)
+                                        ? const Icon(
+                                            Icons.business_outlined,
+                                            size: 18,
+                                          )
+                                        : null,
+                                  ),
                                   title: Text(offer.title),
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        companyName,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
                                       const SizedBox(height: 4),
                                       Text(offer.description),
                                       const SizedBox(height: 4),

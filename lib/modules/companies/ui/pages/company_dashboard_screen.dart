@@ -9,6 +9,7 @@ import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart'
 import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_dashboard_widgets.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar_menu.dart';
 
 class CompanyDashboardScreen extends StatefulWidget {
   const CompanyDashboardScreen({super.key});
@@ -17,18 +18,27 @@ class CompanyDashboardScreen extends StatefulWidget {
   State<CompanyDashboardScreen> createState() => _CompanyDashboardScreenState();
 }
 
-class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
+class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _formControllers = OfferFormControllers();
   String? _loadedCompanyUid;
   var _isGeneratingOffer = false;
+  late final TabController _tabController;
 
   static const _background = Color(0xFFF8FAFC);
   static const _ink = Color(0xFF0F172A);
   static const _border = Color(0xFFE2E8F0);
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
   void dispose() {
+    _tabController.dispose();
     _formControllers.dispose();
     super.dispose();
   }
@@ -81,34 +91,55 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           shape: const Border(bottom: BorderSide(color: _border, width: 1)),
+          actions: authState.isAuthenticated
+              ? const [CompanyAccountAvatarMenu()]
+              : null,
         ),
-        floatingActionButton: authState.isAuthenticated
-            ? FloatingActionButton(
-                backgroundColor: _ink,
-                foregroundColor: Colors.white,
-                onPressed: () => context.read<CompanyAuthCubit>().logout(),
-                tooltip: 'Cerrar sesión',
-                child: const Icon(Icons.logout),
-              )
-            : null,
         body: authState.company == null
             ? const UnauthenticatedCompanyMessage()
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            : Column(
                 children: [
-                  CompanyDashboardHeader(companyName: authState.company!.name),
-                  const SizedBox(height: 24),
-                  CreateOfferCard(
-                    formKey: _formKey,
-                    controllers: _formControllers,
-                    onSubmit: () => _submit(context),
-                    onGenerateWithAi: () => _generateWithAi(context),
-                    isGenerating: _isGeneratingOffer,
+                  _CompanyDashboardNavBar(controller: _tabController),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        const CompanyHomeDashboard(),
+                        ListView(
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                          children: [
+                            CompanyDashboardHeader(
+                              companyName: authState.company!.name,
+                            ),
+                            const SizedBox(height: 24),
+                            CreateOfferCard(
+                              formKey: _formKey,
+                              controllers: _formControllers,
+                              onSubmit: () => _submit(context),
+                              onGenerateWithAi: () => _generateWithAi(context),
+                              isGenerating: _isGeneratingOffer,
+                            ),
+                          ],
+                        ),
+                        ListView(
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                          children: const [
+                            CompanyOffersHeader(),
+                            SizedBox(height: 12),
+                            CompanyOffersRepositorySection(),
+                          ],
+                        ),
+                        ListView(
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                          children: const [
+                            CompanyCandidatesHeader(),
+                            SizedBox(height: 12),
+                            CompanyCandidatesSection(),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 32),
-                  const CompanyOffersHeader(),
-                  const SizedBox(height: 12),
-                  const CompanyOffersSection(),
                 ],
               ),
       ),
@@ -141,6 +172,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         companyId: company.id,
         companyUid: company.uid,
         companyName: company.name,
+        companyAvatarUrl: company.avatarUrl,
         jobType: _formControllers.jobType.text.trim().isEmpty
             ? null
             : _formControllers.jobType.text.trim(),
@@ -261,6 +293,41 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
           initialKeyIndicators: initialKeyIndicators,
         );
       },
+    );
+  }
+}
+
+class _CompanyDashboardNavBar extends StatelessWidget {
+  const _CompanyDashboardNavBar({required this.controller});
+
+  final TabController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    const muted = Color(0xFF64748B);
+    const accent = Color(0xFF3FA7A0);
+    const border = Color(0xFFE2E8F0);
+    const ink = Color(0xFF0F172A);
+
+    return Material(
+      color: Colors.white,
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: border, width: 1)),
+        ),
+        child: TabBar(
+          controller: controller,
+          labelColor: ink,
+          unselectedLabelColor: muted,
+          indicatorColor: accent,
+          tabs: const [
+            Tab(icon: Icon(Icons.home_outlined), text: 'Home'),
+            Tab(icon: Icon(Icons.add_circle_outline), text: 'Publicar oferta'),
+            Tab(icon: Icon(Icons.work_outline), text: 'Mis ofertas'),
+            Tab(icon: Icon(Icons.people_outline), text: 'Candidatos'),
+          ],
+        ),
+      ),
     );
   }
 }
