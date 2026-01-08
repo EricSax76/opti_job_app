@@ -21,7 +21,7 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
       shape: const Border(bottom: BorderSide(color: divider, width: 1)),
       title: Text(
         'OPTIJOB',
-        style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
+        style: TextStyle(fontWeight: FontWeight.w500, letterSpacing: 2),
       ),
       actions: [
         TextButton(
