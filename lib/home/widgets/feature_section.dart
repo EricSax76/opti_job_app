@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 import 'package:opti_job_app/home/widgets/highlight_list.dart';
 
 class FeatureSection extends StatelessWidget {
@@ -6,15 +7,17 @@ class FeatureSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Optimización con IA',
-          style: const TextStyle(
+          l10n.aiOptimizationTitle,
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: ink,
@@ -22,15 +25,14 @@ class FeatureSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Los algoritmos analizan perfiles, automatizan entrevistas y encuentran el mejor match en segundos.',
-          style: const TextStyle(color: muted, fontSize: 16, height: 1.5),
+          l10n.aiOptimizationDescription,
+          style: TextStyle(color: muted, fontSize: 16, height: 1.5),
         ),
         const SizedBox(height: 16),
-        const HighlightList(
+        HighlightList(
           items: [
-            'Analiza perfiles de candidatos instantáneamente',
-            'Automatiza la programación de entrevistas',
-            'Identifica el mejor ajuste basado en datos',
+            l10n.aiFeatureAnalyzeProfiles,
+            l10n.aiFeatureAutomateInterviews,
           ],
         ),
       ],

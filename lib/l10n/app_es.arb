@@ -1,0 +1,35 @@
+{
+    "@@locale": "es",
+    "aiOptimizationTitle": "Optimización con IA",
+    "@aiOptimizationTitle": {
+        "description": "Título de la sección de optimización con IA."
+    },
+    "aiOptimizationDescription": "Nuestra IA analizan perfiles, automatiza entrevistas y encuentran el mejor match en segundos.",
+    "@aiOptimizationDescription": {
+        "description": "Descripción corta de la optimización con IA."
+    },
+    "aiFeatureAnalyzeProfiles": "Analiza perfiles de candidatos instantáneamente",
+    "@aiFeatureAnalyzeProfiles": {
+        "description": "Beneficio de análisis rápido de perfiles."
+    },
+    "aiFeatureAutomateInterviews": "Automatiza la programación de entrevistas",
+    "@aiFeatureAutomateInterviews": {
+        "description": "Beneficio de automatización de entrevistas."
+    },
+    "applicantsMissingCompanyId": "No se pudieron cargar los aplicantes porque falta el identificador de empresa.",
+    "@applicantsMissingCompanyId": {
+        "description": "Mensaje de error cuando falta el identificador de empresa."
+    },
+    "applicantsExpandToLoad": "Expande la tarjeta para cargar los aplicantes de esta oferta.",
+    "@applicantsExpandToLoad": {
+        "description": "Instrucción para expandir la tarjeta y cargar aplicantes."
+    },
+    "applicantsLoadError": "No se pudieron cargar los aplicantes.",
+    "@applicantsLoadError": {
+        "description": "Error genérico al cargar aplicantes."
+    },
+    "applicantsEmpty": "Aún no hay postulaciones para esta oferta.",
+    "@applicantsEmpty": {
+        "description": "Estado vacío cuando no hay aplicantes."
+    }
+}

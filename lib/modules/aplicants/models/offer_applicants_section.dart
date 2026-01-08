@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/application.dart';
@@ -18,15 +19,16 @@ class OfferApplicantsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     const background = Color(0xFFF8FAFC);
     const muted = Color(0xFF475569);
     const border = Color(0xFFE2E8F0);
 
     final resolvedCompanyUid = companyUid;
     if (resolvedCompanyUid == null) {
-      return const Text(
-        'No se pudieron cargar los aplicantes porque falta el identificador de empresa.',
-        style: TextStyle(color: muted, height: 1.4),
+      return Text(
+        l10n.applicantsMissingCompanyId,
+        style: const TextStyle(color: muted, height: 1.4),
       );
     }
     return BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
@@ -67,19 +69,17 @@ class OfferApplicantsSection extends StatelessWidget {
 
         switch (status) {
           case OfferApplicantsStatus.initial:
-            return message(
-              'Expande la tarjeta para cargar los aplicantes de esta oferta.',
-            );
+            return message(l10n.applicantsExpandToLoad);
           case OfferApplicantsStatus.loading:
             return const Padding(
               padding: EdgeInsets.all(8),
               child: Center(child: CircularProgressIndicator()),
             );
           case OfferApplicantsStatus.failure:
-            return message(error ?? 'No se pudieron cargar los aplicantes.');
+            return message(error ?? l10n.applicantsLoadError);
           case OfferApplicantsStatus.success:
             if (applicants.isEmpty) {
-              return message('Aún no hay postulaciones para esta oferta.');
+              return message(l10n.applicantsEmpty);
             }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,

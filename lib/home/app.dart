@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 
 import 'package:opti_job_app/core/theme/app_theme.dart';
 
@@ -14,6 +15,8 @@ class InfoJobsApp extends StatelessWidget {
       title: 'Optijob App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
     );
   }

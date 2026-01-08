@@ -6,15 +6,16 @@ class CandidateBenefitsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
+    final colorScheme = Theme.of(context).colorScheme;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Beneficios para candidatos',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: ink,
@@ -30,7 +31,7 @@ class CandidateBenefitsSection extends StatelessWidget {
           items: [
             'Ofertas personalizadas según tus habilidades',
             'Recomendaciones inteligentes impulsadas por IA',
-            'Procesos más rápidos y sin fricciones',
+            'Procesos más rápidos',
           ],
         ),
       ],
