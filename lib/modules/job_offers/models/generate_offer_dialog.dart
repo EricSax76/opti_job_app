@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
 class GenerateOfferDialog extends StatefulWidget {
   const GenerateOfferDialog({
     super.key,
@@ -28,9 +30,6 @@ class GenerateOfferDialog extends StatefulWidget {
 
 class _GenerateOfferDialogState extends State<GenerateOfferDialog> {
   final _formKey = GlobalKey<FormState>();
-
-  static const _fieldBackground = Color(0xFFF8FAFC);
-  static const _fieldBorder = Color(0xFFE2E8F0);
 
   late final TextEditingController _role;
   late final TextEditingController _location;
@@ -166,14 +165,14 @@ class _GenerateOfferDialogState extends State<GenerateOfferDialog> {
     return InputDecoration(
       labelText: labelText,
       filled: true,
-      fillColor: _fieldBackground,
+      fillColor: uiBackground,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _fieldBorder),
+        borderRadius: BorderRadius.circular(uiFieldRadius),
+        borderSide: const BorderSide(color: uiBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _fieldBorder),
+        borderRadius: BorderRadius.circular(uiFieldRadius),
+        borderSide: const BorderSide(color: uiBorder),
       ),
     );
   }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
-import 'package:opti_job_app/modules/job_offers/models/offer_form_fields.dart';
+import 'package:opti_job_app/modules/job_offers/ui/widgets/offer_form_fields.dart';
 
 class CreateOfferCard extends StatelessWidget {
   const CreateOfferCard({
@@ -23,16 +24,12 @@ class CreateOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
-
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(uiCardRadius),
+        border: Border.all(color: uiBorder),
       ),
       child: Form(
         key: formKey,
@@ -42,7 +39,7 @@ class CreateOfferCard extends StatelessWidget {
             const Text(
               'PUBLICAR',
               style: TextStyle(
-                color: muted,
+                color: uiMuted,
                 fontSize: 12,
                 letterSpacing: 2,
                 fontWeight: FontWeight.w600,
@@ -54,13 +51,13 @@ class CreateOfferCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: ink,
+                color: uiInk,
               ),
             ),
             const SizedBox(height: 8),
             const Text(
               'Completa los datos principales y publícala para recibir postulaciones.',
-              style: TextStyle(color: muted, fontSize: 15, height: 1.4),
+              style: TextStyle(color: uiMuted, fontSize: 15, height: 1.4),
             ),
             const SizedBox(height: 24),
             Align(
@@ -95,12 +92,12 @@ class CreateOfferCard extends StatelessWidget {
                     state.status == JobOfferFormStatus.submitting;
                 return SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: ink,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: uiInk,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                     onPressed: isSubmitting ? null : onSubmit,
                     child: isSubmitting
                         ? const SizedBox(

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/auth/ui/pages/unauthenticated_company_message.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_candidates_tab.dart';
-import 'package:opti_job_app/modules/companies/models/company_offer_creation_tab.dart';
+import 'package:opti_job_app/modules/companies/ui/pages/company_home_dashboard.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/company_offer_creation_tab.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/offers/company_offers_tab.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar_menu.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_nav_bar.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/company_dashboard_widgets.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
 
@@ -23,9 +25,9 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
   String? _loadedCompanyUid;
   late final TabController _tabController;
 
-  static const _background = Color(0xFFF8FAFC);
-  static const _ink = Color(0xFF0F172A);
-  static const _border = Color(0xFFE2E8F0);
+  static const _background = uiBackground;
+  static const _ink = uiInk;
+  static const _border = uiBorder;
 
   @override
   void initState() {

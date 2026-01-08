@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/application.dart';
+import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
 
 class ApplicantTile extends StatelessWidget {
   const ApplicantTile({
@@ -29,7 +30,9 @@ class ApplicantTile extends StatelessWidget {
         application.candidateEmail!.isNotEmpty) {
       subtitleParts.add(application.candidateEmail!);
     }
-    subtitleParts.add('Estado: ${_statusLabel(application.status)}');
+    subtitleParts.add(
+      'Estado: ${applicationStatusLabel(application.status)}',
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -83,14 +86,14 @@ class ApplicantTile extends StatelessWidget {
                             const Icon(Icons.check, size: 16)
                           else
                             const SizedBox(width: 16),
-                          Text(_statusLabel(status)),
+                          Text(applicationStatusLabel(status)),
                         ],
                       ),
                     );
                   }).toList();
                 },
                 child: Chip(
-                  label: Text(_statusLabel(application.status)),
+                  label: Text(applicationStatusLabel(application.status)),
                   side: const BorderSide(color: border),
                   backgroundColor: Colors.white,
                   labelStyle: const TextStyle(color: ink),
@@ -108,23 +111,6 @@ const _applicationStatuses = [
   'accepted',
   'rejected',
 ];
-
-String _statusLabel(String status) {
-  switch (status) {
-    case 'pending':
-      return 'Pendiente';
-    case 'reviewing':
-      return 'En revisión';
-    case 'interview':
-      return 'Entrevista';
-    case 'accepted':
-      return 'Aceptado';
-    case 'rejected':
-      return 'Rechazado';
-    default:
-      return status;
-  }
-}
 
 String _initials(Application application) {
   final raw =

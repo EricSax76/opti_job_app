@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 
 class DashboardCandidatesCard extends StatelessWidget {
@@ -9,16 +10,12 @@ class DashboardCandidatesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const border = Color(0xFFE2E8F0);
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(uiCardRadius),
+        border: Border.all(color: uiBorder),
       ),
       child: BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
         builder: (context, state) {
@@ -33,7 +30,7 @@ class DashboardCandidatesCard extends StatelessWidget {
               const Text(
                 'CANDIDATOS',
                 style: TextStyle(
-                  color: muted,
+                  color: uiMuted,
                   fontSize: 12,
                   letterSpacing: 2,
                   fontWeight: FontWeight.w600,
@@ -43,7 +40,7 @@ class DashboardCandidatesCard extends StatelessWidget {
               Text(
                 '${candidates.length}',
                 style: const TextStyle(
-                  color: ink,
+                  color: uiInk,
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                 ),
@@ -57,7 +54,7 @@ class DashboardCandidatesCard extends StatelessWidget {
                   children: [
                     const Text(
                       'Todavía no hay candidatos cargados en el resumen.',
-                      style: TextStyle(color: muted, height: 1.4),
+                      style: TextStyle(color: uiMuted, height: 1.4),
                     ),
                     const SizedBox(height: 6),
                     TextButton.icon(
@@ -120,13 +117,11 @@ class _CandidateRow extends StatelessWidget {
   final _CandidateSummary candidate;
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
     return Row(
       children: [
         CircleAvatar(
           radius: 14,
-          backgroundColor: ink,
+          backgroundColor: uiInk,
           foregroundColor: Colors.white,
           child: Text(candidate.displayName.substring(0, 1).toUpperCase()),
         ),
@@ -134,11 +129,11 @@ class _CandidateRow extends StatelessWidget {
         Expanded(
           child: Text(
             candidate.displayName,
-            style: const TextStyle(color: ink, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: uiInk, fontWeight: FontWeight.w600),
           ),
         ),
         const SizedBox(width: 10),
-        const Icon(Icons.chevron_right, color: muted),
+        const Icon(Icons.chevron_right, color: uiMuted),
       ],
     );
   }

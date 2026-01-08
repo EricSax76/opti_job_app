@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/modules/aplicants/offer_applicants_section.dart';
+import 'package:opti_job_app/modules/aplicants/models/offer_applicants_section.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class OfferCard extends StatelessWidget {

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 
 class OfferFormFields extends StatelessWidget {
   const OfferFormFields({super.key, required this.controllers});
 
   final OfferFormControllers controllers;
-
-  static const _background = Color(0xFFF8FAFC);
-  static const _border = Color(0xFFE2E8F0);
 
   @override
   Widget build(BuildContext context) {
@@ -103,14 +101,14 @@ class OfferFormFields extends StatelessWidget {
     return InputDecoration(
       labelText: labelText,
       filled: true,
-      fillColor: _background,
+      fillColor: uiBackground,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border),
+        borderRadius: BorderRadius.circular(uiFieldRadius),
+        borderSide: const BorderSide(color: uiBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border),
+        borderRadius: BorderRadius.circular(uiFieldRadius),
+        borderSide: const BorderSide(color: uiBorder),
       ),
     );
   }

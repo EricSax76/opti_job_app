@@ -3,11 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_form_cubit.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_header_section.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_items_section.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_personal_info_form.dart';
+import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_items_section.dart';
+import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_personal_info_form.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_skills_section.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_state_message.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
 
 class CandidateCurriculumView extends StatelessWidget {
@@ -45,19 +45,21 @@ class _CandidateCurriculumContent extends StatelessWidget {
         }
 
         if (state.viewStatus == CurriculumFormViewStatus.error) {
-          return CurriculumStateMessage(
+          return StateMessage(
             title: 'No pudimos cargar tu curriculum',
             message:
                 state.errorMessage ?? 'Intenta nuevamente en unos segundos.',
             actionLabel: 'Reintentar',
             onAction: formCubit.refresh,
+            mutedColor: cvMuted,
           );
         }
 
         if (state.viewStatus == CurriculumFormViewStatus.empty) {
-          return const CurriculumStateMessage(
+          return const StateMessage(
             title: 'Inicia sesión para ver tu curriculum',
             message: 'Necesitas una cuenta activa para editar tu CV.',
+            mutedColor: cvMuted,
           );
         }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
@@ -10,16 +11,12 @@ class DashboardOffersCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const border = Color(0xFFE2E8F0);
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(uiCardRadius),
+        border: Border.all(color: uiBorder),
       ),
       child: BlocBuilder<CompanyJobOffersCubit, CompanyJobOffersState>(
         builder: (context, state) {
@@ -35,7 +32,7 @@ class DashboardOffersCard extends StatelessWidget {
               const Text(
                 'OFERTAS PUBLICADAS',
                 style: TextStyle(
-                  color: muted,
+                  color: uiMuted,
                   fontSize: 12,
                   letterSpacing: 2,
                   fontWeight: FontWeight.w600,
@@ -45,7 +42,7 @@ class DashboardOffersCard extends StatelessWidget {
               Text(
                 '${offers.length}',
                 style: const TextStyle(
-                  color: ink,
+                  color: uiInk,
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                 ),
@@ -54,7 +51,7 @@ class DashboardOffersCard extends StatelessWidget {
               if (offers.isEmpty)
                 const Text(
                   'Aún no has publicado ofertas.',
-                  style: TextStyle(color: muted, height: 1.4),
+                  style: TextStyle(color: uiMuted, height: 1.4),
                 )
               else
                 Column(
@@ -90,14 +87,12 @@ class _OfferRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
           padding: EdgeInsets.only(top: 2),
-          child: Icon(Icons.work_outline, color: ink, size: 18),
+          child: Icon(Icons.work_outline, color: uiInk, size: 18),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -106,12 +101,12 @@ class _OfferRow extends StatelessWidget {
             children: [
               Text(
                 offer.title,
-                style: const TextStyle(color: ink, fontWeight: FontWeight.w600),
+                style: const TextStyle(color: uiInk, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 2),
               Text(
                 offer.location,
-                style: const TextStyle(color: muted, height: 1.3),
+                style: const TextStyle(color: uiMuted, height: 1.3),
               ),
             ],
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/modules/companies/models/company_candidates_logic.dart';
+import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
 
 class CandidateCard extends StatelessWidget {
   const CandidateCard({super.key, required this.candidate});
@@ -80,7 +81,9 @@ class CandidateCard extends StatelessWidget {
                 Card(
                   child: ListTile(
                     title: Text(entry.offerTitle),
-                    subtitle: Text('Estado: ${_statusLabel(entry.status)}'),
+                    subtitle: Text(
+                      'Estado: ${applicationStatusLabel(entry.status)}',
+                    ),
                     trailing: const Icon(Icons.open_in_new),
                     onTap: () {
                       Navigator.of(sheetContext).pop();
@@ -97,20 +100,4 @@ class CandidateCard extends StatelessWidget {
     );
   }
 
-  String _statusLabel(String status) {
-    switch (status) {
-      case 'pending':
-        return 'Pendiente';
-      case 'reviewing':
-        return 'En revisión';
-      case 'interview':
-        return 'Entrevista';
-      case 'accepted':
-        return 'Aceptado';
-      case 'rejected':
-        return 'Rechazado';
-      default:
-        return status;
-    }
-  }
 }

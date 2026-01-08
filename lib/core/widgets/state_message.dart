@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
 
-class CurriculumStateMessage extends StatelessWidget {
-  const CurriculumStateMessage({
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
+class StateMessage extends StatelessWidget {
+  const StateMessage({
     super.key,
     required this.title,
     required this.message,
     this.actionLabel,
     this.onAction,
+    this.mutedColor = uiMuted,
   });
 
   final String title;
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final Color mutedColor;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +42,7 @@ class CurriculumStateMessage extends StatelessWidget {
                   message,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: cvMuted),
+                  ).textTheme.bodyMedium?.copyWith(color: mutedColor),
                   textAlign: TextAlign.center,
                 ),
                 if (actionLabel != null && onAction != null) ...[

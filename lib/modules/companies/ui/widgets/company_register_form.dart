@@ -1,34 +1,32 @@
 import 'package:flutter/material.dart';
 
-class CompanyLoginForm extends StatefulWidget {
-  const CompanyLoginForm({
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
+class CompanyRegisterForm extends StatefulWidget {
+  const CompanyRegisterForm({
     super.key,
     required this.isLoading,
     required this.onSubmit,
-    required this.onRegister,
+    required this.onLogin,
   });
 
   final bool isLoading;
-  final void Function(String email, String password) onSubmit;
-  final VoidCallback onRegister;
+  final void Function(String name, String email, String password) onSubmit;
+  final VoidCallback onLogin;
 
   @override
-  State<CompanyLoginForm> createState() => _CompanyLoginFormState();
+  State<CompanyRegisterForm> createState() => _CompanyRegisterFormState();
 }
 
-class _CompanyLoginFormState extends State<CompanyLoginForm> {
+class _CompanyRegisterFormState extends State<CompanyRegisterForm> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  static const _background = Color(0xFFF8FAFC);
-  static const _ink = Color(0xFF0F172A);
-  static const _muted = Color(0xFF475569);
-  static const _border = Color(0xFFE2E8F0);
-  static const _accent = Color(0xFF3FA7A0);
-
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -45,8 +43,8 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: _border),
+              borderRadius: BorderRadius.circular(uiCardRadius),
+              border: Border.all(color: uiBorder),
             ),
             child: Form(
               key: _formKey,
@@ -54,30 +52,42 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'EMPRESAS',
-                    style: const TextStyle(
-                      color: _muted,
+                    style: TextStyle(
+                      color: uiMuted,
                       fontSize: 12,
                       letterSpacing: 2,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Inicia sesión',
-                    style: const TextStyle(
+                  const Text(
+                    'Registra tu empresa',
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: _ink,
+                      color: uiInk,
                     ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Gestiona tus procesos de selección en un solo lugar.',
-                    style: TextStyle(color: _muted, fontSize: 15, height: 1.4),
+                    'Crea tu cuenta y publica ofertas en minutos.',
+                    style: TextStyle(color: uiMuted, fontSize: 15, height: 1.4),
                   ),
                   const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration:
+                        _inputDecoration(labelText: 'Nombre de la empresa'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'El nombre es obligatorio';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _emailController,
                     decoration: _inputDecoration(
@@ -96,8 +106,8 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
                     decoration: _inputDecoration(labelText: 'Contraseña'),
                     obscureText: true,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'La contraseña es obligatoria';
+                      if (value == null || value.length < 6) {
+                        return 'La contraseña debe tener al menos 6 caracteres';
                       }
                       return null;
                     },
@@ -107,7 +117,7 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
                     width: double.infinity,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
-                        backgroundColor: _ink,
+                        backgroundColor: uiInk,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -123,14 +133,14 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
                                 ),
                               ),
                             )
-                          : const Text('Entrar'),
+                          : const Text('Crear cuenta'),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    style: TextButton.styleFrom(foregroundColor: _accent),
-                    onPressed: widget.onRegister,
-                    child: const Text('¿No tienes cuenta? Regístrate'),
+                    style: TextButton.styleFrom(foregroundColor: uiAccent),
+                    onPressed: widget.onLogin,
+                    child: const Text('¿Ya tienes cuenta? Inicia sesión'),
                   ),
                 ],
               ),
@@ -145,6 +155,7 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
     if (!_formKey.currentState!.validate()) return;
 
     widget.onSubmit(
+      _nameController.text.trim(),
       _emailController.text.trim(),
       _passwordController.text,
     );
@@ -154,14 +165,14 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
     return InputDecoration(
       labelText: labelText,
       filled: true,
-      fillColor: _background,
+      fillColor: uiBackground,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border),
+        borderRadius: BorderRadius.circular(uiFieldRadius),
+        borderSide: const BorderSide(color: uiBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border),
+        borderRadius: BorderRadius.circular(uiFieldRadius),
+        borderSide: const BorderSide(color: uiBorder),
       ),
     );
   }

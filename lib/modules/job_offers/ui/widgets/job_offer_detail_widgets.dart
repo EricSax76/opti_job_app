@@ -10,7 +10,7 @@ import 'package:opti_job_app/modules/curriculum/repositories/curriculum_reposito
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_actions.dart';
+import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_actions.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_details.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_header.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_match_dialog.dart';

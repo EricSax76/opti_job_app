@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubit/profile_form_cubit.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/profiles/ui/widgets/profile_form_content.dart';
-import 'package:opti_job_app/modules/profiles/models/profile_state_message.dart';
 
 class CandidateProfileView extends StatelessWidget {
   const CandidateProfileView({super.key});
@@ -41,7 +41,7 @@ class _CandidateProfileContent extends StatelessWidget {
         }
 
         if (state.viewStatus == ProfileFormViewStatus.error) {
-          return ProfileStateMessage(
+          return StateMessage(
             title: 'No pudimos cargar tu perfil',
             message:
                 state.errorMessage ?? 'Intenta nuevamente en unos segundos.',
@@ -51,7 +51,7 @@ class _CandidateProfileContent extends StatelessWidget {
         }
 
         if (state.viewStatus == ProfileFormViewStatus.empty) {
-          return const ProfileStateMessage(
+          return const StateMessage(
             title: 'Inicia sesión para ver tu perfil',
             message: 'Necesitas una cuenta activa para editar tu información.',
           );
