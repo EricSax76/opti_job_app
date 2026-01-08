@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/modules/ai/models/ai_match_result.dart';
+import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
 
 class JobOfferMatchResultDialog extends StatelessWidget {
   const JobOfferMatchResultDialog({super.key, required this.result});

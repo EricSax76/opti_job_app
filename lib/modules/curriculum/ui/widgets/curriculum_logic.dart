@@ -1,8 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
-import 'package:opti_job_app/modules/ai/repositories/ai_repository.dart';
+import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
+import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_form_cubit.dart';

@@ -5,7 +5,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
+import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 
 class FirebaseAiClient {
   FirebaseAiClient({FirebaseAI? firebaseAI, FirebaseAuth? auth, String? model})

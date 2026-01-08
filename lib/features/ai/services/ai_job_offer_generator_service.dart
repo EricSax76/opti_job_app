@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:firebase_ai/firebase_ai.dart';
 
-import 'package:opti_job_app/modules/ai/api/firebase_ai_client.dart';
-import 'package:opti_job_app/modules/ai/models/ai_exceptions.dart';
-import 'package:opti_job_app/modules/ai/models/ai_job_offer_draft.dart';
-import 'package:opti_job_app/modules/ai/mappers/ai_criteria_sanitizer.dart';
+import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
+import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
+import 'package:opti_job_app/features/ai/models/ai_job_offer_draft.dart';
+import 'package:opti_job_app/features/ai/mappers/ai_criteria_sanitizer.dart';
 
 class AiJobOfferGeneratorService {
   AiJobOfferGeneratorService(

@@ -31,14 +31,14 @@ class CompanyProfileFormState extends Equatable {
 
   @override
   List<Object?> get props => [
-        company,
-        avatarBytes,
-        hasChanges,
-        canSubmit,
-        isSaving,
-        notice,
-        noticeMessage,
-      ];
+    company,
+    avatarBytes,
+    hasChanges,
+    canSubmit,
+    isSaving,
+    notice,
+    noticeMessage,
+  ];
 
   CompanyProfileFormState copyWith({
     Company? company,
@@ -66,21 +66,15 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
   CompanyProfileFormCubit({
     required ProfileRepository profileRepository,
     required CompanyAuthCubit companyAuthCubit,
-  })  : _profileRepository = profileRepository,
-        _companyAuthCubit = companyAuthCubit,
-        nameController = TextEditingController(),
-        super(const CompanyProfileFormState()) {
+  }) : _profileRepository = profileRepository,
+       _companyAuthCubit = companyAuthCubit,
+       nameController = TextEditingController(),
+       super(const CompanyProfileFormState()) {
     nameController.addListener(_handleTextChanged);
     final company = _companyAuthCubit.state.company;
     _initialName = company?.name ?? '';
     nameController.text = _initialName;
-    emit(
-      state.copyWith(
-        company: company,
-        hasChanges: false,
-        canSubmit: false,
-      ),
-    );
+    emit(state.copyWith(company: company, hasChanges: false, canSubmit: false));
   }
 
   final ProfileRepository _profileRepository;
