@@ -13,7 +13,7 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
-import 'package:opti_job_app/modules/companies/aplicants/applicant_curriculum_screen.dart';
+import 'package:opti_job_app/modules/aplicants/applicant_curriculum_screen.dart';
 import 'package:opti_job_app/modules/aplications/models/application_service.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';

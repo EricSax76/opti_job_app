@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_attachment_card.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_logic.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum_logic.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
 
 class CurriculumHeaderSection extends StatefulWidget {

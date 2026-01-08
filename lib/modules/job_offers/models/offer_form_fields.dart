@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:opti_job_app/modules/companies/ui/widgets/offer_form_controllers.dart';
+import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 
 class OfferFormFields extends StatelessWidget {
   const OfferFormFields({super.key, required this.controllers});

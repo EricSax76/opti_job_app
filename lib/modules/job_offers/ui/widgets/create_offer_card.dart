@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/offer_form_controllers.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/offer_form_fields.dart';
+import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
+import 'package:opti_job_app/modules/job_offers/models/offer_form_fields.dart';
 
 class CreateOfferCard extends StatelessWidget {
   const CreateOfferCard({

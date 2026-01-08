@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/modules/companies/aplicants/applicant_curriculum_cubit.dart';
-import 'package:opti_job_app/modules/companies/aplicants/applicant_curriculum_widgets.dart';
+import 'package:opti_job_app/modules/aplicants/applicant_curriculum_cubit.dart';
+import 'package:opti_job_app/modules/aplicants/applicant_curriculum_widgets.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';

@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/candidate_card.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/company_candidates_logic.dart';
+import 'package:opti_job_app/modules/aplicants/candidate_card.dart';
+import 'package:opti_job_app/modules/companies/models/company_candidates_logic.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/section_message.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
 

@@ -6,7 +6,7 @@ import 'package:opti_job_app/auth/cubit/auth_status.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/company_register_form.dart';
+import 'package:opti_job_app/modules/companies/models/company_register_form.dart';
 
 class CompanyRegisterScreen extends StatefulWidget {
   const CompanyRegisterScreen({super.key});

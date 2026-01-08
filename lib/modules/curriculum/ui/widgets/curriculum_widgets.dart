@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_header_section.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_items_section.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_personal_info_form.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum_items_section.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum_personal_info_form.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_skills_section.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_state_message.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum_state_message.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
 
 class CandidateCurriculumView extends StatelessWidget {

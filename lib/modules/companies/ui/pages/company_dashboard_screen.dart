@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_candidates_tab.dart';
-import 'package:opti_job_app/modules/companies/ui/pages/company_offer_creation_tab.dart';
-import 'package:opti_job_app/modules/companies/ui/pages/company_offers_tab.dart';
+import 'package:opti_job_app/modules/companies/models/company_offer_creation_tab.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/offers/company_offers_tab.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar_menu.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_nav_bar.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_dashboard_widgets.dart';

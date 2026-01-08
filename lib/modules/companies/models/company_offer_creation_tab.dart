@@ -6,7 +6,7 @@ import 'package:opti_job_app/features/ai/models/ai_job_offer_draft.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_dashboard_widgets.dart';
-import 'package:opti_job_app/modules/companies/ui/pages/generate_offer_dialog.dart';
+import 'package:opti_job_app/modules/job_offers/models/generate_offer_dialog.dart';
 import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 

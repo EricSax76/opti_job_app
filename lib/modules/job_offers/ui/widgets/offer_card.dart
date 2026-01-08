@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/offer_applicants_section.dart';
+import 'package:opti_job_app/modules/aplicants/offer_applicants_section.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class OfferCard extends StatelessWidget {
@@ -19,7 +19,11 @@ class OfferCard extends StatelessWidget {
     const background = Color(0xFFF8FAFC);
 
     final resolvedCompanyUid = _companyUid(context);
-    final avatarUrl = context.watch<CompanyAuthCubit>().state.company?.avatarUrl;
+    final avatarUrl = context
+        .watch<CompanyAuthCubit>()
+        .state
+        .company
+        ?.avatarUrl;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -29,9 +33,7 @@ class OfferCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Theme(
-          data: Theme.of(
-            context,
-          ).copyWith(dividerColor: Colors.transparent),
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(
               horizontal: 18,
@@ -50,10 +52,7 @@ class OfferCard extends StatelessWidget {
             ),
             title: Text(
               offer.title,
-              style: const TextStyle(
-                color: ink,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(color: ink, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
               '${offer.location} • ${offer.jobType ?? 'Tipología no especificada'}',
@@ -75,7 +74,9 @@ class OfferCard extends StatelessWidget {
               if (companyUid == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('No se pudo determinar el usuario de empresa.'),
+                    content: Text(
+                      'No se pudo determinar el usuario de empresa.',
+                    ),
                   ),
                 );
                 return;

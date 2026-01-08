@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/company_candidates_logic.dart';
+import 'package:opti_job_app/modules/companies/models/company_candidates_logic.dart';
 
 class CandidateCard extends StatelessWidget {
   const CandidateCard({super.key, required this.candidate});
