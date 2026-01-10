@@ -7,6 +7,8 @@ abstract class CoverLetterEvent extends Equatable {
   List<Object> get props => [];
 }
 
+class LoadCoverLetterRequested extends CoverLetterEvent {}
+
 class VideoRecordingStarted extends CoverLetterEvent {}
 
 class VideoRecordingStopped extends CoverLetterEvent {

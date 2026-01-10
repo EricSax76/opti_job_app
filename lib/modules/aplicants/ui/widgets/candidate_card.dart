@@ -1,12 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/modules/companies/models/company_candidates_logic.dart';
 import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
-class CandidateCard extends StatelessWidget {
+class CandidateCard extends StatefulWidget {
   const CandidateCard({super.key, required this.candidate});
 
   final CandidateGroup candidate;
+
+  @override
+  State<CandidateCard> createState() => _CandidateCardState();
+}
+
+class _CandidateCardState extends State<CandidateCard> {
+  Future<Candidate>? _candidateFuture;
+  String? _candidateUidForFuture;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ensureCandidateFuture();
+  }
+
+  @override
+  void didUpdateWidget(covariant CandidateCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.candidate.candidateUid != widget.candidate.candidateUid) {
+      _ensureCandidateFuture(force: true);
+    }
+  }
+
+  void _ensureCandidateFuture({bool force = false}) {
+    final uid = widget.candidate.candidateUid.trim();
+    if (uid.isEmpty) return;
+    if (!force && _candidateFuture != null && _candidateUidForFuture == uid) {
+      return;
+    }
+    _candidateUidForFuture = uid;
+    _candidateFuture =
+        context.read<ProfileRepository>().fetchCandidateProfile(uid);
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +51,7 @@ class CandidateCard extends StatelessWidget {
     const ink = Color(0xFF0F172A);
     const muted = Color(0xFF475569);
     const border = Color(0xFFE2E8F0);
+    const ok = Color(0xFF16A34A);
 
     return Container(
       decoration: BoxDecoration(
@@ -24,28 +62,105 @@ class CandidateCard extends StatelessWidget {
       child: ListTile(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        onTap: candidate.entries.isEmpty
+        onTap: widget.candidate.entries.isEmpty
             ? null
-            : () => _openCvPicker(context, candidate),
+            : () => _openCvPicker(context, widget.candidate),
         leading: CircleAvatar(
           backgroundColor: ink,
           foregroundColor: Colors.white,
-          child: Text(candidate.displayName.substring(0, 1).toUpperCase()),
+          child: Text(
+            widget.candidate.displayName.substring(0, 1).toUpperCase(),
+          ),
         ),
         title: Text(
-          candidate.displayName,
+          widget.candidate.displayName,
           style: const TextStyle(color: ink, fontWeight: FontWeight.w700),
         ),
-        subtitle: Text(
-          candidate.entries.map((e) => e.offerTitle).join(' • '),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: muted, height: 1.35),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.candidate.entries.map((e) => e.offerTitle).join(' • '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: muted, height: 1.35),
+            ),
+            const SizedBox(height: 6),
+            FutureBuilder<Candidate>(
+              future: _candidateFuture,
+              builder: (context, snapshot) {
+                final bool? hasCoverLetter = snapshot.hasData
+                    ? snapshot.data!.hasCoverLetter
+                    : null;
+                final bool? hasVideoCurriculum = snapshot.hasData
+                    ? snapshot.data!.hasVideoCurriculum
+                    : null;
+
+                Widget badge({
+                  required IconData icon,
+                  required String label,
+                  required bool? value,
+                }) {
+                  final isYes = value == true;
+                  final isNo = value == false;
+                  final color = isYes ? ok : muted;
+                  final text = isYes
+                      ? '$label: Sí'
+                      : isNo
+                      ? '$label: No'
+                      : '$label: ...';
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 16, color: color),
+                        const SizedBox(width: 6),
+                        Text(
+                          text,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    badge(
+                      icon: Icons.mail_outline,
+                      label: 'Carta',
+                      value: hasCoverLetter,
+                    ),
+                    badge(
+                      icon: Icons.videocam_outlined,
+                      label: 'Video',
+                      value: hasVideoCurriculum,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
         trailing: TextButton(
-          onPressed: candidate.entries.isEmpty
+          onPressed: widget.candidate.entries.isEmpty
               ? null
-              : () => _openCvPicker(context, candidate),
+              : () => _openCvPicker(context, widget.candidate),
           child: const Text('CV'),
         ),
       ),

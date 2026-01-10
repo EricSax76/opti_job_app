@@ -14,11 +14,12 @@ class CurriculumShareService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$fileName');
     await file.writeAsBytes(bytes, flush: true);
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'application/pdf')],
-      subject: subject,
-      text: text,
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: 'application/pdf')],
+        subject: subject,
+        text: text,
+      ),
     );
   }
 }
-

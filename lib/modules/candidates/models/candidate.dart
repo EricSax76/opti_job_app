@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
+
 class Candidate {
   const Candidate({
     required this.id,
@@ -8,6 +10,8 @@ class Candidate {
     required this.role,
     this.avatarUrl,
     this.token,
+    this.coverLetter,
+    this.videoCurriculum,
   });
 
   final int id;
@@ -18,8 +22,12 @@ class Candidate {
   final String role;
   final String? avatarUrl;
   final String? token;
+  final CandidateCoverLetter? coverLetter;
+  final CandidateVideoCurriculum? videoCurriculum;
 
   factory Candidate.fromJson(Map<String, dynamic> json) {
+    final rawCoverLetter = json['cover_letter'];
+    final rawVideoCurriculum = json['video_curriculum'];
     return Candidate(
       id: json['id'] is int ? json['id'] as int : int.parse(json['id'].toString()),
       name: json['name'] as String? ?? '',
@@ -29,6 +37,12 @@ class Candidate {
       role: json['role'] as String? ?? 'candidate',
       avatarUrl: json['avatar_url'] as String?,
       token: json['token'] as String?,
+      coverLetter: rawCoverLetter is Map<String, dynamic>
+          ? CandidateCoverLetter.fromJson(rawCoverLetter)
+          : null,
+      videoCurriculum: rawVideoCurriculum is Map<String, dynamic>
+          ? CandidateVideoCurriculum.fromJson(rawVideoCurriculum)
+          : null,
     );
   }
 
@@ -42,6 +56,8 @@ class Candidate {
       'role': role,
       'avatar_url': avatarUrl,
       'token': token,
+      if (coverLetter != null) 'cover_letter': coverLetter!.toJson(),
+      if (videoCurriculum != null) 'video_curriculum': videoCurriculum!.toJson(),
     };
   }
 
@@ -54,6 +70,8 @@ class Candidate {
     String? role,
     String? avatarUrl,
     String? token,
+    CandidateCoverLetter? coverLetter,
+    CandidateVideoCurriculum? videoCurriculum,
   }) {
     return Candidate(
       id: id ?? this.id,
@@ -64,6 +82,77 @@ class Candidate {
       role: role ?? this.role,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       token: token ?? this.token,
+      coverLetter: coverLetter ?? this.coverLetter,
+      videoCurriculum: videoCurriculum ?? this.videoCurriculum,
     );
   }
+
+  bool get hasCoverLetter => coverLetter?.text.trim().isNotEmpty == true;
+  bool get hasVideoCurriculum =>
+      videoCurriculum?.downloadUrl.trim().isNotEmpty == true;
+}
+
+class CandidateCoverLetter {
+  const CandidateCoverLetter({required this.text, this.updatedAt});
+
+  final String text;
+  final DateTime? updatedAt;
+
+  factory CandidateCoverLetter.fromJson(Map<String, dynamic> json) {
+    return CandidateCoverLetter(
+      text: json['text'] as String? ?? '',
+      updatedAt: _parseDateTime(json['updated_at']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
+    };
+  }
+}
+
+class CandidateVideoCurriculum {
+  const CandidateVideoCurriculum({
+    required this.downloadUrl,
+    required this.storagePath,
+    required this.contentType,
+    required this.sizeBytes,
+    this.updatedAt,
+  });
+
+  final String downloadUrl;
+  final String storagePath;
+  final String contentType;
+  final int sizeBytes;
+  final DateTime? updatedAt;
+
+  factory CandidateVideoCurriculum.fromJson(Map<String, dynamic> json) {
+    return CandidateVideoCurriculum(
+      downloadUrl: json['download_url'] as String? ?? '',
+      storagePath: json['storage_path'] as String? ?? '',
+      contentType: json['content_type'] as String? ?? '',
+      sizeBytes: (json['size_bytes'] as num?)?.toInt() ?? 0,
+      updatedAt: _parseDateTime(json['updated_at']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'download_url': downloadUrl,
+      'storage_path': storagePath,
+      'content_type': contentType,
+      'size_bytes': sizeBytes,
+      if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
+    };
+  }
+}
+
+DateTime? _parseDateTime(dynamic raw) {
+  if (raw == null) return null;
+  if (raw is Timestamp) return raw.toDate();
+  if (raw is DateTime) return raw;
+  if (raw is String) return DateTime.tryParse(raw);
+  return null;
 }

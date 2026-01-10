@@ -25,6 +25,7 @@ class _CoverLetterScreenState extends State<CoverLetterScreen> {
       candidateUidProvider: () =>
           context.read<CandidateAuthCubit>().state.candidate?.uid,
     );
+    _bloc.add(LoadCoverLetterRequested());
   }
 
   @override
@@ -53,6 +54,11 @@ class _CoverLetterScreenState extends State<CoverLetterScreen> {
           if (state.status == CoverLetterStatus.success &&
               state.improvedCoverLetter != null) {
             _coverLetterController.text = state.improvedCoverLetter!;
+          }
+
+          if (state.savedCoverLetterText != null &&
+              _coverLetterController.text.trim().isEmpty) {
+            _coverLetterController.text = state.savedCoverLetterText!;
           }
 
           if (state.status == CoverLetterStatus.failure && state.error != null) {

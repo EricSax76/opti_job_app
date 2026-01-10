@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,26 +12,36 @@ class CameraView extends StatefulWidget {
   State<CameraView> createState() => _CameraViewState();
 }
 
-class _CameraViewState extends State<CameraView> {
+class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   CameraController? _controller;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
   bool _isRecording = false;
+  bool _isInitializing = false;
+  bool _isToggling = false;
+  Timer? _autoStopTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
+    if (_isInitializing) return;
+    _isInitializing = true;
+    await _disposeController();
     _cameras = await availableCameras();
     final firstCamera = _cameras?.firstWhere(
       (camera) => camera.lensDirection == CameraLensDirection.front,
       orElse: () => _cameras!.first,
     );
 
-    if (firstCamera == null) return;
+    if (firstCamera == null) {
+      _isInitializing = false;
+      return;
+    }
 
     _controller = CameraController(
       firstCamera,
@@ -45,43 +57,98 @@ class _CameraViewState extends State<CameraView> {
       });
     } catch (_) {
       // Gestionar error de inicialización
+    } finally {
+      _isInitializing = false;
+    }
+  }
+
+  Future<void> _disposeController() async {
+    _autoStopTimer?.cancel();
+    _autoStopTimer = null;
+
+    final controller = _controller;
+    _controller = null;
+    _isCameraInitialized = false;
+    if (controller != null) {
+      try {
+        await controller.dispose();
+      } catch (_) {
+        // Ignorar: puede fallar si el controlador ya se liberó.
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final controller = _controller;
+    if (controller == null || !_isCameraInitialized) return;
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      _disposeController();
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed && mounted) {
+      final hasRecordedVideo =
+          context.read<CoverLetterBloc>().state.recordedVideoPath != null;
+      if (!hasRecordedVideo) {
+        _initializeCamera();
+      }
     }
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _disposeController();
     super.dispose();
   }
 
   Future<void> _toggleRecording() async {
+    if (_isToggling) return;
     if (!_isCameraInitialized || _controller == null) return;
 
     final bloc = context.read<CoverLetterBloc>();
 
-    if (_isRecording) {
-      final file = await _controller!.stopVideoRecording();
-      setState(() => _isRecording = false);
-      bloc.add(VideoRecordingStopped(file.path));
-      return;
-    }
-
-    if (bloc.state.attemptsLeft <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No te quedan más intentos.')),
-      );
-      return;
-    }
-
-    bloc.add(VideoRecordingStarted());
-    await _controller!.startVideoRecording();
-    setState(() => _isRecording = true);
-
-    Future.delayed(const Duration(seconds: 60), () {
-      if (_isRecording && mounted) {
-        _toggleRecording();
+    _isToggling = true;
+    try {
+      if (_isRecording) {
+        _autoStopTimer?.cancel();
+        _autoStopTimer = null;
+        final file = await _controller!.stopVideoRecording();
+        if (!mounted) return;
+        setState(() => _isRecording = false);
+        bloc.add(VideoRecordingStopped(file.path));
+        await _disposeController();
+        return;
       }
-    });
+
+      if (bloc.state.attemptsLeft <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No te quedan más intentos.')),
+        );
+        return;
+      }
+
+      bloc.add(VideoRecordingStarted());
+      await _controller!.startVideoRecording();
+      if (!mounted) return;
+      setState(() => _isRecording = true);
+
+      _autoStopTimer?.cancel();
+      _autoStopTimer = Timer(const Duration(seconds: 60), () {
+        if (_isRecording && mounted) {
+          _toggleRecording();
+        }
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isRecording = false);
+      }
+    } finally {
+      _isToggling = false;
+    }
   }
 
   @override
@@ -106,6 +173,7 @@ class _CameraViewState extends State<CameraView> {
                   ElevatedButton(
                     onPressed: () {
                       context.read<CoverLetterBloc>().add(RetryVideoRecording());
+                      _initializeCamera();
                     },
                     child: const Text('Grabar de nuevo'),
                   ),
@@ -144,7 +212,7 @@ class _CameraViewState extends State<CameraView> {
                 padding: const EdgeInsets.all(16.0),
                 child: Chip(
                   label: Text('Intentos: ${state.attemptsLeft}'),
-                  backgroundColor: Colors.black.withOpacity(0.5),
+                  backgroundColor: Colors.black.withValues(alpha: 0.5),
                   labelStyle: const TextStyle(color: Colors.white),
                 ),
               ),

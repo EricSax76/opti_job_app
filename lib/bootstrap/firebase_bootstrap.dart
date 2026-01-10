@@ -51,11 +51,13 @@ Future<void> maybeActivateFirebaseAppCheck() async {
       : null;
 
   await FirebaseAppCheck.instance.activate(
-    webProvider: webProvider,
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+    providerWeb: webProvider,
+    providerAndroid: kDebugMode
+        ? const AndroidDebugProvider()
+        : const AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode
+        ? const AppleDebugProvider()
+        : const AppleAppAttestProvider(),
   );
 }
 

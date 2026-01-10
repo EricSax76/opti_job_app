@@ -16,6 +16,7 @@ class CoverLetterState extends Equatable {
   const CoverLetterState({
     this.status = CoverLetterStatus.initial,
     this.attemptsLeft = 3,
+    this.savedCoverLetterText,
     this.recordedVideoPath,
     this.improvedCoverLetter,
     this.error,
@@ -23,6 +24,7 @@ class CoverLetterState extends Equatable {
 
   final CoverLetterStatus status;
   final int attemptsLeft;
+  final String? savedCoverLetterText;
   final String? recordedVideoPath;
   final String? improvedCoverLetter;
   final String? error;
@@ -30,6 +32,7 @@ class CoverLetterState extends Equatable {
   CoverLetterState copyWith({
     CoverLetterStatus? status,
     int? attemptsLeft,
+    Object? savedCoverLetterText = _unset,
     Object? recordedVideoPath = _unset,
     Object? improvedCoverLetter = _unset,
     String? Function()? error,
@@ -37,6 +40,9 @@ class CoverLetterState extends Equatable {
     return CoverLetterState(
       status: status ?? this.status,
       attemptsLeft: attemptsLeft ?? this.attemptsLeft,
+      savedCoverLetterText: savedCoverLetterText == _unset
+          ? this.savedCoverLetterText
+          : savedCoverLetterText as String?,
       recordedVideoPath: recordedVideoPath == _unset
           ? this.recordedVideoPath
           : recordedVideoPath as String?,
@@ -51,6 +57,7 @@ class CoverLetterState extends Equatable {
   List<Object?> get props => [
         status,
         attemptsLeft,
+        savedCoverLetterText,
         recordedVideoPath,
         improvedCoverLetter,
         error,

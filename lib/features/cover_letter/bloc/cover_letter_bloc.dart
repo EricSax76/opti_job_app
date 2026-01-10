@@ -1,8 +1,10 @@
+import 'dart:io' show File;
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cross_file/cross_file.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
@@ -26,6 +28,7 @@ class CoverLetterBloc extends Bloc<CoverLetterEvent, CoverLetterState> {
        _firestore = firestore,
        _storage = storage,
        super(const CoverLetterState()) {
+    on<LoadCoverLetterRequested>(_onLoadCoverLetterRequested);
     on<VideoRecordingStarted>(_onVideoRecordingStarted);
     on<VideoRecordingStopped>(_onVideoRecordingStopped);
     on<RetryVideoRecording>(_onRetryVideoRecording);
@@ -38,6 +41,46 @@ class CoverLetterBloc extends Bloc<CoverLetterEvent, CoverLetterState> {
   final CandidateUidProvider _candidateUidProvider;
   final FirebaseFirestore? _firestore;
   final FirebaseStorage? _storage;
+
+  Future<void> _onLoadCoverLetterRequested(
+    LoadCoverLetterRequested event,
+    Emitter<CoverLetterState> emit,
+  ) async {
+    final uid = _candidateUidProvider();
+    if (uid == null) return;
+
+    emit(state.copyWith(status: CoverLetterStatus.loading, error: () => null));
+    try {
+      final firestore = _firestore ?? FirebaseFirestore.instance;
+      final doc = await firestore.collection('candidates').doc(uid).get();
+      final data = doc.data();
+      final coverLetter = data?['cover_letter'];
+      final rawText = coverLetter is Map ? coverLetter['text'] : null;
+      final text = rawText is String ? rawText.trim() : null;
+
+      emit(
+        state.copyWith(
+          status: CoverLetterStatus.initial,
+          savedCoverLetterText: (text == null || text.isEmpty) ? null : text,
+          error: () => null,
+        ),
+      );
+    } on FirebaseException catch (error) {
+      emit(
+        state.copyWith(
+          status: CoverLetterStatus.failure,
+          error: () => error.message ?? 'No se pudo cargar tu carta.',
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          status: CoverLetterStatus.failure,
+          error: () => e.toString(),
+        ),
+      );
+    }
+  }
 
   void _onVideoRecordingStarted(
     VideoRecordingStarted event,
@@ -174,6 +217,7 @@ class CoverLetterBloc extends Bloc<CoverLetterEvent, CoverLetterState> {
           },
           'updated_at': FieldValue.serverTimestamp(),
         });
+        emit(state.copyWith(savedCoverLetterText: coverLetterText));
       }
 
       if (shouldRequireVideo && state.recordedVideoPath != null) {
@@ -205,14 +249,6 @@ class CoverLetterBloc extends Bloc<CoverLetterEvent, CoverLetterState> {
     required String candidateUid,
     required String filePath,
   }) async {
-    final bytes = await XFile(filePath).readAsBytes();
-    if (bytes.isEmpty) {
-      throw FirebaseException(
-        plugin: 'firebase_storage',
-        message: 'El vídeo grabado está vacío.',
-      );
-    }
-
     final storage = _storage ?? FirebaseStorage.instance;
     final normalizedPath = filePath.toLowerCase();
     final contentType = normalizedPath.endsWith('.mov')
@@ -222,7 +258,28 @@ class CoverLetterBloc extends Bloc<CoverLetterEvent, CoverLetterState> {
     final storagePath =
         'candidates/$candidateUid/video_curriculum/${DateTime.now().millisecondsSinceEpoch}.$extension';
     final ref = storage.ref().child(storagePath);
-    await ref.putData(bytes, SettableMetadata(contentType: contentType));
+    int sizeBytes;
+    if (kIsWeb) {
+      final bytes = await XFile(filePath).readAsBytes();
+      if (bytes.isEmpty) {
+        throw FirebaseException(
+          plugin: 'firebase_storage',
+          message: 'El vídeo grabado está vacío.',
+        );
+      }
+      sizeBytes = bytes.length;
+      await ref.putData(bytes, SettableMetadata(contentType: contentType));
+    } else {
+      final file = File(filePath);
+      sizeBytes = await file.length();
+      if (sizeBytes == 0) {
+        throw FirebaseException(
+          plugin: 'firebase_storage',
+          message: 'El vídeo grabado está vacío.',
+        );
+      }
+      await ref.putFile(file, SettableMetadata(contentType: contentType));
+    }
     final downloadUrl = await ref.getDownloadURL();
 
     final firestore = _firestore ?? FirebaseFirestore.instance;
@@ -231,7 +288,7 @@ class CoverLetterBloc extends Bloc<CoverLetterEvent, CoverLetterState> {
         'download_url': downloadUrl,
         'storage_path': storagePath,
         'content_type': contentType,
-        'size_bytes': bytes.length,
+        'size_bytes': sizeBytes,
         'updated_at': FieldValue.serverTimestamp(),
       },
       'updated_at': FieldValue.serverTimestamp(),
