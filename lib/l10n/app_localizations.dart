@@ -94,49 +94,49 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('es')];
 
-  /// No description provided for @aiOptimizationTitle.
+  /// Título de la sección de optimización con IA.
   ///
   /// In es, this message translates to:
   /// **'Optimización con IA'**
   String get aiOptimizationTitle;
 
-  /// No description provided for @aiOptimizationDescription.
+  /// Descripción corta de la optimización con IA.
   ///
   /// In es, this message translates to:
   /// **'Nuestra IA analizan perfiles, automatiza entrevistas y encuentran el mejor match en segundos.'**
   String get aiOptimizationDescription;
 
-  /// No description provided for @aiFeatureAnalyzeProfiles.
+  /// Beneficio de análisis rápido de perfiles.
   ///
   /// In es, this message translates to:
   /// **'Analiza perfiles de candidatos instantáneamente'**
   String get aiFeatureAnalyzeProfiles;
 
-  /// No description provided for @aiFeatureAutomateInterviews.
+  /// Beneficio de automatización de entrevistas.
   ///
   /// In es, this message translates to:
   /// **'Automatiza la programación de entrevistas'**
   String get aiFeatureAutomateInterviews;
 
-  /// No description provided for @applicantsMissingCompanyId.
+  /// Mensaje de error cuando falta el identificador de empresa.
   ///
   /// In es, this message translates to:
   /// **'No se pudieron cargar los aplicantes porque falta el identificador de empresa.'**
   String get applicantsMissingCompanyId;
 
-  /// No description provided for @applicantsExpandToLoad.
+  /// Instrucción para expandir la tarjeta y cargar aplicantes.
   ///
   /// In es, this message translates to:
   /// **'Expande la tarjeta para cargar los aplicantes de esta oferta.'**
   String get applicantsExpandToLoad;
 
-  /// No description provided for @applicantsLoadError.
+  /// Error genérico al cargar aplicantes.
   ///
   /// In es, this message translates to:
   /// **'No se pudieron cargar los aplicantes.'**
   String get applicantsLoadError;
 
-  /// No description provided for @applicantsEmpty.
+  /// Estado vacío cuando no hay aplicantes.
   ///
   /// In es, this message translates to:
   /// **'Aún no hay postulaciones para esta oferta.'**
