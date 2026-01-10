@@ -77,7 +77,7 @@ class FirebaseAiClient {
 
   Future<Map<String, dynamic>> generateJson(
     String prompt, {
-    required Schema responseSchema,
+    Schema? responseSchema,
     GenerationConfig? generationConfig,
   }) async {
     final config = GenerationConfig(

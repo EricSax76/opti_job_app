@@ -96,6 +96,7 @@ class CurriculumLogic {
 
       final repository = context.read<CurriculumRepository>();
       final curriculumCubit = context.read<CurriculumCubit>();
+      final formCubit = context.read<CurriculumFormCubit>();
       final messenger = ScaffoldMessenger.of(context);
 
       final result = await FilePicker.platform.pickFiles(
@@ -115,6 +116,20 @@ class CurriculumLogic {
           const SnackBar(content: Text('Selecciona un PDF o DOCX válido.')),
         );
         return;
+      }
+
+      // Antes de subir, intentamos extraer datos del CV para rellenar el form.
+      // Actualmente solo se soporta extracción automática desde `.docx`.
+      if (extension == 'docx') {
+        await formCubit.analyzeCvFile(bytes, file.name);
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Por ahora solo se puede extraer información automáticamente desde .docx.',
+            ),
+          ),
+        );
       }
 
       await repository.uploadAttachment(

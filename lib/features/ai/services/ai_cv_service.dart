@@ -37,10 +37,43 @@ class AiCvService {
     return trimmed;
   }
 
+  Future<String> improveCoverLetter({
+    required Curriculum curriculum,
+    required String coverLetterText,
+    String locale = 'es-ES',
+    String quality = 'flash',
+  }) async {
+    final cv = _compactor.compact(curriculum);
+    final prompt = AiPrompts.improveCoverLetter(
+      coverLetterText: coverLetterText,
+      cv: cv,
+      locale: locale,
+      quality: quality,
+    );
+    final coverLetter = await _client.generateText(
+      prompt,
+      generationConfig: _coverLetterConfigForQuality(quality),
+    );
+    final trimmed = coverLetter.trim();
+    if (trimmed.isEmpty) {
+      throw const AiRequestException(
+        'El servicio de IA no devolvió una carta de presentación.',
+      );
+    }
+    return trimmed;
+  }
+
   GenerationConfig _textConfigForQuality(String quality) {
     return switch (quality) {
       'pro' => GenerationConfig(maxOutputTokens: 512, temperature: 0.4),
       _ => GenerationConfig(maxOutputTokens: 320, temperature: 0.4),
+    };
+  }
+
+  GenerationConfig _coverLetterConfigForQuality(String quality) {
+    return switch (quality) {
+      'pro' => GenerationConfig(maxOutputTokens: 900, temperature: 0.4),
+      _ => GenerationConfig(maxOutputTokens: 700, temperature: 0.4),
     };
   }
 }

@@ -77,4 +77,18 @@ class AiService {
       quality: quality,
     );
   }
+
+  Future<String> improveCoverLetter({
+    required Curriculum curriculum,
+    required String coverLetterText,
+    String locale = 'es-ES',
+    String quality = 'flash',
+  }) async {
+    return _cvService.improveCoverLetter(
+      curriculum: curriculum,
+      coverLetterText: coverLetterText,
+      locale: locale,
+      quality: quality,
+    );
+  }
 }

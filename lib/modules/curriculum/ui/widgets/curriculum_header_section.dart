@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubit/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_attachment_card.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_logic.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
@@ -20,6 +21,9 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
 
   @override
   Widget build(BuildContext context) {
+    final isAnalyzing = context.select(
+      (CurriculumFormCubit cubit) => cubit.state.isAnalyzing,
+    );
     final attachment = context
         .watch<CurriculumCubit>()
         .state
@@ -40,16 +44,14 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
               ),
             ),
             OutlinedButton.icon(
-              onPressed: widget.isSaving || _isManagingAttachment
+              onPressed: widget.isSaving || _isManagingAttachment || isAnalyzing
                   ? null
                   : () => CurriculumLogic.pickAndUploadAttachment(
                       context: context,
-                      onStart: () =>
-                          setState(() => _isManagingAttachment = true),
-                      onEnd: () =>
-                          setState(() => _isManagingAttachment = false),
+                      onStart: () => setState(() => _isManagingAttachment = true),
+                      onEnd: () => setState(() => _isManagingAttachment = false),
                     ),
-              icon: _isManagingAttachment
+              icon: _isManagingAttachment || isAnalyzing
                   ? const SizedBox(
                       width: 18,
                       height: 18,
@@ -57,7 +59,11 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
                     )
                   : const Icon(Icons.upload_file_outlined),
               label: Text(
-                _isManagingAttachment ? 'Subiendo...' : 'Importar PDF/DOCX',
+                isAnalyzing
+                    ? 'Analizando...'
+                    : _isManagingAttachment
+                    ? 'Subiendo...'
+                    : 'Importar PDF/DOCX',
               ),
             ),
           ],

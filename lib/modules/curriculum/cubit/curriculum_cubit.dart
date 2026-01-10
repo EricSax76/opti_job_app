@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
@@ -70,14 +72,32 @@ class CurriculumCubit extends Cubit<CurriculumState> {
         curriculum: curriculum,
       );
       emit(state.copyWith(status: CurriculumStatus.loaded, curriculum: saved));
-    } catch (_) {
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('[Curriculum] save failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
       emit(
         state.copyWith(
           status: CurriculumStatus.failure,
-          errorMessage: 'No se pudo guardar tu curriculum.',
+          errorMessage: _userFacingSaveErrorMessage(error),
         ),
       );
     }
+  }
+
+  String _userFacingSaveErrorMessage(Object error) {
+    if (error is FirebaseException) {
+      if (error.plugin == 'cloud_firestore' && error.code == 'permission-denied') {
+        return 'Permiso denegado al guardar tu curriculum. '
+            'Revisa las reglas de Firestore y/o si tienes App Check en modo enforced '
+            '(debes registrar el debug token o desactivar enforcement para desarrollo).';
+      }
+      if (error.message != null && error.message!.trim().isNotEmpty) {
+        return error.message!;
+      }
+    }
+    return 'No se pudo guardar tu curriculum.';
   }
 
   @override
@@ -86,4 +106,3 @@ class CurriculumCubit extends Cubit<CurriculumState> {
     return super.close();
   }
 }
-

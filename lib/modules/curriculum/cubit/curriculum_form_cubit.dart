@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/features/ai/api/document_parser.dart';
+import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
+import 'package:opti_job_app/features/ai/prompts/ai_prompts.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubit/curriculum_state.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
@@ -18,6 +22,7 @@ class CurriculumFormState extends Equatable {
     this.hasChanges = false,
     this.canSubmit = false,
     this.isSaving = false,
+    this.isAnalyzing = false,
     this.skills = const [],
     this.experiences = const [],
     this.education = const [],
@@ -30,6 +35,7 @@ class CurriculumFormState extends Equatable {
   final bool hasChanges;
   final bool canSubmit;
   final bool isSaving;
+  final bool isAnalyzing;
   final List<String> skills;
   final List<CurriculumItem> experiences;
   final List<CurriculumItem> education;
@@ -43,6 +49,7 @@ class CurriculumFormState extends Equatable {
     hasChanges,
     canSubmit,
     isSaving,
+    isAnalyzing,
     skills,
     experiences,
     education,
@@ -56,6 +63,7 @@ class CurriculumFormState extends Equatable {
     bool? hasChanges,
     bool? canSubmit,
     bool? isSaving,
+    bool? isAnalyzing,
     List<String>? skills,
     List<CurriculumItem>? experiences,
     List<CurriculumItem>? education,
@@ -70,6 +78,7 @@ class CurriculumFormState extends Equatable {
       hasChanges: hasChanges ?? this.hasChanges,
       canSubmit: canSubmit ?? this.canSubmit,
       isSaving: isSaving ?? this.isSaving,
+      isAnalyzing: isAnalyzing ?? this.isAnalyzing,
       skills: skills ?? this.skills,
       experiences: experiences ?? this.experiences,
       education: education ?? this.education,
@@ -105,6 +114,7 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
   StreamSubscription<CurriculumState>? _subscription;
   Curriculum _initial = Curriculum.empty();
   CurriculumStatus? _lastStatus;
+  var _isHydratingControllers = false;
 
   void refresh() => _curriculumCubit.refresh();
 
@@ -122,9 +132,7 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
   }
 
   void removeSkill(String skill) {
-    _emitListUpdate(
-      skills: state.skills.where((s) => s != skill).toList(),
-    );
+    _emitListUpdate(skills: state.skills.where((s) => s != skill).toList());
   }
 
   void addExperience(CurriculumItem item) {
@@ -177,6 +185,94 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
     );
   }
 
+  Future<void> analyzeCvFile(Uint8List bytes, String fileName) async {
+    emit(state.copyWith(isAnalyzing: true, clearNotice: true));
+
+    try {
+      // 1. Extraer texto del documento
+      String text = '';
+      if (fileName.toLowerCase().endsWith('.docx')) {
+        text = DocumentParser.extractTextFromDocx(bytes);
+      }
+      // (Aquí podrías añadir lógica para PDF si integras un paquete compatible)
+
+      if (text.isEmpty) {
+        emit(
+          state.copyWith(
+            isAnalyzing: false,
+            notice: CurriculumFormNotice.error,
+            noticeMessage:
+                'No se pudo leer el texto del archivo. Asegúrate de que sea un .docx válido.',
+          ),
+        );
+        return;
+      }
+
+      // 2. Consultar a la IA
+      final client = FirebaseAiClient();
+      final prompt = AiPrompts.extractCvData(cvText: text);
+      final json = await client.generateJson(prompt, responseSchema: null);
+
+      // 3. Rellenar campos con la respuesta
+      final personal = json['personal'] as Map<String, dynamic>? ?? {};
+      if (personal['summary'] != null) {
+        summaryController.text = personal['summary'];
+      }
+      if (personal['phone'] != null) {
+        phoneController.text = personal['phone'];
+      }
+      if (personal['location'] != null) {
+        locationController.text = personal['location'];
+      }
+
+      final newSkills = List<String>.from(json['skills'] ?? []);
+
+      final newExperience = (json['experience'] as List? ?? [])
+          .map(
+            (e) => CurriculumItem(
+              title: e['role'] ?? '',
+              subtitle: e['company'] ?? '',
+              period: e['date_range'] ?? '',
+              description: e['description'] ?? '',
+            ),
+          )
+          .toList();
+
+      final newEducation = (json['education'] as List? ?? [])
+          .map(
+            (e) => CurriculumItem(
+              title: e['degree'] ?? '',
+              subtitle: e['school'] ?? '',
+              period: e['date_range'] ?? '',
+              description: '',
+            ),
+          )
+          .toList();
+
+      _emitListUpdate(
+        skills: newSkills,
+        experiences: newExperience,
+        education: newEducation,
+      );
+
+      emit(
+        state.copyWith(
+          isAnalyzing: false,
+          notice: CurriculumFormNotice.success,
+          noticeMessage: 'Datos extraídos correctamente.',
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isAnalyzing: false,
+          notice: CurriculumFormNotice.error,
+          noticeMessage: 'Error al analizar CV: $e',
+        ),
+      );
+    }
+  }
+
   void _emitListUpdate({
     List<String>? skills,
     List<CurriculumItem>? experiences,
@@ -207,6 +303,7 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
   }
 
   void _handleTextChanged() {
+    if (_isHydratingControllers) return;
     final hasChanges = _computeHasChanges(
       headline: headlineController.text.trim(),
       summary: summaryController.text.trim(),
@@ -230,29 +327,43 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
         _lastStatus == CurriculumStatus.saving &&
         curriculumState.status == CurriculumStatus.loaded;
 
-    if (viewStatus == CurriculumFormViewStatus.ready &&
+    final shouldPreserveDraft = state.hasChanges && !justSaved;
+    final nextSkills =
+        shouldPreserveDraft ? state.skills : (curriculum?.skills ?? const []);
+    final nextExperiences = shouldPreserveDraft
+        ? state.experiences
+        : (curriculum?.experiences ?? const []);
+    final nextEducation = shouldPreserveDraft
+        ? state.education
+        : (curriculum?.education ?? const []);
+
+    final shouldHydrateFromCurriculum =
+        viewStatus == CurriculumFormViewStatus.ready &&
         curriculum != null &&
-        !state.hasChanges) {
+        !shouldPreserveDraft;
+
+    if (shouldHydrateFromCurriculum) {
       _initial = curriculum;
+      _isHydratingControllers = true;
       headlineController.text = curriculum.headline;
       summaryController.text = curriculum.summary;
       phoneController.text = curriculum.phone;
       locationController.text = curriculum.location;
+      _isHydratingControllers = false;
     }
 
+    final nextHasChanges = justSaved ? false : state.hasChanges;
     var next = state.copyWith(
       viewStatus: viewStatus,
       isSaving: isSaving,
-      skills: curriculum?.skills ?? const [],
-      experiences: curriculum?.experiences ?? const [],
-      education: curriculum?.education ?? const [],
-      hasChanges: justSaved ? false : state.hasChanges,
-      canSubmit: justSaved
-          ? false
-          : _canSubmit(state.hasChanges, isSaving),
+      skills: nextSkills,
+      experiences: nextExperiences,
+      education: nextEducation,
+      hasChanges: nextHasChanges,
+      canSubmit: _canSubmit(nextHasChanges, isSaving),
       errorMessage: viewStatus == CurriculumFormViewStatus.error
           ? curriculumState.errorMessage
-          : null,
+        : null,
       clearError: viewStatus != CurriculumFormViewStatus.error,
     );
 
@@ -368,4 +479,3 @@ class _NoticeUpdate {
   final CurriculumFormNotice notice;
   final String message;
 }
-

@@ -8,6 +8,8 @@ import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_view.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/interviews_view.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/my_applications_view.dart';
+import 'package:opti_job_app/features/cover_letter/view/cover_letter_screen.dart';
+import 'package:opti_job_app/features/cover_letter/view/video_curriculum_screen.dart';
 import 'package:opti_job_app/modules/profiles/ui/pages/profile_screen.dart';
 import 'package:opti_job_app/modules/curriculum/ui/pages/curriculum_screen.dart';
 
@@ -26,7 +28,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -100,6 +102,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
             Tab(icon: Icon(Icons.work_history), text: 'Mis Ofertas'),
             Tab(icon: Icon(Icons.event_available_outlined), text: 'Entrevistas'),
             Tab(icon: Icon(Icons.description_outlined), text: 'CV'),
+            Tab(icon: Icon(Icons.mail_outline), text: 'Carta'),
+            Tab(icon: Icon(Icons.videocam_outlined), text: 'VC'),
           ],
         ),
       ),
@@ -115,6 +119,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
             MyApplicationsView(),
             InterviewsView(),
             CurriculumScreen(),
+            CoverLetterScreen(),
+            VideoCurriculumScreen(),
           ],
         ),
       ),

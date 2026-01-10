@@ -26,6 +26,15 @@ service firebase.storage {
       allow delete: if isSignedIn() && request.auth.uid == candidateId;
     }
 
+    match /candidates/{candidateId}/video_curriculum/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && request.auth.uid == candidateId
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType.matches('video/mp4|video/quicktime');
+      allow delete: if isSignedIn() && request.auth.uid == candidateId;
+    }
+
     match /companies/{companyId}/{allPaths=**} {
       allow read: if isSignedIn();
       allow create, update: if isSignedIn()
