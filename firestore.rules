@@ -6,44 +6,76 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isCandidate() {
+    // IMPORTANT:
+    // Do NOT infer "candidate/company" from existence of user-writable profile docs.
+    // Use custom claims (request.auth.token.role) set by a trusted backend.
+    // Optional fallback: a role registry doc only writable by admin.
+    function isAdmin() {
       return isSignedIn() &&
-        exists(/databases/$(database)/documents/candidates/$(request.auth.uid));
+        ((request.auth.token.admin == true) || (request.auth.token.role == 'admin'));
+    }
+
+    function roleFromToken() {
+      return (isSignedIn() && request.auth.token.role is string)
+        ? request.auth.token.role
+        : null;
+    }
+
+    function roleFromRegistry() {
+      return (isSignedIn() &&
+          exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)))
+        ? get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function hasRole(role) {
+      return roleFromToken() == role || roleFromRegistry() == role;
+    }
+
+    function isCandidate() {
+      return hasRole('candidato') || hasRole('candidate');
     }
 
     function isCompany() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/companies/$(request.auth.uid));
+      return hasRole('empresa') || hasRole('company');
+    }
+
+    // Admin-managed role registry (alternative to custom claims).
+    match /user_roles/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if isAdmin();
     }
 
     match /candidates/{candidateId} {
-      allow create: if isSignedIn()
+      allow create: if isCandidate()
         && request.auth.uid == candidateId
         && request.resource.data.uid == request.auth.uid;
-      allow read: if (isSignedIn()
+      allow read: if (isCandidate()
           && request.auth.uid == candidateId
           && resource.data.uid == request.auth.uid)
         || isCompany();
-      allow update, delete: if isSignedIn()
+      allow update, delete: if isCandidate()
         && request.auth.uid == candidateId
         && resource.data.uid == request.auth.uid;
 
       match /curriculum/{curriculumId} {
-        allow create, update, delete: if isSignedIn()
+        allow create, update, delete: if isCandidate()
           && request.auth.uid == candidateId;
-        allow read: if (isSignedIn() && request.auth.uid == candidateId)
+        allow read: if (isCandidate() && request.auth.uid == candidateId)
           || isCompany();
       }
     }
 
     match /companies/{companyId} {
-      allow create: if isSignedIn() && request.auth.uid == companyId;
+      allow create: if isCompany() && request.auth.uid == companyId;
       allow read, update, delete: if isCompany() && request.auth.uid == companyId;
     }
 
     match /jobOffers/{offerId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isCompany();
+      allow create: if isCompany() && request.resource.data.companyUid == request.auth.uid;
+      allow update: if isCompany() && resource.data.companyUid == request.auth.uid && request.resource.data.companyUid == request.auth.uid;
+      allow delete: if isCompany() && resource.data.companyUid == request.auth.uid;
     }
 
     match /applications/{applicationId} {

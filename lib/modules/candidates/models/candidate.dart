@@ -89,7 +89,7 @@ class Candidate {
 
   bool get hasCoverLetter => coverLetter?.text.trim().isNotEmpty == true;
   bool get hasVideoCurriculum =>
-      videoCurriculum?.downloadUrl.trim().isNotEmpty == true;
+      videoCurriculum?.storagePath.trim().isNotEmpty == true;
 }
 
 class CandidateCoverLetter {
@@ -115,14 +115,12 @@ class CandidateCoverLetter {
 
 class CandidateVideoCurriculum {
   const CandidateVideoCurriculum({
-    required this.downloadUrl,
     required this.storagePath,
     required this.contentType,
     required this.sizeBytes,
     this.updatedAt,
   });
 
-  final String downloadUrl;
   final String storagePath;
   final String contentType;
   final int sizeBytes;
@@ -130,7 +128,6 @@ class CandidateVideoCurriculum {
 
   factory CandidateVideoCurriculum.fromJson(Map<String, dynamic> json) {
     return CandidateVideoCurriculum(
-      downloadUrl: json['download_url'] as String? ?? '',
       storagePath: json['storage_path'] as String? ?? '',
       contentType: json['content_type'] as String? ?? '',
       sizeBytes: (json['size_bytes'] as num?)?.toInt() ?? 0,
@@ -140,7 +137,6 @@ class CandidateVideoCurriculum {
 
   Map<String, dynamic> toJson() {
     return {
-      'download_url': downloadUrl,
       'storage_path': storagePath,
       'content_type': contentType,
       'size_bytes': sizeBytes,

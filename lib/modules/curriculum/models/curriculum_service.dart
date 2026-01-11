@@ -60,13 +60,11 @@ class CurriculumService {
         'candidates/$candidateUid/curriculum/${DateTime.now().millisecondsSinceEpoch}_$sanitizedName';
     final ref = _storage.ref().child(storagePath);
     await ref.putData(bytes, SettableMetadata(contentType: contentType));
-    final downloadUrl = await ref.getDownloadURL();
 
     await _docRef(candidateUid).set(
       {
         'attachment': {
           'file_name': fileName,
-          'download_url': downloadUrl,
           'storage_path': storagePath,
           'content_type': contentType,
           'size_bytes': bytes.length,

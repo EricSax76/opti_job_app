@@ -280,12 +280,10 @@ class CoverLetterBloc extends Bloc<CoverLetterEvent, CoverLetterState> {
       }
       await ref.putFile(file, SettableMetadata(contentType: contentType));
     }
-    final downloadUrl = await ref.getDownloadURL();
 
     final firestore = _firestore ?? FirebaseFirestore.instance;
     await firestore.collection('candidates').doc(candidateUid).update({
       'video_curriculum': {
-        'download_url': downloadUrl,
         'storage_path': storagePath,
         'content_type': contentType,
         'size_bytes': sizeBytes,

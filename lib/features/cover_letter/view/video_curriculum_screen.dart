@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/features/cover_letter/bloc/cover_letter_bloc.dart';
 import 'package:opti_job_app/features/cover_letter/widgets/camera_view.dart';
@@ -141,64 +142,107 @@ class _UploadedVideoStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final candidate = context.watch<ProfileCubit>().state.candidate;
     final video = candidate?.videoCurriculum;
-    final hasUploaded = video != null && video.downloadUrl.trim().isNotEmpty;
-    final url = hasUploaded ? Uri.tryParse(video.downloadUrl.trim()) : null;
-    final canPlay = hasUploaded && url != null;
+    final storagePath = video?.storagePath.trim() ?? '';
+    final hasUploaded = storagePath.isNotEmpty;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  hasUploaded ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    hasUploaded
-                        ? 'Videocurrículum subido'
-                        : 'Sin videocurrículum subido',
-                    style: Theme.of(context).textTheme.titleMedium,
+    if (!hasUploaded || video == null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.cloud_off_outlined),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Sin videocurrículum subido',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Graba y guarda un vídeo para que quede asociado a tu perfil.',
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return FutureBuilder<String>(
+      future: FirebaseStorage.instance.ref().child(storagePath).getDownloadURL(),
+      builder: (context, snapshot) {
+        final downloadUrl = snapshot.data?.trim();
+        final url = (downloadUrl == null || downloadUrl.isEmpty)
+            ? null
+            : Uri.tryParse(downloadUrl);
+        final canPlay = url != null;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.cloud_done_outlined),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Videocurrículum subido',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    if (canPlay)
+                      IconButton(
+                        tooltip: 'Ver',
+                        icon: const Icon(Icons.play_circle_outline),
+                        onPressed: () => _openPlayer(
+                          context,
+                          url,
+                          title: 'Videocurrículum',
+                          allowExternalFallback: true,
+                        ),
+                      ),
+                  ],
                 ),
-                if (canPlay)
-                  IconButton(
-                    tooltip: 'Ver',
-                    icon: const Icon(Icons.play_circle_outline),
-                    onPressed: () => _openPlayer(
+                const SizedBox(height: 8),
+                Text('Tamaño: ${_formatBytes(video.sizeBytes)}'),
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (snapshot.hasError)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: Text(
+                      'No se pudo cargar el enlace del vídeo (verifica permisos).',
+                    ),
+                  )
+                else if (canPlay) ...[
+                  const SizedBox(height: 12),
+                  _InlineVideoPreview(
+                    uri: url,
+                    onOpen: () => _openPlayer(
                       context,
                       url,
                       title: 'Videocurrículum',
                       allowExternalFallback: true,
                     ),
                   ),
+                ],
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              hasUploaded
-                  ? 'Tamaño: ${_formatBytes(video.sizeBytes)}'
-                  : 'Graba y guarda un vídeo para que quede asociado a tu perfil.',
-            ),
-            if (canPlay) ...[
-              const SizedBox(height: 12),
-              _InlineVideoPreview(
-                uri: url,
-                onOpen: () => _openPlayer(
-                  context,
-                  url,
-                  title: 'Videocurrículum',
-                  allowExternalFallback: true,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

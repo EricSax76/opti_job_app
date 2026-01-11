@@ -2,46 +2,50 @@ const express = require('express');
 const admin = require('firebase-admin');
 const { VertexAI } = require('@google-cloud/vertexai');
 const crypto = require('crypto');
+const helmet = require('helmet');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
 
 const app = express();
 app.use(express.json({ limit: '256kb' }));
+app.use(helmet());
 
 function env(name, fallback = '') {
   return process.env[name] ?? fallback;
 }
 
-function parseCorsOrigins(raw) {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  if (!value) return { mode: 'disabled', origins: [] };
-  if (value === '*') return { mode: 'any', origins: [] };
-  const origins = value
-    .split(',')
-    .map((v) => v.trim())
-    .filter(Boolean);
-  return { mode: 'list', origins };
-}
+// Setup CORS
+const corsOptions = {
+  origin: (origin, callback) => {
+    const corsOrigins = env('CORS_ORIGINS', '');
+    if (corsOrigins === '*' && env('NODE_ENV') !== 'production') {
+      callback(null, true);
+    } else {
+      const whitelist = corsOrigins.split(',').map(item => item.trim());
+      if (whitelist.indexOf(origin) !== -1 || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
+  methods: 'GET,POST,OPTIONS',
+  allowedHeaders: 'Authorization,Content-Type',
+  maxAge: 3600,
+};
+app.use(cors(corsOptions));
 
-const cors = parseCorsOrigins(env('CORS_ORIGINS', ''));
-app.use((req, res, next) => {
-  const origin = req.get('Origin');
-  if (!origin || cors.mode === 'disabled') {
-    if (req.method === 'OPTIONS') return res.status(204).send('');
-    return next();
-  }
-
-  const allowOrigin =
-    cors.mode === 'any' ? '*' : cors.origins.includes(origin) ? origin : '';
-  if (allowOrigin) {
-    res.set('Access-Control-Allow-Origin', allowOrigin);
-    res.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Authorization,Content-Type');
-    res.set('Access-Control-Max-Age', '3600');
-    if (allowOrigin !== '*') res.set('Vary', 'Origin');
-  }
-
-  if (req.method === 'OPTIONS') return res.status(204).send('');
-  return next();
+// Setup Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false, 
+  keyGenerator: (req) => req.user?.uid || req.ip, // Use user ID if authenticated, otherwise IP
 });
+app.use(limiter);
+
 
 function nowPlusDays(days) {
   const ms = Date.now() + days * 24 * 60 * 60 * 1000;
@@ -172,26 +176,26 @@ function parseNumberEnv(name, fallback) {
 }
 
 function getSafetySettings() {
-  const threshold = env('AI_SAFETY_THRESHOLD', 'OFF');
+  const threshold = env('AI_SAFETY_THRESHOLD', 'BLOCK_NONE');
   return [
     { category: 'HARM_CATEGORY_HATE_SPEECH', threshold },
     { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold },
     { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold },
     { category: 'HARM_CATEGORY_HARASSMENT', threshold },
-  ];
+  ].filter(s => s.threshold !== 'OFF');
 }
 
 function getVertexModel(quality) {
   const project = env('GCP_PROJECT', env('GOOGLE_CLOUD_PROJECT'));
-  const location = env('GCP_LOCATION', 'global');
+  const location = env('GCP_LOCATION', 'us-central1');
   if (!project) {
     throw new Error('Missing GCP_PROJECT/GOOGLE_CLOUD_PROJECT');
   }
   const vertex = new VertexAI({ project, location });
   const modelName =
     quality === 'pro'
-      ? env('AI_MODEL_PRO', 'gemini-1.5-pro')
-      : env('AI_MODEL_FLASH', 'gemini-2.0-flash-001');
+      ? env('AI_MODEL_PRO', 'gemini-1.5-pro-001')
+      : env('AI_MODEL_FLASH', 'gemini-1.5-flash-001');
   return vertex.getGenerativeModel({ model: modelName });
 }
 
@@ -200,6 +204,7 @@ async function generateJson({ prompt, quality, maxOutputTokens, temperature, top
   const result = await model.generateContent({
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
+      responseMimeType: 'application/json',
       maxOutputTokens,
       temperature:
         typeof temperature === 'number' && Number.isFinite(temperature)
@@ -218,12 +223,12 @@ async function generateJson({ prompt, quality, maxOutputTokens, temperature, top
       ?.map((p) => p.text)
       .filter(Boolean)
       .join('') ?? '';
-  return extractJson(text);
+  return JSON.parse(text); // No need for extractJson with application/json response type
 }
 
 function requireAuth(req, res, next) {
   initFirebaseAdmin();
-  if (env('DISABLE_AUTH', 'false') === 'true') {
+  if (env('DISABLE_AUTH', 'false') === 'true' && env('NODE_ENV') !== 'production') {
     req.user = { uid: 'dev' };
     return next();
   }
@@ -234,12 +239,17 @@ function requireAuth(req, res, next) {
 
   admin
     .auth()
-    .verifyIdToken(token)
+    .verifyIdToken(token, true) // checkRevoked = true
     .then((decoded) => {
       req.user = { uid: decoded.uid, claims: decoded };
       next();
     })
-    .catch(() => res.status(401).json({ error: 'invalid_token' }));
+    .catch((error) => {
+        if (error.code === 'auth/id-token-revoked') {
+            return res.status(401).json({ error: 'token_revoked' });
+        }
+        return res.status(401).json({ error: 'invalid_token' });
+    });
 }
 
 function initFirebaseAdmin() {
@@ -249,14 +259,27 @@ function initFirebaseAdmin() {
 
 app.get('/healthz', (_req, res) => res.status(200).send('ok'));
 
-app.post('/ai/improve-cv-summary', requireAuth, async (req, res) => {
+const improveCvSummaryValidation = [
+    body('locale').optional().isString().trim().escape(),
+    body('quality').optional().isIn(['flash', 'pro']),
+    body('cv').isObject(),
+    body('cv.headline').optional().isString().trim().escape(),
+    body('cv.summary').optional().isString().trim().escape(),
+];
+
+app.post('/ai/improve-cv-summary', requireAuth, improveCvSummaryValidation, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
   initFirebaseAdmin();
 
   const uid = req.user.uid;
   const ttlDays = Number(env('CACHE_TTL_DAYS', '7')) || 7;
-  const locale = typeof req.body?.locale === 'string' ? req.body.locale : 'es-ES';
-  const quality = typeof req.body?.quality === 'string' ? req.body.quality : 'flash';
-  const cv = compactCv(req.body?.cv ?? {});
+  const locale = req.body.locale || 'es-ES';
+  const quality = req.body.quality || 'flash';
+  const cv = compactCv(req.body.cv ?? {});
   const cvUpdatedAtMs = parseUpdatedAtMs(cv.updated_at);
 
   const firestore = admin.firestore();
@@ -309,19 +332,34 @@ app.post('/ai/improve-cv-summary', requireAuth, async (req, res) => {
 
     return res.json({ summary, cached: false });
   } catch (e) {
+    console.error('AI request failed:', e);
     return res.status(502).json({ error: 'ai_failed' });
   }
 });
 
-app.post('/ai/match-offer-candidate', requireAuth, async (req, res) => {
-  initFirebaseAdmin();
+
+const matchOfferCandidateValidation = [
+    body('locale').optional().isString().trim().escape(),
+    body('quality').optional().isIn(['flash', 'pro']),
+    body('cv').isObject(),
+    body('offer').isObject(),
+    body('offer.id').isString().trim().notEmpty().escape(),
+];
+
+app.post('/ai/match-offer-candidate', requireAuth, matchOfferCandidateValidation, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    initFirebaseAdmin();
 
   const uid = req.user.uid;
   const ttlDays = Number(env('CACHE_TTL_DAYS', '7')) || 7;
-  const locale = typeof req.body?.locale === 'string' ? req.body.locale : 'es-ES';
-  const quality = typeof req.body?.quality === 'string' ? req.body.quality : 'flash';
-  const cv = compactCv(req.body?.cv ?? {});
-  const offer = compactOffer(req.body?.offer ?? {});
+  const locale = req.body.locale || 'es-ES';
+  const quality = req.body.quality || 'flash';
+  const cv = compactCv(req.body.cv ?? {});
+  const offer = compactOffer(req.body.offer ?? {});
   const offerId = offer?.id;
   const cvUpdatedAtMs = parseUpdatedAtMs(cv.updated_at);
 
@@ -392,18 +430,31 @@ app.post('/ai/match-offer-candidate', requireAuth, async (req, res) => {
 
     return res.json({ ...result, cached: false });
   } catch (e) {
+    console.error('AI request failed:', e);
     return res.status(502).json({ error: 'ai_failed' });
   }
 });
 
-app.post('/ai/generate-job-offer', requireAuth, async (req, res) => {
-  initFirebaseAdmin();
+const generateJobOfferValidation = [
+    body('locale').optional().isString().trim().escape(),
+    body('quality').optional().isIn(['flash', 'pro']),
+    body('criteria').isObject(),
+    body('criteria.role').isString().trim().notEmpty().escape(),
+];
+
+app.post('/ai/generate-job-offer', requireAuth, generateJobOfferValidation, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    initFirebaseAdmin();
 
   const uid = req.user.uid;
   const ttlDays = Number(env('CACHE_TTL_DAYS', '7')) || 7;
-  const locale = typeof req.body?.locale === 'string' ? req.body.locale : 'es-ES';
-  const quality = typeof req.body?.quality === 'string' ? req.body.quality : 'flash';
-  const criteria = compactOfferCriteria(req.body?.criteria ?? {});
+  const locale = req.body.locale || 'es-ES';
+  const quality = req.body.quality || 'flash';
+  const criteria = compactOfferCriteria(req.body.criteria ?? {});
 
   if (!criteria.role) return res.status(400).json({ error: 'missing_role' });
 
@@ -471,6 +522,7 @@ app.post('/ai/generate-job-offer', requireAuth, async (req, res) => {
 
     return res.json({ ...draft, cached: false });
   } catch (e) {
+    console.error('AI request failed:', e);
     return res.status(502).json({ error: 'ai_failed' });
   }
 });
@@ -485,6 +537,5 @@ function withTimeout(promise, ms) {
 
 const port = Number(env('PORT', '8080')) || 8080;
 app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log(`AI service listening on :${port}`);
 });

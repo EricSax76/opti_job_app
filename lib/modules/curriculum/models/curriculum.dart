@@ -109,7 +109,6 @@ class Curriculum {
 class CurriculumAttachment {
   const CurriculumAttachment({
     required this.fileName,
-    required this.downloadUrl,
     required this.storagePath,
     required this.contentType,
     required this.sizeBytes,
@@ -117,7 +116,6 @@ class CurriculumAttachment {
   });
 
   final String fileName;
-  final String downloadUrl;
   final String storagePath;
   final String contentType;
   final int sizeBytes;
@@ -127,7 +125,6 @@ class CurriculumAttachment {
     if (json == null) return null;
     return CurriculumAttachment(
       fileName: json['file_name'] as String? ?? '',
-      downloadUrl: json['download_url'] as String? ?? '',
       storagePath: json['storage_path'] as String? ?? '',
       contentType: json['content_type'] as String? ?? '',
       sizeBytes: (json['size_bytes'] as num?)?.toInt() ?? 0,
@@ -138,7 +135,6 @@ class CurriculumAttachment {
   Map<String, dynamic> toJson() {
     return {
       'file_name': fileName,
-      'download_url': downloadUrl,
       'storage_path': storagePath,
       'content_type': contentType,
       'size_bytes': sizeBytes,

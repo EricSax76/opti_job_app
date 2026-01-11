@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/aplicants/cubits/applicant_curriculum_cubit.dart';
 import 'package:opti_job_app/modules/aplicants/ui/widgets/applicant_curriculum_widgets.dart';
-import 'package:opti_job_app/features/cover_letter/view/video_playback_screen.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
@@ -88,12 +87,9 @@ class _ApplicantCurriculumView extends StatelessWidget {
                   curriculum.education.isNotEmpty;
               final coverLetterText = candidate.coverLetter?.text.trim() ?? '';
               final hasCoverLetter = candidate.hasCoverLetter;
-              final videoUrl = candidate.videoCurriculum?.downloadUrl.trim();
-              final videoUri = (videoUrl == null || videoUrl.isEmpty)
-                  ? null
-                  : Uri.tryParse(videoUrl);
-              final hasVideoCurriculum =
-                  candidate.hasVideoCurriculum && videoUri != null;
+              final videoStoragePath =
+                  candidate.videoCurriculum?.storagePath.trim() ?? '';
+              final hasVideoCurriculum = videoStoragePath.isNotEmpty;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -217,7 +213,7 @@ class _ApplicantCurriculumView extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         hasVideoCurriculum
-                                            ? 'Video disponible'
+                                            ? 'Video cargado (privado)'
                                             : 'No adjuntó video curriculum',
                                         style: const TextStyle(
                                           color: muted,
@@ -225,23 +221,6 @@ class _ApplicantCurriculumView extends StatelessWidget {
                                         ),
                                       ),
                                     ),
-                                    if (hasVideoCurriculum)
-                                      FilledButton.icon(
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute<void>(
-                                              builder: (_) =>
-                                                  VideoPlaybackScreen(
-                                                    uri: videoUri!,
-                                                    title:
-                                                        'Video curriculum de ${candidate.name}',
-                                                  ),
-                                            ),
-                                          );
-                                        },
-                                        icon: const Icon(Icons.play_arrow),
-                                        label: const Text('Ver'),
-                                      ),
                                   ],
                                 ),
                               ),

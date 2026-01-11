@@ -2,46 +2,27 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    function isSignedIn() {
-      return request.auth != null;
+    // Helper function to check ownership
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
+    // Candidates can create, update, and delete their own files.
+    // Reading is restricted to the owner. This is the main security fix.
+    // A future rule could allow companies to read if an application exists,
+    // but that requires careful implementation and data modeling.
     match /candidates/{candidateId}/{allPaths=**} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && request.auth.uid == candidateId
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
-      allow delete: if isSignedIn() && request.auth.uid == candidateId;
+      allow read, write: if isOwner(candidateId);
     }
 
-    match /candidates/{candidateId}/curriculum/{allPaths=**} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && request.auth.uid == candidateId
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches(
-          'application/pdf|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        );
-      allow delete: if isSignedIn() && request.auth.uid == candidateId;
-    }
-
-    match /candidates/{candidateId}/video_curriculum/{allPaths=**} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && request.auth.uid == candidateId
-        && request.resource.size < 50 * 1024 * 1024
-        && request.resource.contentType.matches('video/mp4|video/quicktime');
-      allow delete: if isSignedIn() && request.auth.uid == candidateId;
-    }
-
+    // Companies can manage their own files.
     match /companies/{companyId}/{allPaths=**} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && request.auth.uid == companyId
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
-      allow delete: if isSignedIn() && request.auth.uid == companyId;
+      allow read, write: if isOwner(companyId);
+    }
+
+    // Default deny (avoid accidental broad access via future rules).
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
