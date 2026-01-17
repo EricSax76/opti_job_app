@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,7 +44,17 @@ class _CompanyProfileView extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: const Border(bottom: BorderSide(color: border, width: 1)),
-        actions: const [CompanyAccountAvatarMenu(showProfileOption: false)],
+        actions: company != null
+            ? [
+                const CompanyAccountAvatarMenu(showProfileOption: false),
+                if (kIsWeb)
+                  IconButton(
+                    tooltip: 'Cerrar sesión',
+                    onPressed: () => context.read<CompanyAuthCubit>().logout(),
+                    icon: const Icon(Icons.logout),
+                  ),
+              ]
+            : null,
       ),
       body: company == null
           ? const Center(child: Text('Inicia sesión para ver tu perfil.'))

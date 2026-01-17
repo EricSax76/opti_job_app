@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -88,8 +89,16 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           shape: const Border(bottom: BorderSide(color: _border, width: 1)),
-          actions: authState.isAuthenticated
-              ? const [CompanyAccountAvatarMenu()]
+          actions: authState.company != null
+              ? [
+                  const CompanyAccountAvatarMenu(),
+                  if (kIsWeb)
+                    IconButton(
+                      tooltip: 'Cerrar sesión',
+                      onPressed: () => context.read<CompanyAuthCubit>().logout(),
+                      icon: const Icon(Icons.logout),
+                    ),
+                ]
               : null,
         ),
         body: authState.company == null

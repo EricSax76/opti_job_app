@@ -32,8 +32,10 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
                 builder: (_) => const CompanyProfileScreen(),
               ),
             );
+            break;
           case CompanyAccountAction.logout:
             context.read<CompanyAuthCubit>().logout();
+            break;
         }
       },
       itemBuilder: (context) => [
