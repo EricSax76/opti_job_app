@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/section_header.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class HeroSection extends StatelessWidget {
   const HeroSection({super.key, required this.onSeeOffers});
@@ -8,74 +12,52 @@ class HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const accent = Color(0xFF3FA7A0);
-    const border = Color(0xFFE2E8F0);
+    final l10n = AppLocalizations.of(context)!;
 
-    return Container(
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(uiSpacing24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'TALENTO + IA',
-            style: TextStyle(
-              color: muted,
-              fontSize: 12,
-              letterSpacing: 2,
-              fontWeight: FontWeight.w600,
-            ),
+          SectionHeader(
+            tagline: l10n.heroTagline,
+            title: l10n.heroTitle,
+            subtitle: l10n.heroDescription,
+            titleFontSize: 30,
           ),
-          const SizedBox(height: 12),
-          Text(
-            'Impulsa tu talento con IA',
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              color: ink,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Una plataforma inteligente que conecta candidatos y empresas usando datos en tiempo real.',
-            style: TextStyle(color: muted, fontSize: 16, height: 1.5),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: uiSpacing24),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: uiSpacing12,
+            runSpacing: uiSpacing12,
             children: [
               FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: ink,
+                  backgroundColor: uiInk,
                   foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: uiSpacing20,
+                    vertical: uiSpacing12,
+                  ),
                 ),
                 onPressed: () => context.go('/CandidateLogin'),
-                child: const Text('Soy candidato'),
+                child: Text(l10n.heroCandidateCta),
               ),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: ink,
-                  side: const BorderSide(color: border),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  foregroundColor: uiInk,
+                  side: const BorderSide(color: uiBorder),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: uiSpacing20,
+                    vertical: uiSpacing12,
+                  ),
                 ),
                 onPressed: () => context.go('/CompanyLogin'),
-                child: const Text('Soy empresa'),
+                child: Text(l10n.heroCompanyCta),
               ),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: accent),
+                style: TextButton.styleFrom(foregroundColor: uiAccent),
                 onPressed: onSeeOffers,
-                child: const Text('Ver ofertas activas'),
+                child: Text(l10n.heroOffersCta),
               ),
             ],
           ),

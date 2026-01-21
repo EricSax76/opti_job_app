@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:5000",
+      "http://localhost:8080",
+      "http://localhost:3000",
+      "https://tu-dominio.com"
+    ],
+    "method": ["GET", "HEAD"],
+    "responseHeader": ["Content-Type", "Authorization"],
+    "maxAgeSeconds": 3600
+  }
+]

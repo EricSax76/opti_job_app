@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
 
 class CurriculumAttachmentCard extends StatelessWidget {
   const CurriculumAttachmentCard({
@@ -21,17 +22,13 @@ class CurriculumAttachmentCard extends StatelessWidget {
         ? null
         : 'Actualizado: ${_formatDate(attachment.updatedAt!)}';
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: cvBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cvBorder),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(uiSpacing12 + 2),
+      borderRadius: uiTileRadius,
       child: Row(
         children: [
-          const Icon(Icons.description_outlined, color: cvMuted),
-          const SizedBox(width: 12),
+          const Icon(Icons.description_outlined, color: uiMuted),
+          const SizedBox(width: uiSpacing12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,19 +38,20 @@ class CurriculumAttachmentCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: cvInk,
-                  ),
+                        fontWeight: FontWeight.w600,
+                        color: uiInk,
+                      ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: uiSpacing4),
                 Text(
                   [
                     sizeLabel,
                     if (updatedLabel != null) updatedLabel,
                   ].join(' · '),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: cvMuted),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: uiMuted),
                 ),
               ],
             ),
@@ -61,7 +59,7 @@ class CurriculumAttachmentCard extends StatelessWidget {
           IconButton(
             tooltip: 'Eliminar',
             onPressed: isBusy ? null : onDelete,
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline, size: 20),
           ),
         ],
       ),
@@ -77,9 +75,8 @@ class CurriculumAttachmentCard extends StatelessWidget {
       size /= 1024;
       unitIndex++;
     }
-    final fixed = unitIndex == 0
-        ? size.toStringAsFixed(0)
-        : size.toStringAsFixed(1);
+    final fixed =
+        unitIndex == 0 ? size.toStringAsFixed(0) : size.toStringAsFixed(1);
     return '$fixed ${units[unitIndex]}';
   }
 
@@ -88,3 +85,4 @@ class CurriculumAttachmentCard extends StatelessWidget {
     return '${two(date.day)}/${two(date.month)}/${date.year}';
   }
 }
+

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
+
 class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
   const AppNavBar({super.key});
 
@@ -9,8 +12,9 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const divider = Color(0xFFE2E8F0);
+    const ink = uiInk;
+    const divider = uiBorder;
+    final l10n = AppLocalizations.of(context)!;
 
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -30,7 +34,7 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
             textStyle: const TextStyle(fontWeight: FontWeight.w500),
           ),
           onPressed: () => context.go('/CandidateLogin'),
-          child: const Text('Candidato'),
+          child: Text(l10n.navCandidate),
         ),
         TextButton(
           style: TextButton.styleFrom(
@@ -38,7 +42,7 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
             textStyle: const TextStyle(fontWeight: FontWeight.w500),
           ),
           onPressed: () => context.go('/job-offer'),
-          child: const Text('Ofertas'),
+          child: Text(l10n.navOffers),
         ),
         TextButton(
           style: TextButton.styleFrom(
@@ -46,7 +50,7 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
             textStyle: const TextStyle(fontWeight: FontWeight.w500),
           ),
           onPressed: () => context.go('/CompanyLogin'),
-          child: const Text('Empresa'),
+          child: Text(l10n.navCompany),
         ),
         const SizedBox(width: 8),
       ],

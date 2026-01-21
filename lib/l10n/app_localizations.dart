@@ -141,6 +141,198 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Aún no hay postulaciones para esta oferta.'**
   String get applicantsEmpty;
+
+  /// Etiqueta superior del hero en la landing.
+  ///
+  /// In es, this message translates to:
+  /// **'Talento + IA'**
+  String get heroTagline;
+
+  /// Título principal del hero.
+  ///
+  /// In es, this message translates to:
+  /// **'Impulsa tu talento con IA'**
+  String get heroTitle;
+
+  /// Descripción principal del hero.
+  ///
+  /// In es, this message translates to:
+  /// **'Una plataforma inteligente que conecta candidatos y empresas usando datos en tiempo real.'**
+  String get heroDescription;
+
+  /// CTA para candidatos en el hero.
+  ///
+  /// In es, this message translates to:
+  /// **'Soy candidato'**
+  String get heroCandidateCta;
+
+  /// CTA para empresas en el hero.
+  ///
+  /// In es, this message translates to:
+  /// **'Soy empresa'**
+  String get heroCompanyCta;
+
+  /// CTA para ver ofertas activas.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver ofertas activas'**
+  String get heroOffersCta;
+
+  /// Título de la sección de beneficios para candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Beneficios para candidatos'**
+  String get candidateBenefitsTitle;
+
+  /// Descripción de la sección de beneficios para candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibe oportunidades diseñadas para tu perfil con una experiencia simple y directa.'**
+  String get candidateBenefitsDescription;
+
+  /// Beneficio de ofertas personalizadas para candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Ofertas personalizadas según tus habilidades'**
+  String get candidateBenefitPersonalizedOffers;
+
+  /// Beneficio de recomendaciones por IA para candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Recomendaciones inteligentes impulsadas por IA'**
+  String get candidateBenefitAiRecommendations;
+
+  /// Beneficio de procesos más rápidos para candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Procesos más rápidos'**
+  String get candidateBenefitFasterProcesses;
+
+  /// Título de la sección de cómo funciona.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Cómo funciona?'**
+  String get howItWorksTitle;
+
+  /// Descripción de la sección de cómo funciona.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuatro pasos claros para acelerar tus procesos de selección.'**
+  String get howItWorksDescription;
+
+  /// Paso 1 de la sección cómo funciona.
+  ///
+  /// In es, this message translates to:
+  /// **'Regístrate como empresa o candidato'**
+  String get howItWorksStepRegister;
+
+  /// Paso 2 de la sección cómo funciona.
+  ///
+  /// In es, this message translates to:
+  /// **'Publica ofertas o añade tu experiencia'**
+  String get howItWorksStepPublish;
+
+  /// Paso 3 de la sección cómo funciona.
+  ///
+  /// In es, this message translates to:
+  /// **'La IA conecta talento con oportunidades'**
+  String get howItWorksStepAiMatch;
+
+  /// Paso 4 de la sección cómo funciona.
+  ///
+  /// In es, this message translates to:
+  /// **'Agenda entrevistas con herramientas automatizadas'**
+  String get howItWorksStepSchedule;
+
+  /// Título de la sección CTA.
+  ///
+  /// In es, this message translates to:
+  /// **'Da el salto con OPTIJOB'**
+  String get ctaTitle;
+
+  /// Descripción de la sección CTA.
+  ///
+  /// In es, this message translates to:
+  /// **'Configura tu cuenta en minutos y empieza a recibir recomendaciones personalizadas.'**
+  String get ctaDescription;
+
+  /// CTA para registrar empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar empresa'**
+  String get ctaCompanyRegister;
+
+  /// CTA para registrar candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Registrar candidato'**
+  String get ctaCandidateRegister;
+
+  /// CTA para ver ofertas.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver ofertas'**
+  String get ctaOffers;
+
+  /// Saludo del onboarding con nombre.
+  ///
+  /// In es, this message translates to:
+  /// **'Hola, {name} 👋'**
+  String onboardingGreeting(Object name);
+
+  /// Mensaje principal del onboarding.
+  ///
+  /// In es, this message translates to:
+  /// **'Bienvenido a tu espacio personalizado. Antes de continuar, revisa tu perfil y completa los datos clave.'**
+  String get onboardingMessage;
+
+  /// CTA de confirmación del onboarding.
+  ///
+  /// In es, this message translates to:
+  /// **'Entendido'**
+  String get onboardingConfirmCta;
+
+  /// Nombre por defecto para candidatos en onboarding.
+  ///
+  /// In es, this message translates to:
+  /// **'Candidato'**
+  String get onboardingDefaultCandidateName;
+
+  /// Nombre por defecto para empresas en onboarding.
+  ///
+  /// In es, this message translates to:
+  /// **'Empresa'**
+  String get onboardingDefaultCompanyName;
+
+  /// Etiqueta de navegación para candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Candidato'**
+  String get navCandidate;
+
+  /// Etiqueta de navegación para ofertas.
+  ///
+  /// In es, this message translates to:
+  /// **'Ofertas'**
+  String get navOffers;
+
+  /// Etiqueta de navegación para empresas.
+  ///
+  /// In es, this message translates to:
+  /// **'Empresa'**
+  String get navCompany;
+
+  /// Texto del footer con el año actual.
+  ///
+  /// In es, this message translates to:
+  /// **'© {year} OPTIJOB. Todos los derechos reservados.'**
+  String footerCopyright(Object year);
+
+  /// Título de la aplicación.
+  ///
+  /// In es, this message translates to:
+  /// **'Optijob App'**
+  String get appTitle;
 }
 
 class _AppLocalizationsDelegate

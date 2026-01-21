@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/l10n/app_localizations.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/home/widgets/highlight_list.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class FeatureSection extends StatelessWidget {
   const FeatureSection({super.key});
@@ -8,27 +10,16 @@ class FeatureSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-    final ink = colorScheme.onSurface;
-    final muted = colorScheme.onSurfaceVariant;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.aiOptimizationTitle,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            color: ink,
-          ),
+        SectionHeader(
+          title: l10n.aiOptimizationTitle,
+          subtitle: l10n.aiOptimizationDescription,
+          titleFontSize: 22,
         ),
-        const SizedBox(height: 12),
-        Text(
-          l10n.aiOptimizationDescription,
-          style: TextStyle(color: muted, fontSize: 16, height: 1.5),
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: uiSpacing16),
         HighlightList(
           items: [
             l10n.aiFeatureAnalyzeProfiles,

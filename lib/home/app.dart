@@ -12,7 +12,8 @@ class InfoJobsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Optijob App',
+      onGenerateTitle: (context) =>
+          AppLocalizations.of(context)?.appTitle ?? 'Opti Job',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

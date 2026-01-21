@@ -1,35 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/theme/app_input_theme.dart';
+import 'package:opti_job_app/core/theme/app_button_theme.dart';
 
 class AppTheme {
-  static const _ink = Color(0xFF0F172A);
-  static const _muted = Color(0xFF475569);
-
   static ThemeData get light {
     final base = ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.indigo,
-      ).copyWith(onSurface: _ink, onSurfaceVariant: _muted),
+      colorScheme: ColorScheme.fromSeed(seedColor: uiAccent).copyWith(
+        surface: uiWhite,
+        onSurface: uiInk,
+        onSurfaceVariant: uiMuted,
+        primary: uiInk,
+        secondary: uiAccent,
+        error: uiError,
+      ),
     );
 
     return base.copyWith(
-      scaffoldBackgroundColor: Colors.grey[50],
-      appBarTheme: const AppBarTheme(centerTitle: false, elevation: 0),
-      inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
-        isDense: true,
+      scaffoldBackgroundColor: uiBackground,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: uiWhite,
+        foregroundColor: uiInk,
+        centerTitle: false,
+        elevation: 0,
       ),
+      inputDecorationTheme: AppInputTheme.theme,
+      filledButtonTheme: AppButtonTheme.filledButtonTheme,
+      outlinedButtonTheme: AppButtonTheme.outlinedButtonTheme,
+      textButtonTheme: AppButtonTheme.textButtonTheme,
       textTheme: base.textTheme.copyWith(
         headlineSmall: const TextStyle(
+          color: uiInk,
           fontWeight: FontWeight.w900,
           fontSize: 24,
           letterSpacing: -1,
         ),
-        titleMedium: const TextStyle(
-          fontWeight: FontWeight.bold,
-        ),
-        bodyMedium: const TextStyle(
-          color: _muted,
+        titleMedium: const TextStyle(color: uiInk, fontWeight: FontWeight.bold),
+        bodyMedium: const TextStyle(color: uiMuted),
+      ),
+      cardTheme: CardThemeData(
+        color: uiWhite,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(uiCardRadius),
+          side: BorderSide(color: uiBorder),
         ),
       ),
     );

@@ -1,64 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/section_header.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class CallToActionSection extends StatelessWidget {
   const CallToActionSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const accent = Color(0xFF3FA7A0);
-    const border = Color(0xFFE2E8F0);
+    final l10n = AppLocalizations.of(context)!;
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F7F6),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: border),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(uiSpacing24),
+      backgroundColor: uiAccentSoft,
+      borderRadius: uiTileRadius,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Da el salto con OPTIJOB',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: ink,
-            ),
+          SectionHeader(
+            title: l10n.ctaTitle,
+            subtitle: l10n.ctaDescription,
+            titleFontSize: 22,
           ),
-          const SizedBox(height: 12),
-          Text(
-            'Configura tu cuenta en minutos y empieza a recibir recomendaciones personalizadas.',
-            style: TextStyle(color: muted, fontSize: 16, height: 1.5),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: uiSpacing16),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: uiSpacing12,
+            runSpacing: uiSpacing12,
             children: [
               FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: ink,
+                  backgroundColor: uiInk,
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => context.go('/companyregister'),
-                child: const Text('Registrar empresa'),
+                child: Text(l10n.ctaCompanyRegister),
               ),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: ink,
-                  side: const BorderSide(color: border),
+                  foregroundColor: uiInk,
+                  side: const BorderSide(color: uiBorder),
                 ),
                 onPressed: () => context.go('/candidateregister'),
-                child: const Text('Registrar candidato'),
+                child: Text(l10n.ctaCandidateRegister),
               ),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: accent),
+                style: TextButton.styleFrom(foregroundColor: uiAccent),
                 onPressed: () => context.go('/job-offer'),
-                child: const Text('Ver ofertas'),
+                child: Text(l10n.ctaOffers),
               ),
             ],
           ),

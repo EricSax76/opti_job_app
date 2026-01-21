@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
 
 enum CompanyAccountAction { profile, logout }
@@ -16,8 +17,8 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFF8FAFC);
-    const muted = Color(0xFF64748B);
+    const background = uiBackground;
+    const muted = uiMuted;
 
     final company = context.watch<CompanyAuthCubit>().state.company;
     final avatarUrl = company?.avatarUrl;

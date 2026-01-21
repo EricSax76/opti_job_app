@@ -90,8 +90,64 @@ class AppRouter {
         ),
         GoRoute(
           path: '/CandidateDashboard',
+          name: 'candidate-dashboard-legacy',
+          builder: (context, state) {
+            final uid = context
+                    .read<CandidateAuthCubit>()
+                    .state
+                    .candidate
+                    ?.uid ??
+                '';
+            return CandidateDashboardScreen(uid: uid, initialIndex: 0);
+          },
+        ),
+        GoRoute(
+          path: '/candidate/:uid/dashboard',
           name: 'candidate-dashboard',
-          builder: (context, state) => const CandidateDashboardScreen(),
+          builder: (context, state) => CandidateDashboardScreen(
+            uid: state.pathParameters['uid'] ?? '',
+            initialIndex: 0,
+          ),
+        ),
+        GoRoute(
+          path: '/candidate/:uid/applications',
+          name: 'candidate-applications',
+          builder: (context, state) => CandidateDashboardScreen(
+            uid: state.pathParameters['uid'] ?? '',
+            initialIndex: 1,
+          ),
+        ),
+        GoRoute(
+          path: '/candidate/:uid/interviews',
+          name: 'candidate-interviews',
+          builder: (context, state) => CandidateDashboardScreen(
+            uid: state.pathParameters['uid'] ?? '',
+            initialIndex: 2,
+          ),
+        ),
+        GoRoute(
+          path: '/candidate/:uid/cv',
+          name: 'candidate-cv',
+          builder: (context, state) => CandidateDashboardScreen(
+            uid: state.pathParameters['uid'] ?? '',
+            initialIndex: 3,
+          ),
+        ),
+        GoRoute(
+          path: '/candidate/:uid/cover-letter',
+          name: 'candidate-cover-letter',
+          builder: (context, state) => CandidateDashboardScreen(
+            uid: state.pathParameters['uid'] ?? '',
+            initialIndex: 4,
+          ),
+        ),
+        GoRoute(
+          path: '/candidate/:uid/video-cv',
+          name: 'candidate-video-cv',
+          builder: (context, state) => CandidateDashboardScreen(
+            uid: state.pathParameters['uid'] ?? '',
+            initialIndex: 5,
+          ),
         ),
         GoRoute(
           path: '/DashboardCompany',
@@ -163,6 +219,7 @@ class AppRouter {
   String? _redirectLogic(BuildContext context, GoRouterState state) {
     final candidateAuthState = context.read<CandidateAuthCubit>().state;
     final companyAuthState = context.read<CompanyAuthCubit>().state;
+    final candidateUid = candidateAuthState.candidate?.uid ?? '';
 
     // Determine the active auth state based on who is authenticated
     final authState = candidateAuthState.isAuthenticated
@@ -176,10 +233,13 @@ class AppRouter {
         location == '/CompanyLogin' || location == '/companyregister';
     final bool onboardingRoute = location == '/onboarding';
     final bool companyArea = location.startsWith('/company');
+    final bool candidateArea = location.startsWith('/candidate/');
+    final routeUid = state.pathParameters['uid'];
 
     if (!authState.isAuthenticated) {
       if (onboardingRoute) return '/';
       if (location == '/CandidateDashboard') return '/CandidateLogin';
+      if (candidateArea) return '/CandidateLogin';
       if (location == '/DashboardCompany') return '/CompanyLogin';
       if (companyArea) return '/CompanyLogin';
       return null;
@@ -191,12 +251,12 @@ class AppRouter {
 
     if (!authState.needsOnboarding && onboardingRoute) {
       return authState.isCandidate
-          ? '/CandidateDashboard'
+          ? '/candidate/$candidateUid/dashboard'
           : '/DashboardCompany';
     }
 
     if (authState.isCandidate && location == '/DashboardCompany') {
-      return '/CandidateDashboard';
+      return '/candidate/$candidateUid/dashboard';
     }
 
     if (authState.isCompany && location == '/CandidateDashboard') {
@@ -204,15 +264,27 @@ class AppRouter {
     }
 
     if (authState.isCandidate && companyArea) {
-      return '/CandidateDashboard';
+      return '/candidate/$candidateUid/dashboard';
     }
 
     if (authState.isCandidate && (loggingInCandidate || loggingInCompany)) {
-      return '/CandidateDashboard';
+      return '/candidate/$candidateUid/dashboard';
     }
 
     if (authState.isCompany && (loggingInCandidate || loggingInCompany)) {
       return '/DashboardCompany';
+    }
+
+    if (authState.isCandidate && location == '/CandidateDashboard') {
+      return '/candidate/$candidateUid/dashboard';
+    }
+
+    if (authState.isCandidate &&
+        candidateArea &&
+        routeUid != null &&
+        routeUid.isNotEmpty &&
+        routeUid != candidateUid) {
+      return '/candidate/$candidateUid/dashboard';
     }
 
     return null;

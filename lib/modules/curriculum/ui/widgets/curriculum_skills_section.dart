@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_section_header.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
 
 class CurriculumSkillsSection extends StatefulWidget {
   const CurriculumSkillsSection({super.key, required this.skills});
@@ -34,25 +34,21 @@ class _CurriculumSkillsSectionState extends State<CurriculumSkillsSection> {
           title: 'Habilidades',
           subtitle: 'Agrega palabras clave',
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: uiSpacing12),
         Row(
           children: [
             Expanded(
-              child: TextField(
+              child: TextFormField(
                 controller: _skillController,
-                decoration: cvInputDecoration(labelText: 'Nueva habilidad'),
-                onSubmitted: (value) {
+                decoration: const InputDecoration(labelText: 'Nueva habilidad'),
+                onFieldSubmitted: (value) {
                   formCubit.addSkill(value);
                   _skillController.clear();
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: uiSpacing12),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: cvInk,
-                foregroundColor: Colors.white,
-              ),
               onPressed: () {
                 formCubit.addSkill(_skillController.text);
                 _skillController.clear();
@@ -61,10 +57,10 @@ class _CurriculumSkillsSectionState extends State<CurriculumSkillsSection> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: uiSpacing8,
+          runSpacing: uiSpacing8,
           children: [
             for (final skill in widget.skills)
               InputChip(
@@ -77,3 +73,4 @@ class _CurriculumSkillsSectionState extends State<CurriculumSkillsSection> {
     );
   }
 }
+

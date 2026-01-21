@@ -52,6 +52,13 @@ En `cloud_run/ai_service` tienes un servicio Node listo para Cloud Run con:
 2. Ejecuta `flutterfire configure` para tu app y plataformas objetivo. Esto generará/actualizará `lib/firebase_options.dart`.
 3. (Opcional) Usa los emuladores de Firebase cuando desarrolles localmente: `firebase emulators:start --only auth,firestore`.
 4. Prepara las colecciones `candidates`, `companies` y `jobOffers` con la estructura esperada (`id`, `name`, `email`, etc.) si necesitas datos de ejemplo.
+5. (Web) Configura CORS en Firebase Storage para servir imágenes desde la app web:
+
+```bash
+gsutil cors set storage.cors.json gs://<tu-bucket>
+```
+
+Si estás en desarrollo y el puerto cambia, añade el origen correspondiente en `storage.cors.json` o usa un origen fijo.
 
 ## Semillas y emuladores
 Contamos con un script sencillo que rellena datos de ejemplo para las colecciones clave cuando trabajas con el emulador de Firestore:

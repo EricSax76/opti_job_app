@@ -1,77 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/section_header.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class HowItWorksSection extends StatelessWidget {
   const HowItWorksSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
+    final l10n = AppLocalizations.of(context)!;
 
     final steps = [
-      'Regístrate como empresa o candidato',
-      'Publica ofertas o añade tu experiencia',
-      'La IA conecta talento con oportunidades',
-      'Agenda entrevistas con herramientas automatizadas',
+      l10n.howItWorksStepRegister,
+      l10n.howItWorksStepPublish,
+      l10n.howItWorksStepAiMatch,
+      l10n.howItWorksStepSchedule,
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '¿Cómo funciona?',
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            color: ink,
-          ),
+        SectionHeader(
+          title: l10n.howItWorksTitle,
+          subtitle: l10n.howItWorksDescription,
+          titleFontSize: 22,
         ),
-        const SizedBox(height: 16),
-        Text(
-          'Cuatro pasos claros para acelerar tus procesos de selección.',
-          style: const TextStyle(color: muted, fontSize: 16, height: 1.5),
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: uiSpacing16),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: steps.length,
           itemBuilder: (context, index) {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: border),
+              padding: const EdgeInsets.symmetric(vertical: uiSpacing8),
+              child: AppCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: uiSpacing16,
+                  vertical: uiSpacing12,
                 ),
+                borderRadius: uiTileRadius,
                 child: Row(
                   children: [
                     Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6F6),
+                        color: uiAccentSoft,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         '${index + 1}',
                         style: const TextStyle(
-                          color: ink,
+                          color: uiInk,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: uiSpacing12),
                     Expanded(
                       child: Text(
                         steps[index],
                         style: const TextStyle(
-                          color: ink,
+                          color: uiInk,
                           fontSize: 15,
                         ),
                       ),

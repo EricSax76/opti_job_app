@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
-import 'package:opti_job_app/auth/cubit/auth_status.dart';
+import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
@@ -22,7 +23,7 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
         .watch<CandidateAuthCubit>()
         .state;
     final isLoading = authState.status == AuthStatus.authenticating;
-    const background = Color(0xFFF8FAFC);
+    const background = uiBackground;
 
     return BlocListener<CandidateAuthCubit, CandidateAuthState>(
       listenWhen: (previous, current) =>
@@ -36,7 +37,12 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
         } else if (state.isAuthenticated &&
             state.status == AuthStatus.authenticated &&
             !state.needsOnboarding) {
-          context.go('/CandidateDashboard');
+          final uid = state.candidate?.uid;
+          if (uid != null && uid.isNotEmpty) {
+            context.go('/candidate/$uid/dashboard');
+          } else {
+            context.go('/CandidateDashboard');
+          }
         }
       },
       child: Scaffold(

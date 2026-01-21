@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/aplications/logic/application_service.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_view.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/interviews_view.dart';
@@ -14,7 +16,14 @@ import 'package:opti_job_app/modules/profiles/ui/pages/profile_screen.dart';
 import 'package:opti_job_app/modules/curriculum/ui/pages/curriculum_screen.dart';
 
 class CandidateDashboardScreen extends StatefulWidget {
-  const CandidateDashboardScreen({super.key});
+  const CandidateDashboardScreen({
+    super.key,
+    required this.uid,
+    required this.initialIndex,
+  });
+
+  final String uid;
+  final int initialIndex;
 
   @override
   State<CandidateDashboardScreen> createState() =>
@@ -24,28 +33,76 @@ class CandidateDashboardScreen extends StatefulWidget {
 class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  bool _isProgrammaticTabChange = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    final safeIndex = widget.initialIndex.clamp(0, 5);
+    _tabController = TabController(
+      length: 6,
+      vsync: this,
+      initialIndex: safeIndex,
+    );
+    _tabController.addListener(_handleTabChange);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant CandidateDashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final safeIndex = widget.initialIndex.clamp(0, 5);
+    if (safeIndex != _tabController.index) {
+      _isProgrammaticTabChange = true;
+      _tabController.index = safeIndex;
+    }
+  }
+
+  void _handleTabChange() {
+    if (_isProgrammaticTabChange) {
+      _isProgrammaticTabChange = false;
+      return;
+    }
+    if (_tabController.indexIsChanging) return;
+    final path = _pathForIndex(_tabController.index);
+    if (path != null) context.go(path);
+  }
+
+  String? _pathForIndex(int index) {
+    if (widget.uid.isEmpty) return null;
+    switch (index) {
+      case 0:
+        return '/candidate/${widget.uid}/dashboard';
+      case 1:
+        return '/candidate/${widget.uid}/applications';
+      case 2:
+        return '/candidate/${widget.uid}/interviews';
+      case 3:
+        return '/candidate/${widget.uid}/cv';
+      case 4:
+        return '/candidate/${widget.uid}/cover-letter';
+      case 5:
+        return '/candidate/${widget.uid}/video-cv';
+      default:
+        return '/candidate/${widget.uid}/dashboard';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<CandidateAuthCubit>().state;
     final profileState = context.watch<ProfileCubit>().state;
-    const background = Color(0xFFF8FAFC);
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF64748B);
-    const accent = Color(0xFF3FA7A0);
-    const border = Color(0xFFE2E8F0);
+    const background = uiBackground;
+    const ink = uiInk;
+    const muted = uiMuted;
+    const accent = uiAccent;
+    const border = uiBorder;
     final avatarUrl = profileState.candidate?.avatarUrl;
 
     return Scaffold(

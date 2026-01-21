@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class CompanyOffersHeader extends StatelessWidget {
   const CompanyOffersHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
+    const ink = uiInk;
+    const muted = uiMuted;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

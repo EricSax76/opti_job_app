@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/auth_form_card.dart';
 
 class CandidateLoginForm extends StatefulWidget {
   const CandidateLoginForm({
@@ -21,12 +23,6 @@ class _CandidateLoginFormState extends State<CandidateLoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  static const _background = Color(0xFFF8FAFC);
-  static const _ink = Color(0xFF0F172A);
-  static const _muted = Color(0xFF475569);
-  static const _border = Color(0xFFE2E8F0);
-  static const _accent = Color(0xFF3FA7A0);
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -36,107 +32,65 @@ class _CandidateLoginFormState extends State<CandidateLoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: _border),
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CANDIDATOS',
-                    style: const TextStyle(
-                      color: _muted,
-                      fontSize: 12,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Inicia sesión',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: _ink,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Accede a oportunidades personalizadas y procesos más rápidos.',
-                    style: TextStyle(color: _muted, fontSize: 15, height: 1.4),
-                  ),
-                  const SizedBox(height: 24),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: _inputDecoration(
-                      labelText: 'Correo electrónico',
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'El correo es obligatorio';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: _inputDecoration(labelText: 'Contraseña'),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'La contraseña es obligatoria';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _ink,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: widget.isLoading ? null : _submit,
-                      child: widget.isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : const Text('Entrar'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    style: TextButton.styleFrom(foregroundColor: _accent),
-                    onPressed: widget.onRegister,
-                    child: const Text('¿No tienes cuenta? Regístrate'),
-                  ),
-                ],
+    return AuthFormCard(
+      tagline: 'CANDIDATOS',
+      title: 'Inicia sesión',
+      subtitle: 'Accede a oportunidades personalizadas y procesos más rápidos.',
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(
+                labelText: 'Correo electrónico',
+                prefixIcon: Icon(Icons.email_outlined),
               ),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'El correo es obligatorio';
+                }
+                return null;
+              },
             ),
-          ),
+            const SizedBox(height: uiSpacing16),
+            TextFormField(
+              controller: _passwordController,
+              decoration: const InputDecoration(
+                labelText: 'Contraseña',
+                prefixIcon: Icon(Icons.lock_outline),
+              ),
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'La contraseña es obligatoria';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: uiSpacing24),
+            FilledButton(
+              onPressed: widget.isLoading ? null : _submit,
+              child: widget.isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(uiWhite),
+                      ),
+                    )
+                  : const Text('Entrar'),
+            ),
+            const SizedBox(height: uiSpacing12),
+            TextButton(
+              onPressed: widget.onRegister,
+              child: const Text('¿No tienes cuenta? Regístrate'),
+            ),
+          ],
         ),
       ),
     );
@@ -150,20 +104,5 @@ class _CandidateLoginFormState extends State<CandidateLoginForm> {
       _passwordController.text,
     );
   }
-
-  static InputDecoration _inputDecoration({required String labelText}) {
-    return InputDecoration(
-      labelText: labelText,
-      filled: true,
-      fillColor: _background,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _border),
-      ),
-    );
-  }
 }
+

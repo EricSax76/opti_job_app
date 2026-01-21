@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
+import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';

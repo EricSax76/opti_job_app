@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_detail_widgets.dart';
@@ -13,7 +14,7 @@ class JobOfferDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<CandidateAuthCubit>().state;
-    const background = Color(0xFFF8FAFC);
+    const background = uiBackground;
 
     return Scaffold(
       backgroundColor: background,

@@ -31,5 +31,139 @@
     "applicantsEmpty": "Aún no hay postulaciones para esta oferta.",
     "@applicantsEmpty": {
         "description": "Estado vacío cuando no hay aplicantes."
+    },
+    "heroTagline": "Talento + IA",
+    "@heroTagline": {
+        "description": "Etiqueta superior del hero en la landing."
+    },
+    "heroTitle": "Impulsa tu talento con IA",
+    "@heroTitle": {
+        "description": "Título principal del hero."
+    },
+    "heroDescription": "Una plataforma inteligente que conecta candidatos y empresas usando datos en tiempo real.",
+    "@heroDescription": {
+        "description": "Descripción principal del hero."
+    },
+    "heroCandidateCta": "Soy candidato",
+    "@heroCandidateCta": {
+        "description": "CTA para candidatos en el hero."
+    },
+    "heroCompanyCta": "Soy empresa",
+    "@heroCompanyCta": {
+        "description": "CTA para empresas en el hero."
+    },
+    "heroOffersCta": "Ver ofertas activas",
+    "@heroOffersCta": {
+        "description": "CTA para ver ofertas activas."
+    },
+    "candidateBenefitsTitle": "Beneficios para candidatos",
+    "@candidateBenefitsTitle": {
+        "description": "Título de la sección de beneficios para candidatos."
+    },
+    "candidateBenefitsDescription": "Recibe oportunidades diseñadas para tu perfil con una experiencia simple y directa.",
+    "@candidateBenefitsDescription": {
+        "description": "Descripción de la sección de beneficios para candidatos."
+    },
+    "candidateBenefitPersonalizedOffers": "Ofertas personalizadas según tus habilidades",
+    "@candidateBenefitPersonalizedOffers": {
+        "description": "Beneficio de ofertas personalizadas para candidatos."
+    },
+    "candidateBenefitAiRecommendations": "Recomendaciones inteligentes impulsadas por IA",
+    "@candidateBenefitAiRecommendations": {
+        "description": "Beneficio de recomendaciones por IA para candidatos."
+    },
+    "candidateBenefitFasterProcesses": "Procesos más rápidos",
+    "@candidateBenefitFasterProcesses": {
+        "description": "Beneficio de procesos más rápidos para candidatos."
+    },
+    "howItWorksTitle": "¿Cómo funciona?",
+    "@howItWorksTitle": {
+        "description": "Título de la sección de cómo funciona."
+    },
+    "howItWorksDescription": "Cuatro pasos claros para acelerar tus procesos de selección.",
+    "@howItWorksDescription": {
+        "description": "Descripción de la sección de cómo funciona."
+    },
+    "howItWorksStepRegister": "Regístrate como empresa o candidato",
+    "@howItWorksStepRegister": {
+        "description": "Paso 1 de la sección cómo funciona."
+    },
+    "howItWorksStepPublish": "Publica ofertas o añade tu experiencia",
+    "@howItWorksStepPublish": {
+        "description": "Paso 2 de la sección cómo funciona."
+    },
+    "howItWorksStepAiMatch": "La IA conecta talento con oportunidades",
+    "@howItWorksStepAiMatch": {
+        "description": "Paso 3 de la sección cómo funciona."
+    },
+    "howItWorksStepSchedule": "Agenda entrevistas con herramientas automatizadas",
+    "@howItWorksStepSchedule": {
+        "description": "Paso 4 de la sección cómo funciona."
+    },
+    "ctaTitle": "Da el salto con OPTIJOB",
+    "@ctaTitle": {
+        "description": "Título de la sección CTA."
+    },
+    "ctaDescription": "Configura tu cuenta en minutos y empieza a recibir recomendaciones personalizadas.",
+    "@ctaDescription": {
+        "description": "Descripción de la sección CTA."
+    },
+    "ctaCompanyRegister": "Registrar empresa",
+    "@ctaCompanyRegister": {
+        "description": "CTA para registrar empresa."
+    },
+    "ctaCandidateRegister": "Registrar candidato",
+    "@ctaCandidateRegister": {
+        "description": "CTA para registrar candidato."
+    },
+    "ctaOffers": "Ver ofertas",
+    "@ctaOffers": {
+        "description": "CTA para ver ofertas."
+    },
+    "onboardingGreeting": "Hola, {name} 👋",
+    "@onboardingGreeting": {
+        "description": "Saludo del onboarding con nombre.",
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "onboardingMessage": "Bienvenido a tu espacio personalizado. Antes de continuar, revisa tu perfil y completa los datos clave.",
+    "@onboardingMessage": {
+        "description": "Mensaje principal del onboarding."
+    },
+    "onboardingConfirmCta": "Entendido",
+    "@onboardingConfirmCta": {
+        "description": "CTA de confirmación del onboarding."
+    },
+    "onboardingDefaultCandidateName": "Candidato",
+    "@onboardingDefaultCandidateName": {
+        "description": "Nombre por defecto para candidatos en onboarding."
+    },
+    "onboardingDefaultCompanyName": "Empresa",
+    "@onboardingDefaultCompanyName": {
+        "description": "Nombre por defecto para empresas en onboarding."
+    },
+    "navCandidate": "Candidato",
+    "@navCandidate": {
+        "description": "Etiqueta de navegación para candidatos."
+    },
+    "navOffers": "Ofertas",
+    "@navOffers": {
+        "description": "Etiqueta de navegación para ofertas."
+    },
+    "navCompany": "Empresa",
+    "@navCompany": {
+        "description": "Etiqueta de navegación para empresas."
+    },
+    "footerCopyright": "© {year} OPTIJOB. Todos los derechos reservados.",
+    "@footerCopyright": {
+        "description": "Texto del footer con el año actual.",
+        "placeholders": {
+            "year": {}
+        }
+    },
+    "appTitle": "Optijob App",
+    "@appTitle": {
+        "description": "Título de la aplicación."
     }
 }

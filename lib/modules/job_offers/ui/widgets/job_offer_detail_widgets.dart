@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
@@ -56,8 +57,8 @@ class JobOfferDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const muted = Color(0xFF64748B);
-    const border = Color(0xFFE2E8F0);
+    const muted = uiMuted;
+    const border = uiBorder;
 
     if (state.status == JobOfferDetailStatus.loading) {
       return const Center(child: CircularProgressIndicator());
@@ -70,7 +71,7 @@ class JobOfferDetailBody extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(uiCardRadius),
             border: Border.all(color: border),
           ),
           child: Text(
@@ -88,7 +89,7 @@ class JobOfferDetailBody extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(uiCardRadius),
             border: Border.all(color: border),
           ),
           child: const Text(

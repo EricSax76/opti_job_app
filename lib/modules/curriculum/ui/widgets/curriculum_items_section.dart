@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
 
 class CurriculumItemsSection extends StatelessWidget {
   const CurriculumItemsSection({
@@ -30,68 +31,94 @@ class CurriculumItemsSection extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
             TextButton.icon(
               onPressed: onAdd,
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add, size: 20),
               label: const Text('Agregar'),
             ),
           ],
         ),
         if (items.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: cvBackground,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cvBorder),
-            ),
+          AppCard(
+            padding: const EdgeInsets.all(uiSpacing16),
+            borderRadius: uiTileRadius,
             child: Text(
               emptyHint,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: cvMuted),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: uiMuted),
             ),
           )
         else
           Column(
             children: [
               for (var i = 0; i < items.length; i++)
-                Card(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  child: ListTile(
-                    title: Text(
-                      items[i].title.isEmpty ? 'Sin título' : items[i].title,
-                    ),
-                    subtitle: Text(
-                      [
-                        if (items[i].subtitle.trim().isNotEmpty)
-                          items[i].subtitle.trim(),
-                        if (items[i].period.trim().isNotEmpty)
-                          items[i].period.trim(),
-                      ].join(' · '),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) async {
-                        if (value == 'edit') {
-                          await onEdit(i, items[i]);
-                        } else if (value == 'remove') {
-                          onRemove(i);
-                        }
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Editar')),
-                        PopupMenuItem(value: 'remove', child: Text('Eliminar')),
-                      ],
-                    ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: uiSpacing8),
+                  child: AppCard(
+                    padding: EdgeInsets.zero,
+                    borderRadius: uiTileRadius,
                     onTap: () => onEdit(i, items[i]),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: uiSpacing12,
+                        vertical: uiSpacing4,
+                      ),
+                      title: Text(
+                        items[i].title.isEmpty ? 'Sin título' : items[i].title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        [
+                          if (items[i].subtitle.trim().isNotEmpty)
+                            items[i].subtitle.trim(),
+                          if (items[i].period.trim().isNotEmpty)
+                            items[i].period.trim(),
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, size: 20),
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            await onEdit(i, items[i]);
+                          } else if (value == 'remove') {
+                            onRemove(i);
+                          }
+                        },
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: ListTile(
+                              leading: Icon(Icons.edit_outlined, size: 20),
+                              title: Text('Editar'),
+                              contentPadding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'remove',
+                            child: ListTile(
+                              leading: Icon(Icons.delete_outline,
+                                  size: 20, color: Colors.red),
+                              title: Text('Eliminar',
+                                  style: TextStyle(color: Colors.red)),
+                              contentPadding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -122,22 +149,22 @@ Future<CurriculumItem?> showCurriculumItemDialog(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              TextFormField(
                 controller: titleController,
                 decoration: const InputDecoration(labelText: 'Título'),
               ),
-              const SizedBox(height: 8),
-              TextField(
+              const SizedBox(height: uiSpacing12),
+              TextFormField(
                 controller: subtitleController,
                 decoration: const InputDecoration(labelText: 'Subtítulo'),
               ),
-              const SizedBox(height: 8),
-              TextField(
+              const SizedBox(height: uiSpacing12),
+              TextFormField(
                 controller: periodController,
                 decoration: const InputDecoration(labelText: 'Periodo'),
               ),
-              const SizedBox(height: 8),
-              TextField(
+              const SizedBox(height: uiSpacing12),
+              TextFormField(
                 controller: descriptionController,
                 maxLines: 4,
                 decoration: const InputDecoration(labelText: 'Descripción'),
@@ -173,3 +200,4 @@ Future<CurriculumItem?> showCurriculumItemDialog(
     descriptionController.dispose();
   });
 }
+

@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
 class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({
     super.key,
@@ -15,9 +17,9 @@ class ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFFF8FAFC);
-    const inkColor = Color(0xFF0F172A);
-    const mutedColor = Color(0xFF475569);
+    const backgroundColor = uiBackground;
+    const inkColor = uiInk;
+    const mutedColor = uiMuted;
 
     final imageProvider = _getImageProvider();
 
@@ -37,7 +39,7 @@ class ProfileAvatar extends StatelessWidget {
             right: 0,
             child: InkWell(
               onTap: onPickImage,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(uiTileRadius),
               child: const CircleAvatar(
                 radius: 16,
                 backgroundColor: inkColor,

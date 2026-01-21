@@ -44,4 +44,11 @@ class CurriculumRepository {
       attachment: attachment,
     );
   }
+
+  String mapException(Object error) {
+    if (error is Exception && error.toString().contains('permission-denied')) {
+      return 'Permiso denegado al acceder a los datos.';
+    }
+    return error.toString();
+  }
 }

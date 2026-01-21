@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
@@ -49,7 +50,7 @@ class ApplicationsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFF8FAFC);
+    const background = uiBackground;
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: applications.length,

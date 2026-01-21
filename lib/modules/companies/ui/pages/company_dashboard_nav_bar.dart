@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class CompanyDashboardNavBar extends StatelessWidget {
   const CompanyDashboardNavBar({super.key, required this.controller});
@@ -7,10 +8,10 @@ class CompanyDashboardNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const muted = Color(0xFF64748B);
-    const accent = Color(0xFF3FA7A0);
-    const border = Color(0xFFE2E8F0);
-    const ink = Color(0xFF0F172A);
+    const muted = uiMuted;
+    const accent = uiAccent;
+    const border = uiBorder;
+    const ink = uiInk;
 
     return Material(
       color: Colors.white,

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
-const cvBackground = Color(0xFFF8FAFC);
-const cvInk = Color(0xFF0F172A);
-const cvMuted = Color(0xFF475569);
-const cvBorder = Color(0xFFE2E8F0);
-const cvAccent = Color(0xFF3FA7A0);
+const cvBackground = uiBackground;
+const cvInk = uiInk;
+const cvMuted = uiMuted;
+const cvBorder = uiBorder;
+const cvAccent = uiAccent;
 
 InputDecoration cvInputDecoration({required String labelText}) {
   return InputDecoration(
@@ -12,15 +13,15 @@ InputDecoration cvInputDecoration({required String labelText}) {
     filled: true,
     fillColor: cvBackground,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(uiFieldRadius),
       borderSide: const BorderSide(color: cvBorder),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(uiFieldRadius),
       borderSide: const BorderSide(color: cvBorder),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(uiFieldRadius),
       borderSide: const BorderSide(color: cvAccent),
     ),
   );

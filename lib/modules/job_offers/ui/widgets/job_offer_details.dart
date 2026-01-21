@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
 
@@ -9,10 +11,6 @@ class JobOfferDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF64748B);
-    const border = Color(0xFFE2E8F0);
-
     final description = offer.description.trim().isEmpty
         ? 'Sin descripción.'
         : offer.description.trim();
@@ -27,15 +25,15 @@ class JobOfferDetails extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          _SectionCard(
+          SectionCard(
             title: 'Descripción',
             child: Text(
               description,
-              style: const TextStyle(color: ink, height: 1.5),
+              style: const TextStyle(color: uiInk, height: 1.5),
             ),
           ),
-          const SizedBox(height: 12),
-          _SectionCard(
+          const SizedBox(height: uiSpacing12),
+          SectionCard(
             title: 'Detalles',
             child: Column(
               children: [
@@ -50,66 +48,23 @@ class JobOfferDetails extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: border),
-            ),
+          const SizedBox(height: uiSpacing16),
+          AppCard(
+            padding: const EdgeInsets.all(uiSpacing12 + 2),
+            borderRadius: uiTileRadius,
             child: Row(
               children: const [
-                Icon(Icons.info_outline, color: muted),
-                SizedBox(width: 10),
+                Icon(Icons.info_outline, color: uiMuted),
+                SizedBox(width: uiSpacing12 - 2),
                 Expanded(
                   child: Text(
                     'Revisa los detalles y postúlate cuando estés listo.',
-                    style: TextStyle(color: muted, height: 1.4),
+                    style: TextStyle(color: uiMuted, height: 1.4),
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const border = Color(0xFFE2E8F0);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: ink,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          child,
         ],
       ),
     );
@@ -124,25 +79,24 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF64748B);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: uiSpacing12 - 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 92,
+            width: 100,
             child: Text(
               label,
-              style: const TextStyle(color: muted, fontWeight: FontWeight.w700),
+              style:
+                  const TextStyle(color: uiMuted, fontWeight: FontWeight.w700),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: uiSpacing12 - 2),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: ink, height: 1.35),
+              style: const TextStyle(color: uiInk, height: 1.35),
             ),
           ),
         ],
@@ -150,3 +104,4 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
+

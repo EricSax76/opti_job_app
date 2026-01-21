@@ -1,6 +1,6 @@
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
-import 'package:opti_job_app/auth/cubit/auth_status.dart';
-import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthState
+import 'package:opti_job_app/auth/cubits/auth_status.dart';
+import 'package:opti_job_app/auth/cubits/auth_cubit.dart'; // Import the base AuthState
 
 class CandidateAuthState extends AuthState {
   const CandidateAuthState({

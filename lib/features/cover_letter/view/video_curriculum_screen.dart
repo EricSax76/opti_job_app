@@ -156,11 +156,9 @@ class _UploadedVideoStatus extends StatelessWidget {
                 children: [
                   const Icon(Icons.cloud_off_outlined),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Sin videocurrículum subido',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+                  Text(
+                    'Sin videocurrículum subido',
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
               ),
@@ -193,11 +191,9 @@ class _UploadedVideoStatus extends StatelessWidget {
                   children: [
                     const Icon(Icons.cloud_done_outlined),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Videocurrículum subido',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+                    Text(
+                      'Videocurrículum subido',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                     if (canPlay)
                       IconButton(
@@ -272,13 +268,11 @@ class _RecordedVideoStatus extends StatelessWidget {
                   hasRecorded ? Icons.videocam_outlined : Icons.videocam_off_outlined,
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    hasRecorded
-                        ? 'Vídeo grabado (local)'
-                        : 'Aún no grabaste un vídeo',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                Text(
+                  hasRecorded
+                      ? 'Vídeo grabado (local)'
+                      : 'Aún no grabaste un vídeo',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
                 if (hasRecorded && localUri != null)
                   IconButton(

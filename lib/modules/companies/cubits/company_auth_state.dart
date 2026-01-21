@@ -1,6 +1,6 @@
 import 'package:opti_job_app/modules/companies/models/company.dart';
-import 'package:opti_job_app/auth/cubit/auth_status.dart';
-import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthState
+import 'package:opti_job_app/auth/cubits/auth_status.dart';
+import 'package:opti_job_app/auth/cubits/auth_cubit.dart'; // Import the base AuthState
 
 class CompanyAuthState extends AuthState {
   const CompanyAuthState({

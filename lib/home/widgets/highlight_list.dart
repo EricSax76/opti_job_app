@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class HighlightList extends StatelessWidget {
   const HighlightList({super.key, required this.items});
@@ -7,24 +8,25 @@ class HighlightList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF3FA7A0);
-    const ink = Color(0xFF0F172A);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items
           .map(
             (item) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: uiSpacing4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.check_circle_outline, color: accent, size: 20),
-                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    color: uiAccent,
+                    size: 20,
+                  ),
+                  const SizedBox(width: uiSpacing8),
                   Expanded(
                     child: Text(
                       item,
-                      style: const TextStyle(color: ink, height: 1.4),
+                      style: const TextStyle(color: uiInk, height: 1.4),
                     ),
                   ),
                 ],

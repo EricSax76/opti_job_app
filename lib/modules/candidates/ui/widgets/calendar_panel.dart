@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
+import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/features/calendar/models/calendar_event.dart';
 
 class CalendarPanel extends StatelessWidget {

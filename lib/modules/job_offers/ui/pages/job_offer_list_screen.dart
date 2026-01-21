@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/section_header.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
+import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 
 class JobOfferListScreen extends StatelessWidget {
@@ -12,47 +17,43 @@ class JobOfferListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppNavBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Ofertas activas',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text('Encuentra tu próximo reto profesional.'),
-            const SizedBox(height: 16),
-            Expanded(
-              child: BlocBuilder<JobOffersCubit, JobOffersState>(
-                builder: (context, state) {
-                  if (state.status == JobOffersStatus.loading ||
-                      state.status == JobOffersStatus.initial) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+      body: BlocBuilder<JobOffersCubit, JobOffersState>(
+        builder: (context, state) {
+          if (state.status == JobOffersStatus.loading ||
+              state.status == JobOffersStatus.initial) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                  if (state.status == JobOffersStatus.failure) {
-                    return Center(
-                      child: Text(
-                        state.errorMessage ?? 'Error al cargar las ofertas.',
-                      ),
-                    );
-                  }
+          if (state.status == JobOffersStatus.failure) {
+            return StateMessage(
+              title: 'Error',
+              message: state.errorMessage ?? 'Error al cargar las ofertas.',
+              actionLabel: 'Reintentar',
+              onAction: () => context.read<JobOffersCubit>().loadOffers(),
+            );
+          }
 
-                  final jobTypes =
-                      state.offers
-                          .map((offer) => offer.jobType)
-                          .whereType<String>()
-                          .where((jobType) => jobType.isNotEmpty)
-                          .toSet()
-                          .toList()
-                        ..sort();
+          final jobTypes = state.offers
+              .map((offer) => offer.jobType)
+              .whereType<String>()
+              .where((jobType) => jobType.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort();
 
-                  return Column(
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(uiSpacing16),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SectionHeader(
+                        title: 'Ofertas activas',
+                        subtitle: 'Encuentra tu próximo reto profesional.',
+                      ),
+                      const SizedBox(height: uiSpacing20),
                       Row(
                         children: [
                           Expanded(
@@ -78,103 +79,71 @@ class JobOfferListScreen extends StatelessWidget {
                                   .selectJobType(value),
                             ),
                           ),
-                          if (state.selectedJobType != null)
-                            TextButton(
+                          if (state.selectedJobType != null) ...[
+                            const SizedBox(width: uiSpacing12),
+                            IconButton.filledTonal(
                               onPressed: () => context
                                   .read<JobOffersCubit>()
                                   .selectJobType(null),
-                              child: const Text('Limpiar'),
+                              icon: const Icon(Icons.close),
+                              tooltip: 'Limpiar filtro',
                             ),
+                          ],
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      if (state.offers.isEmpty)
-                        const Expanded(
-                          child: Center(
-                            child: Text('No hay ofertas disponibles.'),
-                          ),
-                        )
-                      else
-                        Expanded(
-                          child: ListView.separated(
-                            itemCount: state.offers.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final offer = state.offers[index];
-                              final company = offer.companyId == null
-                                  ? null
-                                  : state.companiesById[offer.companyId!];
-                              final companyName = offer.companyName ??
-                                  company?.name ??
-                                  'Empresa no especificada';
-                              final avatarUrl =
-                                  offer.companyAvatarUrl ?? company?.avatarUrl;
-                              return Card(
-                                elevation: 1,
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: const Color(0xFFF8FAFC),
-                                    backgroundImage:
-                                        (avatarUrl != null && avatarUrl.isNotEmpty)
-                                            ? NetworkImage(avatarUrl)
-                                            : null,
-                                    child: (avatarUrl == null ||
-                                            avatarUrl.isEmpty)
-                                        ? const Icon(
-                                            Icons.business_outlined,
-                                            size: 18,
-                                          )
-                                        : null,
-                                  ),
-                                  title: Text(offer.title),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        companyName,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(offer.description),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${offer.location} · ${offer.jobType ?? 'Tipología no especificada'}',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall,
-                                      ),
-                                      if (offer.salaryMin != null ||
-                                          offer.salaryMax != null)
-                                        Text(
-                                          'Salario: ${offer.salaryMin ?? 'N/D'}'
-                                          '${offer.salaryMax != null ? ' - ${offer.salaryMax}' : ''}',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodySmall,
-                                        ),
-                                    ],
-                                  ),
-                                  trailing: const Icon(Icons.chevron_right),
-                                  onTap: () =>
-                                      context.push('/job-offer/${offer.id}'),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
                     ],
-                  );
-                },
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
+              if (state.offers.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: StateMessage(
+                      title: 'Sin resultados',
+                      message: 'No hay ofertas disponibles que coincidan.',
+                      actionLabel: 'Ver todas',
+                      onAction: () =>
+                          context.read<JobOffersCubit>().selectJobType(null),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                      uiSpacing16, 0, uiSpacing16, uiSpacing24),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final offer = state.offers[index];
+                        final company = offer.companyId == null
+                            ? null
+                            : state.companiesById[offer.companyId!];
+                        final companyName = offer.companyName ??
+                            company?.name ??
+                            'Empresa no especificada';
+                        final avatarUrl =
+                            offer.companyAvatarUrl ?? company?.avatarUrl;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: uiSpacing12),
+                          child: JobOfferSummaryCard(
+                            title: offer.title,
+                            company: companyName,
+                            avatarUrl: avatarUrl,
+                            salary: offer.formattedSalary,
+                            modality: offer.jobType,
+                            onTap: () => context.push('/job-offer/${offer.id}'),
+                          ),
+                        );
+                      },
+                      childCount: state.offers.length,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
