@@ -6,7 +6,7 @@ import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
 import 'package:opti_job_app/features/ai/models/ai_service.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
-import 'package:opti_job_app/modules/aplications/models/application_service.dart';
+import 'package:opti_job_app/modules/aplications/logic/application_service.dart';
 import 'package:opti_job_app/modules/aplications/repositories/application_repository.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_service.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
@@ -14,12 +14,21 @@ import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
+import 'package:opti_job_app/modules/candidates/repositories/candidates_repository.dart';
+import 'package:opti_job_app/modules/candidates/data/repositories/firebase_candidates_repository.dart';
+import 'package:opti_job_app/modules/companies/repositories/companies_repository.dart';
+import 'package:opti_job_app/modules/companies/data/repositories/firebase_companies_repository.dart';
+import 'package:opti_job_app/modules/aplicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/aplicants/data/repositories/firebase_applicants_repository.dart';
 
 class AppDependencies {
   AppDependencies._({
     required this.authRepository,
     required this.jobOfferRepository,
     required this.profileRepository,
+    required this.candidatesRepository,
+    required this.companiesRepository,
+    required this.applicantsRepository,
     required this.curriculumRepository,
     required this.calendarRepository,
     required this.applicationRepository,
@@ -41,6 +50,15 @@ class AppDependencies {
     final applicationService = ApplicationService(
       applicationRepository: applicationRepository,
     );
+    final candidatesRepository = FirebaseCandidatesRepository(
+      firestore: firestoreInstance,
+    );
+    final companiesRepository = FirebaseCompaniesRepository(
+      firestore: firestoreInstance,
+    );
+    final applicantsRepository = FirebaseApplicantsRepository(
+      firestore: firestoreInstance,
+    );
     final aiRepository = AiRepository(AiService());
 
     if (kDebugMode) {
@@ -55,6 +73,9 @@ class AppDependencies {
       authRepository: authRepository,
       jobOfferRepository: jobOfferRepository,
       profileRepository: profileRepository,
+      candidatesRepository: candidatesRepository,
+      companiesRepository: companiesRepository,
+      applicantsRepository: applicantsRepository,
       curriculumRepository: curriculumRepository,
       calendarRepository: calendarRepository,
       applicationRepository: applicationRepository,
@@ -66,6 +87,9 @@ class AppDependencies {
   final AuthRepository authRepository;
   final JobOfferRepository jobOfferRepository;
   final ProfileRepository profileRepository;
+  final CandidatesRepository candidatesRepository;
+  final CompaniesRepository companiesRepository;
+  final ApplicantsRepository applicantsRepository;
   final CurriculumRepository curriculumRepository;
   final CalendarRepository calendarRepository;
   final ApplicationRepository applicationRepository;

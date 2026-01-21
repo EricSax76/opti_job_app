@@ -2,15 +2,15 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
 import 'package:opti_job_app/modules/aplications/models/application.dart';
-import 'package:opti_job_app/modules/aplications/models/application_service.dart';
+import 'package:opti_job_app/modules/aplicants/repositories/applicants_repository.dart';
 
 part 'offer_applicants_state.dart';
 
 class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
-  OfferApplicantsCubit(this._applicationService)
+  OfferApplicantsCubit(this._applicantsRepository)
     : super(const OfferApplicantsState());
 
-  final ApplicationService _applicationService;
+  final ApplicantsRepository _applicantsRepository;
 
   Future<void> loadApplicants({
     required int offerId,
@@ -26,7 +26,7 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
       ),
     );
     try {
-      final applicants = await _applicationService.getApplicationsForOffer(
+      final applicants = await _applicantsRepository.getApplicationsForOffer(
         jobOfferId: offerId,
         companyUid: companyUid,
       );
@@ -66,7 +66,7 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
       ),
     );
     try {
-      await _applicationService.updateApplicationStatus(
+      await _applicantsRepository.updateApplicationStatus(
         applicationId: applicationId,
         status: newStatus,
       );

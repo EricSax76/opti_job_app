@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/auth/models/auth_exceptions.dart';
 
 class AuthService {
   AuthService({FirebaseAuth? firebaseAuth, FirebaseFirestore? firestore})
@@ -11,6 +13,8 @@ class AuthService {
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+
+  Stream<String?> get uidStream => _auth.authStateChanges().map((user) => user?.uid);
 
   CollectionReference<Map<String, dynamic>> get _candidatesCollection =>
       _firestore.collection('candidates');
@@ -39,7 +43,7 @@ class AuthService {
     }
     final data = doc.data()!;
     final token = await user.getIdToken();
-    return Candidate.fromJson({...data, 'token': token});
+    return CandidateMapper.fromFirestore({...data, 'token': token});
   }
 
   Future<Candidate> registerCandidate({
@@ -75,7 +79,7 @@ class AuthService {
     });
 
     final token = await user.getIdToken();
-    return Candidate.fromJson({...candidateData, 'token': token});
+    return CandidateMapper.fromFirestore({...candidateData, 'token': token});
   }
 
   Future<Company> loginCompany({
@@ -153,7 +157,7 @@ class AuthService {
     if (data == null) return null;
 
     final token = await user.getIdToken();
-    return Candidate.fromJson({...data, 'token': token});
+    return CandidateMapper.fromFirestore({...data, 'token': token});
   }
 
   Future<Company?> restoreCompanySession() async {
@@ -168,5 +172,30 @@ class AuthService {
 
     final token = await user.getIdToken();
     return Company.fromJson({...data, 'token': token});
+  }
+
+  AuthException mapFirebaseException(Object e) {
+    if (e is FirebaseAuthException) {
+      switch (e.code) {
+        case 'invalid-email':
+          return InvalidEmailException();
+        case 'user-not-found':
+          return UserNotFoundException();
+        case 'wrong-password':
+          return WrongPasswordException();
+        case 'too-many-requests':
+          return TooManyRequestsException();
+        case 'network-request-failed':
+          return NetworkException();
+        default:
+          return AuthException(e.message ?? 'Error de autenticación');
+      }
+    }
+    if (e is FirebaseException) {
+      if (e.code == 'permission-denied') {
+        return PermissionDeniedException();
+      }
+    }
+    return AuthException(e.toString());
   }
 }

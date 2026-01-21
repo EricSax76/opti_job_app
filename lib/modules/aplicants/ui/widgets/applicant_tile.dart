@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/application.dart';
@@ -20,10 +21,10 @@ class ApplicantTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFF8FAFC);
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
+    const background = uiBackground;
+    const ink = uiInk;
+    const muted = uiMuted;
+    const border = uiBorder;
 
     final subtitleParts = <String>[];
     if (application.candidateEmail != null &&
@@ -37,7 +38,7 @@ class ApplicantTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(uiTileRadius),
         border: Border.all(color: border),
       ),
       child: ListTile(

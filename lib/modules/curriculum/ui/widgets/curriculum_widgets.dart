@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_form_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_header_section.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_items_section.dart';

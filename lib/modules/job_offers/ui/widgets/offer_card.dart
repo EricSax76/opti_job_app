@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/modules/aplicants/models/offer_applicants_section.dart';
+import 'package:opti_job_app/modules/aplicants/ui/widgets/offer_applicants_section.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class OfferCard extends StatelessWidget {
@@ -13,10 +14,10 @@ class OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
-    const background = Color(0xFFF8FAFC);
+    const ink = uiInk;
+    const muted = uiMuted;
+    const border = uiBorder;
+    const background = uiBackground;
 
     final resolvedCompanyUid = _companyUid(context);
     final avatarUrl = context
@@ -27,7 +28,7 @@ class OfferCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(uiCardRadius),
         border: Border.all(color: border),
       ),
       child: ClipRRect(

@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_state.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_state.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 

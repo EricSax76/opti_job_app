@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/modules/companies/models/company_candidates_logic.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/companies/logic/company_candidates_logic.dart';
 import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
@@ -47,16 +48,16 @@ class _CandidateCardState extends State<CandidateCard> {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFF8FAFC);
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
-    const ok = Color(0xFF16A34A);
+    const background = uiBackground;
+    const ink = uiInk;
+    const muted = uiMuted;
+    const border = uiBorder;
+    const ok = Color(0xFF16A34A); // Success color
 
     return Container(
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(uiTileRadius),
         border: Border.all(color: border),
       ),
       child: ListTile(

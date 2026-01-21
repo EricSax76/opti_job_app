@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Application {
   const Application({
@@ -30,7 +29,6 @@ class Application {
   factory Application.fromJson(Map<String, dynamic> json, {String? id}) {
     DateTime? parseDate(dynamic value) {
       if (value == null) return null;
-      if (value is Timestamp) return value.toDate();
       if (value is DateTime) return value;
       if (value is String) return DateTime.tryParse(value);
       return null;

@@ -9,9 +9,9 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/features/calendar/cubit/calendar_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
-import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 
 class AppScope extends StatelessWidget {
   const AppScope({super.key, required this.dependencies});

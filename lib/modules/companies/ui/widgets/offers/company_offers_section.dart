@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/offer_card.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/section_message.dart';
 

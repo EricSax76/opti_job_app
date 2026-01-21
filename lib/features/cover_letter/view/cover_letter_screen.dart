@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/features/cover_letter/bloc/cover_letter_bloc.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 
 class CoverLetterScreen extends StatefulWidget {
   const CoverLetterScreen({super.key});

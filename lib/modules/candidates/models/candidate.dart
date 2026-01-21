@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 
 class Candidate {
   const Candidate({
@@ -147,7 +146,6 @@ class CandidateVideoCurriculum {
 
 DateTime? _parseDateTime(dynamic raw) {
   if (raw == null) return null;
-  if (raw is Timestamp) return raw.toDate();
   if (raw is DateTime) return raw;
   if (raw is String) return DateTime.tryParse(raw);
   return null;

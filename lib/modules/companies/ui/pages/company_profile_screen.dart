@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/companies/cubits/company_profile_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
@@ -27,10 +28,10 @@ class _CompanyProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFF8FAFC);
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
+    const background = uiBackground;
+    const ink = uiInk;
+    const muted = uiMuted;
+    const border = uiBorder;
 
     final company = context.watch<CompanyAuthCubit>().state.company;
 
@@ -86,7 +87,7 @@ class _CompanyProfileView extends StatelessWidget {
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(uiCardRadius),
                           border: Border.all(color: border),
                         ),
                         child: Column(
@@ -114,7 +115,7 @@ class _CompanyProfileView extends StatelessWidget {
                                       onTap: context
                                           .read<CompanyProfileFormCubit>()
                                           .pickAvatar,
-                                      borderRadius: BorderRadius.circular(18),
+                                      borderRadius: BorderRadius.circular(uiTileRadius),
                                       child: CircleAvatar(
                                         radius: 16,
                                         backgroundColor: ink,
@@ -150,11 +151,11 @@ class _CompanyProfileView extends StatelessWidget {
                                 filled: true,
                                 fillColor: background,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(uiFieldRadius),
                                   borderSide: const BorderSide(color: border),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(uiFieldRadius),
                                   borderSide: const BorderSide(color: border),
                                 ),
                               ),
@@ -169,11 +170,11 @@ class _CompanyProfileView extends StatelessWidget {
                                 filled: true,
                                 fillColor: background,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(uiFieldRadius),
                                   borderSide: const BorderSide(color: border),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(uiFieldRadius),
                                   borderSide: const BorderSide(color: border),
                                 ),
                               ),

@@ -6,7 +6,7 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/aplicants/ui/widgets/dashboard_candidates_card.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard_home_header.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/dashboard_offers_card.dart';
-import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 
 class CompanyHomeDashboard extends StatefulWidget {
   const CompanyHomeDashboard({super.key});

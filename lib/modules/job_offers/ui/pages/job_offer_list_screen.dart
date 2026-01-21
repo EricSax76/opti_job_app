@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/modules/job_offers/cubit/job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 
 class JobOfferListScreen extends StatelessWidget {

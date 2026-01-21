@@ -8,8 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/ai/api/document_parser.dart';
 import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
 import 'package:opti_job_app/features/ai/prompts/ai_prompts.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_state.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_state.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 
 enum CurriculumFormViewStatus { loading, empty, error, ready }

@@ -14,14 +14,15 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
 import 'package:opti_job_app/modules/aplicants/ui/pages/applicant_curriculum_screen.dart';
-import 'package:opti_job_app/modules/aplications/models/application_service.dart';
-import 'package:opti_job_app/modules/job_offers/cubit/job_offer_detail_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/cubit/job_offer_form_cubit.dart';
+import 'package:opti_job_app/modules/aplicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/aplications/logic/application_service.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_detail_screen.dart';
 import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_list_screen.dart';
 import 'package:opti_job_app/home/pages/landing_screen.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
-import 'package:opti_job_app/modules/job_offers/cubit/company_job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 
 /// Listens to a stream and notifies GoRouter when auth state changes.
@@ -107,7 +108,7 @@ class AppRouter {
               ),
               BlocProvider(
                 create: (context) =>
-                    OfferApplicantsCubit(context.read<ApplicationService>()),
+                    OfferApplicantsCubit(context.read<ApplicantsRepository>()),
               ),
             ],
             child: const CompanyDashboardScreen(),

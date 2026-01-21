@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
+import 'package:opti_job_app/modules/curriculum/data/mappers/curriculum_mapper.dart';
 
 class CurriculumService {
   CurriculumService({FirebaseFirestore? firestore, FirebaseStorage? storage})
@@ -27,7 +28,7 @@ class CurriculumService {
     }
     final data = snapshot.data();
     if (data == null) return Curriculum.empty();
-    return Curriculum.fromJson(data);
+    return CurriculumMapper.fromFirestore(data);
   }
 
   Future<Curriculum> saveCurriculum({
@@ -40,7 +41,7 @@ class CurriculumService {
     final snapshot = await _docRef(candidateUid).get();
     final refreshed = snapshot.data();
     if (refreshed == null) return curriculum;
-    return Curriculum.fromJson(refreshed);
+    return CurriculumMapper.fromFirestore(refreshed);
   }
 
   Future<Curriculum> uploadAttachment({

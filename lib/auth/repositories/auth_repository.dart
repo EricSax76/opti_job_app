@@ -1,11 +1,14 @@
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/auth/models/auth_service.dart';
+import 'package:opti_job_app/auth/models/auth_exceptions.dart';
 
 class AuthRepository {
   AuthRepository(this._service);
 
   final AuthService _service;
+
+  Stream<String?> get uidStream => _service.uidStream;
 
   Future<Candidate> loginCandidate({
     required String email,
@@ -56,4 +59,6 @@ class AuthRepository {
   Future<Company?> restoreCompanySession() {
     return _service.restoreCompanySession();
   }
+
+  AuthException mapException(Object e) => _service.mapFirebaseException(e);
 }

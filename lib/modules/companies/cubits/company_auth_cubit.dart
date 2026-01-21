@@ -1,24 +1,21 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/auth/cubit/auth_status.dart';
-import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; // Import the base AuthCubit
+import 'package:opti_job_app/auth/cubit/auth_cubit.dart'; 
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 
 class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
   final AuthRepository _repository;
-  StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<String?>? _authSubscription;
 
   CompanyAuthCubit(this._repository) : super(const CompanyAuthState()) {
-    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((
-      user,
-    ) {
+    _authSubscription = _repository.uidStream.listen((uid) {
       final currentCompanyUid = state.company?.uid;
       if (!state.isAuthenticated || currentCompanyUid == null) return;
-      if (user == null || user.uid != currentCompanyUid) {
+      if (uid == null || uid != currentCompanyUid) {
         emit(
           state.copyWith(
             status: AuthStatus.unauthenticated,
@@ -67,10 +64,11 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         debugPrint('[Auth] loginCompany failed: $error');
         debugPrintStack(stackTrace: stackTrace);
       }
+      final authException = _repository.mapException(error);
       emit(
         state.copyWith(
           status: AuthStatus.failure,
-          errorMessage: _userFacingAuthErrorMessage(error),
+          errorMessage: authException.message,
           clearCompany: true,
         ),
       );
@@ -102,10 +100,11 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         debugPrint('[Auth] registerCompany failed: $error');
         debugPrintStack(stackTrace: stackTrace);
       }
+      final authException = _repository.mapException(error);
       emit(
         state.copyWith(
           status: AuthStatus.failure,
-          errorMessage: _userFacingAuthErrorMessage(error),
+          errorMessage: authException.message,
           clearCompany: true,
         ),
       );
@@ -144,47 +143,6 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
   void updateCompany(Company company) {
     if (!state.isAuthenticated) return;
     emit(state.copyWith(company: company));
-  }
-
-  String _userFacingAuthErrorMessage(Object error) {
-    if (error is FirebaseAuthException) {
-      switch (error.code) {
-        case 'invalid-email':
-          return 'Email inválido.';
-        case 'user-disabled':
-          return 'Tu cuenta está deshabilitada.';
-        case 'user-not-found':
-          return 'Usuario no encontrado.';
-        case 'wrong-password':
-          return 'Contraseña incorrecta.';
-        case 'invalid-credential':
-          return 'Credenciales inválidas.';
-        case 'too-many-requests':
-          return 'Demasiados intentos. Intenta más tarde.';
-        case 'network-request-failed':
-          return 'Error de red. Revisa tu conexión.';
-        default:
-          return error.message ?? 'No se pudo iniciar sesión.';
-      }
-    }
-
-    if (error is FirebaseException) {
-      if (error.plugin == 'cloud_firestore' && error.code == 'permission-denied') {
-        return 'Permiso denegado al leer tu perfil. '
-            'Si tienes App Check habilitado/enforced en Firestore, '
-            'actívalo en la app (--dart-define=USE_FIREBASE_APP_CHECK=true) '
-            'y registra el debug token en Firebase Console.';
-      }
-      if (error.message != null && error.message!.trim().isNotEmpty) {
-        return error.message!;
-      }
-    }
-
-    if (error is StateError) {
-      return error.message.toString();
-    }
-
-    return 'Ocurrió un error. Intenta nuevamente.';
   }
 
   @override

@@ -6,12 +6,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
-import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
-import 'package:opti_job_app/modules/profiles/cubit/profile_state.dart';
-import 'package:opti_job_app/modules/profiles/cubit/profile_form_state.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_state.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_form_state.dart';
 import 'package:opti_job_app/modules/profiles/utils/candidate_name_utils.dart';
 
-export 'package:opti_job_app/modules/profiles/cubit/profile_form_state.dart';
+export 'package:opti_job_app/modules/profiles/cubits/profile_form_state.dart';
 
 class ProfileFormCubit extends Cubit<ProfileFormState> {
   ProfileFormCubit({required ProfileCubit profileCubit})

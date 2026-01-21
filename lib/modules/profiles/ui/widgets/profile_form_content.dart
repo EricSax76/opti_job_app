@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/modules/profiles/cubit/profile_form_cubit.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_form_cubit.dart';
 import 'package:opti_job_app/modules/profiles/ui/widgets/profile_avatar.dart';
 
 class ProfileFormContent extends StatelessWidget {

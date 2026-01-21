@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 
 class ProfileService {
@@ -22,7 +23,7 @@ class ProfileService {
     if (data == null) {
       throw StateError('Perfil de candidato no encontrado.');
     }
-    return Candidate.fromJson(data);
+    return CandidateMapper.fromFirestore(data);
   }
 
   Future<Company> fetchCompanyProfile(int id) async {
@@ -89,7 +90,7 @@ class ProfileService {
     if (data == null) {
       throw StateError('No se pudo actualizar el perfil.');
     }
-    return Candidate.fromJson(data);
+    return CandidateMapper.fromFirestore(data);
   }
 
   Future<Company> updateCompanyProfile({

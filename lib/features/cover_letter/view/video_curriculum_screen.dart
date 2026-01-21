@@ -7,8 +7,8 @@ import 'package:opti_job_app/features/cover_letter/widgets/camera_view.dart';
 import 'package:opti_job_app/features/cover_letter/view/video_playback_screen.dart';
 import 'package:opti_job_app/features/cover_letter/view/video_playback_controller.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
-import 'package:opti_job_app/modules/curriculum/cubit/curriculum_cubit.dart';
-import 'package:opti_job_app/modules/profiles/cubit/profile_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoCurriculumScreen extends StatefulWidget {

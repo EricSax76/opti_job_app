@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/modules/profiles/ui/widgets/profile_widgets.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFF8FAFC);
-    const ink = Color(0xFF0F172A);
-    const border = Color(0xFFE2E8F0);
+    const background = uiBackground;
+    const ink = uiInk;
+    const border = uiBorder;
 
     return Scaffold(
       backgroundColor: background,

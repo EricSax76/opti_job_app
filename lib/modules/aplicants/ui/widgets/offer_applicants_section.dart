@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/application.dart';
-import 'package:opti_job_app/modules/aplicants/models/applicant_tile.dart';
+import 'package:opti_job_app/modules/aplicants/ui/widgets/applicant_tile.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class OfferApplicantsSection extends StatelessWidget {
@@ -20,9 +21,9 @@ class OfferApplicantsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const background = Color(0xFFF8FAFC);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
+    const background = uiBackground;
+    const muted = uiMuted;
+    const border = uiBorder;
 
     final resolvedCompanyUid = companyUid;
     if (resolvedCompanyUid == null) {
@@ -57,7 +58,7 @@ class OfferApplicantsSection extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: background,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(uiTileRadius),
               border: Border.all(color: border),
             ),
             child: Text(
