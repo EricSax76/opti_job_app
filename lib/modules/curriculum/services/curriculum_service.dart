@@ -109,6 +109,10 @@ class CurriculumService {
 
     return fetchCurriculum(candidateUid);
   }
+
+  Future<String> getAttachmentUrl(CurriculumAttachment attachment) {
+    return _storage.ref().child(attachment.storagePath).getDownloadURL();
+  }
 }
 
 String _sanitizeFileName(String name) {

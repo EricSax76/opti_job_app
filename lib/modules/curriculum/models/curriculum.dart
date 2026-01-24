@@ -1,5 +1,7 @@
 
-class Curriculum {
+import 'package:equatable/equatable.dart';
+
+class Curriculum extends Equatable {
   const Curriculum({
     required this.headline,
     required this.summary,
@@ -21,6 +23,19 @@ class Curriculum {
   final List<CurriculumItem> education;
   final CurriculumAttachment? attachment;
   final DateTime? updatedAt;
+
+  @override
+  List<Object?> get props => [
+        headline,
+        summary,
+        phone,
+        location,
+        skills,
+        experiences,
+        education,
+        attachment,
+        updatedAt,
+      ];
 
   factory Curriculum.empty() {
     return const Curriculum(
@@ -104,7 +119,7 @@ class Curriculum {
   }
 }
 
-class CurriculumAttachment {
+class CurriculumAttachment extends Equatable {
   const CurriculumAttachment({
     required this.fileName,
     required this.storagePath,
@@ -118,6 +133,10 @@ class CurriculumAttachment {
   final String contentType;
   final int sizeBytes;
   final DateTime? updatedAt;
+
+  @override
+  List<Object?> get props =>
+      [fileName, storagePath, contentType, sizeBytes, updatedAt];
 
   static CurriculumAttachment? fromJson(Map<String, dynamic>? json) {
     if (json == null) return null;
@@ -141,7 +160,7 @@ class CurriculumAttachment {
   }
 }
 
-class CurriculumItem {
+class CurriculumItem extends Equatable {
   const CurriculumItem({
     required this.title,
     required this.subtitle,
@@ -153,6 +172,9 @@ class CurriculumItem {
   final String subtitle;
   final String period;
   final String description;
+
+  @override
+  List<Object?> get props => [title, subtitle, period, description];
 
   factory CurriculumItem.empty() {
     return const CurriculumItem(

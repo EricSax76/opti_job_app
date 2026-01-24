@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_service.dart';
+import 'package:opti_job_app/modules/curriculum/services/curriculum_service.dart';
 
 class CurriculumRepository {
   CurriculumRepository(this._service);
@@ -43,6 +43,12 @@ class CurriculumRepository {
       candidateUid: candidateUid,
       attachment: attachment,
     );
+  }
+
+  Future<String> getAttachmentUrl({
+    required CurriculumAttachment attachment,
+  }) {
+    return _service.getAttachmentUrl(attachment);
   }
 
   String mapException(Object error) {

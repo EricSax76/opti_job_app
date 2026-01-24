@@ -26,134 +26,168 @@ class CurriculumReadOnlyView extends StatelessWidget {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (curriculum.headline.trim().isNotEmpty) ...[
-          sectionTitle('Titular'),
-          AppCard(
-            padding: const EdgeInsets.all(uiSpacing16),
-            borderRadius: uiTileRadius,
-            child: Text(
-              curriculum.headline.trim(),
-              style: const TextStyle(
-                color: uiInk,
-                height: 1.4,
-                fontWeight: FontWeight.w600,
+    return SelectionArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (curriculum.headline.trim().isNotEmpty) ...[
+            sectionTitle('Titular'),
+            AppCard(
+              padding: const EdgeInsets.all(uiSpacing16),
+              child: Text(
+                curriculum.headline.trim(),
+                style: const TextStyle(
+                  color: uiInk,
+                  fontSize: 16,
+                  height: 1.4,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: uiSpacing20),
-        ],
-        if (curriculum.summary.trim().isNotEmpty) ...[
-          sectionTitle('Resumen'),
-          AppCard(
-            padding: const EdgeInsets.all(uiSpacing16),
-            borderRadius: uiTileRadius,
-            child: Text(
-              curriculum.summary.trim(),
-              style: const TextStyle(color: uiInk, height: 1.5),
-            ),
-          ),
-          const SizedBox(height: uiSpacing20),
-        ],
-        if (curriculum.phone.trim().isNotEmpty ||
-            curriculum.location.trim().isNotEmpty) ...[
-          sectionTitle('Contacto'),
-          AppCard(
-            padding: const EdgeInsets.all(uiSpacing16),
-            borderRadius: uiTileRadius,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (curriculum.phone.trim().isNotEmpty)
-                  _ContactRow(
-                      icon: Icons.phone_outlined,
-                      label: curriculum.phone.trim()),
-                if (curriculum.phone.trim().isNotEmpty &&
-                    curriculum.location.trim().isNotEmpty)
-                  const SizedBox(height: uiSpacing12),
-                if (curriculum.location.trim().isNotEmpty)
-                  _ContactRow(
-                      icon: Icons.place_outlined,
-                      label: curriculum.location.trim()),
-              ],
-            ),
-          ),
-          const SizedBox(height: uiSpacing20),
-        ],
-        if (curriculum.skills.isNotEmpty) ...[
-          sectionTitle('Skills'),
-          AppCard(
-            padding: const EdgeInsets.all(uiSpacing16),
-            borderRadius: uiTileRadius,
-            child: Wrap(
-              spacing: uiSpacing8,
-              runSpacing: uiSpacing8,
-              children: [
-                for (final skill in curriculum.skills) InfoPill(label: skill),
-              ],
-            ),
-          ),
-          const SizedBox(height: uiSpacing20),
-        ],
-        if (curriculum.experiences.isNotEmpty) ...[
-          sectionTitle('Experiencia'),
-          AppCard(
-            padding: const EdgeInsets.all(uiSpacing16),
-            borderRadius: uiTileRadius,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int i = 0; i < curriculum.experiences.length; i++) ...[
-                  _CurriculumItemBlock(item: curriculum.experiences[i]),
-                  if (i < curriculum.experiences.length - 1)
-                    const Divider(height: uiSpacing24),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: uiSpacing20),
-        ],
-        if (curriculum.education.isNotEmpty) ...[
-          sectionTitle('Educación'),
-          AppCard(
-            padding: const EdgeInsets.all(uiSpacing16),
-            borderRadius: uiTileRadius,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int i = 0; i < curriculum.education.length; i++) ...[
-                  _CurriculumItemBlock(item: curriculum.education[i]),
-                  if (i < curriculum.education.length - 1)
-                    const Divider(height: uiSpacing24),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: uiSpacing20),
-        ],
-        if (curriculum.attachment != null) ...[
-          sectionTitle('Adjunto'),
-          AppCard(
-            padding: const EdgeInsets.all(uiSpacing12),
-            borderRadius: uiTileRadius,
-            child: Row(
-              children: [
-                const Icon(Icons.attach_file, color: uiMuted, size: 20),
-                const SizedBox(width: uiSpacing8),
-                Expanded(
-                  child: Text(
-                    curriculum.attachment!.fileName,
-                    style: const TextStyle(
-                        color: uiInk, fontWeight: FontWeight.w500),
-                  ),
+            const SizedBox(height: uiSpacing24),
+          ],
+          if (curriculum.summary.trim().isNotEmpty) ...[
+            sectionTitle('Resumen Profesional'),
+            AppCard(
+              padding: const EdgeInsets.all(uiSpacing16),
+              child: Text(
+                curriculum.summary.trim(),
+                style: const TextStyle(
+                  color: uiInk,
+                  fontSize: 15,
+                  height: 1.6,
                 ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: uiSpacing24),
+          ],
+          if (curriculum.phone.trim().isNotEmpty ||
+              curriculum.location.trim().isNotEmpty) ...[
+            sectionTitle('Información de Contacto'),
+            AppCard(
+              padding: const EdgeInsets.all(uiSpacing16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (curriculum.phone.trim().isNotEmpty)
+                    _ContactRow(
+                      icon: Icons.phone_outlined,
+                      label: curriculum.phone.trim(),
+                    ),
+                  if (curriculum.phone.trim().isNotEmpty &&
+                      curriculum.location.trim().isNotEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: uiSpacing12),
+                      child: Divider(height: 1),
+                    ),
+                  if (curriculum.location.trim().isNotEmpty)
+                    _ContactRow(
+                      icon: Icons.place_outlined,
+                      label: curriculum.location.trim(),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: uiSpacing24),
+          ],
+          if (curriculum.skills.isNotEmpty) ...[
+            sectionTitle('Habilidades y Conocimientos'),
+            AppCard(
+              padding: const EdgeInsets.all(uiSpacing16),
+              child: Wrap(
+                spacing: uiSpacing8,
+                runSpacing: uiSpacing8,
+                children: [
+                  for (final skill in curriculum.skills)
+                    InfoPill(
+                      label: skill,
+                      backgroundColor: uiAccentSoft,
+                      textColor: uiInk,
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: uiSpacing24),
+          ],
+          if (curriculum.experiences.isNotEmpty) ...[
+            sectionTitle('Experiencia Laboral'),
+            AppCard(
+              padding: const EdgeInsets.all(uiSpacing16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (int i = 0; i < curriculum.experiences.length; i++) ...[
+                    _CurriculumItemBlock(item: curriculum.experiences[i]),
+                    if (i < curriculum.experiences.length - 1)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: uiSpacing16),
+                        child: Divider(height: 1),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: uiSpacing24),
+          ],
+          if (curriculum.education.isNotEmpty) ...[
+            sectionTitle('Formación Académica'),
+            AppCard(
+              padding: const EdgeInsets.all(uiSpacing16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (int i = 0; i < curriculum.education.length; i++) ...[
+                    _CurriculumItemBlock(item: curriculum.education[i]),
+                    if (i < curriculum.education.length - 1)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: uiSpacing16),
+                        child: Divider(height: 1),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: uiSpacing24),
+          ],
+          if (curriculum.attachment != null) ...[
+            sectionTitle('Curriculum Adjunto'),
+            AppCard(
+              padding: const EdgeInsets.all(uiSpacing16),
+              backgroundColor: uiAccentSoft,
+              borderColor: Colors.transparent,
+              child: Row(
+                children: [
+                  const Icon(Icons.description_outlined, color: uiAccent, size: 24),
+                  const SizedBox(width: uiSpacing12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          curriculum.attachment!.fileName,
+                          style: const TextStyle(
+                            color: uiInk,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: uiSpacing4),
+                        Text(
+                          'Archivo importado',
+                          style: TextStyle(
+                            color: uiMuted.withValues(alpha: 0.8),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -223,4 +257,3 @@ class _CurriculumItemBlock extends StatelessWidget {
     );
   }
 }
-

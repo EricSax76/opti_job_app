@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
@@ -89,6 +90,24 @@ class OfferCard extends StatelessWidget {
               );
             },
             children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => context.push('/job-offer/${offer.id}'),
+                    icon: const Icon(Icons.open_in_new, size: 18),
+                    label: const Text('Ver detalle'),
+                  ),
+                  Chip(
+                    label: Text('Oferta #${offer.id}'),
+                    side: const BorderSide(color: border),
+                    backgroundColor: Colors.white,
+                    labelStyle: const TextStyle(color: ink),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               OfferApplicantsSection(
                 offer: offer,
                 companyUid: resolvedCompanyUid,

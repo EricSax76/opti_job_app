@@ -5,6 +5,7 @@ import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
+import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_dialogs.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_header_section.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_items_section.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_personal_info_form.dart';
@@ -61,99 +62,103 @@ class _CandidateCurriculumContent extends StatelessWidget {
           );
         }
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final double maxWidth = constraints.maxWidth.isFinite
-                ? constraints.maxWidth
-                : 640.0;
-            final double contentWidth = maxWidth < 640.0 ? maxWidth : 640.0;
-
-            return Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: contentWidth,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(uiSpacing16),
-                  child: AppCard(
-                    padding: const EdgeInsets.all(uiSpacing24 + 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CurriculumHeaderSection(isSaving: state.isSaving),
-                        const SizedBox(height: uiSpacing24),
-                        CurriculumPersonalInfoForm(state: state),
-                        const SizedBox(height: uiSpacing24),
-                        CurriculumSkillsSection(skills: state.skills),
-                        const SizedBox(height: uiSpacing24),
-                        CurriculumItemsSection(
-                          title: 'Experiencia',
-                          items: state.experiences,
-                          emptyHint:
-                              'Agrega tu experiencia laboral más relevante.',
-                          onAdd: () async {
-                            final created =
-                                await showCurriculumItemDialog(context);
-                            if (created != null) {
-                              formCubit.addExperience(created);
-                            }
-                          },
-                          onEdit: (index, item) async {
-                            final updated = await showCurriculumItemDialog(
-                              context,
-                              initial: item,
-                            );
-                            if (updated != null) {
-                              formCubit.updateExperience(index, updated);
-                            }
-                          },
-                          onRemove: formCubit.removeExperience,
-                        ),
-                        const SizedBox(height: uiSpacing24),
-                        CurriculumItemsSection(
-                          title: 'Educación',
-                          items: state.education,
-                          emptyHint:
-                              'Agrega tu formación académica o cursos clave.',
-                          onAdd: () async {
-                            final created =
-                                await showCurriculumItemDialog(context);
-                            if (created != null) {
-                              formCubit.addEducation(created);
-                            }
-                          },
-                          onEdit: (index, item) async {
-                            final updated = await showCurriculumItemDialog(
-                              context,
-                              initial: item,
-                            );
-                            if (updated != null) {
-                              formCubit.updateEducation(index, updated);
-                            }
-                          },
-                          onRemove: formCubit.removeEducation,
-                        ),
-                        const SizedBox(height: uiSpacing32),
-                        FilledButton(
+        return SelectionArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: uiSpacing16,
+              vertical: uiSpacing24,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 640),
+                child: AppCard(
+                  padding: const EdgeInsets.all(uiSpacing24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      CurriculumHeaderSection(isSaving: state.isSaving),
+                      const Divider(height: uiSpacing48),
+                      CurriculumPersonalInfoForm(state: state),
+                      const SizedBox(height: uiSpacing32),
+                      CurriculumSkillsSection(skills: state.skills),
+                      const SizedBox(height: uiSpacing32),
+                      CurriculumItemsSection(
+                        title: 'Experiencia',
+                        items: state.experiences,
+                        emptyHint:
+                            'Agrega tu experiencia laboral más relevante.',
+                        onAdd: () async {
+                          final created =
+                              await showCurriculumItemDialog(context);
+                          if (created != null) {
+                            formCubit.addExperience(created);
+                          }
+                        },
+                        onEdit: (index, item) async {
+                          final updated = await showCurriculumItemDialog(
+                            context,
+                            initial: item,
+                          );
+                          if (updated != null) {
+                            formCubit.updateExperience(index, updated);
+                          }
+                        },
+                        onRemove: formCubit.removeExperience,
+                      ),
+                      const SizedBox(height: uiSpacing32),
+                      CurriculumItemsSection(
+                        title: 'Educación',
+                        items: state.education,
+                        emptyHint:
+                            'Agrega tu formación académica o cursos clave.',
+                        onAdd: () async {
+                          final created =
+                              await showCurriculumItemDialog(context);
+                          if (created != null) {
+                            formCubit.addEducation(created);
+                          }
+                        },
+                        onEdit: (index, item) async {
+                          final updated = await showCurriculumItemDialog(
+                            context,
+                            initial: item,
+                          );
+                          if (updated != null) {
+                            formCubit.updateEducation(index, updated);
+                          }
+                        },
+                        onRemove: formCubit.removeEducation,
+                      ),
+                      const SizedBox(height: uiSpacing48),
+                      SizedBox(
+                        height: 52,
+                        child: FilledButton(
                           onPressed: state.canSubmit ? formCubit.submit : null,
                           child: state.isSaving
                               ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
+                                  width: 20,
+                                  height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor:
                                         AlwaysStoppedAnimation<Color>(uiWhite),
                                   ),
                                 )
-                              : const Text('Guardar curriculum'),
+                              : const Text(
+                                  'Guardar Cambios',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );

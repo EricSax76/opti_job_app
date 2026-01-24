@@ -8,6 +8,7 @@ import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CurriculumLogic {
   static Future<void> improveSummary({
@@ -207,6 +208,38 @@ class CurriculumLogic {
       );
     } finally {
       onEnd();
+    }
+  }
+
+  static Future<void> openAttachment({
+    required BuildContext context,
+    required CurriculumAttachment attachment,
+  }) async {
+    if (attachment.storagePath.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No encontramos el archivo del CV.')),
+      );
+      return;
+    }
+
+    try {
+      final repository = context.read<CurriculumRepository>();
+      final url = await repository.getAttachmentUrl(attachment: attachment);
+      final uri = Uri.parse(url);
+      final opened = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir el archivo.')),
+        );
+      }
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir el archivo.')),
+      );
     }
   }
 

@@ -1,11 +1,13 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+
 import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/aplications/logic/application_service.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:web/web.dart' as web;
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_view.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/interviews_view.dart';
@@ -70,8 +72,14 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       return;
     }
     if (_tabController.indexIsChanging) return;
-    final path = _pathForIndex(_tabController.index);
-    if (path != null) context.go(path);
+
+    // Update browser URL without triggering navigation
+    if (kIsWeb) {
+      final path = _pathForIndex(_tabController.index);
+      if (path != null) {
+        web.window.history.pushState(null, '', path);
+      }
+    }
   }
 
   String? _pathForIndex(int index) {
@@ -110,10 +118,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       appBar: AppBar(
         title: const Text(
           'OPTIJOB',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 2,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
         ),
         automaticallyImplyLeading: false,
         centerTitle: true,
@@ -121,16 +126,12 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         foregroundColor: ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: const Border(
-          bottom: BorderSide(color: border, width: 1),
-        ),
+        shape: const Border(bottom: BorderSide(color: border, width: 1)),
         actions: [
           IconButton(
             tooltip: 'Perfil',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const ProfileScreen(),
-              ),
+              MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
             ),
             icon: CircleAvatar(
               radius: 16,
@@ -139,11 +140,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
                   ? NetworkImage(avatarUrl)
                   : null,
               child: (avatarUrl == null || avatarUrl.isEmpty)
-                  ? Icon(
-                      Icons.person_outline,
-                      size: 18,
-                      color: muted,
-                    )
+                  ? Icon(Icons.person_outline, size: 18, color: muted)
                   : null,
             ),
           ),
@@ -157,7 +154,10 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Para ti'),
             Tab(icon: Icon(Icons.work_history), text: 'Mis Ofertas'),
-            Tab(icon: Icon(Icons.event_available_outlined), text: 'Entrevistas'),
+            Tab(
+              icon: Icon(Icons.event_available_outlined),
+              text: 'Entrevistas',
+            ),
             Tab(icon: Icon(Icons.description_outlined), text: 'CV'),
             Tab(icon: Icon(Icons.mail_outline), text: 'Carta'),
             Tab(icon: Icon(Icons.videocam_outlined), text: 'VC'),

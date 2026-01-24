@@ -32,43 +32,56 @@ class _CurriculumSkillsSectionState extends State<CurriculumSkillsSection> {
       children: [
         const CurriculumSectionHeader(
           title: 'Habilidades',
-          subtitle: 'Agrega palabras clave',
+          subtitle: 'Agrega palabras clave sobre tus conocimientos',
         ),
-        const SizedBox(height: uiSpacing12),
+        const SizedBox(height: uiSpacing16),
         Row(
           children: [
             Expanded(
               child: TextFormField(
                 controller: _skillController,
-                decoration: const InputDecoration(labelText: 'Nueva habilidad'),
+                decoration: const InputDecoration(
+                  labelText: 'Nueva habilidad',
+                  hintText: 'Ej: Flutter, Python, SQL',
+                ),
                 onFieldSubmitted: (value) {
                   formCubit.addSkill(value);
                   _skillController.clear();
                 },
               ),
             ),
-            const SizedBox(width: uiSpacing12),
-            FilledButton(
+            const SizedBox(width: uiSpacing8),
+            IconButton.filled(
               onPressed: () {
                 formCubit.addSkill(_skillController.text);
                 _skillController.clear();
               },
-              child: const Text('Agregar'),
+              icon: const Icon(Icons.add),
+              tooltip: 'Agregar habilidad',
             ),
           ],
         ),
-        const SizedBox(height: uiSpacing12),
-        Wrap(
-          spacing: uiSpacing8,
-          runSpacing: uiSpacing8,
-          children: [
-            for (final skill in widget.skills)
-              InputChip(
-                label: Text(skill),
-                onDeleted: () => formCubit.removeSkill(skill),
-              ),
-          ],
-        ),
+        if (widget.skills.isNotEmpty) ...[
+          const SizedBox(height: uiSpacing20),
+          Wrap(
+            spacing: uiSpacing8,
+            runSpacing: uiSpacing8,
+            children: [
+              for (final skill in widget.skills)
+                InputChip(
+                  label: Text(skill),
+                  onDeleted: () => formCubit.removeSkill(skill),
+                  deleteIcon: const Icon(Icons.close, size: 14),
+                  padding: const EdgeInsets.all(uiSpacing4),
+                  backgroundColor: uiAccentSoft,
+                  labelStyle: const TextStyle(
+                    color: uiInk,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+            ],
+          ),
+        ],
       ],
     );
   }

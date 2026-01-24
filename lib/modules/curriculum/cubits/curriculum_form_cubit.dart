@@ -1,102 +1,28 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/features/ai/api/document_parser.dart';
-import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
-import 'package:opti_job_app/features/ai/prompts/ai_prompts.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_state.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_state.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
+import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
 
-enum CurriculumFormViewStatus { loading, empty, error, ready }
-
-enum CurriculumFormNotice { success, error }
-
-class CurriculumFormState extends Equatable {
-  const CurriculumFormState({
-    this.viewStatus = CurriculumFormViewStatus.loading,
-    this.hasChanges = false,
-    this.canSubmit = false,
-    this.isSaving = false,
-    this.isAnalyzing = false,
-    this.skills = const [],
-    this.experiences = const [],
-    this.education = const [],
-    this.errorMessage,
-    this.notice,
-    this.noticeMessage,
-  });
-
-  final CurriculumFormViewStatus viewStatus;
-  final bool hasChanges;
-  final bool canSubmit;
-  final bool isSaving;
-  final bool isAnalyzing;
-  final List<String> skills;
-  final List<CurriculumItem> experiences;
-  final List<CurriculumItem> education;
-  final String? errorMessage;
-  final CurriculumFormNotice? notice;
-  final String? noticeMessage;
-
-  @override
-  List<Object?> get props => [
-    viewStatus,
-    hasChanges,
-    canSubmit,
-    isSaving,
-    isAnalyzing,
-    skills,
-    experiences,
-    education,
-    errorMessage,
-    notice,
-    noticeMessage,
-  ];
-
-  CurriculumFormState copyWith({
-    CurriculumFormViewStatus? viewStatus,
-    bool? hasChanges,
-    bool? canSubmit,
-    bool? isSaving,
-    bool? isAnalyzing,
-    List<String>? skills,
-    List<CurriculumItem>? experiences,
-    List<CurriculumItem>? education,
-    String? errorMessage,
-    CurriculumFormNotice? notice,
-    String? noticeMessage,
-    bool clearNotice = false,
-    bool clearError = false,
-  }) {
-    return CurriculumFormState(
-      viewStatus: viewStatus ?? this.viewStatus,
-      hasChanges: hasChanges ?? this.hasChanges,
-      canSubmit: canSubmit ?? this.canSubmit,
-      isSaving: isSaving ?? this.isSaving,
-      isAnalyzing: isAnalyzing ?? this.isAnalyzing,
-      skills: skills ?? this.skills,
-      experiences: experiences ?? this.experiences,
-      education: education ?? this.education,
-      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
-      notice: clearNotice ? null : notice ?? this.notice,
-      noticeMessage: clearNotice ? null : noticeMessage ?? this.noticeMessage,
-    );
-  }
-}
+export 'curriculum_form_state.dart';
 
 class CurriculumFormCubit extends Cubit<CurriculumFormState> {
-  CurriculumFormCubit({required CurriculumCubit curriculumCubit})
-    : _curriculumCubit = curriculumCubit,
-      headlineController = TextEditingController(),
-      summaryController = TextEditingController(),
-      phoneController = TextEditingController(),
-      locationController = TextEditingController(),
-      super(const CurriculumFormState()) {
+  CurriculumFormCubit({
+    required CurriculumCubit curriculumCubit,
+    CvAnalysisService? analysisService,
+  })  : _curriculumCubit = curriculumCubit,
+        _analysisService = analysisService ?? CvAnalysisService(),
+        headlineController = TextEditingController(),
+        summaryController = TextEditingController(),
+        phoneController = TextEditingController(),
+        locationController = TextEditingController(),
+        super(const CurriculumFormState()) {
     headlineController.addListener(_handleTextChanged);
     summaryController.addListener(_handleTextChanged);
     phoneController.addListener(_handleTextChanged);
@@ -106,6 +32,7 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
   }
 
   final CurriculumCubit _curriculumCubit;
+  final CvAnalysisService _analysisService;
   final TextEditingController headlineController;
   final TextEditingController summaryController;
   final TextEditingController phoneController;
@@ -189,70 +116,16 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
     emit(state.copyWith(isAnalyzing: true, clearNotice: true));
 
     try {
-      // 1. Extraer texto del documento
-      String text = '';
-      if (fileName.toLowerCase().endsWith('.docx')) {
-        text = DocumentParser.extractTextFromDocx(bytes);
-      }
-      // (Aquí podrías añadir lógica para PDF si integras un paquete compatible)
+      final result = await _analysisService.analyzeCvFile(bytes, fileName);
 
-      if (text.isEmpty) {
-        emit(
-          state.copyWith(
-            isAnalyzing: false,
-            notice: CurriculumFormNotice.error,
-            noticeMessage:
-                'No se pudo leer el texto del archivo. Asegúrate de que sea un .docx válido.',
-          ),
-        );
-        return;
-      }
-
-      // 2. Consultar a la IA
-      final client = FirebaseAiClient();
-      final prompt = AiPrompts.extractCvData(cvText: text);
-      final json = await client.generateJson(prompt, responseSchema: null);
-
-      // 3. Rellenar campos con la respuesta
-      final personal = json['personal'] as Map<String, dynamic>? ?? {};
-      if (personal['summary'] != null) {
-        summaryController.text = personal['summary'];
-      }
-      if (personal['phone'] != null) {
-        phoneController.text = personal['phone'];
-      }
-      if (personal['location'] != null) {
-        locationController.text = personal['location'];
-      }
-
-      final newSkills = List<String>.from(json['skills'] ?? []);
-
-      final newExperience = (json['experience'] as List? ?? [])
-          .map(
-            (e) => CurriculumItem(
-              title: e['role'] ?? '',
-              subtitle: e['company'] ?? '',
-              period: e['date_range'] ?? '',
-              description: e['description'] ?? '',
-            ),
-          )
-          .toList();
-
-      final newEducation = (json['education'] as List? ?? [])
-          .map(
-            (e) => CurriculumItem(
-              title: e['degree'] ?? '',
-              subtitle: e['school'] ?? '',
-              period: e['date_range'] ?? '',
-              description: '',
-            ),
-          )
-          .toList();
+      if (result.summary.isNotEmpty) summaryController.text = result.summary;
+      if (result.phone.isNotEmpty) phoneController.text = result.phone;
+      if (result.location.isNotEmpty) locationController.text = result.location;
 
       _emitListUpdate(
-        skills: newSkills,
-        experiences: newExperience,
-        education: newEducation,
+        skills: result.skills.isNotEmpty ? result.skills : null,
+        experiences: result.experiences.isNotEmpty ? result.experiences : null,
+        education: result.education.isNotEmpty ? result.education : null,
       );
 
       emit(
@@ -267,7 +140,7 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
         state.copyWith(
           isAnalyzing: false,
           notice: CurriculumFormNotice.error,
-          noticeMessage: 'Error al analizar CV: $e',
+          noticeMessage: e.toString(),
         ),
       );
     }
@@ -363,7 +236,7 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
       canSubmit: _canSubmit(nextHasChanges, isSaving),
       errorMessage: viewStatus == CurriculumFormViewStatus.error
           ? curriculumState.errorMessage
-        : null,
+          : null,
       clearError: viewStatus != CurriculumFormViewStatus.error,
     );
 
@@ -422,36 +295,18 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
     required List<CurriculumItem> experiences,
     required List<CurriculumItem> education,
   }) {
-    return headline != _initial.headline ||
-        summary != _initial.summary ||
-        phone != _initial.phone ||
-        location != _initial.location ||
-        !_sameList(skills, _initial.skills) ||
-        !_sameItems(experiences, _initial.experiences) ||
-        !_sameItems(education, _initial.education);
-  }
-
-  bool _sameList(List<String> a, List<String> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) return false;
-    }
-    return true;
-  }
-
-  bool _sameItems(List<CurriculumItem> a, List<CurriculumItem> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      final left = a[i];
-      final right = b[i];
-      if (left.title != right.title ||
-          left.subtitle != right.subtitle ||
-          left.period != right.period ||
-          left.description != right.description) {
-        return false;
-      }
-    }
-    return true;
+    final currentRevision = Curriculum(
+      headline: headline,
+      summary: summary,
+      phone: phone,
+      location: location,
+      skills: skills,
+      experiences: experiences,
+      education: education,
+      attachment: _initial.attachment,
+      updatedAt: _initial.updatedAt,
+    );
+    return currentRevision != _initial;
   }
 
   bool _canSubmit(bool hasChanges, bool isSaving) {

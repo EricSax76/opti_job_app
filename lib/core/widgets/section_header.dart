@@ -52,9 +52,12 @@ class SectionHeader extends StatelessWidget {
                 ),
               ),
             ),
-            if (action != null) ...[
+            if (action != null) ...[ 
               const SizedBox(width: uiSpacing16),
-              action!,
+              Flexible(
+                fit: FlexFit.loose,
+                child: action!,
+              ),
             ],
           ],
         ),

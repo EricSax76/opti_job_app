@@ -8,11 +8,13 @@ class CurriculumAttachmentCard extends StatelessWidget {
     super.key,
     required this.attachment,
     required this.onDelete,
+    this.onOpen,
     required this.isBusy,
   });
 
   final CurriculumAttachment attachment;
   final VoidCallback onDelete;
+  final VoidCallback? onOpen;
   final bool isBusy;
 
   @override
@@ -23,11 +25,19 @@ class CurriculumAttachmentCard extends StatelessWidget {
         : 'Actualizado: ${_formatDate(attachment.updatedAt!)}';
 
     return AppCard(
-      padding: const EdgeInsets.all(uiSpacing12 + 2),
+      padding: const EdgeInsets.all(uiSpacing12),
       borderRadius: uiTileRadius,
+      backgroundColor: uiWhite,
       child: Row(
         children: [
-          const Icon(Icons.description_outlined, color: uiMuted),
+          Container(
+            padding: const EdgeInsets.all(uiSpacing12),
+            decoration: BoxDecoration(
+              color: uiAccentSoft,
+              borderRadius: BorderRadius.circular(uiTileRadius),
+            ),
+            child: const Icon(Icons.description_outlined, color: uiAccent, size: 24),
+          ),
           const SizedBox(width: uiSpacing12),
           Expanded(
             child: Column(
@@ -37,10 +47,11 @@ class CurriculumAttachmentCard extends StatelessWidget {
                   attachment.fileName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: uiInk,
-                      ),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: uiInk,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: uiSpacing4),
                 Text(
@@ -48,18 +59,21 @@ class CurriculumAttachmentCard extends StatelessWidget {
                     sizeLabel,
                     if (updatedLabel != null) updatedLabel,
                   ].join(' · '),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: uiMuted),
+                  style: const TextStyle(color: uiMuted, fontSize: 12),
                 ),
               ],
             ),
           ),
+          if (onOpen != null)
+            IconButton(
+              tooltip: 'Abrir',
+              onPressed: isBusy ? null : onOpen,
+              icon: const Icon(Icons.open_in_new_rounded, size: 20, color: uiMuted),
+            ),
           IconButton(
             tooltip: 'Eliminar',
             onPressed: isBusy ? null : onDelete,
-            icon: const Icon(Icons.delete_outline, size: 20),
+            icon: const Icon(Icons.delete_outline_rounded, size: 20, color: uiError),
           ),
         ],
       ),
@@ -85,4 +99,3 @@ class CurriculumAttachmentCard extends StatelessWidget {
     return '${two(date.day)}/${two(date.month)}/${date.year}';
   }
 }
-

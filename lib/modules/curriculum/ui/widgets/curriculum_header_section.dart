@@ -5,7 +5,7 @@ import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_attachment_card.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum_logic.dart';
+import 'package:opti_job_app/modules/curriculum/logic/curriculum_actions.dart';
 
 class CurriculumHeaderSection extends StatefulWidget {
   const CurriculumHeaderSection({super.key, required this.isSaving});
@@ -64,6 +64,10 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
           CurriculumAttachmentCard(
             attachment: attachment,
             isBusy: widget.isSaving || _isManagingAttachment,
+            onOpen: () => CurriculumLogic.openAttachment(
+              context: context,
+              attachment: attachment,
+            ),
             onDelete: () => CurriculumLogic.confirmAndDeleteAttachment(
               context: context,
               attachment: attachment,
@@ -76,4 +80,3 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
     );
   }
 }
-

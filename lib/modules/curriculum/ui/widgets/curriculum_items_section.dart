@@ -27,33 +27,59 @@ class CurriculumItemsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: uiInk,
+                  ),
+                ),
+                Text(
+                  items.isEmpty ? 'Pendiente' : '${items.length} elementos',
+                  style: const TextStyle(fontSize: 12, color: uiMuted),
+                ),
+              ],
             ),
             TextButton.icon(
               onPressed: onAdd,
               icon: const Icon(Icons.add, size: 20),
               label: const Text('Agregar'),
+              style: TextButton.styleFrom(
+                backgroundColor: uiAccentSoft,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(uiPillRadius),
+                ),
+              ),
             ),
           ],
         ),
+        const SizedBox(height: uiSpacing16),
         if (items.isEmpty)
           AppCard(
-            padding: const EdgeInsets.all(uiSpacing16),
-            borderRadius: uiTileRadius,
-            child: Text(
-              emptyHint,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: uiMuted),
+            padding: const EdgeInsets.all(uiSpacing24),
+            borderColor: uiBorder,
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.add_circle_outline,
+                    color: uiMuted.withValues(alpha: 0.5),
+                    size: 32,
+                  ),
+                  const SizedBox(height: uiSpacing8),
+                  Text(
+                    emptyHint,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: uiMuted, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
           )
         else
@@ -61,33 +87,39 @@ class CurriculumItemsSection extends StatelessWidget {
             children: [
               for (var i = 0; i < items.length; i++)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: uiSpacing8),
+                  padding: const EdgeInsets.only(bottom: uiSpacing12),
                   child: AppCard(
                     padding: EdgeInsets.zero,
-                    borderRadius: uiTileRadius,
                     onTap: () => onEdit(i, items[i]),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: uiSpacing12,
-                        vertical: uiSpacing4,
+                        horizontal: uiSpacing16,
+                        vertical: uiSpacing8,
                       ),
                       title: Text(
                         items[i].title.isEmpty ? 'Sin título' : items[i].title,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: uiInk,
+                        ),
                       ),
-                      subtitle: Text(
-                        [
-                          if (items[i].subtitle.trim().isNotEmpty)
-                            items[i].subtitle.trim(),
-                          if (items[i].period.trim().isNotEmpty)
-                            items[i].period.trim(),
-                        ].join(' · '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: uiSpacing4),
+                        child: Text(
+                          [
+                            if (items[i].subtitle.trim().isNotEmpty)
+                              items[i].subtitle.trim(),
+                            if (items[i].period.trim().isNotEmpty)
+                              items[i].period.trim(),
+                          ].join(' · '),
+                          style: const TextStyle(fontSize: 13, color: uiMuted),
+                         ),
                       ),
                       trailing: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, size: 20),
+                        icon: const Icon(Icons.more_vert_rounded, size: 20, color: uiMuted),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(uiTileRadius),
+                        ),
                         onSelected: (value) async {
                           if (value == 'edit') {
                             await onEdit(i, items[i]);
@@ -95,25 +127,25 @@ class CurriculumItemsSection extends StatelessWidget {
                             onRemove(i);
                           }
                         },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
                             value: 'edit',
-                            child: ListTile(
-                              leading: Icon(Icons.edit_outlined, size: 20),
-                              title: Text('Editar'),
-                              contentPadding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit_outlined, size: 20, color: uiInk),
+                                SizedBox(width: uiSpacing12),
+                                Text('Editar'),
+                              ],
                             ),
                           ),
-                          PopupMenuItem(
+                          const PopupMenuItem(
                             value: 'remove',
-                            child: ListTile(
-                              leading: Icon(Icons.delete_outline,
-                                  size: 20, color: Colors.red),
-                              title: Text('Eliminar',
-                                  style: TextStyle(color: Colors.red)),
-                              contentPadding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline, size: 20, color: uiError),
+                                SizedBox(width: uiSpacing12),
+                                Text('Eliminar', style: TextStyle(color: uiError)),
+                              ],
                             ),
                           ),
                         ],
@@ -127,77 +159,3 @@ class CurriculumItemsSection extends StatelessWidget {
     );
   }
 }
-
-Future<CurriculumItem?> showCurriculumItemDialog(
-  BuildContext context, {
-  CurriculumItem? initial,
-}) {
-  final initialItem = initial ?? CurriculumItem.empty();
-  final titleController = TextEditingController(text: initialItem.title);
-  final subtitleController = TextEditingController(text: initialItem.subtitle);
-  final periodController = TextEditingController(text: initialItem.period);
-  final descriptionController = TextEditingController(
-    text: initialItem.description,
-  );
-
-  return showDialog<CurriculumItem>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text(initial == null ? 'Agregar' : 'Editar'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Título'),
-              ),
-              const SizedBox(height: uiSpacing12),
-              TextFormField(
-                controller: subtitleController,
-                decoration: const InputDecoration(labelText: 'Subtítulo'),
-              ),
-              const SizedBox(height: uiSpacing12),
-              TextFormField(
-                controller: periodController,
-                decoration: const InputDecoration(labelText: 'Periodo'),
-              ),
-              const SizedBox(height: uiSpacing12),
-              TextFormField(
-                controller: descriptionController,
-                maxLines: 4,
-                decoration: const InputDecoration(labelText: 'Descripción'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop(
-                CurriculumItem(
-                  title: titleController.text.trim(),
-                  subtitle: subtitleController.text.trim(),
-                  period: periodController.text.trim(),
-                  description: descriptionController.text.trim(),
-                ),
-              );
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      );
-    },
-  ).whenComplete(() {
-    titleController.dispose();
-    subtitleController.dispose();
-    periodController.dispose();
-    descriptionController.dispose();
-  });
-}
-

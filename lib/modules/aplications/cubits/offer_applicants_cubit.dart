@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -26,10 +28,12 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
       ),
     );
     try {
-      final applicants = await _applicantsRepository.getApplicationsForOffer(
-        jobOfferId: offerId,
-        companyUid: companyUid,
-      );
+      final applicants = await _applicantsRepository
+          .getApplicationsForOffer(
+            jobOfferId: offerId,
+            companyUid: companyUid,
+          )
+          .timeout(const Duration(seconds: 12));
       final newApplicants = Map<int, List<Application>>.from(state.applicants)
         ..[offerId] = applicants;
       newStatuses[offerId] = OfferApplicantsStatus.success;
@@ -40,7 +44,24 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
           errors: newErrors,
         ),
       );
-    } catch (_) {
+    } on TimeoutException catch (error, stackTrace) {
+      print(
+        'OfferApplicantsCubit.loadApplicants timeout '
+        'offerId=$offerId companyUid=$companyUid error=$error\n$stackTrace',
+      );
+      newStatuses[offerId] = OfferApplicantsStatus.failure;
+      newErrors[offerId] = 'Tiempo de espera agotado al cargar aplicantes.';
+      emit(
+        state.copyWith(
+          statuses: Map<int, OfferApplicantsStatus>.from(newStatuses),
+          errors: Map<int, String?>.from(newErrors),
+        ),
+      );
+    } catch (error, stackTrace) {
+      print(
+        'OfferApplicantsCubit.loadApplicants error '
+        'offerId=$offerId companyUid=$companyUid error=$error\n$stackTrace',
+      );
       newStatuses[offerId] = OfferApplicantsStatus.failure;
       newErrors[offerId] = 'No se pudieron cargar los aplicantes.';
       emit(
