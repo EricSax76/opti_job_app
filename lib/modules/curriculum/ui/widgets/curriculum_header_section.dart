@@ -34,7 +34,15 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
         SectionHeader(
           title: 'Curriculum',
           subtitle: 'Completa tu CV para postular más rápido.',
+          titleFontSize: 22,
           action: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: uiSpacing12,
+                vertical: uiSpacing8,
+              ),
+              textStyle: const TextStyle(fontSize: 13),
+            ),
             onPressed: widget.isSaving || _isManagingAttachment || isAnalyzing
                 ? null
                 : () => CurriculumLogic.pickAndUploadAttachment(
@@ -56,6 +64,8 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
                   : _isManagingAttachment
                       ? 'Subiendo...'
                       : 'Importar PDF',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ),

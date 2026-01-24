@@ -187,15 +187,15 @@ function getSafetySettings() {
 
 function getVertexModel(quality) {
   const project = env('GCP_PROJECT', env('GOOGLE_CLOUD_PROJECT'));
-  const location = env('GCP_LOCATION', 'us-central1');
+  const location = env('GCP_LOCATION', 'europe-southwest1');
   if (!project) {
     throw new Error('Missing GCP_PROJECT/GOOGLE_CLOUD_PROJECT');
   }
   const vertex = new VertexAI({ project, location });
   const modelName =
     quality === 'pro'
-      ? env('AI_MODEL_PRO', 'gemini-1.5-pro-001')
-      : env('AI_MODEL_FLASH', 'gemini-1.5-flash-001');
+      ? env('AI_MODEL_PRO', 'gemini-2.5-pro-001')
+      : env('AI_MODEL_FLASH', 'gemini-2.5-flash-001');
   return vertex.getGenerativeModel({ model: modelName });
 }
 

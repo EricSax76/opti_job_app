@@ -6,8 +6,8 @@ import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.da
 import 'package:opti_job_app/modules/aplications/logic/application_service.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
+import 'package:opti_job_app/core/platform/web_history.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
-import 'package:web/web.dart' as web;
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_view.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/interviews_view.dart';
@@ -36,15 +36,17 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   bool _isProgrammaticTabChange = false;
+  late int _selectedIndex;
 
   @override
   void initState() {
     super.initState();
     final safeIndex = widget.initialIndex.clamp(0, 5);
+    _selectedIndex = safeIndex;
     _tabController = TabController(
-      length: 6,
+      length: 3,
       vsync: this,
-      initialIndex: safeIndex,
+      initialIndex: safeIndex.clamp(0, 2),
     );
     _tabController.addListener(_handleTabChange);
   }
@@ -60,10 +62,13 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
   void didUpdateWidget(covariant CandidateDashboardScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     final safeIndex = widget.initialIndex.clamp(0, 5);
-    if (safeIndex != _tabController.index) {
+    if (safeIndex == _selectedIndex) return;
+    _selectedIndex = safeIndex;
+    if (_selectedIndex <= 2 && safeIndex != _tabController.index) {
       _isProgrammaticTabChange = true;
-      _tabController.index = safeIndex;
+      _tabController.index = _selectedIndex;
     }
+    setState(() {});
   }
 
   void _handleTabChange() {
@@ -73,13 +78,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     }
     if (_tabController.indexIsChanging) return;
 
-    // Update browser URL without triggering navigation
-    if (kIsWeb) {
-      final path = _pathForIndex(_tabController.index);
-      if (path != null) {
-        web.window.history.pushState(null, '', path);
-      }
-    }
+    _setSelectedIndex(_tabController.index);
   }
 
   String? _pathForIndex(int index) {
@@ -102,9 +101,35 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     }
   }
 
+  void _setSelectedIndex(int index) {
+    final nextIndex = index.clamp(0, 5);
+    if (_selectedIndex == nextIndex) return;
+
+    setState(() {
+      _selectedIndex = nextIndex;
+    });
+
+    if (_selectedIndex <= 2 && _tabController.index != _selectedIndex) {
+      _isProgrammaticTabChange = true;
+      _tabController.index = _selectedIndex;
+    }
+
+    // Update browser URL without triggering navigation
+    if (kIsWeb) {
+      final path = _pathForIndex(_selectedIndex);
+      if (path != null) {
+        pushBrowserPath(path);
+      }
+    }
+  }
+
+  void _handleDrawerSelection(int index) {
+    Navigator.of(context).pop();
+    _setSelectedIndex(index);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<CandidateAuthCubit>().state;
     final profileState = context.watch<ProfileCubit>().state;
     const background = uiBackground;
     const ink = uiInk;
@@ -120,7 +145,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
           'OPTIJOB',
           style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
         ),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: ink,
@@ -128,20 +153,45 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         elevation: 0,
         shape: const Border(bottom: BorderSide(color: border, width: 1)),
         actions: [
-          IconButton(
-            tooltip: 'Perfil',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
-            ),
-            icon: CircleAvatar(
-              radius: 16,
-              backgroundColor: background,
-              backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: (avatarUrl == null || avatarUrl.isEmpty)
-                  ? Icon(Icons.person_outline, size: 18, color: muted)
-                  : null,
+          PopupMenuButton<_CandidateAccountAction>(
+            tooltip: 'Cuenta',
+            onSelected: (action) {
+              switch (action) {
+                case _CandidateAccountAction.profile:
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ProfileScreen(),
+                    ),
+                  );
+                  break;
+                case _CandidateAccountAction.logout:
+                  context.read<CandidateAuthCubit>().logout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _CandidateAccountAction.profile,
+                child: Text('Mi perfil'),
+              ),
+              PopupMenuDivider(),
+              PopupMenuItem(
+                value: _CandidateAccountAction.logout,
+                child: Text('Cerrar sesión'),
+              ),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: background,
+                backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
+                    ? NetworkImage(avatarUrl)
+                    : null,
+                child: (avatarUrl == null || avatarUrl.isEmpty)
+                    ? Icon(Icons.person_outline, size: 18, color: muted)
+                    : null,
+              ),
             ),
           ),
         ],
@@ -158,9 +208,44 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
               icon: Icon(Icons.event_available_outlined),
               text: 'Entrevistas',
             ),
-            Tab(icon: Icon(Icons.description_outlined), text: 'CV'),
-            Tab(icon: Icon(Icons.mail_outline), text: 'Carta'),
-            Tab(icon: Icon(Icons.videocam_outlined), text: 'VC'),
+          ],
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.white),
+              child: Center(
+                child: Text(
+                  'OPTIJOB',
+                  style: TextStyle(
+                    color: ink,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: const Text('CV'),
+              selected: _selectedIndex == 3,
+              onTap: () => _handleDrawerSelection(3),
+            ),
+            ListTile(
+              leading: const Icon(Icons.mail_outline),
+              title: const Text('Carta de presentación'),
+              selected: _selectedIndex == 4,
+              onTap: () => _handleDrawerSelection(4),
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam_outlined),
+              title: const Text('Video curriculum'),
+              selected: _selectedIndex == 5,
+              onTap: () => _handleDrawerSelection(5),
+            ),
           ],
         ),
       ),
@@ -169,8 +254,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
           applicationService: context.read<ApplicationService>(),
           candidateAuthCubit: context.read<CandidateAuthCubit>(),
         )..loadMyApplications(),
-        child: TabBarView(
-          controller: _tabController,
+        child: IndexedStack(
+          index: _selectedIndex,
           children: const [
             DashboardView(),
             MyApplicationsView(),
@@ -181,15 +266,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
           ],
         ),
       ),
-      floatingActionButton: authState.isAuthenticated
-          ? FloatingActionButton(
-              backgroundColor: ink,
-              foregroundColor: Colors.white,
-              onPressed: () => context.read<CandidateAuthCubit>().logout(),
-              tooltip: 'Cerrar sesión',
-              child: const Icon(Icons.logout),
-            )
-          : null,
     );
   }
 }
+
+enum _CandidateAccountAction { profile, logout }

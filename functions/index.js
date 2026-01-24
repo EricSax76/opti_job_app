@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-const region = 'europe-southwest1';
+const region = 'europe-west1';
 const regionalFunctions = functions.region(region);
 
 exports.syncCompanyProfileToOffers = regionalFunctions.firestore

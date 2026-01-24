@@ -59,6 +59,17 @@ Future<void> maybeActivateFirebaseAppCheck() async {
         ? const AppleDebugProvider()
         : const AppleAppAttestProvider(),
   );
+
+  if (kDebugMode &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android) {
+    try {
+      final token = await FirebaseAppCheck.instance.getToken(true);
+      debugPrint('[AppCheck] Android debug token: $token');
+    } catch (error) {
+      debugPrint('[AppCheck] Failed to fetch debug token: $error');
+    }
+  }
 }
 
 Future<void> maybeUseFirebaseEmulators() async {

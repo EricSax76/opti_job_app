@@ -14,15 +14,67 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     required int jobOfferId,
     required String companyUid,
   }) async {
-    final query = await _firestore
-        .collection('applications')
-        .where('companyUid', isEqualTo: companyUid)
-        .where('jobOfferId', isEqualTo: jobOfferId)
-        .get();
+    final collection = _firestore.collection('applications');
 
-    return query.docs
-        .map((doc) => ApplicationMapper.fromFirestore(doc.data(), id: doc.id))
-        .toList();
+    Future<List<Application>> runQuery({
+      required String offerField,
+      required String companyField,
+      bool includeCompany = true,
+    }) async {
+      var query = collection.where(offerField, isEqualTo: jobOfferId);
+      if (includeCompany && companyUid.isNotEmpty) {
+        query = query.where(companyField, isEqualTo: companyUid);
+      }
+      final snapshot = await query.get();
+      return snapshot.docs
+          .map((doc) => ApplicationMapper.fromFirestore(doc.data(), id: doc.id))
+          .toList();
+    }
+
+    final primary = await runQuery(
+      offerField: 'jobOfferId',
+      companyField: 'companyUid',
+    );
+    if (primary.isNotEmpty) {
+      return primary;
+    }
+
+    final fallbackResults = <String, Application>{};
+    Future<void> merge(List<Application> apps) async {
+      for (final app in apps) {
+        if (app.id == null) continue;
+        fallbackResults[app.id!] = app;
+      }
+    }
+
+    await merge(
+      await runQuery(offerField: 'job_offer_id', companyField: 'companyUid'),
+    );
+    await merge(
+      await runQuery(offerField: 'jobOfferId', companyField: 'company_uid'),
+    );
+    await merge(
+      await runQuery(offerField: 'job_offer_id', companyField: 'company_uid'),
+    );
+
+    if (fallbackResults.isEmpty) {
+      await merge(
+        await runQuery(
+          offerField: 'jobOfferId',
+          companyField: 'companyUid',
+          includeCompany: false,
+        ),
+      );
+      await merge(
+        await runQuery(
+          offerField: 'job_offer_id',
+          companyField: 'companyUid',
+          includeCompany: false,
+        ),
+      );
+    }
+
+    return fallbackResults.values.toList();
   }
 
   @override
