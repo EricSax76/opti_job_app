@@ -1,0 +1,170 @@
+<section class="hero section">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        El matching laboral<br />
+        ya no es cuestión <span class="text-gradient">de suerte</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Conectamos candidatos con empresas usando inteligencia artificial. Sin
+        intermediarios. Sin filtros obsoletos. Solo el match perfecto.
+      </p>
+
+      <div class="hero-cta">
+        <a href="/candidatos" class="btn btn-primary btn-lg"> Soy candidato </a>
+        <a href="/empresas" class="btn btn-secondary btn-lg"> Soy empresa </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-value">98%</div>
+          <div class="stat-label">Precisión en matching</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">&lt;24h</div>
+          <div class="stat-label">Tiempo medio de respuesta</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">0€</div>
+          <div class="stat-label">Para candidatos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="visual-orb orb-1"></div>
+      <div class="visual-orb orb-2"></div>
+      <div class="visual-grid"></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .hero-content {
+    max-width: 800px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .hero-title {
+    font-size: var(--text-5xl);
+    font-weight: 800;
+    margin-bottom: var(--space-xl);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .hero-subtitle {
+    font-size: var(--text-xl);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-3xl);
+    max-width: 600px;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-4xl);
+    flex-wrap: wrap;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-2xl);
+    padding-top: var(--space-2xl);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .hero-visual {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 50%;
+    height: 80%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .visual-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: float 6s var(--ease-in-out) infinite;
+  }
+
+  .orb-1 {
+    top: 20%;
+    right: 10%;
+    width: 300px;
+    height: 300px;
+    background: var(--color-primary);
+  }
+
+  .orb-2 {
+    bottom: 20%;
+    right: 30%;
+    width: 250px;
+    height: 250px;
+    background: var(--color-secondary);
+    animation-delay: -3s;
+  }
+
+  .visual-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--color-border-light) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-border-light) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(
+      ellipse 80% 80% at 60% 50%,
+      black 0%,
+      transparent 70%
+    );
+    -webkit-mask-image: radial-gradient(
+      ellipse 80% 80% at 60% 50%,
+      black 0%,
+      transparent 70%
+    );
+  }
+
+  @media (max-width: 768px) {
+    .hero-visual {
+      width: 100%;
+      height: 100%;
+      opacity: 0.3;
+    }
+
+    .hero-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

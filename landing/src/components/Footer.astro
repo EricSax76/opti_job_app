@@ -1,0 +1,258 @@
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <!-- Main Footer Info -->
+      <div class="footer-main">
+        <div class="footer-brand">
+          <h3 class="brand-name">OptiJob</h3>
+          <p class="brand-tagline">
+            Matching laboral con inteligencia artificial
+          </p>
+        </div>
+
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4 class="column-title">Producto</h4>
+            <ul class="link-list">
+              <li><a href="/candidatos">Para candidatos</a></li>
+              <li><a href="/empresas">Para empresas</a></li>
+              <li><a href="/recruiters">Para recruiters</a></li>
+              <li><a href="/precios">Precios</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-column">
+            <h4 class="column-title">Empresa</h4>
+            <ul class="link-list">
+              <li><a href="/sobre-nosotros">Sobre nosotros</a></li>
+              <li><a href="/blog">Blog</a></li>
+              <li><a href="/contacto">Contacto</a></li>
+              <li><a href="/soporte">Soporte</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-column">
+            <h4 class="column-title">Legal</h4>
+            <ul class="link-list">
+              <li><a href="/aviso-legal">Aviso legal</a></li>
+              <li><a href="/privacidad">Política de privacidad</a></li>
+              <li><a href="/cookies">Política de cookies</a></li>
+              <li><a href="/condiciones">Condiciones de uso</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legal Footer -->
+      <div class="footer-legal">
+        <div class="legal-info">
+          <p class="company-info">
+            OptiJob, S.L. – CIF: B12345678<br />
+            Domicilio social: Calle Ejemplo, 123, 28001 Madrid, España<br />
+            Registro Mercantil de Madrid, Tomo 12345, Folio 67, Hoja M-123456
+          </p>
+        </div>
+
+        <div class="footer-bottom">
+          <p class="copyright">
+            © {new Date().getFullYear()} OptiJob, S.L. Todos los derechos reservados.
+          </p>
+
+          <div class="social-links">
+            <a
+              href="https://linkedin.com/company/optijob"
+              aria-label="LinkedIn"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+                ></path>
+              </svg>
+            </a>
+            <a
+              href="https://twitter.com/optijob"
+              aria-label="Twitter"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                ></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--color-bg-secondary);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-4xl);
+    padding-bottom: var(--space-2xl);
+  }
+
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4xl);
+  }
+
+  .footer-main {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--space-4xl);
+  }
+
+  .footer-brand {
+    max-width: 300px;
+  }
+
+  .brand-name {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    margin-bottom: var(--space-sm);
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      var(--color-secondary)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .brand-tagline {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+  }
+
+  .footer-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2xl);
+  }
+
+  .footer-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .column-title {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .link-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .link-list a {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .link-list a:hover {
+    color: var(--color-primary);
+  }
+
+  .footer-legal {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-2xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  .legal-info {
+    text-align: center;
+  }
+
+  .company-info {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-lg);
+  }
+
+  .copyright {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .social-links {
+    display: flex;
+    gap: var(--space-md);
+  }
+
+  .social-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    transition: all var(--duration-normal) var(--ease-in-out);
+  }
+
+  .social-links a:hover {
+    background: var(--color-primary);
+    color: var(--color-text-primary);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 1024px) {
+    .footer-main {
+      grid-template-columns: 1fr;
+    }
+
+    .footer-links {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .footer-links {
+      grid-template-columns: 1fr;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>
