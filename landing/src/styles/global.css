@@ -3,25 +3,25 @@
    ======================================== */
 
 :root {
-  /* Colors - Radical Dark Palette */
-  --color-primary: #0066ff;
-  --color-primary-light: #3385ff;
-  --color-primary-dark: #0052cc;
+  /* Colors - Professional Job Search Palette */
+  --color-primary: #2563eb;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1d4ed8;
 
-  --color-secondary: #00ff88;
-  --color-secondary-light: #33ffa3;
-  --color-secondary-dark: #00cc6d;
+  --color-secondary: #10b981;
+  --color-secondary-light: #34d399;
+  --color-secondary-dark: #059669;
 
-  --color-bg-primary: #0a0a0f;
-  --color-bg-secondary: #1a1a24;
-  --color-bg-tertiary: #2a2a38;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
 
-  --color-text-primary: #f5f5f7;
-  --color-text-secondary: #b4b4b8;
-  --color-text-muted: #6e6e73;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #9ca3af;
 
-  --color-border: #3a3a48;
-  --color-border-light: #2a2a38;
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
 
   /* Typography */
   --font-sans:
@@ -59,14 +59,14 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg:
-    0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl:
-    0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
-  --shadow-glow: 0 0 20px rgb(0 102 255 / 0.4);
-  --shadow-glow-secondary: 0 0 20px rgb(0 255 136 / 0.3);
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-glow: 0 0 0 1px rgb(37 99 235 / 0.1), 0 1px 2px 0 rgb(37 99 235 / 0.1);
+  --shadow-glow-secondary: 0 0 0 1px rgb(16 185 129 / 0.1), 0 1px 2px 0 rgb(16 185 129 / 0.1);
 
   /* Animation Durations */
   --duration-fast: 150ms;
@@ -232,25 +232,25 @@ a {
 
 .btn-primary {
   background: var(--color-primary);
-  color: var(--color-text-primary);
-  box-shadow: var(--shadow-glow);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background: var(--color-primary-light);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow), var(--shadow-lg);
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-secondary {
-  background: transparent;
-  color: var(--color-text-primary);
-  border: 2px solid var(--color-border);
+  background: var(--color-bg-primary);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
 }
 
 .btn-secondary:hover {
   border-color: var(--color-primary);
-  background: rgba(0, 102, 255, 0.1);
+  background: var(--color-bg-secondary);
 }
 
 .btn-lg {
@@ -260,17 +260,18 @@ a {
 
 /* Card */
 .card {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   transition: all var(--duration-normal) var(--ease-in-out);
+  box-shadow: var(--shadow-sm);
 }
 
 .card:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-4px);
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 /* Animations */
@@ -326,29 +327,29 @@ a {
 /* Selection */
 ::selection {
   background-color: var(--color-primary);
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 ::-moz-selection {
   background-color: var(--color-primary);
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-primary);
+  background: var(--color-bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bg-tertiary);
+  background: var(--color-border);
   border-radius: var(--radius-full);
-  border: 3px solid var(--color-bg-primary);
+  border: 2px solid var(--color-bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border);
+  background: var(--color-text-muted);
 }

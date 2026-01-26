@@ -3,19 +3,18 @@
     <div class="cta-card">
       <div class="cta-content">
         <h2 class="cta-title">
-          ¿Listo para encontrar<br />
-          <span class="text-gradient">tu próximo paso?</span>
+          ¿Listo para dar<br />
+          <span class="text-gradient">el próximo paso?</span>
         </h2>
         <p class="cta-description">
-          Únete a los miles de candidatos y empresas que ya confían en OptiJob
+          Únete a OptiJob y descubre cómo la inteligencia artificial puede
+          ayudarte en tu búsqueda de empleo o talento
         </p>
         <div class="cta-buttons">
           <a href="/registro" class="btn btn-primary btn-lg">
             Comenzar gratis
           </a>
-          <a href="/contacto" class="btn btn-secondary btn-lg">
-            Contactar ventas
-          </a>
+          <a href="/contacto" class="btn btn-secondary btn-lg"> Contactar </a>
         </div>
       </div>
 
@@ -78,32 +77,16 @@
 
 <style>
   .cta {
-    background: var(--color-bg-secondary);
+    background: var(--color-bg-primary);
     position: relative;
-    overflow: hidden;
-  }
-
-  .cta::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(
-      circle,
-      rgba(0, 102, 255, 0.15) 0%,
-      transparent 70%
-    );
-    pointer-events: none;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
   }
 
   .cta-card {
     position: relative;
-    z-index: 1;
     text-align: center;
-    max-width: 800px;
+    max-width: 700px;
     margin: 0 auto;
   }
 
@@ -112,21 +95,23 @@
   }
 
   .cta-title {
-    font-size: var(--text-4xl);
-    font-weight: 800;
+    font-size: var(--text-3xl);
+    font-weight: 700;
     margin-bottom: var(--space-lg);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
   }
 
   .cta-description {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     color: var(--color-text-secondary);
     margin-bottom: var(--space-2xl);
+    line-height: 1.6;
   }
 
   .cta-buttons {
     display: flex;
-    gap: var(--space-lg);
+    gap: var(--space-md);
     justify-content: center;
     flex-wrap: wrap;
   }

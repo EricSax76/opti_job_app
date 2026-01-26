@@ -1,41 +1,58 @@
 <section class="hero section">
   <div class="container">
     <div class="hero-content">
+      <div class="hero-label">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 3L12 7H17L13.5 10.5L15 17L10 13.5L5 17L6.5 10.5L3 7H8L10 3Z"
+            fill="currentColor"></path>
+        </svg>
+        <span>Potenciado por IA</span>
+      </div>
+
       <h1 class="hero-title">
-        El matching laboral<br />
-        ya no es cuestión <span class="text-gradient">de suerte</span>
+        Encuentra el trabajo que mereces<br />
+        con la ayuda de la <span class="text-gradient"
+          >inteligencia artificial</span
+        >
       </h1>
 
       <p class="hero-subtitle">
-        Conectamos candidatos con empresas usando inteligencia artificial. Sin
-        intermediarios. Sin filtros obsoletos. Solo el match perfecto.
+        OptiJob conecta candidatos con empresas de forma inteligente. Sin largos
+        procesos. Sin candidaturas perdidas. Solo matches precisos.
       </p>
 
       <div class="hero-cta">
-        <a href="/candidatos" class="btn btn-primary btn-lg"> Soy candidato </a>
-        <a href="/empresas" class="btn btn-secondary btn-lg"> Soy empresa </a>
+        <a href="/candidatos" class="btn btn-primary btn-lg">
+          Comenzar como candidato
+        </a>
+        <a href="/empresas" class="btn btn-secondary btn-lg">
+          Publicar oferta
+        </a>
       </div>
 
       <div class="hero-stats">
         <div class="stat">
           <div class="stat-value">98%</div>
-          <div class="stat-label">Precisión en matching</div>
+          <div class="stat-label">Precisión en matches</div>
         </div>
+        <div class="stat-divider"></div>
         <div class="stat">
           <div class="stat-value">&lt;24h</div>
-          <div class="stat-label">Tiempo medio de respuesta</div>
+          <div class="stat-label">Respuesta media</div>
         </div>
+        <div class="stat-divider"></div>
         <div class="stat">
-          <div class="stat-value">0€</div>
-          <div class="stat-label">Para candidatos</div>
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Gratis para candidatos</div>
         </div>
       </div>
-    </div>
-
-    <div class="hero-visual">
-      <div class="visual-orb orb-1"></div>
-      <div class="visual-orb orb-2"></div>
-      <div class="visual-grid"></div>
     </div>
   </div>
 </section>
@@ -43,46 +60,69 @@
 <style>
   .hero {
     position: relative;
-    overflow: hidden;
-    min-height: 100vh;
+    min-height: 90vh;
     display: flex;
     align-items: center;
+    background: linear-gradient(to bottom, #ffffff, var(--color-bg-secondary));
   }
 
   .hero-content {
-    max-width: 800px;
-    position: relative;
-    z-index: 10;
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .hero-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-primary);
+    margin-bottom: var(--space-xl);
+  }
+
+  .hero-label svg {
+    width: 16px;
+    height: 16px;
   }
 
   .hero-title {
-    font-size: var(--text-5xl);
-    font-weight: 800;
+    font-size: var(--text-4xl);
+    font-weight: 700;
     margin-bottom: var(--space-xl);
     letter-spacing: -0.02em;
-    line-height: 1.1;
+    line-height: 1.2;
+    color: var(--color-text-primary);
   }
 
   .hero-subtitle {
-    font-size: var(--text-xl);
+    font-size: var(--text-lg);
     color: var(--color-text-secondary);
     margin-bottom: var(--space-3xl);
-    max-width: 600px;
+    line-height: 1.6;
   }
 
   .hero-cta {
     display: flex;
-    gap: var(--space-lg);
+    gap: var(--space-md);
     margin-bottom: var(--space-4xl);
+    justify-content: center;
     flex-wrap: wrap;
   }
 
   .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: var(--space-2xl);
     padding-top: var(--space-2xl);
     border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;
   }
 
   .stat {
@@ -90,7 +130,7 @@
   }
 
   .stat-value {
-    font-size: var(--text-3xl);
+    font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-primary);
     margin-bottom: var(--space-xs);
@@ -101,70 +141,28 @@
     color: var(--color-text-muted);
   }
 
-  .hero-visual {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    width: 50%;
-    height: 80%;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .visual-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.4;
-    animation: float 6s var(--ease-in-out) infinite;
-  }
-
-  .orb-1 {
-    top: 20%;
-    right: 10%;
-    width: 300px;
-    height: 300px;
-    background: var(--color-primary);
-  }
-
-  .orb-2 {
-    bottom: 20%;
-    right: 30%;
-    width: 250px;
-    height: 250px;
-    background: var(--color-secondary);
-    animation-delay: -3s;
-  }
-
-  .visual-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--color-border-light) 1px, transparent 1px),
-      linear-gradient(90deg, var(--color-border-light) 1px, transparent 1px);
-    background-size: 50px 50px;
-    mask-image: radial-gradient(
-      ellipse 80% 80% at 60% 50%,
-      black 0%,
-      transparent 70%
-    );
-    -webkit-mask-image: radial-gradient(
-      ellipse 80% 80% at 60% 50%,
-      black 0%,
-      transparent 70%
-    );
+  .stat-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--color-border);
   }
 
   @media (max-width: 768px) {
-    .hero-visual {
-      width: 100%;
-      height: 100%;
-      opacity: 0.3;
+    .hero {
+      min-height: 80vh;
+    }
+
+    .hero-title {
+      font-size: var(--text-3xl);
+    }
+
+    .stat-divider {
+      display: none;
     }
 
     .hero-stats {
-      grid-template-columns: 1fr;
+      flex-direction: column;
+      gap: var(--space-lg);
     }
   }
 </style>

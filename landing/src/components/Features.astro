@@ -1,9 +1,10 @@
 <section class="features section">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Todo lo que necesitas.<br />Nada que no.</h2>
+      <h2 class="section-title">Funcionalidades clave</h2>
       <p class="section-subtitle">
-        Tecnología de IA aplicada donde realmente importa
+        Todo lo necesario para encontrar el mejor talento o tu próxima
+        oportunidad
       </p>
     </div>
 
@@ -171,11 +172,7 @@
 
 <style>
   .features {
-    background: linear-gradient(
-      180deg,
-      var(--color-bg-primary) 0%,
-      var(--color-bg-secondary) 100%
-    );
+    background: var(--color-bg-secondary);
   }
 
   .section-header {
@@ -185,10 +182,11 @@
   }
 
   .section-title {
-    font-size: var(--text-4xl);
-    font-weight: 800;
-    margin-bottom: var(--space-lg);
-    letter-spacing: -0.02em;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    margin-bottom: var(--space-md);
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
   }
 
   .section-subtitle {
@@ -214,29 +212,27 @@
     height: 80px;
     margin-bottom: var(--space-lg);
     color: var(--color-primary);
-    background: linear-gradient(
-      135deg,
-      rgba(0, 102, 255, 0.1),
-      rgba(0, 255, 136, 0.1)
-    );
-    border-radius: var(--radius-xl);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-lg);
     transition: all var(--duration-normal) var(--ease-in-out);
   }
 
   .feature-card:hover .feature-icon {
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: var(--shadow-glow);
+    transform: scale(1.05);
+    background: var(--color-primary);
+    color: white;
   }
 
   .feature-title {
     font-size: var(--text-xl);
-    font-weight: 700;
+    font-weight: 600;
     margin-bottom: var(--space-md);
+    color: var(--color-text-primary);
   }
 
   .feature-description {
     color: var(--color-text-secondary);
-    line-height: 1.7;
+    line-height: 1.6;
   }
 
   @media (max-width: 768px) {
