@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
@@ -23,7 +22,7 @@ class _CandidateLoginScreenState extends State<CandidateLoginScreen> {
         .watch<CandidateAuthCubit>()
         .state;
     final isLoading = authState.status == AuthStatus.authenticating;
-    const background = uiBackground;
+    final background = Theme.of(context).scaffoldBackgroundColor;
 
     return BlocListener<CandidateAuthCubit, CandidateAuthState>(
       listenWhen: (previous, current) =>

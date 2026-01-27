@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
+import 'package:opti_job_app/core/theme/theme_state.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
@@ -12,17 +14,16 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = uiInk;
-    const divider = uiBorder;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
     return AppBar(
       backgroundColor: Colors.transparent,
-      foregroundColor: ink,
+      foregroundColor: colorScheme.onSurface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       titleSpacing: 24,
-      shape: const Border(bottom: BorderSide(color: divider, width: 1)),
       title: Text(
         'OPTIJOB',
         style: TextStyle(fontWeight: FontWeight.w500, letterSpacing: 2),
@@ -30,7 +31,7 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         TextButton(
           style: TextButton.styleFrom(
-            foregroundColor: ink,
+            foregroundColor: colorScheme.onSurface,
             textStyle: const TextStyle(fontWeight: FontWeight.w500),
           ),
           onPressed: () => context.go('/CandidateLogin'),
@@ -38,7 +39,7 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         TextButton(
           style: TextButton.styleFrom(
-            foregroundColor: ink,
+            foregroundColor: colorScheme.onSurface,
             textStyle: const TextStyle(fontWeight: FontWeight.w500),
           ),
           onPressed: () => context.go('/job-offer'),
@@ -46,11 +47,22 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         TextButton(
           style: TextButton.styleFrom(
-            foregroundColor: ink,
+            foregroundColor: colorScheme.onSurface,
             textStyle: const TextStyle(fontWeight: FontWeight.w500),
           ),
           onPressed: () => context.go('/CompanyLogin'),
           child: Text(l10n.navCompany),
+        ),
+        const SizedBox(width: 8),
+        BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, themeState) {
+            final isDark = themeState.themeMode == ThemeMode.dark;
+            return IconButton(
+              icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+              tooltip: isDark ? 'Modo claro' : 'Modo oscuro',
+              onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+            );
+          },
         ),
         const SizedBox(width: 8),
       ],

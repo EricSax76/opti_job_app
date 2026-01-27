@@ -23,14 +23,19 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final titleColor =
+        Theme.of(context).textTheme.titleLarge?.color ?? colorScheme.onSurface;
+    final subtitleColor = colorScheme.onSurfaceVariant;
+
     return Column(
       crossAxisAlignment: crossAxisAlignment,
       children: [
         if (tagline != null) ...[
           Text(
             tagline!.toUpperCase(),
-            style: const TextStyle(
-              color: uiMuted,
+            style: TextStyle(
+              color: subtitleColor,
               fontSize: 12,
               letterSpacing: 2,
               fontWeight: FontWeight.w600,
@@ -47,7 +52,7 @@ class SectionHeader extends StatelessWidget {
                 style: TextStyle(
                   fontSize: titleFontSize,
                   fontWeight: FontWeight.w700,
-                  color: uiInk,
+                  color: titleColor,
                   height: titleHeight,
                 ),
               ),
@@ -68,11 +73,14 @@ class SectionHeader extends StatelessWidget {
             textAlign: crossAxisAlignment == CrossAxisAlignment.center
                 ? TextAlign.center
                 : TextAlign.start,
-            style: const TextStyle(color: uiMuted, fontSize: 15, height: 1.4),
+            style: TextStyle(
+              color: subtitleColor,
+              fontSize: 15,
+              height: 1.4,
+            ),
           ),
         ],
       ],
     );
   }
 }
-

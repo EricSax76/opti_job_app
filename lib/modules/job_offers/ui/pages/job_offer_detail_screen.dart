@@ -14,7 +14,9 @@ class JobOfferDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<CandidateAuthCubit>().state;
-    const background = uiBackground;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final background = isDark ? uiDarkBackground : uiBackground;
 
     return Scaffold(
       backgroundColor: background,

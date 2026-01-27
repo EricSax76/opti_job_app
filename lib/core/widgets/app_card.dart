@@ -25,6 +25,20 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final cardTheme = theme.cardTheme;
+    final cardShape = cardTheme.shape;
+    final resolvedRadius = borderRadius != null
+        ? BorderRadius.circular(borderRadius!)
+        : cardShape is RoundedRectangleBorder
+            ? cardShape.borderRadius
+            : BorderRadius.circular(uiCardRadius);
+    final resolvedBorderColor = borderColor ??
+        (cardShape is RoundedRectangleBorder
+            ? cardShape.side.color
+            : colorScheme.outline);
+
     Widget content = Padding(
       padding: padding ?? const EdgeInsets.all(uiSpacing20),
       child: child,
@@ -41,16 +55,16 @@ class AppCard extends StatelessWidget {
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: backgroundColor ?? uiWhite,
-        borderRadius: BorderRadius.circular(borderRadius ?? uiCardRadius),
+        color: backgroundColor ?? cardTheme.color ?? colorScheme.surface,
+        borderRadius: resolvedRadius,
         border: Border.all(
-          color: borderColor ?? uiBorder,
+          color: resolvedBorderColor,
           width: 1,
         ),
         boxShadow: boxShadow,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius ?? uiCardRadius),
+        borderRadius: resolvedRadius,
         child: content,
       ),
     );
@@ -73,6 +87,10 @@ class SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final titleColor = Theme.of(context).textTheme.titleMedium?.color ??
+        colorScheme.onSurface;
+
     return AppCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -92,10 +110,10 @@ class SectionCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         title!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: uiInk,
+                          color: titleColor,
                         ),
                       ),
                     ),

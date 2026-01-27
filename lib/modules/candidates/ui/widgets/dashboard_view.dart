@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/job_offer_filter_sidebar.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/modern_job_offer_card.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/calendar_panel.dart';
@@ -25,39 +26,73 @@ class DashboardView extends StatelessWidget {
         authState.candidate?.name ??
         'Candidato';
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hola, $candidateName',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          const Text('Aquí tienes ofertas seleccionadas para ti.'),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(child: _OffersList(state: offersState)),
-                const SizedBox(height: 16),
-                CalendarPanel(state: calendarState),
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showSidebar = constraints.maxWidth >= 600;
+
+        return Row(
+          children: [
+            // Sidebar for filters (only on web/wide screens)
+            if (showSidebar)
+              JobOfferFilterSidebar(
+                currentFilters: offersState.activeFilters,
+                onFiltersChanged: (filters) {
+                  context.read<JobOffersCubit>().applyFilters(filters);
+                },
+              ),
+
+            // Main content area
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Text(
+                      'Hola, $candidateName',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('Aquí tienes ofertas seleccionadas para ti.'),
+                    const SizedBox(height: 16),
+
+                    // Offers section
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: _OffersGrid(
+                              state: offersState,
+                              showTwoColumns: showSidebar,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          CalendarPanel(state: calendarState),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _OffersList extends StatelessWidget {
-  const _OffersList({required this.state});
+class _OffersGrid extends StatelessWidget {
+  const _OffersGrid({
+    required this.state,
+    required this.showTwoColumns,
+  });
 
   final JobOffersState state;
+  final bool showTwoColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -72,32 +107,109 @@ class _OffersList extends StatelessWidget {
       );
     }
 
-    if (state.offers.isEmpty) {
-      return const Center(
-        child: Text('Aún no hay ofertas disponibles. Intenta más tarde.'),
+    final displayedOffers = state.displayedOffers;
+
+    if (displayedOffers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              state.activeFilters.hasActiveFilters
+                  ? 'No se encontraron ofertas con los filtros aplicados.'
+                  : 'Aún no hay ofertas disponibles. Intenta más tarde.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       );
     }
 
+    // Responsive grid layout
+    if (showTwoColumns) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = constraints.maxWidth >= 900 ? 2 : 1;
+          return GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisExtent: 190,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: displayedOffers.length,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemBuilder: (context, index) {
+              final offer = displayedOffers[index];
+              final company = offer.companyId == null
+                  ? null
+                  : state.companiesById[offer.companyId!];
+              return ModernJobOfferCard(
+                title: offer.title,
+                company: offer.companyName ?? company?.name ?? 'Empresa no especificada',
+                avatarUrl: offer.companyAvatarUrl ?? company?.avatarUrl,
+                salary: _formatSalary(offer),
+                location: offer.location,
+                modality: offer.jobType ?? 'Modalidad no especificada',
+                tags: _extractTags(offer),
+                onTap: () => context.push('/job-offer/${offer.id}'),
+              );
+            },
+          );
+        },
+      );
+    }
+
+    // Single column layout for narrow screens
     return ListView.builder(
-      itemCount: state.offers.length,
+      itemCount: displayedOffers.length,
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemBuilder: (context, index) {
-        final offer = state.offers[index];
-        final company =
-            offer.companyId == null ? null : state.companiesById[offer.companyId!];
+        final offer = displayedOffers[index];
+        final company = offer.companyId == null
+            ? null
+            : state.companiesById[offer.companyId!];
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: JobOfferSummaryCard(
+          child: ModernJobOfferCard(
             title: offer.title,
             company: offer.companyName ?? company?.name ?? 'Empresa no especificada',
             avatarUrl: offer.companyAvatarUrl ?? company?.avatarUrl,
             salary: _formatSalary(offer),
+            location: offer.location,
             modality: offer.jobType ?? 'Modalidad no especificada',
+            tags: _extractTags(offer),
             onTap: () => context.push('/job-offer/${offer.id}'),
           ),
         );
       },
     );
+  }
+
+  List<String>? _extractTags(JobOffer offer) {
+    final tags = <String>[];
+    
+    if (offer.education != null && offer.education!.isNotEmpty) {
+      tags.add(offer.education!);
+    }
+    
+    // Add more tag extraction logic as needed
+    if (offer.keyIndicators != null && offer.keyIndicators!.isNotEmpty) {
+      final indicators = offer.keyIndicators!.split(',');
+      tags.addAll(indicators.take(2).map((e) => e.trim()));
+    }
+    
+    return tags.isEmpty ? null : tags;
   }
 }
 

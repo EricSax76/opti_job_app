@@ -21,15 +21,23 @@ class InfoPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final defaultBg = isDark ? uiDarkSurfaceLight.withValues(alpha: 0.5) : uiBackground;
+    final defaultBorder = isDark ? uiDarkBorder : uiBorder;
+    final defaultText = isDark ? uiDarkInk : uiInk;
+    final defaultIcon = isDark ? uiDarkMuted : uiMuted;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: uiSpacing12,
         vertical: uiSpacing4 + 2,
       ),
       decoration: BoxDecoration(
-        color: backgroundColor ?? uiBackground,
+        color: backgroundColor ?? defaultBg,
         borderRadius: BorderRadius.circular(uiPillRadius),
-        border: Border.all(color: borderColor ?? uiBorder),
+        border: Border.all(color: borderColor ?? defaultBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -38,7 +46,7 @@ class InfoPill extends StatelessWidget {
             Icon(
               icon,
               size: 14,
-              color: iconColor ?? uiMuted,
+              color: iconColor ?? defaultIcon,
             ),
             const SizedBox(width: uiSpacing8 - 2),
           ],
@@ -47,7 +55,7 @@ class InfoPill extends StatelessWidget {
               label,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: textColor ?? uiInk,
+                color: textColor ?? defaultText,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),

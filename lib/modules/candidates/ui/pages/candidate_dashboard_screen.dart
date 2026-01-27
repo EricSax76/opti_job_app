@@ -7,7 +7,9 @@ import 'package:opti_job_app/modules/aplications/logic/application_service.dart'
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/core/platform/web_history.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
+import 'package:opti_job_app/core/theme/theme_state.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_view.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/interviews_view.dart';
@@ -131,15 +133,12 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
   @override
   Widget build(BuildContext context) {
     final profileState = context.watch<ProfileCubit>().state;
-    const background = uiBackground;
-    const ink = uiInk;
-    const muted = uiMuted;
-    const accent = uiAccent;
-    const border = uiBorder;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final avatarUrl = profileState.candidate?.avatarUrl;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'OPTIJOB',
@@ -147,12 +146,17 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         ),
         automaticallyImplyLeading: true,
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: ink,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        shape: const Border(bottom: BorderSide(color: border, width: 1)),
         actions: [
+          BlocBuilder<ThemeCubit, ThemeState>(
+            builder: (context, themeState) {
+              final isDark = themeState.themeMode == ThemeMode.dark;
+              return IconButton(
+                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                tooltip: isDark ? 'Modo claro' : 'Modo oscuro',
+                onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+              );
+            },
+          ),
           PopupMenuButton<_CandidateAccountAction>(
             tooltip: 'Cuenta',
             onSelected: (action) {
@@ -184,12 +188,16 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: CircleAvatar(
                 radius: 16,
-                backgroundColor: background,
+                backgroundColor: colorScheme.surface,
                 backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
                     ? NetworkImage(avatarUrl)
                     : null,
                 child: (avatarUrl == null || avatarUrl.isEmpty)
-                    ? Icon(Icons.person_outline, size: 18, color: muted)
+                    ? Icon(
+                        Icons.person_outline,
+                        size: 18,
+                        color: colorScheme.onSurfaceVariant,
+                      )
                     : null,
               ),
             ),
@@ -198,9 +206,9 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         bottom: TabBar(
           // The TabBar goes in the 'bottom' property of a standard AppBar
           controller: _tabController,
-          labelColor: ink,
-          unselectedLabelColor: muted,
-          indicatorColor: accent,
+          labelColor: colorScheme.onSurface,
+          unselectedLabelColor: colorScheme.onSurfaceVariant,
+          indicatorColor: colorScheme.secondary,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Para ti'),
             Tab(icon: Icon(Icons.work_history), text: 'Mis Ofertas'),
@@ -216,12 +224,12 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: BoxDecoration(color: Colors.white),
+              decoration: BoxDecoration(color: colorScheme.surface),
               child: Center(
                 child: Text(
                   'OPTIJOB',
                   style: TextStyle(
-                    color: ink,
+                    color: colorScheme.onSurface,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 2,
                   ),

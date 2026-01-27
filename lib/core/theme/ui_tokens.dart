@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Colors
+// Light Theme Colors
 const uiInk = Color(0xFF0F172A);
 const uiMuted = Color(0xFF475569);
 const uiBorder = Color(0xFFE2E8F0);
@@ -10,6 +10,19 @@ const uiAccentSoft = Color(0xFFF1F7F6);
 const uiError = Color(0xFFEF4444);
 const uiSuccess = Color(0xFF10B981);
 const uiWhite = Colors.white;
+
+// Dark Theme Colors
+const uiDarkInk = Color(0xFFF1F5F9);
+const uiDarkMuted = Color(0xFF94A3B8);
+const uiDarkBorder = Color(0xFF1E293B);
+const uiDarkBackground = Color(0xFF0F172A);
+const uiDarkSurface = Color(0xFF1E293B);
+const uiDarkSurfaceLight = Color(0xFF334155);
+const uiDarkAccentSoft = Color(0xFF132F2E);
+
+// Dark Theme Card Gradients
+const uiDarkCardGradientStart = Color(0xFF1E293B);
+const uiDarkCardGradientEnd = Color(0xFF161E2E);
 
 // Spacing
 const double uiSpacing4 = 4.0;

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
@@ -21,7 +20,7 @@ class _CompanyLoginScreenState extends State<CompanyLoginScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<CompanyAuthCubit>().state;
     final isLoading = authState.status == AuthStatus.authenticating;
-    const background = uiBackground;
+    final background = Theme.of(context).scaffoldBackgroundColor;
 
     return BlocListener<CompanyAuthCubit, CompanyAuthState>(
       listenWhen: (previous, current) =>

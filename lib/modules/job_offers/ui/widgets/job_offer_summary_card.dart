@@ -25,6 +25,13 @@ class JobOfferSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final ink = isDark ? uiDarkInk : uiInk;
+    final muted = isDark ? uiDarkMuted : uiMuted;
+    final surface = isDark ? uiDarkBackground : uiBackground;
+
     return AppCard(
       onTap: onTap,
       padding: const EdgeInsets.all(uiSpacing16),
@@ -32,9 +39,9 @@ class JobOfferSummaryCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: Icon(Icons.work_outline, color: uiInk),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(Icons.work_outline, color: ink),
           ),
           const SizedBox(width: uiSpacing12),
           Expanded(
@@ -49,8 +56,8 @@ class JobOfferSummaryCard extends StatelessWidget {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: uiInk,
+                        style: TextStyle(
+                          color: ink,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           height: 1.2,
@@ -68,16 +75,16 @@ class JobOfferSummaryCard extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 10,
-                      backgroundColor: uiBackground,
+                      backgroundColor: surface,
                       backgroundImage:
                           (avatarUrl != null && avatarUrl!.isNotEmpty)
                               ? NetworkImage(avatarUrl!)
                               : null,
                       child: (avatarUrl == null || avatarUrl!.isEmpty)
-                          ? const Icon(
+                          ? Icon(
                               Icons.business_outlined,
                               size: 12,
-                              color: uiMuted,
+                              color: muted,
                             )
                           : null,
                     ),
@@ -87,8 +94,8 @@ class JobOfferSummaryCard extends StatelessWidget {
                         company,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: uiMuted,
+                        style: TextStyle(
+                          color: muted,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -116,12 +123,12 @@ class JobOfferSummaryCard extends StatelessWidget {
           ),
           if (onTap != null) ...[
             const SizedBox(width: uiSpacing8 + 2),
-            const Padding(
-              padding: EdgeInsets.only(top: 4),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
               child: Icon(
                 Icons.arrow_forward_ios,
                 size: 14,
-                color: uiMuted,
+                color: muted,
               ),
             ),
           ],

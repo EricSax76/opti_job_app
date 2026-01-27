@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/bootstrap/app_dependencies.dart';
 import 'package:opti_job_app/core/router/app_router.dart';
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/home/app.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
@@ -36,6 +37,9 @@ class AppScope extends StatelessWidget {
       ],
       child: MultiBlocProvider(
         providers: [
+          BlocProvider<ThemeCubit>(
+            create: (_) => ThemeCubit(),
+          ),
           BlocProvider<CandidateAuthCubit>(
             create: (_) =>
                 CandidateAuthCubit(dependencies.authRepository)..restoreSession(),

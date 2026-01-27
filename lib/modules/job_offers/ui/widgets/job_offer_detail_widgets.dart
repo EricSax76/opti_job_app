@@ -57,8 +57,10 @@ class JobOfferDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const muted = uiMuted;
-    const border = uiBorder;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final muted = isDark ? uiDarkMuted : uiMuted;
+    final border = isDark ? uiDarkBorder : uiBorder;
+    final cardBackground = isDark ? uiDarkSurface : Colors.white;
 
     if (state.status == JobOfferDetailStatus.loading) {
       return const Center(child: CircularProgressIndicator());
@@ -70,13 +72,13 @@ class JobOfferDetailBody extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBackground,
             borderRadius: BorderRadius.circular(uiCardRadius),
             border: Border.all(color: border),
           ),
           child: Text(
             message,
-            style: const TextStyle(color: muted, height: 1.4),
+            style: TextStyle(color: muted, height: 1.4),
           ),
         ),
       );
@@ -88,11 +90,11 @@ class JobOfferDetailBody extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBackground,
             borderRadius: BorderRadius.circular(uiCardRadius),
             border: Border.all(color: border),
           ),
-          child: const Text(
+          child: Text(
             'Oferta no encontrada.',
             style: TextStyle(color: muted, height: 1.4),
           ),

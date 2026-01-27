@@ -23,7 +23,7 @@ class _CandidateRegisterScreenState extends State<CandidateRegisterScreen> {
         .watch<CandidateAuthCubit>()
         .state;
     final isLoading = authState.status == AuthStatus.authenticating;
-    const background = Color(0xFFF8FAFC);
+    final background = Theme.of(context).scaffoldBackgroundColor;
 
     return BlocListener<CandidateAuthCubit, CandidateAuthState>(
       listenWhen: (previous, current) =>

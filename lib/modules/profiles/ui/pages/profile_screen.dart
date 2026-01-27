@@ -8,20 +8,24 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = uiBackground;
-    const ink = uiInk;
-    const border = uiBorder;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final background = isDark ? uiDarkBackground : uiBackground;
+    final ink = isDark ? uiDarkInk : uiInk;
+    final border = isDark ? uiDarkBorder : uiBorder;
+    final appBarBg = isDark ? uiDarkBackground : Colors.white;
 
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(
         title: const Text('Perfil'),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: appBarBg,
         foregroundColor: ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: const Border(
+        shape: Border(
           bottom: BorderSide(color: border, width: 1),
         ),
       ),

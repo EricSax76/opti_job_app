@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
 import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/aplications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/modern_application_card.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 
 class MyApplicationsView extends StatelessWidget {
   const MyApplicationsView({super.key});
@@ -29,13 +29,28 @@ class MyApplicationsView extends StatelessWidget {
         }
 
         if (state.applications.isEmpty) {
-          return const Center(
-            child: Text('Aún no te has postulado a ninguna oferta.'),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.work_off_outlined,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Aún no te has postulado a ninguna oferta.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+              ],
+            ),
           );
         }
 
         return RefreshIndicator(
-          onRefresh: () => context.read<MyApplicationsCubit>().loadMyApplications(),
+          onRefresh: () =>
+              context.read<MyApplicationsCubit>().loadMyApplications(),
           child: ApplicationsList(applications: state.applications),
         );
       },
@@ -50,43 +65,56 @@ class ApplicationsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = uiBackground;
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: applications.length,
-      itemBuilder: (context, index) {
-        final entry = applications[index];
-        final offer = entry.offer;
-        final fallbackTitle = entry.application.jobOfferTitle;
-        final title =
-            offer?.title ??
-            ((fallbackTitle != null && fallbackTitle.trim().isNotEmpty)
-                ? fallbackTitle
-                : 'Oferta');
-        final statusChip = applicationStatusChip(entry.application.status);
-        final company = offer?.companyName ?? 'Empresa no especificada';
-        final salary = offer == null ? null : _formatSalary(offer);
-        final modality =
-            offer == null ? null : (offer.jobType ?? 'Modalidad no especificada');
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: DecoratedBox(
-            decoration: const BoxDecoration(color: background),
-            child: JobOfferSummaryCard(
-              title: title,
-              company: company,
-              salary: salary,
-              modality: modality,
-              trailing: statusChip,
-              onTap:
-                  offer == null
-                      ? null
-                      : () => context.push('/job-offer/${offer.id}'),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth >= 900 ? 2 : 1;
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisExtent: 190,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
           ),
+          itemCount: applications.length,
+          itemBuilder: (context, index) {
+            return _buildApplicationCard(context, applications[index]);
+          },
         );
       },
+    );
+  }
+
+  Widget _buildApplicationCard(
+    BuildContext context,
+    CandidateApplicationEntry entry,
+  ) {
+    final offer = entry.offer;
+    final fallbackTitle = entry.application.jobOfferTitle;
+    final title =
+        offer?.title ??
+        ((fallbackTitle != null && fallbackTitle.trim().isNotEmpty)
+            ? fallbackTitle
+            : 'Oferta');
+    final statusChip = applicationStatusChip(entry.application.status);
+    final company = offer?.companyName ?? 'Empresa no especificada';
+    final salary = offer == null ? null : _formatSalary(offer);
+    final location = offer?.location;
+    final modality = offer == null
+        ? null
+        : (offer.jobType ?? 'Modalidad no especificada');
+
+    return ModernApplicationCard(
+      title: title,
+      company: company,
+      avatarUrl: offer?.companyAvatarUrl,
+      salary: salary,
+      location: location,
+      modality: modality,
+      statusBadge: statusChip,
+      onTap: offer == null
+          ? null
+          : () => context.push('/job-offer/${offer.id}'),
     );
   }
 }

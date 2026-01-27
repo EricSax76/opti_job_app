@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
+import 'package:opti_job_app/core/theme/theme_state.dart';
 import 'package:opti_job_app/auth/ui/pages/unauthenticated_company_message.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_candidates_tab.dart';
@@ -24,10 +25,6 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
     with SingleTickerProviderStateMixin {
   String? _loadedCompanyUid;
   late final TabController _tabController;
-
-  static const _background = uiBackground;
-  static const _ink = uiInk;
-  static const _border = uiBorder;
 
   @override
   void initState() {
@@ -54,6 +51,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<CompanyAuthCubit>().state;
+    final theme = Theme.of(context);
 
     return BlocListener<JobOfferFormCubit, JobOfferFormState>(
       listenWhen: (previous, current) => previous.status != current.status,
@@ -75,7 +73,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: _background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text(
             'OPTIJOB',
@@ -83,13 +81,18 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
           ),
           automaticallyImplyLeading: false,
           centerTitle: true,
-          backgroundColor: Colors.white,
-          foregroundColor: _ink,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          shape: const Border(bottom: BorderSide(color: _border, width: 1)),
           actions: authState.company != null
               ? [
+                  BlocBuilder<ThemeCubit, ThemeState>(
+                    builder: (context, themeState) {
+                      final isDark = themeState.themeMode == ThemeMode.dark;
+                      return IconButton(
+                        icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                        tooltip: isDark ? 'Modo claro' : 'Modo oscuro',
+                        onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+                      );
+                    },
+                  ),
                   const CompanyAccountAvatarMenu(),
                 ]
               : null,
