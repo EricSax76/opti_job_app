@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
+import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/job_offer_filter_sidebar.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/modern_job_offer_card.dart';
@@ -20,11 +21,21 @@ class DashboardView extends StatelessWidget {
     final profileState = context.watch<ProfileCubit>().state;
     final offersState = context.watch<JobOffersCubit>().state;
     final calendarState = context.watch<CalendarCubit>().state;
+    final myApplicationsState = context.watch<MyApplicationsCubit>().state;
 
     final candidateName =
         profileState.candidate?.name ??
         authState.candidate?.name ??
         'Candidato';
+
+    // Filter out offers that the user has already applied to
+    final appliedOfferIds = myApplicationsState.applications
+        .map((e) => e.application.jobOfferId)
+        .toSet();
+
+    final filteredOffers = offersState.displayedOffers
+        .where((offer) => !appliedOfferIds.contains(offer.id))
+        .toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -66,6 +77,7 @@ class DashboardView extends StatelessWidget {
                           Expanded(
                             child: _OffersGrid(
                               state: offersState,
+                              offers: filteredOffers,
                               showTwoColumns: showSidebar,
                             ),
                           ),
@@ -88,10 +100,12 @@ class DashboardView extends StatelessWidget {
 class _OffersGrid extends StatelessWidget {
   const _OffersGrid({
     required this.state,
+    required this.offers,
     required this.showTwoColumns,
   });
 
   final JobOffersState state;
+  final List<JobOffer> offers;
   final bool showTwoColumns;
 
   @override
@@ -107,9 +121,7 @@ class _OffersGrid extends StatelessWidget {
       );
     }
 
-    final displayedOffers = state.displayedOffers;
-
-    if (displayedOffers.isEmpty) {
+    if (offers.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -147,10 +159,10 @@ class _OffersGrid extends StatelessWidget {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
-            itemCount: displayedOffers.length,
+            itemCount: offers.length,
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemBuilder: (context, index) {
-              final offer = displayedOffers[index];
+              final offer = offers[index];
               final company = offer.companyId == null
                   ? null
                   : state.companiesById[offer.companyId!];
@@ -172,10 +184,10 @@ class _OffersGrid extends StatelessWidget {
 
     // Single column layout for narrow screens
     return ListView.builder(
-      itemCount: displayedOffers.length,
+      itemCount: offers.length,
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemBuilder: (context, index) {
-        final offer = displayedOffers[index];
+        final offer = offers[index];
         final company = offer.companyId == null
             ? null
             : state.companiesById[offer.companyId!];
