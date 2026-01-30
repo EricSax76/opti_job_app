@@ -50,6 +50,23 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
   }
 
   @override
+  void didUpdateWidget(JobOfferFilterSidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentFilters != oldWidget.currentFilters) {
+      if (widget.currentFilters != _filters) {
+        setState(() {
+          _filters = widget.currentFilters;
+          if (_searchController.text != (_filters.searchQuery ?? '')) {
+            _searchController.text = _filters.searchQuery ?? '';
+          }
+          _minSalary = _filters.salaryMin ?? 0;
+          _maxSalary = _filters.salaryMax ?? 100000;
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

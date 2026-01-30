@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
+import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/modules/aplicants/ui/widgets/dashboard_candidates_card.dart';
+import 'package:opti_job_app/modules/applicants/ui/widgets/dashboard_candidates_card.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard_home_header.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/dashboard_offers_card.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';

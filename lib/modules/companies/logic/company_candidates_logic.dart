@@ -1,5 +1,5 @@
-import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
-import 'package:opti_job_app/modules/aplications/models/application.dart';
+import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
+import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class CandidateGroup {
@@ -21,14 +21,14 @@ class CandidateOfferEntry {
     required this.status,
   });
 
-  final int offerId;
+  final String offerId;
   final String offerTitle;
   final String status;
 }
 
 List<CandidateGroup> groupCandidates({
   required OfferApplicantsState applicantsState,
-  required Map<int, JobOffer> offerById,
+  required Map<String, JobOffer> offerById,
 }) {
   final byCandidate = <String, List<Application>>{};
   for (final apps in applicantsState.applicants.values) {
@@ -58,7 +58,7 @@ List<CandidateGroup> groupCandidates({
         : candidateUid;
 
     final entries = <CandidateOfferEntry>[];
-    final seenOffers = <int>{};
+    final seenOffers = <String>{};
     for (final app in apps) {
       if (!seenOffers.add(app.jobOfferId)) continue;
       final offerTitle =

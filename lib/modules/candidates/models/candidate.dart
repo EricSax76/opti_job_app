@@ -1,4 +1,4 @@
-
+import 'package:opti_job_app/core/utils/firestore_utils.dart';
 class Candidate {
   const Candidate({
     required this.id,
@@ -28,7 +28,7 @@ class Candidate {
     final rawCoverLetter = json['cover_letter'];
     final rawVideoCurriculum = json['video_curriculum'];
     return Candidate(
-      id: json['id'] is int ? json['id'] as int : int.parse(json['id'].toString()),
+      id: FirestoreUtils.parseIntId(json['id']),
       name: json['name'] as String? ?? '',
       lastName: json['last_name'] as String? ?? '',
       email: json['email'] as String? ?? '',

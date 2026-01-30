@@ -53,20 +53,34 @@ class JobOfferService {
     return docs.map((doc) => JobOfferMapper.fromFirestore(doc.data())).toList();
   }
 
-  Future<JobOffer> fetchJobOffer(int id) async {
-    final snapshot = await _collection
+  Future<JobOffer> fetchJobOffer(String id) async {
+    // Try finding by String ID first
+    var snapshot = await _collection
         .where('id', isEqualTo: id)
         .limit(1)
         .get();
+    
+    // Fallback: If not found and ID looks like an int, try finding by int ID (legacy)
     if (snapshot.docs.isEmpty) {
-      throw StateError('Oferta no encontrada.');
+      final intId = int.tryParse(id);
+      if (intId != null) {
+        snapshot = await _collection
+            .where('id', isEqualTo: intId)
+            .limit(1)
+            .get();
+      }
+    }
+
+    if (snapshot.docs.isEmpty) {
+      throw StateError('Oferta no encontrada (ID: $id).');
     }
     final data = snapshot.docs.first.data();
     return JobOfferMapper.fromFirestore(data);
   }
 
   Future<JobOffer> createJobOffer(JobOfferPayload payload) async {
-    final offerId = DateTime.now().millisecondsSinceEpoch;
+    final docRef = _collection.doc();
+    final offerId = docRef.id;
     final payloadData = payload.toJson();
     final offerData = <String, dynamic>{
       ...payloadData,
@@ -74,7 +88,9 @@ class JobOfferService {
       'created_at': FieldValue.serverTimestamp(),
     };
 
-    final docRef = await _collection.add(offerData);
+    await docRef.set(offerData);
+    
+    // Look up what we just wrote to return complete object including server timestamp
     final storedDoc = await docRef.get();
     final storedData =
         storedDoc.data() ??

@@ -1,3 +1,5 @@
+import 'package:opti_job_app/core/utils/firestore_utils.dart';
+
 class Company {
   const Company({
     required this.id,
@@ -19,7 +21,7 @@ class Company {
 
   factory Company.fromJson(Map<String, dynamic> json) {
     return Company(
-      id: json['id'] is int ? json['id'] as int : int.parse(json['id'].toString()),
+      id: FirestoreUtils.parseIntId(json['id']),
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       uid: json['uid'] as String? ?? '',

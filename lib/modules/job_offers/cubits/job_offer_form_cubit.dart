@@ -43,7 +43,7 @@ class JobOfferFormCubit extends Cubit<JobOfferFormState> {
           message: 'Oferta publicada con éxito.',
         ),
       );
-      emit(state.copyWith(status: JobOfferFormStatus.idle, clearMessage: true));
+      // Do not reset to idle immediately; let UI handle navigation or reset.
     } catch (error) {
       emit(
         state.copyWith(
@@ -51,7 +51,6 @@ class JobOfferFormCubit extends Cubit<JobOfferFormState> {
           message: 'Error al publicar la oferta. Intenta nuevamente.',
         ),
       );
-      emit(state.copyWith(status: JobOfferFormStatus.idle, clearMessage: true));
     }
   }
 }

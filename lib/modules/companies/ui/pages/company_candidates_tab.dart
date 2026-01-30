@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/modules/aplicants/ui/widgets/company_candidates_header.dart';
-import 'package:opti_job_app/modules/aplicants/ui/widgets/company_candidates_section.dart';
+import 'package:opti_job_app/modules/applicants/ui/widgets/company_candidates_header.dart';
+import 'package:opti_job_app/modules/applicants/ui/widgets/company_candidates_section.dart';
 
 class CompanyCandidatesTab extends StatelessWidget {
   const CompanyCandidatesTab({super.key});

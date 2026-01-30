@@ -45,12 +45,34 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
             ),
             onPressed: widget.isSaving || _isManagingAttachment || isAnalyzing
                 ? null
-                : () => CurriculumLogic.pickAndUploadAttachment(
-                      context: context,
-                      onStart: () =>
-                          setState(() => _isManagingAttachment = true),
-                      onEnd: () => setState(() => _isManagingAttachment = false),
-                    ),
+                : () async {
+                     setState(() => _isManagingAttachment = true);
+                     try {
+                       final result = await CurriculumLogic.pickAndUploadAttachment(
+                         context: context,
+                       );
+                       if (!context.mounted) return;
+                       
+                       if (result is ActionFailure) {
+                         ScaffoldMessenger.of(context).showSnackBar(
+                           SnackBar(content: Text((result as ActionFailure).message)),
+                         );
+                       } else if (result is ActionSuccess<String>) {
+                          final data = result.data;
+                          if (data != null) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text(data)),
+                             );
+                          } else {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               const SnackBar(content: Text('Archivo importado correctamente.')),
+                             );
+                          }
+                       }
+                     } finally {
+                       if (mounted) setState(() => _isManagingAttachment = false);
+                     }
+                  },
             icon: _isManagingAttachment || isAnalyzing
                 ? const SizedBox(
                     width: 18,
@@ -74,16 +96,65 @@ class _CurriculumHeaderSectionState extends State<CurriculumHeaderSection> {
           CurriculumAttachmentCard(
             attachment: attachment,
             isBusy: widget.isSaving || _isManagingAttachment,
-            onOpen: () => CurriculumLogic.openAttachment(
-              context: context,
-              attachment: attachment,
-            ),
-            onDelete: () => CurriculumLogic.confirmAndDeleteAttachment(
-              context: context,
-              attachment: attachment,
-              onStart: () => setState(() => _isManagingAttachment = true),
-              onEnd: () => setState(() => _isManagingAttachment = false),
-            ),
+            onOpen: () async {
+               final result = await CurriculumLogic.openAttachment(
+                  context: context,
+                  attachment: attachment,
+               );
+               if (!context.mounted) return;
+               if (result is ActionFailure) {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   SnackBar(content: Text(result.message)),
+                 );
+               }
+            },
+            onDelete: () async {
+               final shouldDelete = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Eliminar archivo'),
+                      content: const Text(
+                        'Se eliminará el archivo importado de tu curriculum.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancelar'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Eliminar'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                
+                if (shouldDelete != true) return;
+                if (!context.mounted) return;
+                
+                setState(() => _isManagingAttachment = true);
+                try {
+                  final result = await CurriculumLogic.deleteAttachment(
+                    context: context, 
+                    attachment: attachment
+                  );
+                  if (!context.mounted) return;
+
+                  if (result is ActionFailure) {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       SnackBar(content: Text(result.message)),
+                     );
+                  } else {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       const SnackBar(content: Text('Archivo eliminado.')),
+                     );
+                  }
+                } finally {
+                  if (mounted) setState(() => _isManagingAttachment = false);
+                }
+            },
           ),
         ],
       ],

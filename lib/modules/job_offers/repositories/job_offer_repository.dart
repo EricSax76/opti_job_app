@@ -14,7 +14,7 @@ class JobOfferRepository {
     return _service.fetchJobOffersByCompanyUid(companyUid);
   }
 
-  Future<JobOffer> fetchById(int id) {
+  Future<JobOffer> fetchById(String id) {
     return _service.fetchJobOffer(id);
   }
 

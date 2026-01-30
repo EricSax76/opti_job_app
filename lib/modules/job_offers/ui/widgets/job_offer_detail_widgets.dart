@@ -5,7 +5,7 @@ import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
-import 'package:opti_job_app/modules/aplications/ui/application_status.dart';
+import 'package:opti_job_app/modules/applications/ui/application_status.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';

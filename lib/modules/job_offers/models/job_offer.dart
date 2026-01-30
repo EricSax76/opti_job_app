@@ -17,7 +17,7 @@ class JobOffer {
     this.createdAt,
   });
 
-  final int id;
+  final String id;
   final String title;
   final String description;
   final String location;
@@ -34,9 +34,7 @@ class JobOffer {
 
   factory JobOffer.fromJson(Map<String, dynamic> json) {
     return JobOffer(
-      id: json['id'] is int
-          ? json['id'] as int
-          : int.parse(json['id'].toString()),
+      id: json['id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       location: json['location'] as String? ?? '',
@@ -80,7 +78,7 @@ class JobOffer {
   }
 
   JobOffer copyWith({
-    int? id,
+    String? id,
     String? title,
     String? description,
     String? location,

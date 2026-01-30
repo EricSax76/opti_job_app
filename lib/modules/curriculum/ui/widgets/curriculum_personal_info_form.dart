@@ -58,14 +58,50 @@ class _CurriculumPersonalInfoFormState
               child: TextButton.icon(
                 onPressed: widget.state.isSaving || _isImprovingSummary
                     ? null
-                    : () => CurriculumLogic.improveSummary(
-                          context: context,
-                          state: widget.state,
-                          onStart: () =>
-                              setState(() => _isImprovingSummary = true),
-                          onEnd: () =>
-                              setState(() => _isImprovingSummary = false),
-                        ),
+                    : () async {
+                        setState(() => _isImprovingSummary = true);
+                        try {
+                          final result = await CurriculumLogic.improveSummary(
+                            context: context,
+                            state: widget.state,
+                          );
+                          if (!context.mounted) return;
+                          
+                          if (result is ActionFailure) {
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(content: Text((result as ActionFailure).message)),
+                             );
+                          } else if (result is ActionSuccess<String>) {
+                             final suggestion = result.data;
+                             if (suggestion != null) {
+                                final shouldApply = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: const Text('Resumen sugerido'),
+                                      content: SingleChildScrollView(child: SelectableText(suggestion)),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: const Text('Aplicar'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                                if (shouldApply == true && context.mounted) {
+                                  context.read<CurriculumFormCubit>().summaryController.text = suggestion;
+                                }
+                             }
+                          }
+                        } finally {
+                          if (mounted) setState(() => _isImprovingSummary = false);
+                        }
+                    },
                 style: TextButton.styleFrom(
                   backgroundColor: uiAccentSoft,
                   padding: const EdgeInsets.symmetric(horizontal: uiSpacing12),

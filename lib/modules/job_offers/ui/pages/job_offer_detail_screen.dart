@@ -9,7 +9,7 @@ import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 class JobOfferDetailScreen extends StatelessWidget {
   const JobOfferDetailScreen({super.key, required this.offerId});
 
-  final int offerId;
+  final String offerId;
 
   @override
   Widget build(BuildContext context) {

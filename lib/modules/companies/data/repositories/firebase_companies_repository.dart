@@ -89,15 +89,18 @@ class FirebaseCompaniesRepository implements CompaniesRepository {
         .where('company_uid', isEqualTo: uid)
         .get();
     if (offersQuery.docs.isNotEmpty) {
-      final batch = _firestore.batch();
-      for (final doc in offersQuery.docs) {
-        final update = <String, dynamic>{'company_name': name};
-        if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty) {
-          update['company_avatar_url'] = avatarUrlForOffers;
+      // Chunk offers to avoid exceeding Firestore batch limit (500)
+      for (final chunk in _chunk(offersQuery.docs, 400)) {
+        final batch = _firestore.batch();
+        for (final doc in chunk) {
+          final update = <String, dynamic>{'company_name': name};
+          if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty) {
+            update['company_avatar_url'] = avatarUrlForOffers;
+          }
+          batch.update(doc.reference, update);
         }
-        batch.update(doc.reference, update);
+        await batch.commit();
       }
-      await batch.commit();
     }
 
     final updatedSnapshot = await docRef.get();

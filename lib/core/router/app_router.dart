@@ -13,9 +13,9 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
-import 'package:opti_job_app/modules/aplicants/ui/pages/applicant_curriculum_screen.dart';
-import 'package:opti_job_app/modules/aplicants/repositories/applicants_repository.dart';
-import 'package:opti_job_app/modules/aplications/logic/application_service.dart';
+import 'package:opti_job_app/modules/applicants/ui/pages/applicant_curriculum_screen.dart';
+import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_detail_screen.dart';
@@ -23,7 +23,7 @@ import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_list_screen.d
 import 'package:opti_job_app/home/pages/landing_screen.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
-import 'package:opti_job_app/modules/aplications/cubits/offer_applicants_cubit.dart';
+import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 
 /// Listens to a stream and notifies GoRouter when auth state changes.
 class GoRouterCombinedRefreshStream extends ChangeNotifier {
@@ -72,8 +72,7 @@ class AppRouter {
           path: '/job-offer/:id',
           name: 'job-offer-detail',
           builder: (context, state) {
-            final idParam = state.pathParameters['id'] ?? '0';
-            final id = int.tryParse(idParam) ?? 0;
+            final id = state.pathParameters['id'] ?? '';
             final candidateUid = context
                 .read<CandidateAuthCubit>()
                 .state
@@ -175,8 +174,7 @@ class AppRouter {
           name: 'company-applicant-cv',
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
-            final offerId =
-                int.tryParse(state.pathParameters['offerId'] ?? '') ?? 0;
+            final offerId = state.pathParameters['offerId'] ?? '';
             return ApplicantCurriculumScreen(
               candidateUid: uid,
               offerId: offerId,

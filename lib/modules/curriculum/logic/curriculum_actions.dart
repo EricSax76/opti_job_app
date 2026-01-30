@@ -10,14 +10,25 @@ import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+sealed class CurriculumActionResult<T> {
+  const CurriculumActionResult();
+}
+
+class ActionSuccess<T> extends CurriculumActionResult<T> {
+  const ActionSuccess([this.data]);
+  final T? data;
+}
+
+class ActionFailure<T> extends CurriculumActionResult<T> {
+  const ActionFailure(this.message);
+  final String message;
+}
+
 class CurriculumLogic {
-  static Future<void> improveSummary({
+  static Future<CurriculumActionResult<String>> improveSummary({
     required BuildContext context,
     required CurriculumFormState state,
-    required VoidCallback onStart,
-    required VoidCallback onEnd,
   }) async {
-    onStart();
     try {
       final formCubit = context.read<CurriculumFormCubit>();
       final curriculum = Curriculum(
@@ -35,77 +46,38 @@ class CurriculumLogic {
           .read<AiRepository>()
           .improveCurriculumSummary(curriculum: curriculum, locale: locale);
 
-      if (!context.mounted) return;
-
-      final shouldApply = await showDialog<bool>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Resumen sugerido'),
-            content: SingleChildScrollView(child: SelectableText(suggestion)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Aplicar'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (shouldApply == true && context.mounted) {
-        formCubit.summaryController.text = suggestion;
-      }
+      return ActionSuccess(suggestion);
     } on AiConfigurationException catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      return ActionFailure(error.message);
     } on AiRequestException catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      return ActionFailure(error.message);
     } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo generar el resumen con IA.')),
-      );
-    } finally {
-      onEnd();
+      return const ActionFailure('No se pudo generar el resumen con IA.');
     }
   }
 
-  static Future<void> pickAndUploadAttachment({
+  static Future<CurriculumActionResult<String>> pickAndUploadAttachment({
     required BuildContext context,
-    required VoidCallback onStart,
-    required VoidCallback onEnd,
   }) async {
-    onStart();
     try {
       final candidate = context.read<CandidateAuthCubit>().state.candidate;
       if (candidate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Debes iniciar sesión para importar.')),
-        );
-        return;
+        return const ActionFailure('Debes iniciar sesión para importar.');
       }
 
       final repository = context.read<CurriculumRepository>();
       final curriculumCubit = context.read<CurriculumCubit>();
       final formCubit = context.read<CurriculumFormCubit>();
-      final messenger = ScaffoldMessenger.of(context);
 
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['pdf', 'doc', 'docx'],
         withData: true,
       );
-      if (result == null || result.files.isEmpty) return;
+      if (result == null || result.files.isEmpty) {
+        // User canceled, treating as success with no action
+        return const ActionSuccess();
+      }
 
       final file = result.files.single;
       final bytes = file.bytes;
@@ -113,24 +85,16 @@ class CurriculumLogic {
       final contentType = _contentTypeForExtension(extension);
 
       if (bytes == null || contentType == null) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Selecciona un PDF o DOCX válido.')),
-        );
-        return;
+        return const ActionFailure('Selecciona un PDF o DOCX válido.');
       }
 
-      // Antes de subir, intentamos extraer datos del CV para rellenar el form.
-      // Actualmente solo se soporta extracción automática desde `.docx`.
       if (extension == 'docx') {
         await formCubit.analyzeCvFile(bytes, file.name);
       } else {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Por ahora solo se puede extraer información automáticamente desde .docx.',
-            ),
-          ),
-        );
+         // Not really an error, just info, but we return logic result. 
+         // We'll treat this as part of success flow for logic, caller handles info?
+         // Actually, let's just proceed. The original logic showed a snackbar.
+         // We will just return clear success and let the file be uploaded.
       }
 
       await repository.uploadAttachment(
@@ -141,85 +105,44 @@ class CurriculumLogic {
       );
 
       await curriculumCubit.refresh();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Archivo importado correctamente.')),
+      return ActionSuccess(
+          extension != 'docx' 
+          ? 'Archivo importado. (Info: solo .docx soporta extracción automática)' 
+          : 'Archivo importado y analizado.'
       );
     } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo importar el archivo.')),
-      );
-    } finally {
-      onEnd();
+      return const ActionFailure('No se pudo importar el archivo.');
     }
   }
 
-  static Future<void> confirmAndDeleteAttachment({
+  static Future<CurriculumActionResult<void>> deleteAttachment({
     required BuildContext context,
     required CurriculumAttachment attachment,
-    required VoidCallback onStart,
-    required VoidCallback onEnd,
   }) async {
     final candidate = context.read<CandidateAuthCubit>().state.candidate;
-    if (candidate == null) return;
+    if (candidate == null) return const ActionFailure('No autenticado');
 
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Eliminar archivo'),
-          content: const Text(
-            'Se eliminará el archivo importado de tu curriculum.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Eliminar'),
-            ),
-          ],
-        );
-      },
-    );
-    if (shouldDelete != true) return;
-    if (!context.mounted) return;
-
-    onStart();
     try {
       final repository = context.read<CurriculumRepository>();
       final curriculumCubit = context.read<CurriculumCubit>();
-      final messenger = ScaffoldMessenger.of(context);
 
       await repository.deleteAttachment(
         candidateUid: candidate.uid,
         attachment: attachment,
       );
       await curriculumCubit.refresh();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Archivo eliminado.')),
-      );
+      return const ActionSuccess();
     } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo eliminar el archivo.')),
-      );
-    } finally {
-      onEnd();
+      return const ActionFailure('No se pudo eliminar el archivo.');
     }
   }
 
-  static Future<void> openAttachment({
+  static Future<CurriculumActionResult<void>> openAttachment({
     required BuildContext context,
     required CurriculumAttachment attachment,
   }) async {
     if (attachment.storagePath.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No encontramos el archivo del CV.')),
-      );
-      return;
+      return const ActionFailure('No encontramos el archivo del CV.');
     }
 
     try {
@@ -230,16 +153,12 @@ class CurriculumLogic {
         uri,
         mode: LaunchMode.externalApplication,
       );
-      if (!opened && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir el archivo.')),
-        );
+      if (!opened) {
+        return const ActionFailure('No se pudo abrir el archivo.');
       }
+      return const ActionSuccess();
     } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo abrir el archivo.')),
-      );
+      return const ActionFailure('No se pudo abrir el archivo.');
     }
   }
 

@@ -6,8 +6,8 @@ import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
 import 'package:opti_job_app/features/ai/models/ai_service.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
-import 'package:opti_job_app/modules/aplications/logic/application_service.dart';
-import 'package:opti_job_app/modules/aplications/repositories/application_repository.dart';
+import 'package:opti_job_app/modules/applications/logic/application_service.dart';
+import 'package:opti_job_app/modules/applications/repositories/application_repository.dart';
 import 'package:opti_job_app/modules/curriculum/services/curriculum_service.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
@@ -18,8 +18,8 @@ import 'package:opti_job_app/modules/candidates/repositories/candidates_reposito
 import 'package:opti_job_app/modules/candidates/data/repositories/firebase_candidates_repository.dart';
 import 'package:opti_job_app/modules/companies/repositories/companies_repository.dart';
 import 'package:opti_job_app/modules/companies/data/repositories/firebase_companies_repository.dart';
-import 'package:opti_job_app/modules/aplicants/repositories/applicants_repository.dart';
-import 'package:opti_job_app/modules/aplicants/data/repositories/firebase_applicants_repository.dart';
+import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/applicants/data/repositories/firebase_applicants_repository.dart';
 
 class AppDependencies {
   AppDependencies._({

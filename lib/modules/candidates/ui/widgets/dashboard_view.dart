@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
-import 'package:opti_job_app/modules/aplications/cubits/my_applications_cubit.dart';
+import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/job_offer_filter_sidebar.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/modern_job_offer_card.dart';
