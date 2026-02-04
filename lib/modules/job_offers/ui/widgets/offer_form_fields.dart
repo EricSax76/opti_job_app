@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 
 class OfferFormFields extends StatelessWidget {
@@ -100,16 +99,6 @@ class OfferFormFields extends StatelessWidget {
   static InputDecoration _inputDecoration({required String labelText}) {
     return InputDecoration(
       labelText: labelText,
-      filled: true,
-      fillColor: uiBackground,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(uiFieldRadius),
-        borderSide: const BorderSide(color: uiBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(uiFieldRadius),
-        borderSide: const BorderSide(color: uiBorder),
-      ),
     );
   }
 

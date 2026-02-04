@@ -34,14 +34,21 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
             companyUid: companyUid,
           )
           .timeout(const Duration(seconds: 12));
-      final newApplicants = Map<String, List<Application>>.from(state.applicants)
-        ..[offerId] = applicants;
-      newStatuses[offerId] = OfferApplicantsStatus.success;
+      
+      final updatedApplicants =
+          Map<String, List<Application>>.from(state.applicants)
+            ..[offerId] = applicants;
+      final updatedStatuses =
+          Map<String, OfferApplicantsStatus>.from(state.statuses)
+            ..[offerId] = OfferApplicantsStatus.success;
+      final updatedErrors = Map<String, String?>.from(state.errors)
+        ..remove(offerId);
+
       emit(
         state.copyWith(
-          statuses: Map<String, OfferApplicantsStatus>.from(newStatuses),
-          applicants: newApplicants,
-          errors: newErrors,
+          statuses: updatedStatuses,
+          applicants: updatedApplicants,
+          errors: updatedErrors,
         ),
       );
     } on TimeoutException catch (error, stackTrace) {
@@ -49,12 +56,15 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
         'OfferApplicantsCubit.loadApplicants timeout '
         'offerId=$offerId companyUid=$companyUid error=$error\n$stackTrace',
       );
-      newStatuses[offerId] = OfferApplicantsStatus.failure;
-      newErrors[offerId] = 'Tiempo de espera agotado al cargar aplicantes.';
+      final updatedStatuses =
+          Map<String, OfferApplicantsStatus>.from(state.statuses)
+            ..[offerId] = OfferApplicantsStatus.failure;
+      final updatedErrors = Map<String, String?>.from(state.errors)
+        ..[offerId] = 'Tiempo de espera agotado al cargar aplicantes.';
       emit(
         state.copyWith(
-          statuses: Map<String, OfferApplicantsStatus>.from(newStatuses),
-          errors: Map<String, String?>.from(newErrors),
+          statuses: updatedStatuses,
+          errors: updatedErrors,
         ),
       );
     } catch (error, stackTrace) {
@@ -62,12 +72,15 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
         'OfferApplicantsCubit.loadApplicants error '
         'offerId=$offerId companyUid=$companyUid error=$error\n$stackTrace',
       );
-      newStatuses[offerId] = OfferApplicantsStatus.failure;
-      newErrors[offerId] = 'No se pudieron cargar los aplicantes.';
+      final updatedStatuses =
+          Map<String, OfferApplicantsStatus>.from(state.statuses)
+            ..[offerId] = OfferApplicantsStatus.failure;
+      final updatedErrors = Map<String, String?>.from(state.errors)
+        ..[offerId] = 'No se pudieron cargar los aplicantes.';
       emit(
         state.copyWith(
-          statuses: Map<String, OfferApplicantsStatus>.from(newStatuses),
-          errors: Map<String, String?>.from(newErrors),
+          statuses: updatedStatuses,
+          errors: updatedErrors,
         ),
       );
     }
@@ -93,15 +106,19 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
       );
       await loadApplicants(offerId: offerId, companyUid: companyUid);
     } catch (_) {
-      newStatuses[offerId] = OfferApplicantsStatus.failure;
-      final newErrors = Map<String, String?>.from(state.errors)
+
+      final updatedStatuses =
+          Map<String, OfferApplicantsStatus>.from(state.statuses)
+            ..[offerId] = OfferApplicantsStatus.failure;
+      final updatedErrors = Map<String, String?>.from(state.errors)
         ..[offerId] = 'No se pudo actualizar el estado.';
       emit(
         state.copyWith(
-          statuses: Map<String, OfferApplicantsStatus>.from(newStatuses),
-          errors: newErrors,
+          statuses: updatedStatuses,
+          errors: updatedErrors,
         ),
       );
     }
+
   }
 }

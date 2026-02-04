@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class CompanyDashboardNavBar extends StatelessWidget {
   const CompanyDashboardNavBar({super.key, required this.controller});
@@ -8,22 +7,21 @@ class CompanyDashboardNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const muted = uiMuted;
-    const accent = uiAccent;
-    const border = uiBorder;
-    const ink = uiInk;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: Colors.white,
+      color: colorScheme.surface,
       child: Container(
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: border, width: 1)),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: colorScheme.outline, width: 1),
+          ),
         ),
         child: TabBar(
           controller: controller,
-          labelColor: ink,
-          unselectedLabelColor: muted,
-          indicatorColor: accent,
+          labelColor: colorScheme.onSurface,
+          unselectedLabelColor: colorScheme.onSurfaceVariant,
+          indicatorColor: colorScheme.secondary,
           tabs: const [
             Tab(icon: Icon(Icons.home_outlined), text: 'Home'),
             Tab(icon: Icon(Icons.add_circle_outline), text: 'Publicar oferta'),

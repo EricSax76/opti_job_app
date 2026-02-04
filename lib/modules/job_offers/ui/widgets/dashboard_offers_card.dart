@@ -11,12 +11,19 @@ class DashboardOffersCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
+    final border = colorScheme.outline;
+    final muted = colorScheme.onSurfaceVariant;
+    final ink = colorScheme.onSurface;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surface,
         borderRadius: BorderRadius.circular(uiCardRadius),
-        border: Border.all(color: uiBorder),
+        border: Border.all(color: border),
       ),
       child: BlocBuilder<CompanyJobOffersCubit, CompanyJobOffersState>(
         builder: (context, state) {
@@ -29,10 +36,10 @@ class DashboardOffersCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'OFERTAS PUBLICADAS',
                 style: TextStyle(
-                  color: uiMuted,
+                  color: muted,
                   fontSize: 12,
                   letterSpacing: 2,
                   fontWeight: FontWeight.w600,
@@ -41,17 +48,17 @@ class DashboardOffersCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 '${offers.length}',
-                style: const TextStyle(
-                  color: uiInk,
+                style: TextStyle(
+                  color: ink,
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 10),
               if (offers.isEmpty)
-                const Text(
+                Text(
                   'Aún no has publicado ofertas.',
-                  style: TextStyle(color: uiMuted, height: 1.4),
+                  style: TextStyle(color: muted, height: 1.4),
                 )
               else
                 Column(
@@ -87,12 +94,17 @@ class _OfferRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(top: 2),
-          child: Icon(Icons.work_outline, color: uiInk, size: 18),
+          child: Icon(
+            Icons.work_outline,
+            color: colorScheme.onSurface,
+            size: 18,
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -101,12 +113,18 @@ class _OfferRow extends StatelessWidget {
             children: [
               Text(
                 offer.title,
-                style: const TextStyle(color: uiInk, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 offer.location,
-                style: const TextStyle(color: uiMuted, height: 1.3),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.3,
+                ),
               ),
             ],
           ),

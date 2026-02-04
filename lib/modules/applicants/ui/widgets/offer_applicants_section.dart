@@ -21,15 +21,16 @@ class OfferApplicantsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const background = uiBackground;
-    const muted = uiMuted;
-    const border = uiBorder;
+    final colorScheme = Theme.of(context).colorScheme;
+    final surfaceContainer = colorScheme.surfaceContainerHighest;
+    final muted = colorScheme.onSurfaceVariant;
+    final border = colorScheme.outline;
 
     final resolvedCompanyUid = companyUid;
     if (resolvedCompanyUid == null) {
       return Text(
         l10n.applicantsMissingCompanyId,
-        style: const TextStyle(color: muted, height: 1.4),
+        style: TextStyle(color: muted, height: 1.4),
       );
     }
     return BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
@@ -57,13 +58,13 @@ class OfferApplicantsSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: background,
+              color: surfaceContainer,
               borderRadius: BorderRadius.circular(uiTileRadius),
               border: Border.all(color: border),
             ),
             child: Text(
               text,
-              style: const TextStyle(color: muted, height: 1.4),
+              style: TextStyle(color: muted, height: 1.4),
             ),
           );
         }

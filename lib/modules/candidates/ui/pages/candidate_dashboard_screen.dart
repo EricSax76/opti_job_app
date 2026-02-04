@@ -32,6 +32,7 @@ class CandidateDashboardScreen extends StatefulWidget {
 class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  late final MyApplicationsCubit _applicationsCubit;
   bool _isProgrammaticTabChange = false;
   late int _selectedIndex;
 
@@ -46,12 +47,17 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       initialIndex: candidateDashboardClampTabIndex(safeIndex),
     );
     _tabController.addListener(_handleTabChange);
+    _applicationsCubit = MyApplicationsCubit(
+      applicationService: context.read<ApplicationService>(),
+      candidateAuthCubit: context.read<CandidateAuthCubit>(),
+    )..loadMyApplications();
   }
 
   @override
   void dispose() {
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
+    _applicationsCubit.close();
     super.dispose();
   }
 
@@ -140,11 +146,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
               selectedIndex: _selectedIndex,
               onSelected: _handleDrawerSelection,
             ),
-      body: BlocProvider(
-        create: (context) => MyApplicationsCubit(
-          applicationService: context.read<ApplicationService>(),
-          candidateAuthCubit: context.read<CandidateAuthCubit>(),
-        )..loadMyApplications(),
+      body: BlocProvider.value(
+        value: _applicationsCubit,
         child: Builder(
           builder: (context) {
             final content = IndexedStack(

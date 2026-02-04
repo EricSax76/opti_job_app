@@ -8,15 +8,16 @@ class SectionMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    const border = uiBorder;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surface,
         borderRadius: BorderRadius.circular(uiCardRadius),
-        border: Border.all(color: border),
+        border: Border.all(color: colorScheme.outline),
       ),
       child: Text(
         text,

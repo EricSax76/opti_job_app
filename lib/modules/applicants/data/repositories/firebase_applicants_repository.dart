@@ -26,7 +26,9 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
       if (includeCompany && companyUid.isNotEmpty) {
         query = query.where(companyField, isEqualTo: companyUid);
       }
+      print('FirebaseApplicantsRepository query: offerField=$offerField offerIdValue=$offerIdValue ($offerIdValue.runtimeType) companyField=$companyField includeCompany=$includeCompany companyUid=$companyUid');
       final snapshot = await query.get();
+      print('FirebaseApplicantsRepository results: ${snapshot.docs.length}');
       return snapshot.docs
           .map((doc) => ApplicationMapper.fromFirestore(doc.data(), id: doc.id))
           .toList();
@@ -64,7 +66,7 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
         );
     }
 
-    if (fallbackResults.isEmpty) {
+    if (fallbackResults.isEmpty && companyUid.isEmpty) {
       for (final idValue in idsToQuery) {
         await merge(
           await runQuery(

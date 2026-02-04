@@ -24,40 +24,47 @@ class CreateOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
+    final border = colorScheme.outline;
+    final muted = colorScheme.onSurfaceVariant;
+    final ink = colorScheme.onSurface;
+
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surface,
         borderRadius: BorderRadius.circular(uiCardRadius),
-        border: Border.all(color: uiBorder),
+        border: Border.all(color: border),
       ),
       child: Form(
         key: formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'PUBLICAR',
               style: TextStyle(
-                color: uiMuted,
+                color: muted,
                 fontSize: 12,
                 letterSpacing: 2,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Crear nueva oferta',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: uiInk,
+                color: ink,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Completa los datos principales y publícala para recibir postulaciones.',
-              style: TextStyle(color: uiMuted, fontSize: 15, height: 1.4),
+              style: TextStyle(color: muted, fontSize: 15, height: 1.4),
             ),
             const SizedBox(height: 24),
             Align(
@@ -92,21 +99,21 @@ class CreateOfferCard extends StatelessWidget {
                     state.status == JobOfferFormStatus.submitting;
                 return SizedBox(
                   width: double.infinity,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: uiInk,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                     onPressed: isSubmitting ? null : onSubmit,
                     child: isSubmitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                colorScheme.onPrimary,
                               ),
                             ),
                           )

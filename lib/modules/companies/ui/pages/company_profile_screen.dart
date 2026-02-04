@@ -28,23 +28,24 @@ class _CompanyProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = uiBackground;
-    const ink = uiInk;
-    const muted = uiMuted;
-    const border = uiBorder;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
+    final surfaceContainer = colorScheme.surfaceContainerHighest;
+    final border = colorScheme.outline;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
 
     final company = context.watch<CompanyAuthCubit>().state.company;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Perfil'),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: const Border(bottom: BorderSide(color: border, width: 1)),
+        shape: Border(bottom: BorderSide(color: border, width: 1)),
         actions: company != null
             ? [
                 const CompanyAccountAvatarMenu(showProfileOption: false),
@@ -86,7 +87,7 @@ class _CompanyProfileView extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: surface,
                           borderRadius: BorderRadius.circular(uiCardRadius),
                           border: Border.all(color: border),
                         ),
@@ -98,10 +99,10 @@ class _CompanyProfileView extends StatelessWidget {
                                 children: [
                                   CircleAvatar(
                                     radius: 44,
-                                    backgroundColor: background,
+                                    backgroundColor: surfaceContainer,
                                     backgroundImage: avatarImage,
                                     child: avatarImage == null
-                                        ? const Icon(
+                                        ? Icon(
                                             Icons.business_outlined,
                                             size: 40,
                                             color: muted,
@@ -118,11 +119,11 @@ class _CompanyProfileView extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(uiTileRadius),
                                       child: CircleAvatar(
                                         radius: 16,
-                                        backgroundColor: ink,
-                                        child: const Icon(
+                                        backgroundColor: colorScheme.primary,
+                                        child: Icon(
                                           Icons.camera_alt,
                                           size: 16,
-                                          color: Colors.white,
+                                          color: colorScheme.onPrimary,
                                         ),
                                       ),
                                     ),
@@ -146,18 +147,8 @@ class _CompanyProfileView extends StatelessWidget {
                               controller: context
                                   .read<CompanyProfileFormCubit>()
                                   .nameController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Nombre',
-                                filled: true,
-                                fillColor: background,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(uiFieldRadius),
-                                  borderSide: const BorderSide(color: border),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(uiFieldRadius),
-                                  borderSide: const BorderSide(color: border),
-                                ),
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -167,16 +158,6 @@ class _CompanyProfileView extends StatelessWidget {
                               decoration: InputDecoration(
                                 labelText: 'Correo',
                                 helperText: 'Este dato no se puede modificar.',
-                                filled: true,
-                                fillColor: background,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(uiFieldRadius),
-                                  borderSide: const BorderSide(color: border),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(uiFieldRadius),
-                                  borderSide: const BorderSide(color: border),
-                                ),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -184,8 +165,8 @@ class _CompanyProfileView extends StatelessWidget {
                               width: double.infinity,
                               child: FilledButton(
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: ink,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor: colorScheme.primary,
+                                  foregroundColor: colorScheme.onPrimary,
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 14),
                                 ),
@@ -195,14 +176,14 @@ class _CompanyProfileView extends StatelessWidget {
                                         .submit()
                                     : null,
                                 child: state.isSaving
-                                    ? const SizedBox(
+                                    ? SizedBox(
                                         width: 18,
                                         height: 18,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            Colors.white,
+                                            colorScheme.onPrimary,
                                           ),
                                         ),
                                       )

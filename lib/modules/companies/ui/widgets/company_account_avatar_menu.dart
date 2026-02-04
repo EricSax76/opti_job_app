@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
 
 enum CompanyAccountAction { profile, logout }
@@ -17,8 +16,7 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = uiBackground;
-    const muted = uiMuted;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final company = context.watch<CompanyAuthCubit>().state.company;
     final avatarUrl = company?.avatarUrl;
@@ -55,15 +53,15 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         child: CircleAvatar(
           radius: 16,
-          backgroundColor: background,
+          backgroundColor: colorScheme.surface,
           backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
               ? NetworkImage(avatarUrl)
               : null,
           child: (avatarUrl == null || avatarUrl.isEmpty)
-              ? const Icon(
+              ? Icon(
                   Icons.business_outlined,
                   size: 18,
-                  color: muted,
+                  color: colorScheme.onSurfaceVariant,
                 )
               : null,
         ),

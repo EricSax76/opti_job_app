@@ -53,6 +53,7 @@ class Application {
       candidateUid:
           json['candidateId'] as String? ??
           json['candidate_id']?.toString() ??
+          json['candidate_uid']?.toString() ??
           '',
       candidateName:
           json['candidateName'] as String? ?? json['candidate_name'] as String?,

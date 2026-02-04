@@ -5,15 +5,17 @@
  * Creates initial profile documents and sends welcome email.
  */
 
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { UserProfile } from "../../types/models";
 
 const logger = createLogger({ function: "onUserCreate" });
 
-export const onUserCreate = functions.auth.user().onCreate(async (user) => {
-  const { uid, email, displayName } = user;
+export const onUserCreate = functions.auth
+  .user()
+  .onCreate(async (user: functions.auth.UserRecord) => {
+    const { uid, email, displayName } = user;
 
   logger.info("New user created", { uid, email });
 

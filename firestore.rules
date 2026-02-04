@@ -46,17 +46,34 @@ service cloud.firestore {
       allow create, update, delete: if isCompany();
     }
 
+    function isOfferOwner(offerId) {
+      let offer = get(/databases/$(database)/documents/jobOffers/$(string(offerId)));
+      let data = offer.data;
+      return offer != null && (
+        data.get('companyUid', '') == request.auth.uid ||
+        data.get('company_uid', '') == request.auth.uid ||
+        data.get('owner_uid', '') == request.auth.uid ||
+        // Check for integer IDs converted to string if stored that way
+        string(data.get('companyId', '')) == request.auth.uid ||
+        string(data.get('company_id', '')) == request.auth.uid
+      );
+    }
+
     match /applications/{applicationId} {
       allow create: if isCandidate()
-        && request.auth.uid == request.resource.data.candidateId;
+        && (request.auth.uid == request.resource.data.candidateId
+            || request.auth.uid == request.resource.data.candidate_uid);
 
       allow read: if (isCandidate()
-          && request.auth.uid == resource.data.candidateId)
-        || (isCompany()
-          && request.auth.uid == resource.data.companyUid);
+          && (request.auth.uid == resource.data.candidateId
+              || request.auth.uid == resource.data.candidate_uid))
+        || (request.auth.uid == resource.data.companyUid)
+        || (request.auth.uid == resource.data.company_uid)
+        || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')));
 
-      allow update: if isCompany()
-        && request.auth.uid == resource.data.companyUid;
+      allow update: if request.auth.uid == resource.data.companyUid
+            || request.auth.uid == resource.data.company_uid
+            || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')));
 
       allow delete: if false; // Deletion is not allowed for now.
     }

@@ -21,10 +21,13 @@ class ApplicantTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = uiBackground;
-    const ink = uiInk;
-    const muted = uiMuted;
-    const border = uiBorder;
+    final colorScheme = Theme.of(context).colorScheme;
+    final surfaceContainer = colorScheme.surfaceContainerHighest;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final border = colorScheme.outline;
+    final avatarBg = colorScheme.primary;
+    final avatarFg = colorScheme.onPrimary;
 
     final subtitleParts = <String>[];
     if (application.candidateEmail != null &&
@@ -37,7 +40,7 @@ class ApplicantTile extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: background,
+        color: surfaceContainer,
         borderRadius: BorderRadius.circular(uiTileRadius),
         border: Border.all(color: border),
       ),
@@ -50,19 +53,19 @@ class ApplicantTile extends StatelessWidget {
               '/company/offers/$offerId/applicants/${application.candidateUid}/cv',
             ),
         leading: CircleAvatar(
-          backgroundColor: ink,
-          foregroundColor: Colors.white,
+          backgroundColor: avatarBg,
+          foregroundColor: avatarFg,
           child: Text(_initials(application)),
         ),
         title: Text(
           application.candidateName ??
               application.candidateEmail ??
               application.candidateUid,
-          style: const TextStyle(color: ink, fontWeight: FontWeight.w600),
+          style: TextStyle(color: ink, fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           subtitleParts.join(' • '),
-          style: const TextStyle(color: muted, height: 1.35),
+          style: TextStyle(color: muted, height: 1.35),
         ),
         trailing: application.id == null
             ? null
@@ -95,9 +98,9 @@ class ApplicantTile extends StatelessWidget {
                 },
                 child: Chip(
                   label: Text(applicationStatusLabel(application.status)),
-                  side: const BorderSide(color: border),
-                  backgroundColor: Colors.white,
-                  labelStyle: const TextStyle(color: ink),
+                  side: BorderSide(color: border),
+                  backgroundColor: colorScheme.surface,
+                  labelStyle: TextStyle(color: ink),
                 ),
               ),
       ),

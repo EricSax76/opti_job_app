@@ -5,7 +5,7 @@
  * Validates data and initializes counters.
  */
 
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { validateJobOffer } from "../../utils/validation";

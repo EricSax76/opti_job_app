@@ -443,7 +443,8 @@ class _FilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = uiInk;
+    final colorScheme = Theme.of(context).colorScheme;
+    final ink = colorScheme.onSurface;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,7 +455,7 @@ class _FilterSection extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: ink,

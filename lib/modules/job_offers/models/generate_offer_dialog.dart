@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
-
 class GenerateOfferDialog extends StatefulWidget {
   const GenerateOfferDialog({
     super.key,
@@ -164,16 +162,6 @@ class _GenerateOfferDialogState extends State<GenerateOfferDialog> {
   static InputDecoration _inputDecoration({required String labelText}) {
     return InputDecoration(
       labelText: labelText,
-      filled: true,
-      fillColor: uiBackground,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(uiFieldRadius),
-        borderSide: const BorderSide(color: uiBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(uiFieldRadius),
-        borderSide: const BorderSide(color: uiBorder),
-      ),
     );
   }
 }

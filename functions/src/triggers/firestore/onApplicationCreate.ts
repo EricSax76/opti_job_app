@@ -5,7 +5,7 @@
  * Validates data, updates counters, and sends notifications.
  */
 
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { Application, JobOffer } from "../../types/models";

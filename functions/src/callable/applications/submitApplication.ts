@@ -5,14 +5,13 @@
  * Validates all data on the server side and prevents abuse.
  */
 
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { validateApplication, ValidationError } from "../../utils/validation";
 import {
   SubmitApplicationRequest,
   SubmitApplicationResponse,
-  Application,
 } from "../../types/models";
 
 const logger = createLogger({ function: "submitApplication" });
@@ -21,7 +20,10 @@ const logger = createLogger({ function: "submitApplication" });
 const MAX_APPLICATIONS_PER_DAY = 50;
 
 export const submitApplication = functions.https.onCall(
-  async (data: SubmitApplicationRequest, context): Promise<SubmitApplicationResponse> => {
+  async (
+    data: SubmitApplicationRequest,
+    context: functions.https.CallableContext
+  ): Promise<SubmitApplicationResponse> => {
     const requestId = Math.random().toString(36).substring(7);
     const funcLogger = logger.withContext({ requestId });
 
@@ -135,19 +137,39 @@ export const submitApplication = functions.https.onCall(
 
       // Create application
       const now = admin.firestore.FieldValue.serverTimestamp();
-      const application: Omit<Application, "id" | "match_score"> = {
+      const companyUid =
+        jobOffer?.company_uid ?? jobOffer?.companyUid ?? jobOffer?.owner_uid;
+      const application: Record<string, unknown> = {
         job_offer_id: jobOfferId,
+        jobOfferId: jobOfferId,
         candidate_uid: candidateUid,
+        candidateId: candidateUid,
         candidate_name: candidate.name,
+        candidateName: candidate.name,
         candidate_email: candidate.email,
+        candidateEmail: candidate.email,
         curriculum_id: curriculumId,
-        cover_letter: coverLetter,
+        curriculumId,
         status: "submitted",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         submitted_at: now as any,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         updated_at: now as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        submittedAt: now as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        updatedAt: now as any,
       };
+
+      if (coverLetter !== undefined) {
+        application.cover_letter = coverLetter;
+        application.coverLetter = coverLetter;
+      }
+
+      if (companyUid !== undefined && companyUid !== null) {
+        application.company_uid = companyUid;
+        application.companyUid = companyUid;
+      }
 
       // Validate application data
       validateApplication(application);

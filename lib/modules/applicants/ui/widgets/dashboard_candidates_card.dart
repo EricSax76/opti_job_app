@@ -10,12 +10,19 @@ class DashboardCandidatesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
+    final border = colorScheme.outline;
+    final muted = colorScheme.onSurfaceVariant;
+    final ink = colorScheme.onSurface;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surface,
         borderRadius: BorderRadius.circular(uiCardRadius),
-        border: Border.all(color: uiBorder),
+        border: Border.all(color: border),
       ),
       child: BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
         builder: (context, state) {
@@ -27,10 +34,10 @@ class DashboardCandidatesCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'CANDIDATOS',
                 style: TextStyle(
-                  color: uiMuted,
+                  color: muted,
                   fontSize: 12,
                   letterSpacing: 2,
                   fontWeight: FontWeight.w600,
@@ -39,8 +46,8 @@ class DashboardCandidatesCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 '${candidates.length}',
-                style: const TextStyle(
-                  color: uiInk,
+                style: TextStyle(
+                  color: ink,
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
                 ),
@@ -52,9 +59,9 @@ class DashboardCandidatesCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Todavía no hay candidatos cargados en el resumen.',
-                      style: TextStyle(color: uiMuted, height: 1.4),
+                      style: TextStyle(color: muted, height: 1.4),
                     ),
                     const SizedBox(height: 6),
                     TextButton.icon(
@@ -117,23 +124,27 @@ class _CandidateRow extends StatelessWidget {
   final _CandidateSummary candidate;
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         CircleAvatar(
           radius: 14,
-          backgroundColor: uiInk,
-          foregroundColor: Colors.white,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           child: Text(candidate.displayName.substring(0, 1).toUpperCase()),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             candidate.displayName,
-            style: const TextStyle(color: uiInk, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(width: 10),
-        const Icon(Icons.chevron_right, color: uiMuted),
+        Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
       ],
     );
   }

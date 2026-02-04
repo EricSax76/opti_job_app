@@ -21,14 +21,17 @@ class ApplicantCurriculumHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0F172A);
-    const muted = Color(0xFF475569);
-    const border = Color(0xFFE2E8F0);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
+    final border = colorScheme.outline;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: border),
       ),
@@ -39,8 +42,8 @@ class ApplicantCurriculumHeader extends StatelessWidget {
           final header = Row(
             children: [
               CircleAvatar(
-                backgroundColor: ink,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 child: Text(_initial(candidate)),
               ),
               const SizedBox(width: 12),
@@ -52,7 +55,7 @@ class ApplicantCurriculumHeader extends StatelessWidget {
                       '${candidate.name} ${candidate.lastName}'.trim(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: ink,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -63,7 +66,7 @@ class ApplicantCurriculumHeader extends StatelessWidget {
                       candidate.email,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: muted, height: 1.3),
+                      style: TextStyle(color: muted, height: 1.3),
                     ),
                   ],
                 ),
@@ -71,8 +74,13 @@ class ApplicantCurriculumHeader extends StatelessWidget {
             ],
           );
 
+          final buttonStyle = OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 52),
+          );
+
           final exportButton = OutlinedButton.icon(
             onPressed: isExporting || !hasCurriculum ? null : onExport,
+            style: buttonStyle,
             icon: isExporting
                 ? const SizedBox(
                     width: 18,
@@ -85,6 +93,7 @@ class ApplicantCurriculumHeader extends StatelessWidget {
 
           final matchButton = OutlinedButton.icon(
             onPressed: isMatching || !hasCurriculum ? null : onMatch,
+            style: buttonStyle,
             icon: isMatching
                 ? const SizedBox(
                     width: 18,

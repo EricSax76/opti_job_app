@@ -15,10 +15,13 @@ class OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const ink = uiInk;
-    const muted = uiMuted;
-    const border = uiBorder;
-    const background = uiBackground;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
+    final surfaceContainer = colorScheme.surfaceContainerHighest;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final border = colorScheme.outline;
 
     final resolvedCompanyUid = _companyUid(context);
     final avatarUrl = context
@@ -28,7 +31,7 @@ class OfferCard extends StatelessWidget {
         ?.avatarUrl;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surface,
         borderRadius: BorderRadius.circular(uiCardRadius),
         border: Border.all(color: border),
       ),
@@ -44,21 +47,21 @@ class OfferCard extends StatelessWidget {
             childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
             leading: CircleAvatar(
               radius: 18,
-              backgroundColor: background,
+              backgroundColor: surfaceContainer,
               backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
                   ? NetworkImage(avatarUrl)
                   : null,
               child: (avatarUrl == null || avatarUrl.isEmpty)
-                  ? const Icon(Icons.business_outlined, color: muted)
+                  ? Icon(Icons.business_outlined, color: muted)
                   : null,
             ),
             title: Text(
               offer.title,
-              style: const TextStyle(color: ink, fontWeight: FontWeight.w600),
+              style: TextStyle(color: ink, fontWeight: FontWeight.w600),
             ),
             subtitle: Text(
               '${offer.location} • ${offer.jobType ?? 'Tipología no especificada'}',
-              style: const TextStyle(color: muted, height: 1.4),
+              style: TextStyle(color: muted, height: 1.4),
             ),
             onExpansionChanged: (expanded) {
               if (!expanded) return;
@@ -101,9 +104,9 @@ class OfferCard extends StatelessWidget {
                   ),
                   Chip(
                     label: Text('Oferta #${offer.id}'),
-                    side: const BorderSide(color: border),
-                    backgroundColor: Colors.white,
-                    labelStyle: const TextStyle(color: ink),
+                    side: BorderSide(color: border),
+                    backgroundColor: surface,
+                    labelStyle: TextStyle(color: ink),
                   ),
                 ],
               ),

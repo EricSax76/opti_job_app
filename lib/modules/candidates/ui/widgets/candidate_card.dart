@@ -48,15 +48,18 @@ class _CandidateCardState extends State<CandidateCard> {
 
   @override
   Widget build(BuildContext context) {
-    const background = uiBackground;
-    const ink = uiInk;
-    const muted = uiMuted;
-    const border = uiBorder;
+    final colorScheme = Theme.of(context).colorScheme;
+    final surfaceContainer = colorScheme.surfaceContainerHighest;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final border = colorScheme.outline;
+    final avatarBg = colorScheme.primary;
+    final avatarFg = colorScheme.onPrimary;
     const ok = Color(0xFF16A34A); // Success color
 
     return Container(
       decoration: BoxDecoration(
-        color: background,
+        color: surfaceContainer,
         borderRadius: BorderRadius.circular(uiTileRadius),
         border: Border.all(color: border),
       ),
@@ -67,15 +70,15 @@ class _CandidateCardState extends State<CandidateCard> {
             ? null
             : () => _openCvPicker(context, widget.candidate),
         leading: CircleAvatar(
-          backgroundColor: ink,
-          foregroundColor: Colors.white,
+          backgroundColor: avatarBg,
+          foregroundColor: avatarFg,
           child: Text(
             widget.candidate.displayName.substring(0, 1).toUpperCase(),
           ),
         ),
         title: Text(
           widget.candidate.displayName,
-          style: const TextStyle(color: ink, fontWeight: FontWeight.w700),
+          style: TextStyle(color: ink, fontWeight: FontWeight.w700),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +87,7 @@ class _CandidateCardState extends State<CandidateCard> {
               widget.candidate.entries.map((e) => e.offerTitle).join(' • '),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: muted, height: 1.35),
+              style: TextStyle(color: muted, height: 1.35),
             ),
             const SizedBox(height: 6),
             FutureBuilder<Candidate>(
@@ -116,7 +119,7 @@ class _CandidateCardState extends State<CandidateCard> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(color: border),
                     ),

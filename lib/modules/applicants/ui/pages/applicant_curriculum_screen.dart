@@ -36,9 +36,12 @@ class _ApplicantCurriculumView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFF8FAFC);
-    const border = Color(0xFFE2E8F0);
-    const muted = Color(0xFF475569);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surface = theme.cardTheme.color ?? colorScheme.surface;
+    final surfaceContainer = colorScheme.surfaceContainerHighest;
+    final border = colorScheme.outline;
+    final muted = colorScheme.onSurfaceVariant;
 
     return BlocConsumer<ApplicantCurriculumCubit, ApplicantCurriculumState>(
       listener: (context, state) {
@@ -116,7 +119,7 @@ class _ApplicantCurriculumView extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: surface,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: border),
                           ),
@@ -125,13 +128,16 @@ class _ApplicantCurriculumView extends StatelessWidget {
                               : Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: background,
+                                    color: surfaceContainer,
                                     borderRadius: BorderRadius.circular(18),
                                     border: Border.all(color: border),
                                   ),
-                                  child: const Text(
+                                  child: Text(
                                     'El aplicante aún no tiene un CV cargado.',
-                                    style: TextStyle(color: muted, height: 1.4),
+                                    style: TextStyle(
+                                      color: muted,
+                                      height: 1.4,
+                                    ),
                                   ),
                                 ),
                         ),
@@ -140,7 +146,7 @@ class _ApplicantCurriculumView extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: surface,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: border),
                           ),
@@ -160,13 +166,13 @@ class _ApplicantCurriculumView extends StatelessWidget {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: background,
+                                    color: surfaceContainer,
                                     borderRadius: BorderRadius.circular(18),
                                     border: Border.all(color: border),
                                   ),
                                   child: SelectableText(
                                     coverLetterText,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: muted,
                                       height: 1.5,
                                     ),
@@ -177,13 +183,16 @@ class _ApplicantCurriculumView extends StatelessWidget {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: background,
+                                    color: surfaceContainer,
                                     borderRadius: BorderRadius.circular(18),
                                     border: Border.all(color: border),
                                   ),
-                                  child: const Text(
+                                  child: Text(
                                     'El aplicante no adjuntó una carta de presentación.',
-                                    style: TextStyle(color: muted, height: 1.4),
+                                    style: TextStyle(
+                                      color: muted,
+                                      height: 1.4,
+                                    ),
                                   ),
                                 ),
                               const SizedBox(height: 18),
@@ -199,13 +208,13 @@ class _ApplicantCurriculumView extends StatelessWidget {
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: background,
+                                  color: surfaceContainer,
                                   borderRadius: BorderRadius.circular(18),
                                   border: Border.all(color: border),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.videocam_outlined,
                                       color: muted,
                                     ),
@@ -215,7 +224,7 @@ class _ApplicantCurriculumView extends StatelessWidget {
                                         hasVideoCurriculum
                                             ? 'Video cargado (privado)'
                                             : 'No adjuntó video curriculum',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: muted,
                                           height: 1.3,
                                         ),

@@ -5,14 +5,16 @@
  * Cleans up user data and archives applications for GDPR compliance.
  */
 
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 
 const logger = createLogger({ function: "onUserDelete" });
 
-export const onUserDelete = functions.auth.user().onDelete(async (user) => {
-  const { uid, email } = user;
+export const onUserDelete = functions.auth
+  .user()
+  .onDelete(async (user: functions.auth.UserRecord) => {
+    const { uid, email } = user;
 
   logger.info("User deleted, starting cleanup", { uid, email });
 
