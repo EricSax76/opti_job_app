@@ -13,6 +13,7 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
+import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
 import 'package:opti_job_app/modules/applicants/ui/pages/applicant_curriculum_screen.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
@@ -91,12 +92,8 @@ class AppRouter {
           path: '/CandidateDashboard',
           name: 'candidate-dashboard-legacy',
           builder: (context, state) {
-            final uid = context
-                    .read<CandidateAuthCubit>()
-                    .state
-                    .candidate
-                    ?.uid ??
-                '';
+            final uid =
+                context.read<CandidateAuthCubit>().state.candidate?.uid ?? '';
             return CandidateDashboardScreen(uid: uid, initialIndex: 0);
           },
         ),
@@ -168,6 +165,11 @@ class AppRouter {
             ],
             child: const CompanyDashboardScreen(),
           ),
+        ),
+        GoRoute(
+          path: '/company/profile',
+          name: 'company-profile',
+          builder: (context, state) => const CompanyProfileScreen(),
         ),
         GoRoute(
           path: '/company/offers/:offerId/applicants/:uid/cv',

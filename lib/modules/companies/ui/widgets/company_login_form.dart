@@ -19,6 +19,8 @@ class CompanyLoginForm extends StatefulWidget {
 }
 
 class _CompanyLoginFormState extends State<CompanyLoginForm> {
+  static final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -50,8 +52,12 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
               ),
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                final normalizedValue = value?.trim() ?? '';
+                if (normalizedValue.isEmpty) {
                   return 'El correo es obligatorio';
+                }
+                if (!_emailPattern.hasMatch(normalizedValue)) {
+                  return 'Ingresa un correo válido';
                 }
                 return null;
               },
@@ -99,10 +105,6 @@ class _CompanyLoginFormState extends State<CompanyLoginForm> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    widget.onSubmit(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+    widget.onSubmit(_emailController.text.trim(), _passwordController.text);
   }
 }
-

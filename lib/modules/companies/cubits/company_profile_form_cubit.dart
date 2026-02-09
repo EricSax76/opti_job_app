@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
@@ -48,11 +50,13 @@ class CompanyProfileFormState extends Equatable {
     bool? isSaving,
     CompanyProfileFormNotice? notice,
     String? noticeMessage,
+    bool clearCompany = false,
+    bool clearAvatarBytes = false,
     bool clearNotice = false,
   }) {
     return CompanyProfileFormState(
-      company: company ?? this.company,
-      avatarBytes: avatarBytes ?? this.avatarBytes,
+      company: clearCompany ? null : company ?? this.company,
+      avatarBytes: clearAvatarBytes ? null : avatarBytes ?? this.avatarBytes,
       hasChanges: hasChanges ?? this.hasChanges,
       canSubmit: canSubmit ?? this.canSubmit,
       isSaving: isSaving ?? this.isSaving,
@@ -71,16 +75,24 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
        nameController = TextEditingController(),
        super(const CompanyProfileFormState()) {
     nameController.addListener(_handleTextChanged);
-    final company = _companyAuthCubit.state.company;
-    _initialName = company?.name ?? '';
-    nameController.text = _initialName;
-    emit(state.copyWith(company: company, hasChanges: false, canSubmit: false));
+    _syncWithAuthenticatedCompany(
+      company: _companyAuthCubit.state.company,
+      preserveDraftForSameCompany: false,
+    );
+    _companyAuthSubscription = _companyAuthCubit.stream.listen((authState) {
+      _syncWithAuthenticatedCompany(
+        company: authState.company,
+        preserveDraftForSameCompany: true,
+      );
+    });
   }
 
   final ProfileRepository _profileRepository;
   final CompanyAuthCubit _companyAuthCubit;
   final TextEditingController nameController;
+  late final StreamSubscription<CompanyAuthState> _companyAuthSubscription;
   String _initialName = '';
+  var _isSyncingControllerFromState = false;
 
   void clearNotice() {
     if (state.notice != null) {
@@ -163,11 +175,11 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
       );
       _companyAuthCubit.updateCompany(mergedCompany);
       _initialName = mergedCompany.name;
-      nameController.text = mergedCompany.name;
+      _setNameControllerText(mergedCompany.name);
       emit(
         state.copyWith(
           company: mergedCompany,
-          avatarBytes: null,
+          clearAvatarBytes: true,
           hasChanges: false,
           canSubmit: false,
           isSaving: false,
@@ -196,6 +208,8 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
   }
 
   void _handleTextChanged() {
+    if (_isSyncingControllerFromState) return;
+
     final name = nameController.text.trim();
     final hasChanges = _computeHasChanges(
       name: name,
@@ -228,8 +242,76 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
     return hasChanges && !isSaving && name.isNotEmpty;
   }
 
+  void _syncWithAuthenticatedCompany({
+    required Company? company,
+    required bool preserveDraftForSameCompany,
+  }) {
+    final previousCompany = state.company;
+    if (_sameCompany(previousCompany, company)) return;
+
+    if (company == null) {
+      _initialName = '';
+      _setNameControllerText('');
+      emit(
+        state.copyWith(
+          clearCompany: true,
+          clearAvatarBytes: true,
+          hasChanges: false,
+          canSubmit: false,
+          isSaving: false,
+          clearNotice: true,
+        ),
+      );
+      return;
+    }
+
+    final sameCompanyUid =
+        previousCompany != null && previousCompany.uid == company.uid;
+    if (preserveDraftForSameCompany && sameCompanyUid && state.hasChanges) {
+      emit(state.copyWith(company: company));
+      return;
+    }
+
+    _initialName = company.name;
+    _setNameControllerText(company.name);
+    emit(
+      state.copyWith(
+        company: company,
+        clearAvatarBytes: true,
+        hasChanges: false,
+        canSubmit: false,
+        isSaving: false,
+        clearNotice: true,
+      ),
+    );
+  }
+
+  void _setNameControllerText(String value) {
+    if (nameController.text == value) return;
+    _isSyncingControllerFromState = true;
+    nameController.value = nameController.value.copyWith(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+      composing: TextRange.empty,
+    );
+    _isSyncingControllerFromState = false;
+  }
+
+  bool _sameCompany(Company? a, Company? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null) return false;
+    return a.id == b.id &&
+        a.uid == b.uid &&
+        a.name == b.name &&
+        a.email == b.email &&
+        a.role == b.role &&
+        a.token == b.token &&
+        a.avatarUrl == b.avatarUrl;
+  }
+
   @override
-  Future<void> close() {
+  Future<void> close() async {
+    await _companyAuthSubscription.cancel();
     nameController.dispose();
     return super.close();
   }

@@ -14,33 +14,41 @@ class CompanyOffersSection extends StatelessWidget {
       builder: (context, state) {
         if (state.status == CompanyJobOffersStatus.loading ||
             state.status == CompanyJobOffersStatus.initial) {
-          return const Center(child: CircularProgressIndicator());
+          return const SliverToBoxAdapter(
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (state.status == CompanyJobOffersStatus.failure) {
-          return SectionMessage(
-            text:
-                state.errorMessage ??
-                'No se pudieron cargar tus ofertas. Intenta refrescar.',
+          return SliverToBoxAdapter(
+            child: SectionMessage(
+              text:
+                  state.errorMessage ??
+                  'No se pudieron cargar tus ofertas. Intenta refrescar.',
+            ),
           );
         }
 
         if (state.offers.isEmpty) {
-          return const SectionMessage(
-            text:
-                'Aún no has publicado ofertas. Crea la primera para comenzar a recibir postulaciones.',
+          return const SliverToBoxAdapter(
+            child: SectionMessage(
+              text:
+                  'Aún no has publicado ofertas. Crea la primera para comenzar a recibir postulaciones.',
+            ),
           );
         }
 
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: state.offers.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final offer = state.offers[index];
+        final separatorAwareCount = (state.offers.length * 2) - 1;
+
+        return SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            if (index.isOdd) {
+              return const SizedBox(height: 12);
+            }
+            final offerIndex = index ~/ 2;
+            final offer = state.offers[offerIndex];
             return OfferCard(offer: offer);
-          },
+          }, childCount: separatorAwareCount),
         );
       },
     );

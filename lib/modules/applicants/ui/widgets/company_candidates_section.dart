@@ -42,21 +42,27 @@ class _CompanyCandidatesSectionState extends State<CompanyCandidatesSection> {
       builder: (context, offersState) {
         if (offersState.status == CompanyJobOffersStatus.loading ||
             offersState.status == CompanyJobOffersStatus.initial) {
-          return const Center(child: CircularProgressIndicator());
+          return const SliverToBoxAdapter(
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (offersState.status == CompanyJobOffersStatus.failure) {
-          return SectionMessage(
-            text:
-                offersState.errorMessage ??
-                'No se pudieron cargar tus ofertas. Intenta refrescar.',
+          return SliverToBoxAdapter(
+            child: SectionMessage(
+              text:
+                  offersState.errorMessage ??
+                  'No se pudieron cargar tus ofertas. Intenta refrescar.',
+            ),
           );
         }
 
         if (offersState.offers.isEmpty) {
-          return const SectionMessage(
-            text:
-                'Aún no hay ofertas publicadas. Publica una oferta para recibir candidatos.',
+          return const SliverToBoxAdapter(
+            child: SectionMessage(
+              text:
+                  'Aún no hay ofertas publicadas. Publica una oferta para recibir candidatos.',
+            ),
           );
         }
 
@@ -78,43 +84,50 @@ class _CompanyCandidatesSectionState extends State<CompanyCandidatesSection> {
             );
 
             if (isLoading && grouped.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (grouped.isEmpty) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SectionMessage(
-                    text:
-                        'Aún no hay candidatos cargados. Pulsa para cargar postulaciones de tus ofertas.',
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _maybeLoadAllApplicants(force: true),
-                      icon: const Icon(Icons.download_outlined),
-                      label: const Text('Cargar candidatos'),
-                    ),
-                  ),
-                ],
+              return const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
               );
             }
 
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: grouped.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final candidate = grouped[index];
+            if (grouped.isEmpty) {
+              return SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionMessage(
+                      text:
+                          'Aún no hay candidatos cargados. Pulsa para cargar postulaciones de tus ofertas.',
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _maybeLoadAllApplicants(force: true),
+                        icon: const Icon(Icons.download_outlined),
+                        label: const Text('Cargar candidatos'),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final separatorAwareCount = (grouped.length * 2) - 1;
+
+            return SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                if (index.isOdd) {
+                  return const SizedBox(height: 12);
+                }
+
+                final groupIndex = index ~/ 2;
+                final candidate = grouped[groupIndex];
                 return CandidateCard(
                   candidate: candidate,
                   candidateProfile:
                       _candidateProfilesByUid[candidate.candidateUid.trim()],
                 );
-              },
+              }, childCount: separatorAwareCount),
             );
           },
         );

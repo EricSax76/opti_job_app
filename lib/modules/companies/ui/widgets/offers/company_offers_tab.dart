@@ -7,12 +7,17 @@ class CompanyOffersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-      children: const [
-        CompanyOffersHeader(),
-        SizedBox(height: 12),
-        CompanyOffersSection(),
+    return const CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
+          sliver: SliverToBoxAdapter(child: CompanyOffersHeader()),
+        ),
+        SliverToBoxAdapter(child: SizedBox(height: 12)),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(24, 0, 24, 32),
+          sliver: CompanyOffersSection(),
+        ),
       ],
     );
   }

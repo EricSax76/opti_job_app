@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
 
 enum CompanyAccountAction { profile, logout }
 
 class CompanyAccountAvatarMenu extends StatelessWidget {
-  const CompanyAccountAvatarMenu({
-    super.key,
-    this.showProfileOption = true,
-  });
+  const CompanyAccountAvatarMenu({super.key, this.showProfileOption = true});
 
   final bool showProfileOption;
 
@@ -26,11 +23,7 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
       onSelected: (action) {
         switch (action) {
           case CompanyAccountAction.profile:
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const CompanyProfileScreen(),
-              ),
-            );
+            context.pushNamed('company-profile');
             break;
           case CompanyAccountAction.logout:
             context.read<CompanyAuthCubit>().logout();

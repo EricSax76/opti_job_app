@@ -19,6 +19,8 @@ class CompanyRegisterForm extends StatefulWidget {
 }
 
 class _CompanyRegisterFormState extends State<CompanyRegisterForm> {
+  static final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -66,8 +68,12 @@ class _CompanyRegisterFormState extends State<CompanyRegisterForm> {
               ),
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                final normalizedValue = value?.trim() ?? '';
+                if (normalizedValue.isEmpty) {
                   return 'El correo es obligatorio';
+                }
+                if (!_emailPattern.hasMatch(normalizedValue)) {
+                  return 'Ingresa un correo válido';
                 }
                 return null;
               },
@@ -122,4 +128,3 @@ class _CompanyRegisterFormState extends State<CompanyRegisterForm> {
     );
   }
 }
-
