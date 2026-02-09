@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
+import 'package:opti_job_app/core/theme/theme_state.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/models/candidate_dashboard_navigation.dart';
 
 class CandidateDashboardSidebar extends StatelessWidget {
@@ -53,6 +56,25 @@ class CandidateDashboardSidebar extends StatelessWidget {
                     onTap: () => onSelected(item.index),
                   ),
               ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+            child: BlocBuilder<ThemeCubit, ThemeState>(
+              builder: (context, themeState) {
+                final isDark = themeState.themeMode == ThemeMode.dark;
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  leading: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+                  title: const Text('Tema oscuro'),
+                  subtitle: Text(isDark ? 'Activado' : 'Desactivado'),
+                  trailing: Switch.adaptive(
+                    value: isDark,
+                    onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
+                  ),
+                );
+              },
             ),
           ),
         ],

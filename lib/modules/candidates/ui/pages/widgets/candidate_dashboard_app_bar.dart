@@ -1,8 +1,6 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/core/theme/theme_cubit.dart';
-import 'package:opti_job_app/core/theme/theme_state.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/models/candidate_dashboard_navigation.dart';
 
 class CandidateDashboardAppBar extends StatelessWidget
@@ -22,7 +20,7 @@ class CandidateDashboardAppBar extends StatelessWidget
 
   @override
   Size get preferredSize =>
-      const Size.fromHeight(kToolbarHeight + kTextTabBarHeight);
+      Size.fromHeight(kToolbarHeight + kTextTabBarHeight + (kIsWeb ? 12 : 0));
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +28,10 @@ class CandidateDashboardAppBar extends StatelessWidget
     final colorScheme = theme.colorScheme;
     final avatarImageCacheSize = (32 * MediaQuery.of(context).devicePixelRatio)
         .round();
+    final toolbarHeight = kToolbarHeight + (kIsWeb ? 12 : 0);
 
     return AppBar(
+      toolbarHeight: toolbarHeight,
       title: const Text(
         'OPTIJOB',
         style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
@@ -39,16 +39,6 @@ class CandidateDashboardAppBar extends StatelessWidget
       automaticallyImplyLeading: true,
       centerTitle: true,
       actions: [
-        BlocBuilder<ThemeCubit, ThemeState>(
-          builder: (context, themeState) {
-            final isDark = themeState.themeMode == ThemeMode.dark;
-            return IconButton(
-              icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-              tooltip: isDark ? 'Modo claro' : 'Modo oscuro',
-              onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-            );
-          },
-        ),
         PopupMenuButton<_CandidateAccountAction>(
           tooltip: 'Cuenta',
           onSelected: (action) {

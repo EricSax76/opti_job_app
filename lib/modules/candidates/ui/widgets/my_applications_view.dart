@@ -66,7 +66,7 @@ class ApplicationsList extends StatelessWidget {
           ),
           itemCount: applications.length,
           itemBuilder: (context, index) {
-            return _buildApplicationCard(context, applications[index]);
+            return _buildApplicationCard(context, applications[index], index);
           },
         );
       },
@@ -76,6 +76,7 @@ class ApplicationsList extends StatelessWidget {
   Widget _buildApplicationCard(
     BuildContext context,
     CandidateApplicationEntry entry,
+    int index,
   ) {
     final offer = entry.offer;
     final fallbackTitle = entry.application.jobOfferTitle;
@@ -92,6 +93,8 @@ class ApplicationsList extends StatelessWidget {
         ? null
         : (offer.jobType ?? 'Modalidad no especificada');
 
+    final heroId = entry.application.id ?? entry.application.jobOfferId;
+
     return ModernApplicationCard(
       title: title,
       company: company,
@@ -100,7 +103,7 @@ class ApplicationsList extends StatelessWidget {
       location: location,
       modality: modality,
       statusBadge: statusChip,
-      heroTag: entry.application.id ?? entry.application.jobOfferId,
+      heroTag: 'my-applications-$index-$heroId',
       onTap: offer == null
           ? null
           : () => context.push('/job-offer/${offer.id}'),

@@ -70,7 +70,7 @@ class InterviewsList extends StatelessWidget {
           ),
           itemCount: interviews.length,
           itemBuilder: (context, index) {
-            return _buildInterviewCard(context, interviews[index]);
+            return _buildInterviewCard(context, interviews[index], index);
           },
         );
       },
@@ -80,6 +80,7 @@ class InterviewsList extends StatelessWidget {
   Widget _buildInterviewCard(
     BuildContext context,
     CandidateApplicationEntry entry,
+    int index,
   ) {
     final offer = entry.offer;
     final fallbackTitle = entry.application.jobOfferTitle;
@@ -96,6 +97,8 @@ class InterviewsList extends StatelessWidget {
         ? null
         : (offer.jobType ?? 'Modalidad no especificada');
 
+    final heroId = entry.application.id ?? entry.application.jobOfferId;
+
     return ModernApplicationCard(
       title: title,
       company: company,
@@ -104,7 +107,7 @@ class InterviewsList extends StatelessWidget {
       location: location,
       modality: modality,
       statusBadge: statusChip,
-      heroTag: entry.application.id ?? entry.application.jobOfferId,
+      heroTag: 'interviews-$index-$heroId',
       onTap: offer == null
           ? null
           : () => context.push('/job-offer/${offer.id}'),

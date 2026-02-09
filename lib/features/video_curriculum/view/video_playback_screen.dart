@@ -180,6 +180,7 @@ class _VideoPlaybackScreenState extends State<VideoPlaybackScreen> {
       ),
       floatingActionButton: _controller.value.isInitialized
           ? FloatingActionButton(
+              heroTag: null,
               onPressed: _togglePlay,
               child: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
             )

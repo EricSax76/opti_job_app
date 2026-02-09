@@ -79,6 +79,7 @@ class CameraLivePreviewView extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: FloatingActionButton(
+              heroTag: null,
               onPressed: hasAttemptsLeft ? onToggleRecording : null,
               backgroundColor: fabBackgroundColor,
               foregroundColor: fabForegroundColor,
