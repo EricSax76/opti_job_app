@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/features/cover_letter/bloc/cover_letter_bloc.dart';
+import 'package:opti_job_app/features/cover_letter/repositories/cover_letter_repository.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 
@@ -15,13 +16,16 @@ class CoverLetterScreen extends StatefulWidget {
 class _CoverLetterScreenState extends State<CoverLetterScreen> {
   final _coverLetterController = TextEditingController();
   late final CoverLetterBloc _bloc;
+  String? _lastAppliedImprovedCoverLetter;
 
   @override
   void initState() {
     super.initState();
     _bloc = CoverLetterBloc(
       aiRepository: context.read<AiRepository>(),
-      curriculumProvider: () => context.read<CurriculumCubit>().state.curriculum,
+      coverLetterRepository: context.read<CoverLetterRepository>(),
+      curriculumProvider: () =>
+          context.read<CurriculumCubit>().state.curriculum,
       candidateUidProvider: () =>
           context.read<CandidateAuthCubit>().state.candidate?.uid,
     );
@@ -42,7 +46,7 @@ class _CoverLetterScreenState extends State<CoverLetterScreen> {
   }
 
   void _save() {
-    _bloc.add(SaveCoverLetterAndVideo(_coverLetterController.text.trim()));
+    _bloc.add(SaveCoverLetterRequested(_coverLetterController.text.trim()));
   }
 
   @override
@@ -50,10 +54,24 @@ class _CoverLetterScreenState extends State<CoverLetterScreen> {
     return BlocProvider.value(
       value: _bloc,
       child: BlocListener<CoverLetterBloc, CoverLetterState>(
+        listenWhen: (previous, current) {
+          return previous.status != current.status ||
+              previous.savedCoverLetterText != current.savedCoverLetterText ||
+              previous.improvedCoverLetter != current.improvedCoverLetter ||
+              previous.error != current.error;
+        },
         listener: (context, state) {
-          if (state.status == CoverLetterStatus.success &&
-              state.improvedCoverLetter != null) {
-            _coverLetterController.text = state.improvedCoverLetter!;
+          final improvedCoverLetter = state.improvedCoverLetter;
+          if (improvedCoverLetter == null) {
+            _lastAppliedImprovedCoverLetter = null;
+          } else if (improvedCoverLetter != _lastAppliedImprovedCoverLetter) {
+            _coverLetterController.value = TextEditingValue(
+              text: improvedCoverLetter,
+              selection: TextSelection.collapsed(
+                offset: improvedCoverLetter.length,
+              ),
+            );
+            _lastAppliedImprovedCoverLetter = improvedCoverLetter;
           }
 
           if (state.savedCoverLetterText != null &&
@@ -61,25 +79,28 @@ class _CoverLetterScreenState extends State<CoverLetterScreen> {
             _coverLetterController.text = state.savedCoverLetterText!;
           }
 
-          if (state.status == CoverLetterStatus.failure && state.error != null) {
+          if (state.status == CoverLetterStatus.failure &&
+              state.error != null) {
+            final colorScheme = Theme.of(context).colorScheme;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.error!),
-                backgroundColor: Colors.red,
+                content: Text(
+                  state.error!,
+                  style: TextStyle(color: colorScheme.onError),
+                ),
+                backgroundColor: colorScheme.error,
               ),
             );
           }
 
-          if (state.status == CoverLetterStatus.uploading) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Guardando...')),
-            );
+          if (state.status == CoverLetterStatus.saving) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Guardando...')));
           }
         },
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Carta de presentación'),
-          ),
+          appBar: AppBar(title: const Text('Carta de presentación')),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -115,12 +136,16 @@ class _CoverLetterScreenState extends State<CoverLetterScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.auto_awesome),
-                      label: Text(isImproving ? 'Generando...' : 'Mejorar con IA'),
+                      label: Text(
+                        isImproving ? 'Generando...' : 'Mejorar con IA',
+                      ),
                       style: ElevatedButton.styleFrom(
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSecondary,
-                        backgroundColor:
-                            Theme.of(context).colorScheme.secondary,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onSecondary,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary,
                       ),
                     );
                   },

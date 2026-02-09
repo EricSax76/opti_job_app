@@ -33,6 +33,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final MyApplicationsCubit _applicationsCubit;
+  late final List<Widget> _dashboardPages;
   bool _isProgrammaticTabChange = false;
   late int _selectedIndex;
 
@@ -45,6 +46,10 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       length: candidateDashboardTabItems.length,
       vsync: this,
       initialIndex: candidateDashboardClampTabIndex(safeIndex),
+    );
+    _dashboardPages = List<Widget>.generate(
+      candidateDashboardMaxIndex + 1,
+      candidateDashboardPageForIndex,
     );
     _tabController.addListener(_handleTabChange);
     _applicationsCubit = MyApplicationsCubit(
@@ -149,9 +154,9 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         value: _applicationsCubit,
         child: Builder(
           builder: (context) {
-            final content = KeyedSubtree(
-              key: ValueKey<int>(_selectedIndex),
-              child: candidateDashboardPageForIndex(_selectedIndex),
+            final content = IndexedStack(
+              index: _selectedIndex,
+              children: _dashboardPages,
             );
 
             if (!showNavigationSidebar) {

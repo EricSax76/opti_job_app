@@ -71,8 +71,8 @@ class CreateOfferCard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(48, 48),
+                  tapTargetSize: MaterialTapTargetSize.padded,
                 ),
                 onPressed: isGenerating ? null : onGenerateWithAi,
                 child: Wrap(

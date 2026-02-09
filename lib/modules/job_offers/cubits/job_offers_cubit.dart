@@ -14,6 +14,7 @@ class JobOffersState {
     this.status = JobOffersStatus.initial,
     this.offers = const [],
     this.filteredOffers,
+    this.availableJobTypes = const [],
     this.companiesById = const {},
     this.isRefreshing = false,
     this.isLoadingMore = false,
@@ -26,6 +27,7 @@ class JobOffersState {
   final JobOffersStatus status;
   final List<JobOffer> offers;
   final List<JobOffer>? filteredOffers;
+  final List<String> availableJobTypes;
   final Map<int, Company> companiesById;
   final bool isRefreshing;
   final bool isLoadingMore;
@@ -40,6 +42,7 @@ class JobOffersState {
     JobOffersStatus? status,
     List<JobOffer>? offers,
     List<JobOffer>? filteredOffers,
+    List<String>? availableJobTypes,
     Map<int, Company>? companiesById,
     bool? isRefreshing,
     bool? isLoadingMore,
@@ -49,6 +52,7 @@ class JobOffersState {
     JobOfferFilters? activeFilters,
     bool clearError = false,
     bool clearFilters = false,
+    bool clearSelectedJobType = false,
   }) {
     return JobOffersState(
       status: status ?? this.status,
@@ -56,12 +60,15 @@ class JobOffersState {
       filteredOffers: clearFilters
           ? null
           : (filteredOffers ?? this.filteredOffers),
+      availableJobTypes: availableJobTypes ?? this.availableJobTypes,
       companiesById: companiesById ?? this.companiesById,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMore: hasMore ?? this.hasMore,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
-      selectedJobType: selectedJobType ?? this.selectedJobType,
+      selectedJobType: clearSelectedJobType
+          ? null
+          : (selectedJobType ?? this.selectedJobType),
       activeFilters: clearFilters
           ? const JobOfferFilters()
           : (activeFilters ?? this.activeFilters),
@@ -84,8 +91,15 @@ class JobOffersCubit extends Cubit<JobOffersState> {
   JobOffersPageCursor? _nextPageCursor;
   int _requestSequence = 0;
 
-  Future<void> loadOffers({String? jobType, bool forceRefresh = false}) async {
-    final selectedJobType = _normalizeJobType(jobType) ?? state.selectedJobType;
+  Future<void> loadOffers({
+    String? jobType,
+    bool forceRefresh = false,
+    bool preserveCurrentJobType = true,
+  }) async {
+    final normalizedJobType = _normalizeJobType(jobType);
+    final selectedJobType = preserveCurrentJobType
+        ? (normalizedJobType ?? state.selectedJobType)
+        : normalizedJobType;
     final previousSelectedJobType = state.selectedJobType;
     final sameQuery =
         _normalizeJobType(selectedJobType) ==
@@ -113,6 +127,7 @@ class JobOffersCubit extends Cubit<JobOffersState> {
             ? JobOffersStatus.loading
             : state.status,
         selectedJobType: selectedJobType,
+        clearSelectedJobType: selectedJobType == null,
         isRefreshing: !shouldShowBlockingLoader,
         isLoadingMore: false,
         hasMore: shouldShowBlockingLoader ? true : state.hasMore,
@@ -135,11 +150,17 @@ class JobOffersCubit extends Cubit<JobOffersState> {
       if (requestId != _requestSequence) return;
 
       final filteredOffers = _filterOffers(page.offers, state.activeFilters);
+      final availableJobTypes = _mergeJobTypes(
+        state.availableJobTypes,
+        page.offers,
+        selectedJobType: selectedJobType,
+      );
       emit(
         state.copyWith(
           status: JobOffersStatus.success,
           offers: page.offers,
           filteredOffers: filteredOffers,
+          availableJobTypes: availableJobTypes,
           companiesById: companiesById,
           isRefreshing: false,
           isLoadingMore: false,
@@ -156,6 +177,7 @@ class JobOffersCubit extends Cubit<JobOffersState> {
           state.copyWith(
             status: JobOffersStatus.success,
             selectedJobType: previousSelectedJobType,
+            clearSelectedJobType: previousSelectedJobType == null,
             isRefreshing: false,
             isLoadingMore: false,
             errorMessage: 'No se pudieron actualizar las ofertas.',
@@ -208,11 +230,17 @@ class JobOffersCubit extends Cubit<JobOffersState> {
       if (requestId != _requestSequence) return;
 
       final filteredOffers = _filterOffers(mergedOffers, state.activeFilters);
+      final availableJobTypes = _mergeJobTypes(
+        state.availableJobTypes,
+        page.offers,
+        selectedJobType: state.selectedJobType,
+      );
       emit(
         state.copyWith(
           status: JobOffersStatus.success,
           offers: mergedOffers,
           filteredOffers: filteredOffers,
+          availableJobTypes: availableJobTypes,
           companiesById: companiesById,
           isLoadingMore: false,
           isRefreshing: false,
@@ -239,7 +267,16 @@ class JobOffersCubit extends Cubit<JobOffersState> {
         state.status != JobOffersStatus.failure) {
       return;
     }
-    loadOffers(jobType: normalizedJobType, forceRefresh: true);
+    loadOffers(
+      jobType: normalizedJobType,
+      forceRefresh: true,
+      preserveCurrentJobType: false,
+    );
+  }
+
+  void clearErrorMessage() {
+    if (state.errorMessage == null) return;
+    emit(state.copyWith(clearError: true));
   }
 
   void applyFilters(JobOfferFilters filters) {
@@ -258,6 +295,29 @@ class JobOffersCubit extends Cubit<JobOffersState> {
 
     final filtered = _filterOffers(state.offers, filters);
     emit(state.copyWith(activeFilters: filters, filteredOffers: filtered));
+  }
+
+  List<String> _mergeJobTypes(
+    List<String> existing,
+    Iterable<JobOffer> offers, {
+    String? selectedJobType,
+  }) {
+    final knownTypes = <String>{
+      ...existing
+          .map((jobType) => jobType.trim())
+          .where((type) => type.isNotEmpty),
+      ...offers
+          .map((offer) => offer.jobType?.trim())
+          .whereType<String>()
+          .where((type) => type.isNotEmpty),
+    };
+    final normalizedSelected = _normalizeJobType(selectedJobType);
+    if (normalizedSelected != null) {
+      knownTypes.add(normalizedSelected);
+    }
+    final sortedTypes = knownTypes.toList(growable: false)
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return sortedTypes;
   }
 
   List<JobOffer>? _filterOffers(

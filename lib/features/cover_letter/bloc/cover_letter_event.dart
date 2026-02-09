@@ -9,18 +9,6 @@ abstract class CoverLetterEvent extends Equatable {
 
 class LoadCoverLetterRequested extends CoverLetterEvent {}
 
-class VideoRecordingStarted extends CoverLetterEvent {}
-
-class VideoRecordingStopped extends CoverLetterEvent {
-  const VideoRecordingStopped(this.path);
-  final String path;
-
-  @override
-  List<Object> get props => [path];
-}
-
-class RetryVideoRecording extends CoverLetterEvent {}
-
 class ImproveCoverLetterRequested extends CoverLetterEvent {
   const ImproveCoverLetterRequested(this.originalText, {required this.locale});
   final String originalText;
@@ -30,8 +18,8 @@ class ImproveCoverLetterRequested extends CoverLetterEvent {
   List<Object> get props => [originalText, locale];
 }
 
-class SaveCoverLetterAndVideo extends CoverLetterEvent {
-  const SaveCoverLetterAndVideo(this.coverLetterText);
+class SaveCoverLetterRequested extends CoverLetterEvent {
+  const SaveCoverLetterRequested(this.coverLetterText);
   final String coverLetterText;
 
   @override

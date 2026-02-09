@@ -1,1 +1,1 @@
-export 'package:opti_job_app/features/cover_letter/widgets/camera_view.dart';
+export 'package:opti_job_app/features/video_curriculum/widgets/camera_view.dart';

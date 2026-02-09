@@ -6,6 +6,10 @@ import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
 import 'package:opti_job_app/features/ai/models/ai_service.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
+import 'package:opti_job_app/features/cover_letter/repositories/cover_letter_repository.dart';
+import 'package:opti_job_app/features/cover_letter/services/cover_letter_service.dart';
+import 'package:opti_job_app/features/video_curriculum/repositories/video_curriculum_repository.dart';
+import 'package:opti_job_app/features/video_curriculum/services/video_curriculum_service.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/applications/repositories/application_repository.dart';
 import 'package:opti_job_app/modules/curriculum/services/curriculum_service.dart';
@@ -34,6 +38,8 @@ class AppDependencies {
     required this.applicationRepository,
     required this.applicationService,
     required this.aiRepository,
+    required this.coverLetterRepository,
+    required this.videoCurriculumRepository,
   });
 
   factory AppDependencies.create({FirebaseFirestore? firestore}) {
@@ -60,11 +66,18 @@ class AppDependencies {
       firestore: firestoreInstance,
     );
     final aiRepository = AiRepository(AiService());
+    final coverLetterRepository = CoverLetterRepository(
+      CoverLetterService(firestore: firestoreInstance),
+    );
+    final videoCurriculumRepository = VideoCurriculumRepository(
+      VideoCurriculumService(firestore: firestoreInstance),
+    );
 
     if (kDebugMode) {
       debugPrint(
         'Locator: AuthRepository, JobOfferRepository, ProfileRepository, '
-        'CalendarRepository, ApplicationRepository, ApplicationService',
+        'CalendarRepository, ApplicationRepository, ApplicationService, '
+        'CoverLetterRepository, VideoCurriculumRepository',
       );
       debugPrint('Firebase instances: firestore=$firestoreInstance');
     }
@@ -81,6 +94,8 @@ class AppDependencies {
       applicationRepository: applicationRepository,
       applicationService: applicationService,
       aiRepository: aiRepository,
+      coverLetterRepository: coverLetterRepository,
+      videoCurriculumRepository: videoCurriculumRepository,
     );
   }
 
@@ -95,4 +110,6 @@ class AppDependencies {
   final ApplicationRepository applicationRepository;
   final ApplicationService applicationService;
   final AiRepository aiRepository;
+  final CoverLetterRepository coverLetterRepository;
+  final VideoCurriculumRepository videoCurriculumRepository;
 }

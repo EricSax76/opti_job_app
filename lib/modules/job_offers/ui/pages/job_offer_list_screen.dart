@@ -19,7 +19,19 @@ class JobOfferListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppNavBar(),
-      body: BlocBuilder<JobOffersCubit, JobOffersState>(
+      body: BlocConsumer<JobOffersCubit, JobOffersState>(
+        listenWhen: (previous, current) =>
+            previous.errorMessage != current.errorMessage &&
+            current.errorMessage != null &&
+            current.status == JobOffersStatus.success,
+        listener: (context, state) {
+          final message = state.errorMessage;
+          if (message == null) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(message)));
+          context.read<JobOffersCubit>().clearErrorMessage();
+        },
         builder: (context, state) {
           if (state.status == JobOffersStatus.initial) {
             context.read<JobOffersCubit>().loadOffers();
@@ -41,14 +53,19 @@ class JobOfferListScreen extends StatelessWidget {
           }
 
           final offers = state.offers;
-          final jobTypes =
-              state.offers
-                  .map((offer) => offer.jobType)
-                  .whereType<String>()
-                  .where((jobType) => jobType.isNotEmpty)
-                  .toSet()
-                  .toList()
-                ..sort();
+          final selectedJobType = state.selectedJobType?.trim();
+          final jobTypes = <String>{
+            ...state.availableJobTypes,
+            ...offers
+                .map((offer) => offer.jobType?.trim())
+                .whereType<String>()
+                .where((jobType) => jobType.isNotEmpty),
+          };
+          if (selectedJobType != null && selectedJobType.isNotEmpty) {
+            jobTypes.add(selectedJobType);
+          }
+          final sortedJobTypes = jobTypes.toList()
+            ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
           return NotificationListener<ScrollNotification>(
             onNotification: (notification) {
@@ -81,7 +98,7 @@ class JobOfferListScreen extends StatelessWidget {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String?>(
-                                initialValue: state.selectedJobType,
+                                initialValue: selectedJobType,
                                 decoration: const InputDecoration(
                                   labelText: 'Filtrar por tipología',
                                 ),
@@ -90,7 +107,7 @@ class JobOfferListScreen extends StatelessWidget {
                                     value: null,
                                     child: Text('Todas'),
                                   ),
-                                  ...jobTypes.map(
+                                  ...sortedJobTypes.map(
                                     (type) => DropdownMenuItem<String?>(
                                       value: type,
                                       child: Text(type),

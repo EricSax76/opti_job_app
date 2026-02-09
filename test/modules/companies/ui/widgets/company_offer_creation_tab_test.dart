@@ -44,6 +44,28 @@ void main() {
     expect(payload.companyName, 'Acme Corp');
   });
 
+  testWidgets('does not submit when required fields contain only spaces', (
+    tester,
+  ) async {
+    final formCubit = TestJobOfferFormCubit(const JobOfferFormState());
+    await tester.pumpWidget(_wrap(formCubit: formCubit));
+
+    await tester.enterText(find.byType(TextFormField).at(0), '   ');
+    await tester.enterText(find.byType(TextFormField).at(1), '   ');
+    await tester.enterText(find.byType(TextFormField).at(2), '   ');
+
+    final publishButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Publicar oferta'),
+    );
+    publishButton.onPressed?.call();
+    await tester.pump();
+
+    expect(formCubit.submittedPayloads, isEmpty);
+    expect(find.text('El título es obligatorio'), findsOneWidget);
+    expect(find.text('La descripción es obligatoria'), findsOneWidget);
+    expect(find.text('La ubicación es obligatoria'), findsOneWidget);
+  });
+
   testWidgets('resets form when submit state changes to success', (
     tester,
   ) async {

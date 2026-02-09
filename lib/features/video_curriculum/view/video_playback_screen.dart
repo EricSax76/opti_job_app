@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
-import 'package:opti_job_app/features/cover_letter/view/video_playback_controller.dart';
+import 'package:opti_job_app/features/video_curriculum/view/video_playback_controller.dart';
 
 class VideoPlaybackScreen extends StatefulWidget {
   const VideoPlaybackScreen({
@@ -30,14 +30,17 @@ class _VideoPlaybackScreenState extends State<VideoPlaybackScreen> {
   void initState() {
     super.initState();
     _controller = createVideoController(widget.uri);
-    _initializeFuture = _controller.initialize().then((_) {
-      if (!mounted) return;
-      _controller.setLooping(true);
-      setState(() {});
-    }).catchError((Object error) {
-      _initError = error;
-      if (mounted) setState(() {});
-    });
+    _initializeFuture = _controller
+        .initialize()
+        .then((_) {
+          if (!mounted) return;
+          _controller.setLooping(true);
+          setState(() {});
+        })
+        .catchError((Object error) {
+          _initError = error;
+          if (mounted) setState(() {});
+        });
   }
 
   @override
@@ -60,7 +63,10 @@ class _VideoPlaybackScreenState extends State<VideoPlaybackScreen> {
   Future<void> _openExternal() async {
     if (!widget.allowExternalFallback) return;
     if (widget.uri.scheme == 'file' || widget.uri.scheme.isEmpty) return;
-    final ok = await launchUrl(widget.uri, mode: LaunchMode.externalApplication);
+    final ok = await launchUrl(
+      widget.uri,
+      mode: LaunchMode.externalApplication,
+    );
     if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo abrir en una app externa.')),
@@ -71,7 +77,9 @@ class _VideoPlaybackScreenState extends State<VideoPlaybackScreen> {
   @override
   Widget build(BuildContext context) {
     final title = widget.title ?? 'Reproducir vídeo';
-    final canOpenExternal = widget.allowExternalFallback &&
+    final colorScheme = Theme.of(context).colorScheme;
+    final canOpenExternal =
+        widget.allowExternalFallback &&
         widget.uri.scheme.isNotEmpty &&
         widget.uri.scheme != 'file';
 
@@ -135,12 +143,12 @@ class _VideoPlaybackScreenState extends State<VideoPlaybackScreen> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.35),
+                          color: colorScheme.surface.withValues(alpha: 0.75),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.play_arrow,
-                          color: Colors.white,
+                          color: colorScheme.secondary,
                           size: 42,
                         ),
                       ),
@@ -153,9 +161,13 @@ class _VideoPlaybackScreenState extends State<VideoPlaybackScreen> {
                         _controller,
                         allowScrubbing: true,
                         colors: VideoProgressColors(
-                          playedColor: Theme.of(context).colorScheme.primary,
-                          bufferedColor: Colors.white.withValues(alpha: 0.35),
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          playedColor: colorScheme.secondary,
+                          bufferedColor: colorScheme.onSurface.withValues(
+                            alpha: 0.35,
+                          ),
+                          backgroundColor: colorScheme.onSurface.withValues(
+                            alpha: 0.2,
+                          ),
                         ),
                       ),
                     ),

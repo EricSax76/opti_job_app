@@ -34,26 +34,26 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.applicationRepository),
         RepositoryProvider.value(value: dependencies.applicationService),
         RepositoryProvider.value(value: dependencies.aiRepository),
+        RepositoryProvider.value(value: dependencies.coverLetterRepository),
+        RepositoryProvider.value(value: dependencies.videoCurriculumRepository),
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider<ThemeCubit>(
-            create: (_) => ThemeCubit(),
-          ),
+          BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
           BlocProvider<CandidateAuthCubit>(
             create: (_) =>
-                CandidateAuthCubit(dependencies.authRepository)..restoreSession(),
+                CandidateAuthCubit(dependencies.authRepository)
+                  ..restoreSession(),
           ),
           BlocProvider<CompanyAuthCubit>(
             create: (_) =>
                 CompanyAuthCubit(dependencies.authRepository)..restoreSession(),
           ),
           BlocProvider<JobOffersCubit>(
-            create: (_) =>
-                JobOffersCubit(
-                  dependencies.jobOfferRepository,
-                  profileRepository: dependencies.profileRepository,
-                ),
+            create: (_) => JobOffersCubit(
+              dependencies.jobOfferRepository,
+              profileRepository: dependencies.profileRepository,
+            ),
           ),
           BlocProvider<CalendarCubit>(
             create: (_) =>

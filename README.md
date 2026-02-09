@@ -128,8 +128,19 @@ Las reglas permiten lecturas públicas de `jobOffers`, restringen la escritura d
 - `lib/app.dart`: MaterialApp y configuración de temas.
 - `lib/router/app_router.dart`: declaración de rutas con GoRouter.
 - `lib/features/*`: pantallas migradas (landing, ofertas, dashboards, auth).
+- `lib/features/video_curriculum/README.md`: límites, dependencias y contratos de la feature de videocurrículum.
 - `lib/data/services`: servicios que consumen FirebaseAuth y Cloud Firestore.
 - `lib/firebase_options.dart`: credenciales generadas por `flutterfire`.
+
+## Arquitectura por features
+| Feature | Responsabilidad principal | Fuera de alcance | Entrada |
+| --- | --- | --- | --- |
+| `cover_letter` | Generar/mejorar/guardar carta de presentación. | Grabación/subida de vídeo. | `lib/features/cover_letter/view/cover_letter_screen.dart` |
+| `video_curriculum` | Grabar, previsualizar y subir videocurrículum. | Gestión de carta de presentación. | `lib/features/video_curriculum/view/video_curriculum_screen.dart` |
+
+Notas de frontera:
+- No importar BLoC/servicios/repositorios de `video_curriculum` desde `cover_letter` (ni viceversa).
+- Compartir integración por DI, navegación y contratos públicos de cada feature.
 
 ## Próximos pasos
 - Añadir internacionalización (`flutter_localizations`).

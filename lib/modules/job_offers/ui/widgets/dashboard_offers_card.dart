@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
@@ -30,6 +31,47 @@ class DashboardOffersCard extends StatelessWidget {
           if (state.status == CompanyJobOffersStatus.loading ||
               state.status == CompanyJobOffersStatus.initial) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.status == CompanyJobOffersStatus.failure) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'OFERTAS PUBLICADAS',
+                  style: TextStyle(
+                    color: muted,
+                    fontSize: 12,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  state.errorMessage ?? 'No se pudieron cargar tus ofertas.',
+                  style: TextStyle(color: muted, height: 1.4),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      final companyUid = context
+                          .read<CompanyAuthCubit>()
+                          .state
+                          .company
+                          ?.uid;
+                      if (companyUid == null) return;
+                      context.read<CompanyJobOffersCubit>().loadCompanyOffers(
+                        companyUid,
+                      );
+                    },
+                    icon: const Icon(Icons.refresh_outlined, size: 18),
+                    label: const Text('Reintentar'),
+                  ),
+                ),
+              ],
+            );
           }
 
           final offers = state.offers;

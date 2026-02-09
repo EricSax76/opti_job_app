@@ -19,6 +19,12 @@ class JobOfferHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final ink = isDark ? uiDarkInk : uiInk;
+    final muted = isDark ? uiDarkMuted : uiMuted;
+    final avatarBackground = isDark ? uiDarkSurface : uiBackground;
+
     final title = offer.title.trim().isEmpty ? 'Oferta' : offer.title.trim();
     final company = offer.companyName?.trim().isNotEmpty == true
         ? offer.companyName!.trim()
@@ -39,16 +45,16 @@ class JobOfferHeader extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 2),
-                child: Icon(Icons.work_outline, color: uiInk),
+                child: Icon(Icons.work_outline, color: ink),
               ),
               const SizedBox(width: uiSpacing12),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: uiInk,
+                  style: TextStyle(
+                    color: ink,
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     height: 1.15,
@@ -66,7 +72,7 @@ class JobOfferHeader extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 10,
-                backgroundColor: uiBackground,
+                backgroundColor: avatarBackground,
                 backgroundImage:
                     (companyAvatarUrl != null &&
                         companyAvatarUrl!.trim().isNotEmpty)
@@ -75,11 +81,7 @@ class JobOfferHeader extends StatelessWidget {
                 child:
                     (companyAvatarUrl == null ||
                         companyAvatarUrl!.trim().isEmpty)
-                    ? const Icon(
-                        Icons.business_outlined,
-                        size: 14,
-                        color: uiMuted,
-                      )
+                    ? Icon(Icons.business_outlined, size: 14, color: muted)
                     : null,
               ),
               const SizedBox(width: uiSpacing8),
@@ -88,8 +90,8 @@ class JobOfferHeader extends StatelessWidget {
                   company,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: uiMuted,
+                  style: TextStyle(
+                    color: muted,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -113,4 +115,3 @@ class JobOfferHeader extends StatelessWidget {
     );
   }
 }
-

@@ -76,10 +76,7 @@ class JobOfferDetailBody extends StatelessWidget {
             borderRadius: BorderRadius.circular(uiCardRadius),
             border: Border.all(color: border),
           ),
-          child: Text(
-            message,
-            style: TextStyle(color: muted, height: 1.4),
-          ),
+          child: Text(message, style: TextStyle(color: muted, height: 1.4)),
         ),
       );
     }
@@ -161,6 +158,14 @@ class JobOfferDetailBody extends StatelessWidget {
     final candidate = authState.candidate;
     if (candidate == null) return;
 
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    var isLoadingDialogOpen = true;
+    void closeLoadingDialogIfNeeded() {
+      if (!isLoadingDialogOpen || !rootNavigator.mounted) return;
+      rootNavigator.pop();
+      isLoadingDialogOpen = false;
+    }
+
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -179,7 +184,9 @@ class JobOfferDetailBody extends StatelessWidget {
           ),
         );
       },
-    );
+    ).whenComplete(() {
+      isLoadingDialogOpen = false;
+    });
 
     try {
       final curriculumRepository = context.read<CurriculumRepository>();
@@ -198,26 +205,26 @@ class JobOfferDetailBody extends StatelessWidget {
       );
 
       if (!context.mounted) return;
-      Navigator.of(context).pop(); // loading
+      closeLoadingDialogIfNeeded();
       await showDialog<void>(
         context: context,
         builder: (context) => JobOfferMatchResultDialog(result: result),
       );
     } on AiConfigurationException catch (error) {
       if (!context.mounted) return;
-      Navigator.of(context).pop();
+      closeLoadingDialogIfNeeded();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(error.message)));
     } on AiRequestException catch (error) {
       if (!context.mounted) return;
-      Navigator.of(context).pop();
+      closeLoadingDialogIfNeeded();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (_) {
       if (!context.mounted) return;
-      Navigator.of(context).pop();
+      closeLoadingDialogIfNeeded();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo calcular el match.')),
       );

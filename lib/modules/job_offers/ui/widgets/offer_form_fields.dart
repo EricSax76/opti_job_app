@@ -16,7 +16,7 @@ class OfferFormFields extends StatelessWidget {
           controller: controllers.title,
           decoration: _inputDecoration(labelText: 'Título'),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'El título es obligatorio';
             }
             return null;
@@ -28,7 +28,7 @@ class OfferFormFields extends StatelessWidget {
           maxLines: 4,
           decoration: _inputDecoration(labelText: 'Descripción'),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'La descripción es obligatoria';
             }
             return null;
@@ -39,7 +39,7 @@ class OfferFormFields extends StatelessWidget {
           controller: controllers.location,
           decoration: _inputDecoration(labelText: 'Ubicación'),
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null || value.trim().isEmpty) {
               return 'La ubicación es obligatoria';
             }
             return null;
@@ -97,9 +97,7 @@ class OfferFormFields extends StatelessWidget {
   }
 
   static InputDecoration _inputDecoration({required String labelText}) {
-    return InputDecoration(
-      labelText: labelText,
-    );
+    return InputDecoration(labelText: labelText);
   }
 
   String? _validateSalary(
