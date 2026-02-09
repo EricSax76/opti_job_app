@@ -1,4 +1,6 @@
-class JobOfferFilters {
+import 'package:equatable/equatable.dart';
+
+class JobOfferFilters extends Equatable {
   const JobOfferFilters({
     this.searchQuery,
     this.location,
@@ -56,4 +58,15 @@ class JobOfferFilters {
   JobOfferFilters clear() {
     return const JobOfferFilters();
   }
+
+  @override
+  List<Object?> get props => [
+    searchQuery,
+    location,
+    jobType,
+    salaryMin,
+    salaryMax,
+    education,
+    companyName,
+  ];
 }

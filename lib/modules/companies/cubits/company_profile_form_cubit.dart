@@ -91,7 +91,12 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
   Future<void> pickAvatar() async {
     try {
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery);
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
       if (image == null) return;
       final bytes = await image.readAsBytes();
       emit(

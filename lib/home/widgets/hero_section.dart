@@ -9,6 +9,25 @@ class HeroSection extends StatelessWidget {
   const HeroSection({super.key, required this.onSeeOffers});
 
   final VoidCallback onSeeOffers;
+  static final ButtonStyle _filledButtonStyle = FilledButton.styleFrom(
+    backgroundColor: uiInk,
+    foregroundColor: Colors.white,
+    padding: const EdgeInsets.symmetric(
+      horizontal: uiSpacing20,
+      vertical: uiSpacing12,
+    ),
+  );
+  static final ButtonStyle _outlinedButtonStyle = OutlinedButton.styleFrom(
+    foregroundColor: uiInk,
+    side: const BorderSide(color: uiBorder),
+    padding: const EdgeInsets.symmetric(
+      horizontal: uiSpacing20,
+      vertical: uiSpacing12,
+    ),
+  );
+  static final ButtonStyle _textButtonStyle = TextButton.styleFrom(
+    foregroundColor: uiAccent,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -31,31 +50,17 @@ class HeroSection extends StatelessWidget {
             runSpacing: uiSpacing12,
             children: [
               FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: uiInk,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: uiSpacing20,
-                    vertical: uiSpacing12,
-                  ),
-                ),
+                style: _filledButtonStyle,
                 onPressed: () => context.go('/CandidateLogin'),
                 child: Text(l10n.heroCandidateCta),
               ),
               OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: uiInk,
-                  side: const BorderSide(color: uiBorder),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: uiSpacing20,
-                    vertical: uiSpacing12,
-                  ),
-                ),
+                style: _outlinedButtonStyle,
                 onPressed: () => context.go('/CompanyLogin'),
                 child: Text(l10n.heroCompanyCta),
               ),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: uiAccent),
+                style: _textButtonStyle,
                 onPressed: onSeeOffers,
                 child: Text(l10n.heroOffersCta),
               ),

@@ -19,7 +19,8 @@ class CompanyOffersSection extends StatelessWidget {
 
         if (state.status == CompanyJobOffersStatus.failure) {
           return SectionMessage(
-            text: state.errorMessage ??
+            text:
+                state.errorMessage ??
                 'No se pudieron cargar tus ofertas. Intenta refrescar.',
           );
         }
@@ -31,14 +32,15 @@ class CompanyOffersSection extends StatelessWidget {
           );
         }
 
-        return Column(
-          children: [
-            for (final offer in state.offers)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: OfferCard(offer: offer),
-              ),
-          ],
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: state.offers.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final offer = state.offers[index];
+            return OfferCard(offer: offer);
+          },
         );
       },
     );

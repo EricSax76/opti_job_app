@@ -28,6 +28,8 @@ class CandidateDashboardAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final avatarImageCacheSize = (32 * MediaQuery.of(context).devicePixelRatio)
+        .round();
 
     return AppBar(
       title: const Text(
@@ -75,16 +77,30 @@ class CandidateDashboardAppBar extends StatelessWidget
             child: CircleAvatar(
               radius: 16,
               backgroundColor: colorScheme.surface,
-              backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
-                  ? NetworkImage(avatarUrl!)
-                  : null,
-              child: (avatarUrl == null || avatarUrl!.isEmpty)
-                  ? Icon(
+              child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                  ? ClipOval(
+                      child: Image.network(
+                        avatarUrl!,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        cacheWidth: avatarImageCacheSize,
+                        cacheHeight: avatarImageCacheSize,
+                        filterQuality: FilterQuality.low,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person_outline,
+                            size: 18,
+                            color: colorScheme.onSurfaceVariant,
+                          );
+                        },
+                      ),
+                    )
+                  : Icon(
                       Icons.person_outline,
                       size: 18,
                       color: colorScheme.onSurfaceVariant,
-                    )
-                  : null,
+                    ),
             ),
           ),
         ),

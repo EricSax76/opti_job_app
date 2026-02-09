@@ -7,6 +7,17 @@ import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class CallToActionSection extends StatelessWidget {
   const CallToActionSection({super.key});
+  static final ButtonStyle _filledButtonStyle = FilledButton.styleFrom(
+    backgroundColor: uiInk,
+    foregroundColor: Colors.white,
+  );
+  static final ButtonStyle _outlinedButtonStyle = OutlinedButton.styleFrom(
+    foregroundColor: uiInk,
+    side: const BorderSide(color: uiBorder),
+  );
+  static final ButtonStyle _textButtonStyle = TextButton.styleFrom(
+    foregroundColor: uiAccent,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -30,23 +41,17 @@ class CallToActionSection extends StatelessWidget {
             runSpacing: uiSpacing12,
             children: [
               FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: uiInk,
-                  foregroundColor: Colors.white,
-                ),
+                style: _filledButtonStyle,
                 onPressed: () => context.go('/companyregister'),
                 child: Text(l10n.ctaCompanyRegister),
               ),
               OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: uiInk,
-                  side: const BorderSide(color: uiBorder),
-                ),
+                style: _outlinedButtonStyle,
                 onPressed: () => context.go('/candidateregister'),
                 child: Text(l10n.ctaCandidateRegister),
               ),
               TextButton(
-                style: TextButton.styleFrom(foregroundColor: uiAccent),
+                style: _textButtonStyle,
                 onPressed: () => context.go('/job-offer'),
                 child: Text(l10n.ctaOffers),
               ),

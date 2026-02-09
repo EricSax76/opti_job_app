@@ -6,9 +6,11 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/home/app.dart';
 
 void main() {
@@ -17,7 +19,12 @@ void main() {
       routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink())],
     );
 
-    await tester.pumpWidget(InfoJobsApp(router: router));
+    await tester.pumpWidget(
+      BlocProvider(
+        create: (_) => ThemeCubit(),
+        child: InfoJobsApp(router: router),
+      ),
+    );
 
     expect(find.byType(InfoJobsApp), findsOneWidget);
   });

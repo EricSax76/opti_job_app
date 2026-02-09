@@ -91,24 +91,24 @@ class CurriculumLogic {
       if (extension == 'docx') {
         await formCubit.analyzeCvFile(bytes, file.name);
       } else {
-         // Not really an error, just info, but we return logic result. 
-         // We'll treat this as part of success flow for logic, caller handles info?
-         // Actually, let's just proceed. The original logic showed a snackbar.
-         // We will just return clear success and let the file be uploaded.
+        // Not really an error, just info, but we return logic result.
+        // We'll treat this as part of success flow for logic, caller handles info?
+        // Actually, let's just proceed. The original logic showed a snackbar.
+        // We will just return clear success and let the file be uploaded.
       }
 
-      await repository.uploadAttachment(
+      final updatedCurriculum = await repository.uploadAttachment(
         candidateUid: candidate.uid,
         bytes: bytes,
         fileName: file.name,
         contentType: contentType,
+        previousAttachment: curriculumCubit.state.curriculum?.attachment,
       );
-
-      await curriculumCubit.refresh();
+      curriculumCubit.setCurriculum(updatedCurriculum);
       return ActionSuccess(
-          extension != 'docx' 
-          ? 'Archivo importado. (Info: solo .docx soporta extracción automática)' 
-          : 'Archivo importado y analizado.'
+        extension != 'docx'
+            ? 'Archivo importado. (Info: solo .docx soporta extracción automática)'
+            : 'Archivo importado y analizado.',
       );
     } catch (_) {
       return const ActionFailure('No se pudo importar el archivo.');
@@ -126,11 +126,11 @@ class CurriculumLogic {
       final repository = context.read<CurriculumRepository>();
       final curriculumCubit = context.read<CurriculumCubit>();
 
-      await repository.deleteAttachment(
+      final updatedCurriculum = await repository.deleteAttachment(
         candidateUid: candidate.uid,
         attachment: attachment,
       );
-      await curriculumCubit.refresh();
+      curriculumCubit.setCurriculum(updatedCurriculum);
       return const ActionSuccess();
     } catch (_) {
       return const ActionFailure('No se pudo eliminar el archivo.');
@@ -149,10 +149,7 @@ class CurriculumLogic {
       final repository = context.read<CurriculumRepository>();
       final url = await repository.getAttachmentUrl(attachment: attachment);
       final uri = Uri.parse(url);
-      final opened = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!opened) {
         return const ActionFailure('No se pudo abrir el archivo.');
       }

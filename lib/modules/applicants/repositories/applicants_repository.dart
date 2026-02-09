@@ -6,6 +6,11 @@ abstract class ApplicantsRepository {
     required String companyUid,
   });
 
+  Future<Map<String, List<Application>>> getApplicationsForOffers({
+    required Iterable<String> jobOfferIds,
+    required String companyUid,
+  });
+
   Future<void> updateApplicationStatus({
     required String applicationId,
     required String status,

@@ -19,10 +19,7 @@ class CandidateAuthState extends AuthState {
   bool get isCompany => false;
 
   @override
-  List<Object?> get props => [
-    super.props, // Include properties from the base class
-    candidate,
-  ];
+  List<Object?> get props => [...super.props, candidate];
 
   CandidateAuthState copyWith({
     AuthStatus? status,

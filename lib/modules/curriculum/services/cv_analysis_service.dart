@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/features/ai/api/document_parser.dart';
 import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
 import 'package:opti_job_app/features/ai/prompts/ai_prompts.dart';
@@ -19,7 +18,7 @@ class CvAnalysisService {
       // 1. Extraer texto del documento
       String text = '';
       if (fileName.toLowerCase().endsWith('.docx')) {
-        text = DocumentParser.extractTextFromDocx(bytes);
+        text = await compute(_extractTextFromDocx, bytes);
       }
       // (Aquí podrías añadir lógica para PDF si integras un paquete compatible)
 
@@ -76,6 +75,10 @@ class CvAnalysisService {
       education: education,
     );
   }
+}
+
+String _extractTextFromDocx(Uint8List bytes) {
+  return DocumentParser.extractTextFromDocx(bytes);
 }
 
 class CvAnalysisResult {

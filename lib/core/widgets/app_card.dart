@@ -12,6 +12,7 @@ class AppCard extends StatelessWidget {
     this.borderColor,
     this.borderRadius,
     this.boxShadow,
+    this.clipBehavior = Clip.none,
   });
 
   final Widget child;
@@ -22,6 +23,7 @@ class AppCard extends StatelessWidget {
   final Color? borderColor;
   final double? borderRadius;
   final List<BoxShadow>? boxShadow;
+  final Clip clipBehavior;
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +34,10 @@ class AppCard extends StatelessWidget {
     final resolvedRadius = borderRadius != null
         ? BorderRadius.circular(borderRadius!)
         : cardShape is RoundedRectangleBorder
-            ? cardShape.borderRadius
-            : BorderRadius.circular(uiCardRadius);
-    final resolvedBorderColor = borderColor ??
+        ? cardShape.borderRadius
+        : BorderRadius.circular(uiCardRadius);
+    final resolvedBorderColor =
+        borderColor ??
         (cardShape is RoundedRectangleBorder
             ? cardShape.side.color
             : colorScheme.outline);
@@ -52,21 +55,27 @@ class AppCard extends StatelessWidget {
       );
     }
 
+    final shouldClip = onTap != null || clipBehavior != Clip.none;
+    final resolvedClipBehavior = clipBehavior == Clip.none
+        ? Clip.antiAlias
+        : clipBehavior;
+    final decoratedContent = shouldClip
+        ? ClipRRect(
+            borderRadius: resolvedRadius,
+            clipBehavior: resolvedClipBehavior,
+            child: content,
+          )
+        : content;
+
     return Container(
       margin: margin,
       decoration: BoxDecoration(
         color: backgroundColor ?? cardTheme.color ?? colorScheme.surface,
         borderRadius: resolvedRadius,
-        border: Border.all(
-          color: resolvedBorderColor,
-          width: 1,
-        ),
+        border: Border.all(color: resolvedBorderColor, width: 1),
         boxShadow: boxShadow,
       ),
-      child: ClipRRect(
-        borderRadius: resolvedRadius,
-        child: content,
-      ),
+      child: decoratedContent,
     );
   }
 }
@@ -88,8 +97,8 @@ class SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final titleColor = Theme.of(context).textTheme.titleMedium?.color ??
-        colorScheme.onSurface;
+    final titleColor =
+        Theme.of(context).textTheme.titleMedium?.color ?? colorScheme.onSurface;
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -122,7 +131,8 @@ class SectionCard extends StatelessWidget {
               ),
             ),
           Padding(
-            padding: padding ??
+            padding:
+                padding ??
                 const EdgeInsets.fromLTRB(
                   uiSpacing20,
                   0,

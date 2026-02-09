@@ -75,6 +75,25 @@ dart run tool/firestore_seed.dart
 
 El script usa la API REST del emulador, por lo que no necesitas credenciales adicionales. Ajusta `FIREBASE_PROJECT_ID` si tu `firebase_options.dart` apunta a otro proyecto. Si quieres conservar el estado al reiniciar los emuladores, añade `--import ./firebase/emulator-cache --export-on-exit` al comando anterior y vuelve a ejecutar el seeder cada vez que limpies ese directorio.
 
+### Migración de esquema de applications (legacy -> canónico)
+Para normalizar documentos antiguos de `applications` (ej. `job_offer_id`, `company_uid`) y dejar solo campos canónicos (`jobOfferId`, `companyUid`, `candidateId`):
+
+```bash
+cd functions
+
+# 1) Simulación (sin escribir)
+npm run migrate:applications -- --dry-run
+
+# 2) Aplicar cambios reales
+npm run migrate:applications -- --apply
+
+# Opcional: corrida parcial
+npm run migrate:applications -- --apply --max-documents=5000
+```
+
+El script usa `firebase-admin`, por lo que debes ejecutarlo con credenciales válidas (ADC o `GOOGLE_APPLICATION_CREDENTIALS`).
+Si no detecta el proyecto automáticamente, añade `--project-id=<tu-project-id>`.
+
 Se crean automáticamente cuentas de ejemplo en ambos emuladores (correo / contraseña):
 
 - `lucia@app.dev` / `Secret123!` (candidata)

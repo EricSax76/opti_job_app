@@ -23,7 +23,47 @@ class ProfileService {
     if (data == null) {
       throw StateError('Perfil de candidato no encontrado.');
     }
-    return CandidateMapper.fromFirestore(data);
+    final rawUid = data['uid'] as String?;
+    final candidateData = rawUid == null || rawUid.trim().isEmpty
+        ? {...data, 'uid': uid}
+        : data;
+    return CandidateMapper.fromFirestore(candidateData);
+  }
+
+  Future<Map<String, Candidate>> fetchCandidateProfilesByUids(
+    Iterable<String> uids,
+  ) async {
+    final uniqueUids = uids
+        .map((uid) => uid.trim())
+        .where((uid) => uid.isNotEmpty)
+        .toSet()
+        .toList();
+    if (uniqueUids.isEmpty) return const {};
+
+    final candidatesByUid = <String, Candidate>{};
+    for (final chunk in _chunk(uniqueUids, 10)) {
+      final query = await _firestore
+          .collection('candidates')
+          .where(FieldPath.documentId, whereIn: chunk)
+          .get();
+      for (final doc in query.docs) {
+        final data = doc.data();
+        final documentUid = doc.id.trim();
+        if (documentUid.isEmpty) continue;
+        final rawUid = data['uid'] as String?;
+        final candidateUid = rawUid == null || rawUid.trim().isEmpty
+            ? documentUid
+            : rawUid.trim();
+        final candidateData = rawUid == null || rawUid.trim().isEmpty
+            ? {...data, 'uid': candidateUid}
+            : data;
+        candidatesByUid[documentUid] = CandidateMapper.fromFirestore(
+          candidateData,
+        );
+      }
+    }
+
+    return candidatesByUid;
   }
 
   Future<Company> fetchCompanyProfile(int id) async {
@@ -104,7 +144,10 @@ class ProfileService {
       throw StateError('Perfil de empresa no encontrado.');
     }
     final snapshotData = snapshot.data();
-    final existingAvatarUrl = snapshotData?['avatar_url'] as String?;
+    if (snapshotData == null) {
+      throw StateError('Perfil de empresa no encontrado.');
+    }
+    final existingAvatarUrl = snapshotData['avatar_url'] as String?;
 
     final updateData = <String, dynamic>{
       'name': name,
@@ -127,28 +170,39 @@ class ProfileService {
     final avatarUrlForOffers = (newAvatarUrl != null && newAvatarUrl.isNotEmpty)
         ? newAvatarUrl
         : existingAvatarUrl;
-    final offersQuery = await _firestore
-        .collection('jobOffers')
-        .where('company_uid', isEqualTo: uid)
-        .get();
-    if (offersQuery.docs.isNotEmpty) {
-      final batch = _firestore.batch();
-      for (final doc in offersQuery.docs) {
-        final update = <String, dynamic>{'company_name': name};
-        if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty) {
-          update['company_avatar_url'] = avatarUrlForOffers;
+    final previousName = (snapshotData['name'] as String?)?.trim() ?? '';
+    final hasNameChanged = previousName != name;
+    final hasAvatarChanged =
+        newAvatarUrl != null &&
+        newAvatarUrl.isNotEmpty &&
+        newAvatarUrl != existingAvatarUrl;
+    if (hasNameChanged || hasAvatarChanged) {
+      final offersQuery = await _firestore
+          .collection('jobOffers')
+          .where('company_uid', isEqualTo: uid)
+          .get();
+      if (offersQuery.docs.isNotEmpty) {
+        for (final chunk in _chunk(offersQuery.docs, 400)) {
+          final batch = _firestore.batch();
+          for (final doc in chunk) {
+            final update = <String, dynamic>{'company_name': name};
+            if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty) {
+              update['company_avatar_url'] = avatarUrlForOffers;
+            }
+            batch.update(doc.reference, update);
+          }
+          await batch.commit();
         }
-        batch.update(doc.reference, update);
       }
-      await batch.commit();
     }
 
-    final updatedSnapshot = await docRef.get();
-    final data = updatedSnapshot.data();
-    if (data == null) {
-      throw StateError('No se pudo actualizar el perfil.');
-    }
-    return Company.fromJson(data);
+    return Company.fromJson({
+      ...snapshotData,
+      'uid': uid,
+      'name': name,
+      if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty)
+        'avatar_url': avatarUrlForOffers,
+    });
   }
 }
 

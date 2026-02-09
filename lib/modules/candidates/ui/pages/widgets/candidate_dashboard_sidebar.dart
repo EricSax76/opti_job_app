@@ -21,9 +21,7 @@ class CandidateDashboardSidebar extends StatelessWidget {
       width: 260,
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        border: Border(
-          right: BorderSide(color: colorScheme.outlineVariant),
-        ),
+        border: Border(right: BorderSide(color: colorScheme.outlineVariant)),
       ),
       child: Column(
         children: [
@@ -50,8 +48,8 @@ class CandidateDashboardSidebar extends StatelessWidget {
                     title: Text(item.label),
                     selected: item.index == selectedIndex,
                     selectedColor: colorScheme.onSecondaryContainer,
-                    selectedTileColor:
-                        colorScheme.secondaryContainer.withOpacity(0.6),
+                    selectedTileColor: colorScheme.secondaryContainer
+                        .withValues(alpha: 0.6),
                     onTap: () => onSelected(item.index),
                   ),
               ],

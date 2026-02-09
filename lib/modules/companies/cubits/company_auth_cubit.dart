@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
-import 'package:opti_job_app/auth/cubits/auth_cubit.dart'; 
+import 'package:opti_job_app/auth/cubits/auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
@@ -72,7 +72,6 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
           clearCompany: true,
         ),
       );
-      emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
   }
 
@@ -108,7 +107,6 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
           clearCompany: true,
         ),
       );
-      emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
   }
 

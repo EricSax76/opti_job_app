@@ -17,6 +17,10 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final navActionStyle = TextButton.styleFrom(
+      foregroundColor: colorScheme.onSurface,
+      textStyle: const TextStyle(fontWeight: FontWeight.w500),
+    );
 
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -30,26 +34,17 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         TextButton(
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.onSurface,
-            textStyle: const TextStyle(fontWeight: FontWeight.w500),
-          ),
+          style: navActionStyle,
           onPressed: () => context.go('/CandidateLogin'),
           child: Text(l10n.navCandidate),
         ),
         TextButton(
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.onSurface,
-            textStyle: const TextStyle(fontWeight: FontWeight.w500),
-          ),
+          style: navActionStyle,
           onPressed: () => context.go('/job-offer'),
           child: Text(l10n.navOffers),
         ),
         TextButton(
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.onSurface,
-            textStyle: const TextStyle(fontWeight: FontWeight.w500),
-          ),
+          style: navActionStyle,
           onPressed: () => context.go('/CompanyLogin'),
           child: Text(l10n.navCompany),
         ),

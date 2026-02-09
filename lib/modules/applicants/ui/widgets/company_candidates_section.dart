@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
+import 'package:opti_job_app/modules/applications/models/application.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_card.dart';
 import 'package:opti_job_app/modules/companies/logic/company_candidates_logic.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/section_message.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
 class CompanyCandidatesSection extends StatefulWidget {
   const CompanyCandidatesSection({super.key});
@@ -18,6 +22,13 @@ class CompanyCandidatesSection extends StatefulWidget {
 
 class _CompanyCandidatesSectionState extends State<CompanyCandidatesSection> {
   var _requestedInitialLoad = false;
+  final Map<String, Candidate> _candidateProfilesByUid = <String, Candidate>{};
+  final Set<String> _candidateProfilesInFlight = <String>{};
+  Map<String, List<Application>>? _lastApplicantsByOfferRef;
+  List<JobOffer>? _lastOffersRef;
+  Map<String, JobOffer>? _lastOfferByIdRef;
+  List<CandidateGroup> _cachedGrouped = const <CandidateGroup>[];
+  Map<String, JobOffer> _cachedOfferById = const <String, JobOffer>{};
 
   @override
   void didChangeDependencies() {
@@ -49,16 +60,18 @@ class _CompanyCandidatesSectionState extends State<CompanyCandidatesSection> {
           );
         }
 
-        final offerById = {
-          for (final offer in offersState.offers) offer.id: offer,
-        };
+        final offerById = _resolveOfferById(offersState.offers);
 
         return BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
+          buildWhen: (previous, current) =>
+              !identical(previous.applicants, current.applicants) ||
+              !identical(previous.statuses, current.statuses),
           builder: (context, applicantsState) {
-            final grouped = groupCandidates(
-              applicantsState: applicantsState,
+            final grouped = _resolveGroupedCandidates(
+              applicantsByOffer: applicantsState.applicants,
               offerById: offerById,
             );
+            _scheduleCandidateProfilesPrefetch(grouped);
 
             final isLoading = applicantsState.statuses.values.any(
               (s) => s == OfferApplicantsStatus.loading,
@@ -89,14 +102,19 @@ class _CompanyCandidatesSectionState extends State<CompanyCandidatesSection> {
               );
             }
 
-            return Column(
-              children: [
-                for (final candidate in grouped)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: CandidateCard(candidate: candidate),
-                  ),
-              ],
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: grouped.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final candidate = grouped[index];
+                return CandidateCard(
+                  candidate: candidate,
+                  candidateProfile:
+                      _candidateProfilesByUid[candidate.candidateUid.trim()],
+                );
+              },
             );
           },
         );
@@ -112,25 +130,84 @@ class _CompanyCandidatesSectionState extends State<CompanyCandidatesSection> {
     final offersState = context.read<CompanyJobOffersCubit>().state;
     if (offersState.offers.isEmpty) return;
 
-    final applicantsCubit = context.read<OfferApplicantsCubit>();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      for (final offer in offersState.offers) {
-        final status =
-            applicantsCubit.state.statuses[offer.id] ??
-            OfferApplicantsStatus.initial;
-        if (force ||
-            status == OfferApplicantsStatus.initial ||
-            status == OfferApplicantsStatus.failure) {
-          applicantsCubit.loadApplicants(
-            offerId: offer.id,
-            companyUid: companyUid,
-          );
-        }
-      }
-    });
+    context.read<OfferApplicantsCubit>().loadApplicantsForOffers(
+      offerIds: offersState.offers.map((offer) => offer.id),
+      companyUid: companyUid,
+      force: force,
+    );
 
     if (!force) {
       setState(() => _requestedInitialLoad = true);
+    }
+  }
+
+  List<CandidateGroup> _resolveGroupedCandidates({
+    required Map<String, List<Application>> applicantsByOffer,
+    required Map<String, JobOffer> offerById,
+  }) {
+    if (!identical(_lastApplicantsByOfferRef, applicantsByOffer) ||
+        !identical(_lastOfferByIdRef, offerById)) {
+      _cachedGrouped = groupCandidates(
+        applicantsByOffer: applicantsByOffer,
+        offerById: offerById,
+      );
+      _lastApplicantsByOfferRef = applicantsByOffer;
+      _lastOfferByIdRef = offerById;
+    }
+    return _cachedGrouped;
+  }
+
+  Map<String, JobOffer> _resolveOfferById(List<JobOffer> offers) {
+    if (!identical(_lastOffersRef, offers)) {
+      _cachedOfferById = {for (final offer in offers) offer.id: offer};
+      _lastOffersRef = offers;
+    }
+    return _cachedOfferById;
+  }
+
+  void _scheduleCandidateProfilesPrefetch(List<CandidateGroup> grouped) {
+    final candidateUids = grouped
+        .map((group) => group.candidateUid.trim())
+        .where((uid) => uid.isNotEmpty)
+        .toSet();
+    if (candidateUids.isEmpty) return;
+
+    final hasMissingUids = candidateUids.any(
+      (uid) =>
+          !_candidateProfilesByUid.containsKey(uid) &&
+          !_candidateProfilesInFlight.contains(uid),
+    );
+    if (!hasMissingUids) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _prefetchCandidateProfiles(candidateUids);
+    });
+  }
+
+  Future<void> _prefetchCandidateProfiles(Set<String> candidateUids) async {
+    final missingUids = candidateUids
+        .where(
+          (uid) =>
+              !_candidateProfilesByUid.containsKey(uid) &&
+              !_candidateProfilesInFlight.contains(uid),
+        )
+        .toList(growable: false);
+    if (missingUids.isEmpty) return;
+
+    _candidateProfilesInFlight.addAll(missingUids);
+    try {
+      final profiles = await context
+          .read<ProfileRepository>()
+          .fetchCandidateProfilesByUids(missingUids);
+      if (!mounted || profiles.isEmpty) return;
+      setState(() {
+        _candidateProfilesByUid.addAll(profiles);
+      });
+    } catch (_) {
+      // Ignore profile prefetch errors: badges will remain in unknown state.
+    } finally {
+      _candidateProfilesInFlight.removeAll(missingUids);
     }
   }
 }

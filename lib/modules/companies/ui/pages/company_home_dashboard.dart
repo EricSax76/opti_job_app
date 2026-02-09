@@ -42,17 +42,10 @@ class _CompanyHomeDashboardState extends State<CompanyHomeDashboard> {
     final offers = offersState.offers;
     if (offers.isEmpty) return;
 
-    final applicantsCubit = context.read<OfferApplicantsCubit>();
-    for (final offer in offers) {
-      final status =
-          applicantsCubit.state.statuses[offer.id] ??
-          OfferApplicantsStatus.initial;
-      if (status != OfferApplicantsStatus.loading) {
-        applicantsCubit.loadApplicants(
-          offerId: offer.id,
-          companyUid: companyUid,
-        );
-      }
-    }
+    context.read<OfferApplicantsCubit>().loadApplicantsForOffers(
+      offerIds: offers.map((offer) => offer.id),
+      companyUid: companyUid,
+      force: true,
+    );
   }
 }

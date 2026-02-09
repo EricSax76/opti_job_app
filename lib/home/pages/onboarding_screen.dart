@@ -17,13 +17,20 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
-    final profileState = context.watch<ProfileCubit>().state;
+    final isCandidate = context.select(
+      (AuthCubit cubit) => cubit.state.isCandidate,
+    );
+    final candidateName = context.select(
+      (ProfileCubit cubit) => cubit.state.candidate?.name,
+    );
+    final companyName = context.select(
+      (ProfileCubit cubit) => cubit.state.company?.name,
+    );
     final l10n = AppLocalizations.of(context)!;
 
-    final name = authState.isCandidate
-        ? profileState.candidate?.name ?? l10n.onboardingDefaultCandidateName
-        : profileState.company?.name ?? l10n.onboardingDefaultCompanyName;
+    final name = isCandidate
+        ? candidateName ?? l10n.onboardingDefaultCandidateName
+        : companyName ?? l10n.onboardingDefaultCompanyName;
 
     return Scaffold(
       appBar: const AppNavBar(),
@@ -52,7 +59,7 @@ class OnboardingScreen extends StatelessWidget {
                   const SizedBox(height: uiSpacing24),
                   FilledButton.icon(
                     onPressed: () {
-                      if (authState.isCandidate) {
+                      if (isCandidate) {
                         context.read<CandidateAuthCubit>().completeOnboarding();
                         final uid = context
                             .read<CandidateAuthCubit>()

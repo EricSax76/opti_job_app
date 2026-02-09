@@ -5,7 +5,7 @@ import 'package:opti_job_app/modules/applicants/repositories/applicants_reposito
 
 class FirebaseApplicantsRepository implements ApplicantsRepository {
   FirebaseApplicantsRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -14,80 +14,54 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     required String jobOfferId,
     required String companyUid,
   }) async {
-    final collection = _firestore.collection('applications');
+    final normalizedOfferId = jobOfferId.trim();
+    if (normalizedOfferId.isEmpty) return const [];
 
-    Future<List<Application>> runQuery({
-      required String offerField,
-      required dynamic offerIdValue,
-      required String companyField,
-      bool includeCompany = true,
-    }) async {
-      var query = collection.where(offerField, isEqualTo: offerIdValue);
-      if (includeCompany && companyUid.isNotEmpty) {
-        query = query.where(companyField, isEqualTo: companyUid);
+    final byOffer = await getApplicationsForOffers(
+      jobOfferIds: [normalizedOfferId],
+      companyUid: companyUid,
+    );
+    return byOffer[normalizedOfferId] ?? const <Application>[];
+  }
+
+  @override
+  Future<Map<String, List<Application>>> getApplicationsForOffers({
+    required Iterable<String> jobOfferIds,
+    required String companyUid,
+  }) async {
+    final normalizedOfferIds = jobOfferIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (normalizedOfferIds.isEmpty) return const {};
+
+    final applicationsByOffer = <String, List<Application>>{
+      for (final offerId in normalizedOfferIds) offerId: <Application>[],
+    };
+    for (final chunk in _chunk(normalizedOfferIds, 10)) {
+      Query<Map<String, dynamic>> query = _firestore
+          .collection('applications')
+          .where('jobOfferId', whereIn: chunk);
+      if (companyUid.isNotEmpty) {
+        query = query.where('companyUid', isEqualTo: companyUid);
       }
-      print('FirebaseApplicantsRepository query: offerField=$offerField offerIdValue=$offerIdValue ($offerIdValue.runtimeType) companyField=$companyField includeCompany=$includeCompany companyUid=$companyUid');
+
       final snapshot = await query.get();
-      print('FirebaseApplicantsRepository results: ${snapshot.docs.length}');
-      return snapshot.docs
-          .map((doc) => ApplicationMapper.fromFirestore(doc.data(), id: doc.id))
-          .toList();
-    }
-
-    // Identify IDs to query
-    final idsToQuery = <dynamic>[jobOfferId];
-    final intId = int.tryParse(jobOfferId);
-    if (intId != null) idsToQuery.add(intId);
-
-    final fallbackResults = <String, Application>{};
-    Future<void> merge(List<Application> apps) async {
-       for (final app in apps) {
-        if (app.id == null) continue;
-        fallbackResults[app.id!] = app;
-      }
-    }
-    
-    for (final idValue in idsToQuery) {
-        final primary = await runQuery(
-          offerField: 'jobOfferId',
-          offerIdValue: idValue,
-          companyField: 'companyUid',
-        );
-        await merge(primary);
-        
-        await merge(
-          await runQuery(offerField: 'job_offer_id', offerIdValue: idValue, companyField: 'companyUid'),
-        );
-        await merge(
-          await runQuery(offerField: 'jobOfferId', offerIdValue: idValue, companyField: 'company_uid'),
-        );
-        await merge(
-          await runQuery(offerField: 'job_offer_id', offerIdValue: idValue, companyField: 'company_uid'),
-        );
-    }
-
-    if (fallbackResults.isEmpty && companyUid.isEmpty) {
-      for (final idValue in idsToQuery) {
-        await merge(
-          await runQuery(
-            offerField: 'jobOfferId',
-            offerIdValue: idValue,
-            companyField: 'companyUid',
-            includeCompany: false,
-          ),
-        );
-        await merge(
-          await runQuery(
-            offerField: 'job_offer_id',
-            offerIdValue: idValue,
-            companyField: 'companyUid',
-            includeCompany: false,
-          ),
-        );
+      for (final doc in snapshot.docs) {
+        final app = ApplicationMapper.fromFirestore(doc.data(), id: doc.id);
+        final normalizedOfferId = app.jobOfferId.trim();
+        if (normalizedOfferId.isEmpty) continue;
+        final bucket = applicationsByOffer[normalizedOfferId];
+        if (bucket == null) continue;
+        bucket.add(app);
       }
     }
 
-    return fallbackResults.values.toList();
+    for (final applications in applicationsByOffer.values) {
+      applications.sort(_sortByMostRecent);
+    }
+    return applicationsByOffer;
   }
 
   @override
@@ -99,5 +73,24 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  List<List<T>> _chunk<T>(List<T> items, int size) {
+    if (items.isEmpty) return const [];
+    final chunks = <List<T>>[];
+    for (var i = 0; i < items.length; i += size) {
+      final end = i + size > items.length ? items.length : i + size;
+      chunks.add(items.sublist(i, end));
+    }
+    return chunks;
+  }
+
+  static int _sortByMostRecent(Application a, Application b) {
+    final aDate = a.updatedAt ?? a.createdAt;
+    final bDate = b.updatedAt ?? b.createdAt;
+    if (aDate == null && bDate == null) return 0;
+    if (aDate == null) return 1;
+    if (bDate == null) return -1;
+    return bDate.compareTo(aDate);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
@@ -17,15 +19,16 @@ class JobOfferFilterSidebar extends StatefulWidget {
 }
 
 class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
+  static const Duration _textFilterDebounceDuration = Duration(
+    milliseconds: 300,
+  );
+
   late TextEditingController _searchController;
   late JobOfferFilters _filters;
+  Timer? _textFilterDebounce;
 
   // Valores predefinidos
-  final List<String> _jobTypes = [
-    'Presencial',
-    'Híbrido',
-    'Remoto',
-  ];
+  final List<String> _jobTypes = ['Presencial', 'Híbrido', 'Remoto'];
 
   final List<String> _educationLevels = [
     'Sin requisitos',
@@ -68,12 +71,22 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
 
   @override
   void dispose() {
+    _textFilterDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _updateFilters(JobOfferFilters newFilters) {
+  void _updateFilters(JobOfferFilters newFilters, {bool debounced = false}) {
     setState(() => _filters = newFilters);
+    if (debounced) {
+      _textFilterDebounce?.cancel();
+      _textFilterDebounce = Timer(_textFilterDebounceDuration, () {
+        if (!mounted) return;
+        widget.onFiltersChanged(newFilters);
+      });
+      return;
+    }
+    _textFilterDebounce?.cancel();
     widget.onFiltersChanged(newFilters);
   }
 
@@ -101,9 +114,7 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
       width: 280,
       decoration: BoxDecoration(
         color: surface.withValues(alpha: isDark ? 1.0 : 0.8),
-        border: Border(
-          right: BorderSide(color: border, width: 1),
-        ),
+        border: Border(right: BorderSide(color: border, width: 1)),
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -171,6 +182,7 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                     searchQuery: value.isEmpty ? null : value,
                     clearSearchQuery: value.isEmpty,
                   ),
+                  debounced: true,
                 );
               },
             ),
@@ -210,6 +222,7 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                       location: value.isEmpty ? null : value,
                       clearLocation: value.isEmpty,
                     ),
+                    debounced: true,
                   );
                 },
               ),
@@ -399,6 +412,7 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                       companyName: value.isEmpty ? null : value,
                       clearCompanyName: value.isEmpty,
                     ),
+                    debounced: true,
                   );
                 },
               ),

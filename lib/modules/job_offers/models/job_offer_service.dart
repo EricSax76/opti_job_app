@@ -3,7 +3,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/data/mappers/job_offer_mapper.dart';
 
+class JobOffersPageCursor {
+  const JobOffersPageCursor._(this._snapshot);
+
+  final QueryDocumentSnapshot<Map<String, dynamic>> _snapshot;
+}
+
+class JobOffersPage {
+  const JobOffersPage({
+    required this.offers,
+    required this.hasMore,
+    required this.nextPageCursor,
+  });
+
+  final List<JobOffer> offers;
+  final bool hasMore;
+  final JobOffersPageCursor? nextPageCursor;
+}
+
 class JobOfferService {
+  static const int _defaultPageSize = 20;
+
   JobOfferService({FirebaseFirestore? firestore})
     : _firestore = firestore ?? FirebaseFirestore.instance;
 
@@ -12,57 +32,169 @@ class JobOfferService {
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('jobOffers');
 
-  Future<List<JobOffer>> fetchJobOffers({String? jobType}) async {
+  Future<JobOffersPage> fetchJobOffersPage({
+    String? jobType,
+    int limit = _defaultPageSize,
+    JobOffersPageCursor? startAfter,
+  }) async {
+    final normalizedJobType = jobType?.trim();
     Query<Map<String, dynamic>> query = _collection.orderBy(
       'created_at',
       descending: true,
     );
-    if (jobType != null && jobType.isNotEmpty) {
-      query = query.where('job_type', isEqualTo: jobType);
+    if (normalizedJobType != null && normalizedJobType.isNotEmpty) {
+      query = query.where('job_type', isEqualTo: normalizedJobType);
     }
-    final snapshot = await query.get();
-    return snapshot.docs.map((doc) => JobOfferMapper.fromFirestore(doc.data())).toList();
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter._snapshot);
+    }
+    final safeLimit = limit > 0 ? limit : _defaultPageSize;
+    final snapshot = await query.limit(safeLimit).get();
+    return _toPage(snapshot.docs, safeLimit);
   }
 
-  Future<List<JobOffer>> fetchJobOffersByCompanyUid(String companyUid) async {
-    try {
-      final snapshot = await _collection
-          .where('company_uid', isEqualTo: companyUid)
-          .orderBy('created_at', descending: true)
-          .get();
-      return _mapOffers(snapshot.docs);
-    } on FirebaseException catch (error) {
-      final needsFallback =
-          error.code == 'failed-precondition' &&
-          (error.message?.toLowerCase().contains('index') ?? false);
-      if (!needsFallback) rethrow;
+  Future<List<JobOffer>> fetchJobOffers({
+    String? jobType,
+    int limit = _defaultPageSize,
+    JobOffersPageCursor? startAfter,
+  }) async {
+    final firstPage = await fetchJobOffersPage(
+      jobType: jobType,
+      limit: limit,
+      startAfter: startAfter,
+    );
+    if (startAfter != null || !firstPage.hasMore) {
+      return firstPage.offers;
+    }
 
-      final snapshot = await _collection
-          .where('company_uid', isEqualTo: companyUid)
-          .get();
-      final offers = _mapOffers(snapshot.docs);
-      offers.sort(
-        (a, b) => (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
-            .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
+    final offers = <JobOffer>[...firstPage.offers];
+    var cursor = firstPage.nextPageCursor;
+    while (cursor != null) {
+      final page = await fetchJobOffersPage(
+        jobType: jobType,
+        limit: limit,
+        startAfter: cursor,
       );
-      return offers;
+      offers.addAll(page.offers);
+      if (!page.hasMore) break;
+      cursor = page.nextPageCursor;
+    }
+    return offers;
+  }
+
+  Future<JobOffersPage> fetchJobOffersByCompanyUidPage(
+    String companyUid, {
+    int limit = _defaultPageSize,
+    JobOffersPageCursor? startAfter,
+  }) async {
+    final normalizedCompanyUid = companyUid.trim();
+    if (normalizedCompanyUid.isEmpty) {
+      throw ArgumentError.value(companyUid, 'companyUid', 'must not be empty');
+    }
+
+    try {
+      Query<Map<String, dynamic>> query = _collection
+          .where('company_uid', isEqualTo: normalizedCompanyUid)
+          .orderBy('created_at', descending: true);
+      if (startAfter != null) {
+        query = query.startAfterDocument(startAfter._snapshot);
+      }
+      final safeLimit = limit > 0 ? limit : _defaultPageSize;
+      final snapshot = await query.limit(safeLimit).get();
+      return _toPage(snapshot.docs, safeLimit);
+    } on FirebaseException catch (error) {
+      if (_isMissingIndexError(error)) {
+        throw StateError(
+          'Falta un indice de Firestore para consultar ofertas por empresa '
+          'ordenadas por fecha.',
+        );
+      }
+      rethrow;
     }
   }
 
-  List<JobOffer> _mapOffers(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
-    return docs.map((doc) => JobOfferMapper.fromFirestore(doc.data())).toList();
+  Future<List<JobOffer>> fetchJobOffersByCompanyUid(
+    String companyUid, {
+    int limit = _defaultPageSize,
+    JobOffersPageCursor? startAfter,
+  }) async {
+    final firstPage = await fetchJobOffersByCompanyUidPage(
+      companyUid,
+      limit: limit,
+      startAfter: startAfter,
+    );
+    if (startAfter != null || !firstPage.hasMore) {
+      return firstPage.offers;
+    }
+
+    final offers = <JobOffer>[...firstPage.offers];
+    var cursor = firstPage.nextPageCursor;
+    while (cursor != null) {
+      final page = await fetchJobOffersByCompanyUidPage(
+        companyUid,
+        limit: limit,
+        startAfter: cursor,
+      );
+      offers.addAll(page.offers);
+      if (!page.hasMore) break;
+      cursor = page.nextPageCursor;
+    }
+    return offers;
+  }
+
+  JobOffersPage _toPage(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    int limit,
+  ) {
+    final offers = docs.map(_mapOfferDoc).toList(growable: false);
+    final hasMore = docs.length == limit;
+    return JobOffersPage(
+      offers: offers,
+      hasMore: hasMore,
+      nextPageCursor: hasMore && docs.isNotEmpty
+          ? JobOffersPageCursor._(docs.last)
+          : null,
+    );
+  }
+
+  JobOffer _mapOfferDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final rawId = data['id']?.toString().trim();
+    if (rawId == null || rawId.isEmpty) {
+      return JobOfferMapper.fromFirestore({...data, 'id': doc.id});
+    }
+    return JobOfferMapper.fromFirestore(data);
+  }
+
+  bool _isMissingIndexError(FirebaseException error) {
+    return error.code == 'failed-precondition' &&
+        (error.message?.toLowerCase().contains('index') ?? false);
   }
 
   Future<JobOffer> fetchJobOffer(String id) async {
-    // Try finding by String ID first
+    final normalizedId = id.trim();
+    if (normalizedId.isEmpty) {
+      throw ArgumentError.value(id, 'id', 'must not be empty');
+    }
+
+    final docSnapshot = await _collection.doc(normalizedId).get();
+    final docData = docSnapshot.data();
+    if (docSnapshot.exists && docData != null) {
+      final withId = <String, dynamic>{...docData};
+      final rawId = withId['id']?.toString().trim();
+      if (rawId == null || rawId.isEmpty) {
+        withId['id'] = docSnapshot.id;
+      }
+      return JobOfferMapper.fromFirestore(withId);
+    }
+
     var snapshot = await _collection
-        .where('id', isEqualTo: id)
+        .where('id', isEqualTo: normalizedId)
         .limit(1)
         .get();
-    
-    // Fallback: If not found and ID looks like an int, try finding by int ID (legacy)
+
     if (snapshot.docs.isEmpty) {
-      final intId = int.tryParse(id);
+      final intId = int.tryParse(normalizedId);
       if (intId != null) {
         snapshot = await _collection
             .where('id', isEqualTo: intId)
@@ -72,10 +204,9 @@ class JobOfferService {
     }
 
     if (snapshot.docs.isEmpty) {
-      throw StateError('Oferta no encontrada (ID: $id).');
+      throw StateError('Oferta no encontrada (ID: $normalizedId).');
     }
-    final data = snapshot.docs.first.data();
-    return JobOfferMapper.fromFirestore(data);
+    return _mapOfferDoc(snapshot.docs.first);
   }
 
   Future<JobOffer> createJobOffer(JobOfferPayload payload) async {
@@ -89,7 +220,7 @@ class JobOfferService {
     };
 
     await docRef.set(offerData);
-    
+
     // Look up what we just wrote to return complete object including server timestamp
     final storedDoc = await docRef.get();
     final storedData =

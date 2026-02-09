@@ -75,7 +75,6 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
           clearCandidate: true,
         ),
       );
-      emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
   }
 
@@ -111,7 +110,6 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
           clearCandidate: true,
         ),
       );
-      emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
   }
 

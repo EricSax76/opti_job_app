@@ -123,7 +123,8 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     final profileState = context.watch<ProfileCubit>().state;
     final theme = Theme.of(context);
     final avatarUrl = profileState.candidate?.avatarUrl;
-    final showNavigationSidebar = MediaQuery.of(context).size.width >=
+    final showNavigationSidebar =
+        MediaQuery.of(context).size.width >=
         candidateDashboardSidebarBreakpoint;
 
     return Scaffold(
@@ -133,9 +134,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         avatarUrl: avatarUrl,
         onOpenProfile: () {
           Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const ProfileScreen(),
-            ),
+            MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
           );
         },
         onLogout: () => context.read<CandidateAuthCubit>().logout(),
@@ -150,9 +149,9 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         value: _applicationsCubit,
         child: Builder(
           builder: (context) {
-            final content = IndexedStack(
-              index: _selectedIndex,
-              children: candidateDashboardPages,
+            final content = KeyedSubtree(
+              key: ValueKey<int>(_selectedIndex),
+              child: candidateDashboardPageForIndex(_selectedIndex),
             );
 
             if (!showNavigationSidebar) {

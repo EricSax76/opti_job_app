@@ -27,11 +27,8 @@ class HowItWorksSection extends StatelessWidget {
           titleFontSize: 22,
         ),
         const SizedBox(height: uiSpacing16),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: steps.length,
-          itemBuilder: (context, index) {
+        Column(
+          children: List.generate(steps.length, (index) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: uiSpacing8),
               child: AppCard(
@@ -62,17 +59,14 @@ class HowItWorksSection extends StatelessWidget {
                     Expanded(
                       child: Text(
                         steps[index],
-                        style: const TextStyle(
-                          color: uiInk,
-                          fontSize: 15,
-                        ),
+                        style: const TextStyle(color: uiInk, fontSize: 15),
                       ),
                     ),
                   ],
                 ),
               ),
             );
-          },
+          }),
         ),
       ],
     );

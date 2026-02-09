@@ -6,12 +6,52 @@ class JobOfferRepository {
 
   final JobOfferService _service;
 
-  Future<List<JobOffer>> fetchAll({String? jobType}) {
-    return _service.fetchJobOffers(jobType: jobType);
+  Future<JobOffersPage> fetchPage({
+    String? jobType,
+    int limit = 20,
+    JobOffersPageCursor? startAfter,
+  }) {
+    return _service.fetchJobOffersPage(
+      jobType: jobType,
+      limit: limit,
+      startAfter: startAfter,
+    );
   }
 
-  Future<List<JobOffer>> fetchByCompanyUid(String companyUid) {
-    return _service.fetchJobOffersByCompanyUid(companyUid);
+  Future<List<JobOffer>> fetchAll({
+    String? jobType,
+    int limit = 20,
+    JobOffersPageCursor? startAfter,
+  }) {
+    return _service.fetchJobOffers(
+      jobType: jobType,
+      limit: limit,
+      startAfter: startAfter,
+    );
+  }
+
+  Future<JobOffersPage> fetchByCompanyUidPage(
+    String companyUid, {
+    int limit = 20,
+    JobOffersPageCursor? startAfter,
+  }) {
+    return _service.fetchJobOffersByCompanyUidPage(
+      companyUid,
+      limit: limit,
+      startAfter: startAfter,
+    );
+  }
+
+  Future<List<JobOffer>> fetchByCompanyUid(
+    String companyUid, {
+    int limit = 20,
+    JobOffersPageCursor? startAfter,
+  }) {
+    return _service.fetchJobOffersByCompanyUid(
+      companyUid,
+      limit: limit,
+      startAfter: startAfter,
+    );
   }
 
   Future<JobOffer> fetchById(String id) {

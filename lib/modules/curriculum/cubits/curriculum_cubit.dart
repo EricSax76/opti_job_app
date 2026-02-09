@@ -16,17 +16,26 @@ class CurriculumCubit extends Cubit<CurriculumState> {
   }) : _repository = repository,
        _candidateAuthCubit = candidateAuthCubit,
        super(const CurriculumState()) {
-    _authSubscription = _candidateAuthCubit.stream.listen(_onAuthStateChanged);
-    _onAuthStateChanged(_candidateAuthCubit.state);
+    _authSubscription = _candidateAuthCubit.stream
+        .map(_effectiveAuthUid)
+        .distinct()
+        .listen(_onAuthUidChanged);
+    _onAuthUidChanged(_effectiveAuthUid(_candidateAuthCubit.state));
   }
 
   final CurriculumRepository _repository;
   final CandidateAuthCubit _candidateAuthCubit;
-  StreamSubscription<CandidateAuthState>? _authSubscription;
+  StreamSubscription<String?>? _authSubscription;
 
-  Future<void> _onAuthStateChanged(CandidateAuthState authState) async {
+  String? _effectiveAuthUid(CandidateAuthState authState) {
+    if (!authState.isAuthenticated) return null;
     final uid = authState.candidate?.uid;
-    if (!authState.isAuthenticated || uid == null) {
+    if (uid == null || uid.isEmpty) return null;
+    return uid;
+  }
+
+  Future<void> _onAuthUidChanged(String? uid) async {
+    if (uid == null) {
       emit(const CurriculumState(status: CurriculumStatus.empty));
       return;
     }
@@ -48,7 +57,17 @@ class CurriculumCubit extends Cubit<CurriculumState> {
   }
 
   Future<void> refresh() {
-    return _onAuthStateChanged(_candidateAuthCubit.state);
+    return _onAuthUidChanged(_effectiveAuthUid(_candidateAuthCubit.state));
+  }
+
+  void setCurriculum(Curriculum curriculum) {
+    emit(
+      state.copyWith(
+        status: CurriculumStatus.loaded,
+        curriculum: curriculum,
+        clearError: true,
+      ),
+    );
   }
 
   Future<void> save(Curriculum curriculum) async {

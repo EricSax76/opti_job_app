@@ -62,10 +62,7 @@ class OfferApplicantsSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(uiTileRadius),
               border: Border.all(color: border),
             ),
-            child: Text(
-              text,
-              style: TextStyle(color: muted, height: 1.4),
-            ),
+            child: Text(text, style: TextStyle(color: muted, height: 1.4)),
           );
         }
 
@@ -83,19 +80,19 @@ class OfferApplicantsSection extends StatelessWidget {
             if (applicants.isEmpty) {
               return message(l10n.applicantsEmpty);
             }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final application in applicants)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: ApplicantTile(
-                      offerId: offer.id,
-                      application: application,
-                      companyUid: resolvedCompanyUid,
-                    ),
-                  ),
-              ],
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: applicants.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final application = applicants[index];
+                return ApplicantTile(
+                  offerId: offer.id,
+                  application: application,
+                  companyUid: resolvedCompanyUid,
+                );
+              },
             );
         }
       },

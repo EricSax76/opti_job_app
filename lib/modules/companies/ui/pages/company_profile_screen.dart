@@ -63,9 +63,9 @@ class _CompanyProfileView extends StatelessWidget {
           : BlocConsumer<CompanyProfileFormCubit, CompanyProfileFormState>(
               listener: (context, state) {
                 if (state.notice != null && state.noticeMessage != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.noticeMessage!)),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(state.noticeMessage!)));
                   context.read<CompanyProfileFormCubit>().clearNotice();
                 }
               },
@@ -74,7 +74,11 @@ class _CompanyProfileView extends StatelessWidget {
                 final avatarBytes = state.avatarBytes;
                 ImageProvider? avatarImage;
                 if (avatarBytes != null) {
-                  avatarImage = MemoryImage(avatarBytes);
+                  avatarImage = ResizeImage(
+                    MemoryImage(avatarBytes),
+                    width: 256,
+                    height: 256,
+                  );
                 } else if (avatarUrl != null && avatarUrl.isNotEmpty) {
                   avatarImage = NetworkImage(avatarUrl);
                 }
@@ -116,7 +120,9 @@ class _CompanyProfileView extends StatelessWidget {
                                       onTap: context
                                           .read<CompanyProfileFormCubit>()
                                           .pickAvatar,
-                                      borderRadius: BorderRadius.circular(uiTileRadius),
+                                      borderRadius: BorderRadius.circular(
+                                        uiTileRadius,
+                                      ),
                                       child: CircleAvatar(
                                         radius: 16,
                                         backgroundColor: colorScheme.primary,
@@ -134,9 +140,7 @@ class _CompanyProfileView extends StatelessWidget {
                             const SizedBox(height: 20),
                             Text(
                               'Datos de la empresa',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
+                              style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: ink,
@@ -167,13 +171,14 @@ class _CompanyProfileView extends StatelessWidget {
                                 style: FilledButton.styleFrom(
                                   backgroundColor: colorScheme.primary,
                                   foregroundColor: colorScheme.onPrimary,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                 ),
                                 onPressed: state.canSubmit
                                     ? () => context
-                                        .read<CompanyProfileFormCubit>()
-                                        .submit()
+                                          .read<CompanyProfileFormCubit>()
+                                          .submit()
                                     : null,
                                 child: state.isSaving
                                     ? SizedBox(
@@ -183,8 +188,8 @@ class _CompanyProfileView extends StatelessWidget {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                            colorScheme.onPrimary,
-                                          ),
+                                                colorScheme.onPrimary,
+                                              ),
                                         ),
                                       )
                                     : const Text('Guardar cambios'),
@@ -193,10 +198,9 @@ class _CompanyProfileView extends StatelessWidget {
                             const SizedBox(height: 12),
                             Text(
                               'Sesión activa como ${company.name}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: muted),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(color: muted),
                             ),
                           ],
                         ),

@@ -26,12 +26,14 @@ class CurriculumRepository {
     required Uint8List bytes,
     required String fileName,
     required String contentType,
+    CurriculumAttachment? previousAttachment,
   }) {
     return _service.uploadAttachment(
       candidateUid: candidateUid,
       bytes: bytes,
       fileName: fileName,
       contentType: contentType,
+      previousAttachment: previousAttachment,
     );
   }
 
@@ -45,9 +47,7 @@ class CurriculumRepository {
     );
   }
 
-  Future<String> getAttachmentUrl({
-    required CurriculumAttachment attachment,
-  }) {
+  Future<String> getAttachmentUrl({required CurriculumAttachment attachment}) {
     return _service.getAttachmentUrl(attachment);
   }
 

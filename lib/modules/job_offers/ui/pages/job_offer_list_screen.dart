@@ -10,6 +10,8 @@ import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 
+const double _paginationThreshold = 280;
+
 class JobOfferListScreen extends StatelessWidget {
   const JobOfferListScreen({super.key});
 
@@ -19,8 +21,12 @@ class JobOfferListScreen extends StatelessWidget {
       appBar: const AppNavBar(),
       body: BlocBuilder<JobOffersCubit, JobOffersState>(
         builder: (context, state) {
-          if (state.status == JobOffersStatus.loading ||
-              state.status == JobOffersStatus.initial) {
+          if (state.status == JobOffersStatus.initial) {
+            context.read<JobOffersCubit>().loadOffers();
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.status == JobOffersStatus.loading) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -29,97 +35,130 @@ class JobOfferListScreen extends StatelessWidget {
               title: 'Error',
               message: state.errorMessage ?? 'Error al cargar las ofertas.',
               actionLabel: 'Reintentar',
-              onAction: () => context.read<JobOffersCubit>().loadOffers(),
+              onAction: () =>
+                  context.read<JobOffersCubit>().loadOffers(forceRefresh: true),
             );
           }
 
-          final jobTypes = state.offers
-              .map((offer) => offer.jobType)
-              .whereType<String>()
-              .where((jobType) => jobType.isNotEmpty)
-              .toSet()
-              .toList()
-            ..sort();
+          final offers = state.offers;
+          final jobTypes =
+              state.offers
+                  .map((offer) => offer.jobType)
+                  .whereType<String>()
+                  .where((jobType) => jobType.isNotEmpty)
+                  .toSet()
+                  .toList()
+                ..sort();
 
-          return CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.all(uiSpacing16),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SectionHeader(
-                        title: 'Ofertas activas',
-                        subtitle: 'Encuentra tu próximo reto profesional.',
-                      ),
-                      const SizedBox(height: uiSpacing20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String?>(
-                              initialValue: state.selectedJobType,
-                              decoration: const InputDecoration(
-                                labelText: 'Filtrar por tipología',
-                              ),
-                              items: [
-                                const DropdownMenuItem<String?>(
-                                  value: null,
-                                  child: Text('Todas'),
+          return NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification.metrics.axis != Axis.vertical) return false;
+              final pixels = notification.metrics.pixels;
+              final max = notification.metrics.maxScrollExtent;
+              if (max - pixels <= _paginationThreshold &&
+                  state.hasMore &&
+                  !state.isLoadingMore &&
+                  !state.isRefreshing &&
+                  state.status == JobOffersStatus.success) {
+                context.read<JobOffersCubit>().loadMoreOffers();
+              }
+              return false;
+            },
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(uiSpacing16),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionHeader(
+                          title: 'Ofertas activas',
+                          subtitle: 'Encuentra tu próximo reto profesional.',
+                        ),
+                        const SizedBox(height: uiSpacing20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String?>(
+                                initialValue: state.selectedJobType,
+                                decoration: const InputDecoration(
+                                  labelText: 'Filtrar por tipología',
                                 ),
-                                ...jobTypes.map(
-                                  (type) => DropdownMenuItem<String?>(
-                                    value: type,
-                                    child: Text(type),
+                                items: [
+                                  const DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('Todas'),
                                   ),
-                                ),
-                              ],
-                              onChanged: (value) => context
-                                  .read<JobOffersCubit>()
-                                  .selectJobType(value),
+                                  ...jobTypes.map(
+                                    (type) => DropdownMenuItem<String?>(
+                                      value: type,
+                                      child: Text(type),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) => context
+                                    .read<JobOffersCubit>()
+                                    .selectJobType(value),
+                              ),
                             ),
-                          ),
-                          if (state.selectedJobType != null) ...[
-                            const SizedBox(width: uiSpacing12),
-                            IconButton.filledTonal(
-                              onPressed: () => context
-                                  .read<JobOffersCubit>()
-                                  .selectJobType(null),
-                              icon: const Icon(Icons.close),
-                              tooltip: 'Limpiar filtro',
-                            ),
+                            if (state.selectedJobType != null) ...[
+                              const SizedBox(width: uiSpacing12),
+                              IconButton.filledTonal(
+                                onPressed: () => context
+                                    .read<JobOffersCubit>()
+                                    .selectJobType(null),
+                                icon: const Icon(Icons.close),
+                                tooltip: 'Limpiar filtro',
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (state.offers.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: StateMessage(
-                      title: 'Sin resultados',
-                      message: 'No hay ofertas disponibles que coincidan.',
-                      actionLabel: 'Ver todas',
-                      onAction: () =>
-                          context.read<JobOffersCubit>().selectJobType(null),
+                        ),
+                      ],
                     ),
                   ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                      uiSpacing16, 0, uiSpacing16, uiSpacing24),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final offer = state.offers[index];
+                ),
+                if (state.isRefreshing)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        uiSpacing16,
+                        0,
+                        uiSpacing16,
+                        uiSpacing12,
+                      ),
+                      child: LinearProgressIndicator(minHeight: 2),
+                    ),
+                  ),
+                if (offers.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: StateMessage(
+                        title: 'Sin resultados',
+                        message: 'No hay ofertas disponibles que coincidan.',
+                        actionLabel: 'Ver todas',
+                        onAction: () =>
+                            context.read<JobOffersCubit>().selectJobType(null),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      uiSpacing16,
+                      0,
+                      uiSpacing16,
+                      uiSpacing24,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final offer = offers[index];
                         final company = offer.companyId == null
                             ? null
                             : state.companiesById[offer.companyId!];
-                        final companyName = offer.companyName ??
+                        final companyName =
+                            offer.companyName ??
                             company?.name ??
                             'Empresa no especificada';
                         final avatarUrl =
@@ -136,12 +175,23 @@ class JobOfferListScreen extends StatelessWidget {
                             onTap: () => context.push('/job-offer/${offer.id}'),
                           ),
                         );
-                      },
-                      childCount: state.offers.length,
+                      }, childCount: offers.length),
                     ),
                   ),
-                ),
-            ],
+                if (state.isLoadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: uiSpacing20),
+                      child: Center(
+                        child: SizedBox.square(
+                          dimension: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),

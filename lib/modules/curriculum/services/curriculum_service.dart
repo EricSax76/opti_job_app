@@ -49,32 +49,24 @@ class CurriculumService {
     required Uint8List bytes,
     required String fileName,
     required String contentType,
+    CurriculumAttachment? previousAttachment,
   }) async {
-    final previousSnapshot = await _docRef(candidateUid).get();
-    final previousData = previousSnapshot.data();
-    final previousAttachment = CurriculumAttachment.fromJson(
-      previousData?['attachment'] as Map<String, dynamic>?,
-    );
-
     final sanitizedName = _sanitizeFileName(fileName);
     final storagePath =
         'candidates/$candidateUid/curriculum/${DateTime.now().millisecondsSinceEpoch}_$sanitizedName';
     final ref = _storage.ref().child(storagePath);
     await ref.putData(bytes, SettableMetadata(contentType: contentType));
 
-    await _docRef(candidateUid).set(
-      {
-        'attachment': {
-          'file_name': fileName,
-          'storage_path': storagePath,
-          'content_type': contentType,
-          'size_bytes': bytes.length,
-          'updated_at': FieldValue.serverTimestamp(),
-        },
+    await _docRef(candidateUid).set({
+      'attachment': {
+        'file_name': fileName,
+        'storage_path': storagePath,
+        'content_type': contentType,
+        'size_bytes': bytes.length,
         'updated_at': FieldValue.serverTimestamp(),
       },
-      SetOptions(merge: true),
-    );
+      'updated_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
     if (previousAttachment != null &&
         previousAttachment.storagePath.isNotEmpty &&
@@ -99,13 +91,10 @@ class CurriculumService {
       // Ignorar: el archivo puede no existir o no tener permisos de borrado.
     }
 
-    await _docRef(candidateUid).set(
-      {
-        'attachment': FieldValue.delete(),
-        'updated_at': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    await _docRef(candidateUid).set({
+      'attachment': FieldValue.delete(),
+      'updated_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
     return fetchCurriculum(candidateUid);
   }

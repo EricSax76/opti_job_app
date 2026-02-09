@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "lint": "echo \"No lint configured\"",
-    "build": "echo \"No build step\""
+    "build": "echo \"No build step\"",
+    "migrate:applications": "node scripts/migrate-applications-schema.js"
   },
   "engines": {
     "node": "20"
