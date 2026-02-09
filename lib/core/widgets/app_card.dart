@@ -9,7 +9,9 @@ class AppCard extends StatelessWidget {
     this.onTap,
     this.margin,
     this.backgroundColor,
+    this.gradient,
     this.borderColor,
+    this.borderWidth = 1,
     this.borderRadius,
     this.boxShadow,
     this.clipBehavior = Clip.none,
@@ -20,7 +22,9 @@ class AppCard extends StatelessWidget {
   final VoidCallback? onTap;
   final EdgeInsetsGeometry? margin;
   final Color? backgroundColor;
+  final Gradient? gradient;
   final Color? borderColor;
+  final double borderWidth;
   final double? borderRadius;
   final List<BoxShadow>? boxShadow;
   final Clip clipBehavior;
@@ -70,9 +74,12 @@ class AppCard extends StatelessWidget {
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: backgroundColor ?? cardTheme.color ?? colorScheme.surface,
+        color: gradient == null
+            ? (backgroundColor ?? cardTheme.color ?? colorScheme.surface)
+            : null,
+        gradient: gradient,
         borderRadius: resolvedRadius,
-        border: Border.all(color: resolvedBorderColor, width: 1),
+        border: Border.all(color: resolvedBorderColor, width: borderWidth),
         boxShadow: boxShadow,
       ),
       child: decoratedContent,

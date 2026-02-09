@@ -266,27 +266,31 @@ class JobOffersCubit extends Cubit<JobOffersState> {
   ) {
     if (!filters.hasActiveFilters) return null;
 
-    final query = filters.searchQuery?.trim().toLowerCase();
-    final location = filters.location?.trim().toLowerCase();
-    final companyNameFilter = filters.companyName?.trim().toLowerCase();
+    final query = _normalizedFilter(filters.searchQuery);
+    final location = _normalizedFilter(filters.location);
+    final companyNameFilter = _normalizedFilter(filters.companyName);
+    final jobTypeFilter = _normalizedFilter(filters.jobType);
+    final educationFilter = _normalizedFilter(filters.education);
 
     return offers
         .where((offer) {
-          if (query != null && query.isNotEmpty) {
-            final titleMatch = offer.title.toLowerCase().contains(query);
-            final descMatch = offer.description.toLowerCase().contains(query);
-            final companyMatch = (offer.companyName?.toLowerCase() ?? '')
-                .contains(query);
+          if (query != null) {
+            final titleMatch = _containsNormalized(offer.title, query);
+            final descMatch = _containsNormalized(offer.description, query);
+            final companyMatch = _containsNormalized(
+              offer.companyName ?? '',
+              query,
+            );
             if (!titleMatch && !descMatch && !companyMatch) return false;
           }
 
-          if (location != null && location.isNotEmpty) {
-            if (!offer.location.toLowerCase().contains(location)) {
-              return false;
-            }
+          if (location != null &&
+              !_containsNormalized(offer.location, location)) {
+            return false;
           }
 
-          if (filters.jobType != null && offer.jobType != filters.jobType) {
+          if (jobTypeFilter != null &&
+              !_matchesFlexibleValue(offer.jobType, jobTypeFilter)) {
             return false;
           }
 
@@ -303,21 +307,51 @@ class JobOffersCubit extends Cubit<JobOffersState> {
             }
           }
 
-          if (filters.education != null &&
-              offer.education != filters.education) {
+          if (educationFilter != null &&
+              !_matchesFlexibleValue(offer.education, educationFilter)) {
             return false;
           }
 
-          if (companyNameFilter != null && companyNameFilter.isNotEmpty) {
-            final companyName = offer.companyName ?? '';
-            if (!companyName.toLowerCase().contains(companyNameFilter)) {
-              return false;
-            }
+          if (companyNameFilter != null &&
+              !_containsNormalized(
+                offer.companyName ?? '',
+                companyNameFilter,
+              )) {
+            return false;
           }
 
           return true;
         })
         .toList(growable: false);
+  }
+
+  String? _normalizedFilter(String? value) {
+    final normalized = value == null ? '' : _normalizeText(value);
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  bool _containsNormalized(String source, String normalizedNeedle) {
+    return _normalizeText(source).contains(normalizedNeedle);
+  }
+
+  bool _matchesFlexibleValue(String? source, String normalizedFilter) {
+    final normalizedSource = _normalizedFilter(source);
+    if (normalizedSource == null) return false;
+    return normalizedSource.contains(normalizedFilter) ||
+        normalizedFilter.contains(normalizedSource);
+  }
+
+  String _normalizeText(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u');
   }
 
   double? _parseSalary(String? salaryStr) {

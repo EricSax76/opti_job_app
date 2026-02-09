@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/applications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/applications/ui/application_status.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/modern_application_card.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
 
 class InterviewsView extends StatelessWidget {
   const InterviewsView({super.key});
@@ -21,10 +22,10 @@ class InterviewsView extends StatelessWidget {
         }
 
         if (state.status == ApplicationsStatus.error) {
-          return Center(
-            child: Text(
-              state.errorMessage ?? 'Error al cargar tus entrevistas.',
-            ),
+          return StateMessage(
+            title: 'No se pudieron cargar tus entrevistas',
+            message:
+                state.errorMessage ?? 'Intenta nuevamente en unos segundos.',
           );
         }
 
@@ -33,22 +34,9 @@ class InterviewsView extends StatelessWidget {
             .toList();
 
         if (interviews.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.event_busy_outlined,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Aún no tienes entrevistas asignadas.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                ),
-              ],
-            ),
+          return const StateMessage(
+            title: 'Sin entrevistas',
+            message: 'Aún no tienes entrevistas asignadas.',
           );
         }
 
@@ -102,7 +90,7 @@ class InterviewsList extends StatelessWidget {
             : 'Oferta');
     final statusChip = applicationStatusChip(entry.application.status);
     final company = offer?.companyName ?? 'Empresa no especificada';
-    final salary = offer == null ? null : _formatSalary(offer);
+    final salary = offer?.formattedSalary;
     final location = offer?.location;
     final modality = offer == null
         ? null
@@ -116,22 +104,10 @@ class InterviewsList extends StatelessWidget {
       location: location,
       modality: modality,
       statusBadge: statusChip,
+      heroTag: entry.application.id ?? entry.application.jobOfferId,
       onTap: offer == null
           ? null
           : () => context.push('/job-offer/${offer.id}'),
     );
   }
-}
-
-String? _formatSalary(JobOffer offer) {
-  final min = offer.salaryMin?.trim();
-  final max = offer.salaryMax?.trim();
-
-  final hasMin = min != null && min.isNotEmpty;
-  final hasMax = max != null && max.isNotEmpty;
-
-  if (hasMin && hasMax) return '$min - $max';
-  if (hasMin) return 'Desde $min';
-  if (hasMax) return 'Hasta $max';
-  return null;
 }
