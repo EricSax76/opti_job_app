@@ -33,7 +33,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final MyApplicationsCubit _applicationsCubit;
-  late final List<Widget> _dashboardPages;
+  late final List<Widget?> _dashboardPages;
   bool _isProgrammaticTabChange = false;
   late int _selectedIndex;
 
@@ -47,10 +47,12 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       vsync: this,
       initialIndex: candidateDashboardClampTabIndex(safeIndex),
     );
-    _dashboardPages = List<Widget>.generate(
+    _dashboardPages = List<Widget?>.filled(
       candidateDashboardMaxIndex + 1,
-      candidateDashboardPageForIndex,
+      null,
+      growable: false,
     );
+    _ensureDashboardPageLoaded(safeIndex);
     _tabController.addListener(_handleTabChange);
     _applicationsCubit = MyApplicationsCubit(
       applicationService: context.read<ApplicationService>(),
@@ -71,6 +73,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     super.didUpdateWidget(oldWidget);
     final safeIndex = candidateDashboardClampIndex(widget.initialIndex);
     if (safeIndex == _selectedIndex) return;
+    _ensureDashboardPageLoaded(safeIndex);
     _selectedIndex = safeIndex;
     if (candidateDashboardIsTabIndex(_selectedIndex) &&
         safeIndex != _tabController.index) {
@@ -92,9 +95,15 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     );
   }
 
+  void _ensureDashboardPageLoaded(int index) {
+    final safeIndex = candidateDashboardClampIndex(index);
+    _dashboardPages[safeIndex] ??= candidateDashboardPageForIndex(safeIndex);
+  }
+
   void _setSelectedIndex(int index) {
     final nextIndex = candidateDashboardClampIndex(index);
     if (_selectedIndex == nextIndex) return;
+    _ensureDashboardPageLoaded(nextIndex);
 
     setState(() {
       _selectedIndex = nextIndex;
@@ -156,7 +165,11 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
           builder: (context) {
             final content = IndexedStack(
               index: _selectedIndex,
-              children: _dashboardPages,
+              children: List<Widget>.generate(
+                _dashboardPages.length,
+                (index) => _dashboardPages[index] ?? const SizedBox.shrink(),
+                growable: false,
+              ),
             );
 
             if (!showNavigationSidebar) {
