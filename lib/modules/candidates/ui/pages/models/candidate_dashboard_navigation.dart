@@ -11,7 +11,6 @@ class CandidateDashboardNavItem {
     this.drawerLabel,
     this.showInTabs = false,
     this.showInDrawer = false,
-    this.showInSidebar = true,
   });
 
   final int index;
@@ -23,7 +22,6 @@ class CandidateDashboardNavItem {
   final String? drawerLabel;
   final bool showInTabs;
   final bool showInDrawer;
-  final bool showInSidebar;
 }
 
 const candidateDashboardSidebarBreakpoint = 900.0;
@@ -91,9 +89,7 @@ final List<CandidateDashboardNavItem> candidateDashboardDrawerItems =
 );
 
 final List<CandidateDashboardNavItem> candidateDashboardSidebarItems =
-    List.unmodifiable(
-  candidateDashboardNavItems.where((item) => item.showInSidebar),
-);
+    List.unmodifiable(candidateDashboardNavItems);
 
 int get candidateDashboardMaxIndex => candidateDashboardNavItems.fold<int>(
       0,

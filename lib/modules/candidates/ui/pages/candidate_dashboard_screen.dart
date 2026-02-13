@@ -11,8 +11,12 @@ import 'package:opti_job_app/modules/candidates/ui/pages/models/candidate_dashbo
 import 'package:opti_job_app/modules/candidates/ui/pages/widgets/candidate_dashboard_app_bar.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/widgets/candidate_dashboard_drawer.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/widgets/candidate_dashboard_sidebar.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_interviews_badge.dart';
+import 'package:opti_job_app/core/config/feature_flags.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/profiles/ui/pages/profile_screen.dart';
+import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
+import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 
 class CandidateDashboardScreen extends StatefulWidget {
   const CandidateDashboardScreen({
@@ -33,6 +37,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final MyApplicationsCubit _applicationsCubit;
+  late final InterviewListCubit _interviewsCubit;
   late final List<Widget?> _dashboardPages;
   bool _isProgrammaticTabChange = false;
   late int _selectedIndex;
@@ -58,6 +63,11 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       applicationService: context.read<ApplicationService>(),
       candidateAuthCubit: context.read<CandidateAuthCubit>(),
     )..loadMyApplications();
+
+    _interviewsCubit = InterviewListCubit(
+      repository: context.read<InterviewRepository>(),
+      uid: widget.uid,
+    );
   }
 
   @override
@@ -65,6 +75,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     _applicationsCubit.close();
+    _interviewsCubit.close();
     super.dispose();
   }
 
@@ -140,37 +151,110 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     final showNavigationSidebar =
         MediaQuery.of(context).size.width >=
         candidateDashboardSidebarBreakpoint;
+    final mobileTabItems = candidateDashboardTabItems
+        .where((item) => item.label != 'Entrevistas' || FeatureFlags.interviews)
+        .toList(growable: false);
+    final selectedMobileTabPosition = mobileTabItems.indexWhere(
+      (item) => item.index == _selectedIndex,
+    );
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: CandidateDashboardAppBar(
-        tabController: _tabController,
-        avatarUrl: avatarUrl,
-        onOpenProfile: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
-          );
-        },
-        onLogout: () => context.read<CandidateAuthCubit>().logout(),
-      ),
-      drawer: showNavigationSidebar
-          ? null
-          : CandidateDashboardDrawer(
-              selectedIndex: _selectedIndex,
-              onSelected: _handleDrawerSelection,
-            ),
-      body: BlocProvider.value(
-        value: _applicationsCubit,
-        child: Builder(
-          builder: (context) {
-            final content = IndexedStack(
-              index: _selectedIndex,
-              children: List<Widget>.generate(
-                _dashboardPages.length,
-                (index) => _dashboardPages[index] ?? const SizedBox.shrink(),
-                growable: false,
-              ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _applicationsCubit),
+        BlocProvider.value(value: _interviewsCubit),
+      ],
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: CandidateDashboardAppBar(
+          tabController: _tabController,
+          avatarUrl: avatarUrl,
+          onOpenProfile: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
             );
+          },
+          onLogout: () => context.read<CandidateAuthCubit>().logout(),
+          showTabBar: false,
+        ),
+        drawer: showNavigationSidebar
+            ? null
+            : CandidateDashboardDrawer(
+                selectedIndex: _selectedIndex,
+                onSelected: _handleDrawerSelection,
+              ),
+        bottomNavigationBar: showNavigationSidebar || mobileTabItems.isEmpty
+            ? null
+            : BottomNavigationBar(
+                currentIndex: selectedMobileTabPosition >= 0
+                    ? selectedMobileTabPosition
+                    : 0,
+                onTap: (position) =>
+                    _setSelectedIndex(mobileTabItems[position].index),
+                type: BottomNavigationBarType.fixed,
+                items: [
+                  for (final item in mobileTabItems)
+                    BottomNavigationBarItem(
+                      icon: item.index == 2
+                          ? CandidateInterviewsBadge(
+                              child: Icon(item.tabIcon ?? item.icon),
+                            )
+                          : Icon(item.tabIcon ?? item.icon),
+                      label: item.tabLabel ?? item.label,
+                    ),
+                ],
+              ),
+        body: Builder(
+          builder: (context) {
+            final content =
+                BlocListener<InterviewListCubit, InterviewListState>(
+                  listenWhen: (previous, current) {
+                    if (previous is! InterviewListLoaded ||
+                        current is! InterviewListLoaded) {
+                      return false;
+                    }
+                    final uid = context
+                        .read<CandidateAuthCubit>()
+                        .state
+                        .candidate
+                        ?.uid;
+                    if (uid == null) return false;
+
+                    int prevUnread = 0;
+                    for (final interview in previous.interviews) {
+                      prevUnread += interview.unreadCounts?[uid] ?? 0;
+                    }
+
+                    int currUnread = 0;
+                    for (final interview in current.interviews) {
+                      currUnread += interview.unreadCounts?[uid] ?? 0;
+                    }
+
+                    return currUnread > prevUnread;
+                  },
+                  listener: (context, state) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'Tienes nuevos mensajes de entrevista',
+                        ),
+                        action: SnackBarAction(
+                          label: 'Ver',
+                          onPressed: () => _setSelectedIndex(2),
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  child: IndexedStack(
+                    index: _selectedIndex,
+                    children: List<Widget>.generate(
+                      _dashboardPages.length,
+                      (index) =>
+                          _dashboardPages[index] ?? const SizedBox.shrink(),
+                      growable: false,
+                    ),
+                  ),
+                );
 
             if (!showNavigationSidebar) {
               return content;

@@ -18,19 +18,20 @@ import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
-import 'package:opti_job_app/modules/candidates/repositories/candidates_repository.dart';
-import 'package:opti_job_app/modules/candidates/data/repositories/firebase_candidates_repository.dart';
+
 import 'package:opti_job_app/modules/companies/repositories/companies_repository.dart';
 import 'package:opti_job_app/modules/companies/data/repositories/firebase_companies_repository.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/applicants/data/repositories/firebase_applicants_repository.dart';
+import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
+import 'package:opti_job_app/modules/interviews/repositories/firebase_interview_repository.dart';
 
 class AppDependencies {
   AppDependencies._({
     required this.authRepository,
     required this.jobOfferRepository,
     required this.profileRepository,
-    required this.candidatesRepository,
+
     required this.companiesRepository,
     required this.applicantsRepository,
     required this.curriculumRepository,
@@ -40,6 +41,7 @@ class AppDependencies {
     required this.aiRepository,
     required this.coverLetterRepository,
     required this.videoCurriculumRepository,
+    required this.interviewRepository,
   });
 
   factory AppDependencies.create({FirebaseFirestore? firestore}) {
@@ -56,9 +58,7 @@ class AppDependencies {
     final applicationService = ApplicationService(
       applicationRepository: applicationRepository,
     );
-    final candidatesRepository = FirebaseCandidatesRepository(
-      firestore: firestoreInstance,
-    );
+
     final companiesRepository = FirebaseCompaniesRepository(
       firestore: firestoreInstance,
     );
@@ -71,6 +71,9 @@ class AppDependencies {
     );
     final videoCurriculumRepository = VideoCurriculumRepository(
       VideoCurriculumService(firestore: firestoreInstance),
+    );
+    final interviewRepository = FirebaseInterviewRepository(
+      firestore: firestoreInstance,
     );
 
     if (kDebugMode) {
@@ -86,7 +89,7 @@ class AppDependencies {
       authRepository: authRepository,
       jobOfferRepository: jobOfferRepository,
       profileRepository: profileRepository,
-      candidatesRepository: candidatesRepository,
+
       companiesRepository: companiesRepository,
       applicantsRepository: applicantsRepository,
       curriculumRepository: curriculumRepository,
@@ -96,13 +99,14 @@ class AppDependencies {
       aiRepository: aiRepository,
       coverLetterRepository: coverLetterRepository,
       videoCurriculumRepository: videoCurriculumRepository,
+      interviewRepository: interviewRepository,
     );
   }
 
   final AuthRepository authRepository;
   final JobOfferRepository jobOfferRepository;
   final ProfileRepository profileRepository;
-  final CandidatesRepository candidatesRepository;
+
   final CompaniesRepository companiesRepository;
   final ApplicantsRepository applicantsRepository;
   final CurriculumRepository curriculumRepository;
@@ -112,4 +116,5 @@ class AppDependencies {
   final AiRepository aiRepository;
   final CoverLetterRepository coverLetterRepository;
   final VideoCurriculumRepository videoCurriculumRepository;
+  final InterviewRepository interviewRepository;
 }

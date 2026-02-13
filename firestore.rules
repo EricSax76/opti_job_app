@@ -84,5 +84,24 @@ service cloud.firestore {
       allow read, update, delete: if isSignedIn()
         && resource.data.owner_uid == request.auth.uid;
     }
+    match /interviews/{interviewId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if isCompany() 
+          && request.resource.data.companyUid == request.auth.uid
+          && request.auth.uid in request.resource.data.participants;
+      allow update: if isSignedIn() 
+          && request.auth.uid in resource.data.participants
+          // Prevent participants from changing immutable fields like applicationId or participants list
+          && request.resource.data.applicationId == resource.data.applicationId
+          && request.resource.data.participants == resource.data.participants;
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() 
+            && request.auth.uid in get(/databases/$(database)/documents/interviews/$(interviewId)).data.participants;
+        allow create: if isSignedIn()
+            && request.auth.uid in get(/databases/$(database)/documents/interviews/$(interviewId)).data.participants
+            && request.resource.data.senderUid == request.auth.uid;
+      }
+    }
   }
 }

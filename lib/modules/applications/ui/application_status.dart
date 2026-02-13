@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 String applicationStatusLabel(String status) {
   switch (status) {
-    case 'pending':
-      return 'Pendiente';
+    case 'submitted':
+    case 'pending': // Legacy support
+      return 'Postulado'; // changed from "Pendiente" to "Postulado" for "submitted"
     case 'reviewing':
       return 'En revisión';
     case 'interview':
@@ -12,6 +13,8 @@ String applicationStatusLabel(String status) {
       return 'Aceptado';
     case 'rejected':
       return 'Rechazado';
+    case 'withdrawn':
+      return 'Retirado';
     default:
       return status;
   }
@@ -19,7 +22,8 @@ String applicationStatusLabel(String status) {
 
 Color applicationStatusColor(String status) {
   switch (status) {
-    case 'pending':
+    case 'submitted':
+    case 'pending': // Legacy support
       return const Color(0xFF64748B);
     case 'reviewing':
       return const Color(0xFF0EA5E9);
@@ -29,6 +33,8 @@ Color applicationStatusColor(String status) {
       return const Color(0xFF16A34A);
     case 'rejected':
       return const Color(0xFFDC2626);
+    case 'withdrawn':
+      return const Color(0xFF94A3B8);
     default:
       return const Color(0xFF334155);
   }

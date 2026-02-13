@@ -25,6 +25,7 @@ import 'package:opti_job_app/home/pages/landing_screen.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
+import 'package:opti_job_app/modules/interviews/ui/pages/interview_chat_page.dart';
 
 /// Listens to a stream and notifies GoRouter when auth state changes.
 class GoRouterCombinedRefreshStream extends ChangeNotifier {
@@ -207,6 +208,14 @@ class AppRouter {
           path: '/onboarding',
           name: 'onboarding',
           builder: (context, state) => const OnboardingScreen(),
+        ),
+        GoRoute(
+          path: '/interviews/:id',
+          name: 'interview-chat',
+          builder: (context, state) {
+            final id = state.pathParameters['id'] ?? '';
+            return InterviewChatPage(interviewId: id);
+          },
         ),
       ],
     );

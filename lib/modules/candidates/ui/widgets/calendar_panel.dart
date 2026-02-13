@@ -84,16 +84,35 @@ class _CalendarEventTile extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final date = event.date;
+    final timeStr = "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+    
+    // Determine style based on metadata or title
+    // ownerType 'company' or 'candidate' doesn't distinguish interview vs reminder well if used generically.
+    // But title contains "Entrevista".
+    final isInterview = event.title.contains('Entrevista');
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
+      leading: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+            Text(timeStr, style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? uiDarkInk : uiInk)),
+        ],
+      ),
       title: Text(
         event.title,
-        style: TextStyle(color: isDark ? uiDarkInk : uiInk),
+        style: TextStyle(
+            color: isDark ? uiDarkInk : uiInk, 
+            fontWeight: isInterview ? FontWeight.w600 : FontWeight.normal
+        ),
       ),
       subtitle: event.description != null
           ? Text(
               event.description!,
               style: TextStyle(color: isDark ? uiDarkMuted : uiMuted),
+              maxLines: 1, 
+              overflow: TextOverflow.ellipsis,
             )
           : null,
       trailing: IconButton(

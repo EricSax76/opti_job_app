@@ -63,7 +63,7 @@ class Application {
       candidateProfileId: parseNullableInt(
         json['candidate_profile_id'] ?? json['candidateProfileId'],
       ),
-      status: json['status'] as String? ?? 'pending',
+      status: json['status'] as String? ?? 'submitted',
       createdAt: parseDate(json['created_at'] ?? json['createdAt']),
       updatedAt: parseDate(json['updated_at'] ?? json['updatedAt']),
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 class ApplicantCurriculumHeader extends StatelessWidget {
@@ -23,18 +25,13 @@ class ApplicantCurriculumHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final surface = theme.cardTheme.color ?? colorScheme.surface;
-    final border = colorScheme.outline;
     final ink = colorScheme.onSurface;
     final muted = colorScheme.onSurfaceVariant;
+    final fullName = '${candidate.name} ${candidate.lastName}'.trim();
+    final displayName = fullName.isEmpty ? candidate.email : fullName;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: border),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(uiSpacing20),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isNarrow = constraints.maxWidth < 520;
@@ -52,7 +49,7 @@ class ApplicantCurriculumHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${candidate.name} ${candidate.lastName}'.trim(),
+                      displayName,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

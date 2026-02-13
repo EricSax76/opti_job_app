@@ -7,6 +7,7 @@ class ModernApplicationCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.company,
+    this.description,
     this.avatarUrl,
     this.salary,
     this.location,
@@ -18,6 +19,7 @@ class ModernApplicationCard extends StatelessWidget {
 
   final String title;
   final String company;
+  final String? description;
   final String? avatarUrl;
   final String? salary;
   final String? location;
@@ -31,6 +33,7 @@ class ModernApplicationCard extends StatelessWidget {
     return CandidateOfferCardBase(
       title: title,
       company: company,
+      description: description,
       avatarUrl: avatarUrl,
       salary: salary,
       location: location,

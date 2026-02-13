@@ -75,13 +75,17 @@ class _DashboardOffersGrid extends StatelessWidget {
     }
 
     if (offers.isEmpty) {
+      final hasFilters = state.activeFilters.hasActiveFilters;
       return StateMessage(
-        title: state.activeFilters.hasActiveFilters
-            ? 'Sin resultados'
-            : 'Sin ofertas disponibles',
-        message: state.activeFilters.hasActiveFilters
+        title: hasFilters ? 'Sin resultados' : 'Sin ofertas disponibles',
+        message: hasFilters
             ? 'No se encontraron ofertas con los filtros aplicados.'
             : 'Aún no hay ofertas disponibles. Intenta más tarde.',
+        actionLabel: hasFilters ? 'Limpiar filtros' : 'Actualizar',
+        onAction: hasFilters
+            ? () => context.read<JobOffersCubit>().clearFilters()
+            : () =>
+                context.read<JobOffersCubit>().loadOffers(forceRefresh: true),
       );
     }
 
@@ -145,6 +149,7 @@ class _DashboardOffersGrid extends StatelessWidget {
     return ModernJobOfferCard(
       title: offer.title,
       company: offer.companyName ?? company?.name ?? 'Empresa no especificada',
+      description: offer.description,
       avatarUrl: offer.companyAvatarUrl ?? company?.avatarUrl,
       salary: offer.formattedSalary,
       location: offer.location,

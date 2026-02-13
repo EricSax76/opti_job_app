@@ -1,116 +1,111 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-
-import 'package:opti_job_app/core/widgets/state_message.dart';
-import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
-import 'package:opti_job_app/modules/applications/models/candidate_application_entry.dart';
-import 'package:opti_job_app/modules/applications/ui/application_status.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/modern_application_card.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
+import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
+import 'package:opti_job_app/modules/interviews/ui/widgets/interview_list_tile.dart';
 
 class InterviewsView extends StatelessWidget {
   const InterviewsView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MyApplicationsCubit, MyApplicationsState>(
-      builder: (context, state) {
-        if (state.status == ApplicationsStatus.loading ||
-            state.status == ApplicationsStatus.initial) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final candidateUid = context
+        .read<CandidateAuthCubit>()
+        .state
+        .candidate
+        ?.uid;
+    if (candidateUid == null) return const SizedBox.shrink();
 
-        if (state.status == ApplicationsStatus.error) {
-          return StateMessage(
-            title: 'No se pudieron cargar tus entrevistas',
-            message:
-                state.errorMessage ?? 'Intenta nuevamente en unos segundos.',
-          );
-        }
-
-        final interviews = state.applications
-            .where((entry) => entry.application.status == 'interview')
-            .toList();
-
-        if (interviews.isEmpty) {
-          return const StateMessage(
-            title: 'Sin entrevistas',
-            message: 'Aún no tienes entrevistas asignadas.',
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () =>
-              context.read<MyApplicationsCubit>().loadMyApplications(),
-          child: InterviewsList(interviews: interviews),
-        );
-      },
+    return BlocProvider(
+      create: (context) => InterviewListCubit(
+        repository: context.read<InterviewRepository>(),
+        uid: candidateUid,
+      ),
+      child: const _InterviewsList(),
     );
   }
 }
 
-class InterviewsList extends StatelessWidget {
-  const InterviewsList({super.key, required this.interviews});
-
-  final List<CandidateApplicationEntry> interviews;
+class _InterviewsList extends StatelessWidget {
+  const _InterviewsList();
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth >= 900 ? 2 : 1;
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisExtent: 190,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: interviews.length,
-          itemBuilder: (context, index) {
-            return _buildInterviewCard(context, interviews[index], index);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildInterviewCard(
-    BuildContext context,
-    CandidateApplicationEntry entry,
-    int index,
-  ) {
-    final offer = entry.offer;
-    final fallbackTitle = entry.application.jobOfferTitle;
-    final title =
-        offer?.title ??
-        ((fallbackTitle != null && fallbackTitle.trim().isNotEmpty)
-            ? fallbackTitle
-            : 'Oferta');
-    final statusChip = applicationStatusChip(entry.application.status);
-    final company = offer?.companyName ?? 'Empresa no especificada';
-    final salary = offer?.formattedSalary;
-    final location = offer?.location;
-    final modality = offer == null
-        ? null
-        : (offer.jobType ?? 'Modalidad no especificada');
-
-    final heroId = entry.application.id ?? entry.application.jobOfferId;
-
-    return ModernApplicationCard(
-      title: title,
-      company: company,
-      avatarUrl: offer?.companyAvatarUrl,
-      salary: salary,
-      location: location,
-      modality: modality,
-      statusBadge: statusChip,
-      heroTag: 'interviews-$index-$heroId',
-      onTap: offer == null
-          ? null
-          : () => context.push('/job-offer/${offer.id}'),
+    return Scaffold(
+      body: BlocBuilder<InterviewListCubit, InterviewListState>(
+        builder: (context, state) {
+          if (state is InterviewListLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is InterviewListError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error: ${state.message}'),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () =>
+                        context.read<InterviewListCubit>().refresh(),
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            );
+          }
+          if (state is InterviewListEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No tienes entrevistas activas',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Cuando una empresa inicie una entrevista,\naparecerá aquí.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          if (state is InterviewListLoaded) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                await context.read<InterviewListCubit>().refresh();
+              },
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: state.interviews.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  return InterviewListTile(
+                    interview: state.interviews[index],
+                    isCompany: false,
+                  );
+                },
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }

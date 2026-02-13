@@ -26,7 +26,6 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.authRepository),
         RepositoryProvider.value(value: dependencies.jobOfferRepository),
         RepositoryProvider.value(value: dependencies.profileRepository),
-        RepositoryProvider.value(value: dependencies.candidatesRepository),
         RepositoryProvider.value(value: dependencies.companiesRepository),
         RepositoryProvider.value(value: dependencies.applicantsRepository),
         RepositoryProvider.value(value: dependencies.curriculumRepository),
@@ -36,6 +35,7 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.aiRepository),
         RepositoryProvider.value(value: dependencies.coverLetterRepository),
         RepositoryProvider.value(value: dependencies.videoCurriculumRepository),
+        RepositoryProvider.value(value: dependencies.interviewRepository),
       ],
       child: MultiBlocProvider(
         providers: [

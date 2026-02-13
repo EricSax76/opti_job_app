@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/cards/candidate_offer_card_logic.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/cards/candidate_offer_card_models.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/cards/models/candidate_offer_card_models.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/cards/candidate_offer_card_widgets.dart';
 
 class CandidateOfferCardBase extends StatefulWidget {
@@ -10,6 +10,7 @@ class CandidateOfferCardBase extends StatefulWidget {
     super.key,
     required this.title,
     required this.company,
+    this.description,
     this.avatarUrl,
     this.salary,
     this.location,
@@ -24,6 +25,7 @@ class CandidateOfferCardBase extends StatefulWidget {
 
   final String title;
   final String company;
+  final String? description;
   final String? avatarUrl;
   final String? salary;
   final String? location;
@@ -67,8 +69,7 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
       location: widget.location,
       modality: widget.modality,
     );
-    final tags =
-        widget.tags
+    final tags = widget.tags
             ?.where((tag) => tag.trim().isNotEmpty)
             .take(2)
             .toList(growable: false) ??
@@ -87,10 +88,10 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
         child: AnimatedScale(
           duration: _hoverAnimationDuration,
           curve: Curves.easeOut,
-          scale: effectiveHovered ? 1.02 : 1.0,
+          scale: effectiveHovered ? 1.01 : 1.0,
           child: AppCard(
             onTap: widget.onTap,
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.zero, // Custom padding inside
             borderRadius: 16,
             borderColor: decoration.borderColor,
             borderWidth: decoration.borderWidth,
@@ -100,68 +101,118 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
             clipBehavior: Clip.antiAlias,
             child: Stack(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CandidateOfferAvatar(
-                          avatarUrl: widget.avatarUrl,
-                          heroTag: widget.heroTag,
-                          heroTagPrefix: widget.heroTagPrefix,
-                          palette: palette,
-                          avatarImageCacheSize: avatarImageCacheSize,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _TitleBlock(
-                            company: widget.company,
-                            title: widget.title,
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Row: Avatar, Info, Badge
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CandidateOfferAvatar(
+                            avatarUrl: widget.avatarUrl,
+                            heroTag: widget.heroTag,
+                            heroTagPrefix: widget.heroTagPrefix,
                             palette: palette,
+                            avatarImageCacheSize: avatarImageCacheSize,
                           ),
-                        ),
-                        if (widget.topRightBadge != null)
-                          const SizedBox(width: 60),
-                      ],
-                    ),
-                    if (metrics.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: metrics
-                            .map(
-                              (metric) =>
-                                  CandidateOfferMetricPill(metric: metric),
-                            )
-                            .toList(growable: false),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        widget.company,
+                                        style: TextStyle(
+                                          color: palette.muted,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (widget.topRightBadge != null) ...[
+                                      const SizedBox(width: 8),
+                                      // Scale down badge slightly if needed or wrap
+                                      widget.topRightBadge!,
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.title,
+                                  style: TextStyle(
+                                    color: palette.ink,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                    if (tags.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Description (Optional)
+                      if (widget.description != null && widget.description!.isNotEmpty) ...[
+                        Text(
+                          _normalizeDescription(widget.description),
+                          style: TextStyle(
+                            color: palette.muted,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Footer: Tags & Metrics
                       Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: tags
-                            .map(
-                              (tag) => CandidateOfferTagPill(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          ...tags.map((tag) => CandidateOfferTagPill(
                                 label: tag,
                                 palette: palette,
-                              ),
-                            )
-                            .toList(growable: false),
+                              )),
+                          if (tags.isNotEmpty && metrics.isNotEmpty)
+                             VerticalDivider(width: 1, color: palette.borderColor),
+                          ...metrics.map((metric) => CandidateOfferMetricPill(
+                                metric: metric,
+                              )),
+                        ],
                       ),
                     ],
-                    if (hasTapAction) ...[
-                      const SizedBox(height: 8),
-                      CandidateOfferActionIndicator(
-                        actionLabel: widget.actionLabel,
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-                if (widget.topRightBadge != null)
-                  Positioned(top: 0, right: 0, child: widget.topRightBadge!),
+                
+                // Keep the action indicator subtle at bottom right or remove if redundant
+                // For now, let's just use the card tap. If an explicit action is needed:
+                if (hasTapAction)
+                  Positioned(
+                    bottom: 12,
+                    right: 12,
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: palette.muted.withValues(alpha: 0.5),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -171,46 +222,10 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
   }
 }
 
-class _TitleBlock extends StatelessWidget {
-  const _TitleBlock({
-    required this.company,
-    required this.title,
-    required this.palette,
-  });
 
-  final String company;
-  final String title;
-  final CandidateOfferCardPalette palette;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          company,
-          style: TextStyle(
-            color: palette.muted,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.2,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          title,
-          style: TextStyle(
-            color: palette.ink,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
+String _normalizeDescription(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return '';
   }
+  return value.replaceAll(RegExp(r'\s+'), ' ').trim();
 }

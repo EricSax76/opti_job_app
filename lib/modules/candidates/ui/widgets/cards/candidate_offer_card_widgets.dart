@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/cards/candidate_offer_card_models.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/cards/models/candidate_offer_card_models.dart';
 
 class CandidateOfferAvatar extends StatelessWidget {
   const CandidateOfferAvatar({

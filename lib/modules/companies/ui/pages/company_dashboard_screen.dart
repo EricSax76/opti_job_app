@@ -13,6 +13,8 @@ import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar
 import 'package:opti_job_app/modules/companies/ui/widgets/company_dashboard_nav_bar.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/company_interviews_tab.dart';
+import 'package:opti_job_app/core/config/feature_flags.dart';
 
 class CompanyDashboardScreen extends StatefulWidget {
   const CompanyDashboardScreen({super.key});
@@ -29,7 +31,8 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    final tabCount = FeatureFlags.interviews ? 5 : 4;
+    _tabController = TabController(length: tabCount, vsync: this);
   }
 
   @override
@@ -111,6 +114,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
                         CompanyOfferCreationTab(),
                         CompanyOffersTab(),
                         CompanyCandidatesTab(),
+                        if (FeatureFlags.interviews) CompanyInterviewsTab(),
                       ],
                     ),
                   ),

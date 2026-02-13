@@ -6,6 +6,7 @@ import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applications/ui/application_status.dart';
+import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 
 class ApplicantTile extends StatelessWidget {
   const ApplicantTile({
@@ -34,9 +35,8 @@ class ApplicantTile extends StatelessWidget {
         application.candidateEmail!.isNotEmpty) {
       subtitleParts.add(application.candidateEmail!);
     }
-    subtitleParts.add(
-      'Estado: ${applicationStatusLabel(application.status)}',
-    );
+    subtitleParts.add('Estado: ${applicationStatusLabel(application.status)}');
+    final applicationId = application.id;
 
     return Container(
       decoration: BoxDecoration(
@@ -50,8 +50,8 @@ class ApplicantTile extends StatelessWidget {
         onTap: application.candidateUid.trim().isEmpty
             ? null
             : () => context.push(
-              '/company/offers/$offerId/applicants/${application.candidateUid}/cv',
-            ),
+                '/company/offers/$offerId/applicants/${application.candidateUid}/cv',
+              ),
         leading: CircleAvatar(
           backgroundColor: avatarBg,
           foregroundColor: avatarFg,
@@ -67,17 +67,71 @@ class ApplicantTile extends StatelessWidget {
           subtitleParts.join(' • '),
           style: TextStyle(color: muted, height: 1.35),
         ),
-        trailing: application.id == null
+        trailing: applicationId == null
             ? null
             : PopupMenuButton<String>(
                 tooltip: 'Actualizar estado',
-                onSelected: (value) {
-                  context.read<OfferApplicantsCubit>().updateApplicationStatus(
-                    offerId: offerId,
-                    applicationId: application.id!,
-                    newStatus: value,
-                    companyUid: companyUid,
-                  );
+                onSelected: (value) async {
+                  if (value == 'interview') {
+                    // Confirm dialog
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Iniciar entrevista'),
+                        content: const Text(
+                          'Esto creará una sala de chat con el candidato. ¿Continuar?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancelar'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Iniciar'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (!context.mounted) return;
+
+                    if (confirm == true) {
+                      try {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Iniciando entrevista...'),
+                          ),
+                        );
+                        final repo = context.read<InterviewRepository>();
+                        final interviewId = await repo.startInterview(
+                          applicationId,
+                        );
+
+                        if (context.mounted) {
+                          context.pushNamed(
+                            'interview-chat',
+                            pathParameters: {'id': interviewId},
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        }
+                      }
+                    }
+                  } else {
+                    context
+                        .read<OfferApplicantsCubit>()
+                        .updateApplicationStatus(
+                          offerId: offerId,
+                          applicationId: applicationId,
+                          newStatus: value,
+                          companyUid: companyUid,
+                        );
+                  }
                 },
                 itemBuilder: (context) {
                   return _applicationStatuses.map((status) {
@@ -109,7 +163,7 @@ class ApplicantTile extends StatelessWidget {
 }
 
 const _applicationStatuses = [
-  'pending',
+  'submitted',
   'reviewing',
   'interview',
   'accepted',

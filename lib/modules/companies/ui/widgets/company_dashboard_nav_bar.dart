@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/config/feature_flags.dart';
 
 class CompanyDashboardNavBar extends StatelessWidget {
   const CompanyDashboardNavBar({super.key, required this.controller});
@@ -27,6 +28,8 @@ class CompanyDashboardNavBar extends StatelessWidget {
             Tab(icon: Icon(Icons.add_circle_outline), text: 'Publicar oferta'),
             Tab(icon: Icon(Icons.work_outline), text: 'Mis ofertas'),
             Tab(icon: Icon(Icons.people_outline), text: 'Candidatos'),
+            if (FeatureFlags.interviews)
+              Tab(icon: Icon(Icons.chat_bubble_outline), text: 'Entrevistas'),
           ],
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/logic/company_candidates_logic.dart';
 import 'package:opti_job_app/modules/applications/ui/application_status.dart';
@@ -21,14 +23,13 @@ class CandidateCard extends StatelessWidget {
     final surfaceContainer = colorScheme.surfaceContainerHighest;
     final ink = colorScheme.onSurface;
     final muted = colorScheme.onSurfaceVariant;
-    final border = colorScheme.outline;
     final avatarBg = colorScheme.primary;
     final avatarFg = colorScheme.onPrimary;
     const ok = Color(0xFF16A34A); // Success color
     final bool? hasCoverLetter = candidateProfile?.hasCoverLetter;
     final bool? hasVideoCurriculum = candidateProfile?.hasVideoCurriculum;
 
-    Widget badge({
+    Widget statusPill({
       required IconData icon,
       required String label,
       required bool? value,
@@ -41,37 +42,21 @@ class CandidateCard extends StatelessWidget {
           : isNo
           ? '$label: No'
           : '$label: ...';
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 6),
-            Text(
-              text,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+      return InfoPill(
+        icon: icon,
+        label: text,
+        backgroundColor: colorScheme.surface,
+        borderColor: colorScheme.outline,
+        textColor: color,
+        iconColor: color,
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceContainer,
-        borderRadius: BorderRadius.circular(uiTileRadius),
-        border: Border.all(color: border),
-      ),
+    return AppCard(
+      padding: EdgeInsets.zero,
+      borderRadius: uiTileRadius,
+      backgroundColor: surfaceContainer,
+      borderColor: colorScheme.outline,
       child: ListTile(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -101,12 +86,12 @@ class CandidateCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                badge(
+                statusPill(
                   icon: Icons.mail_outline,
                   label: 'Carta',
                   value: hasCoverLetter,
                 ),
-                badge(
+                statusPill(
                   icon: Icons.videocam_outlined,
                   label: 'Video',
                   value: hasVideoCurriculum,

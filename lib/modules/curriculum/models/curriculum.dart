@@ -37,6 +37,15 @@ class Curriculum extends Equatable {
         updatedAt,
       ];
 
+  bool get hasContent =>
+      headline.trim().isNotEmpty ||
+      summary.trim().isNotEmpty ||
+      phone.trim().isNotEmpty ||
+      location.trim().isNotEmpty ||
+      skills.isNotEmpty ||
+      experiences.isNotEmpty ||
+      education.isNotEmpty;
+
   factory Curriculum.empty() {
     return const Curriculum(
       headline: '',

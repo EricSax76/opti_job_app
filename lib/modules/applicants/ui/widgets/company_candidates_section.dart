@@ -5,7 +5,7 @@ import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_card.dart';
+import 'package:opti_job_app/modules/applicants/ui/widgets/candidate_card.dart';
 import 'package:opti_job_app/modules/companies/logic/company_candidates_logic.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/section_message.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';

@@ -20,40 +20,60 @@ class StateMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Card(
-          margin: const EdgeInsets.all(24),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compactHeight =
+            constraints.maxHeight.isFinite && constraints.maxHeight < 240;
+        final compactWidth = constraints.maxWidth < 320;
+        final compactLayout = compactHeight || compactWidth;
+        final cardMargin = EdgeInsets.all(compactLayout ? 8 : 24);
+        final cardPadding = EdgeInsets.all(compactLayout ? 12 : 24);
+        final titleStyle =
+            (compactLayout
+                    ? Theme.of(context).textTheme.titleMedium
+                    : Theme.of(context).textTheme.titleLarge)
+                ?.copyWith(fontWeight: FontWeight.bold);
+        final messageStyle =
+            (compactLayout
+                    ? Theme.of(context).textTheme.bodySmall
+                    : Theme.of(context).textTheme.bodyMedium)
+                ?.copyWith(color: mutedColor);
+        final titleMessageSpacing = compactLayout ? 8.0 : 12.0;
+        final actionSpacing = compactLayout ? 10.0 : 16.0;
+
+        final content = ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Card(
+            margin: cardMargin,
+            child: Padding(
+              padding: cardPadding,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(title, style: titleStyle, textAlign: TextAlign.center),
+                    SizedBox(height: titleMessageSpacing),
+                    Text(
+                      message,
+                      style: messageStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                    if (actionLabel != null && onAction != null) ...[
+                      SizedBox(height: actionSpacing),
+                      TextButton(
+                        onPressed: onAction,
+                        child: Text(actionLabel!),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  message,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: mutedColor),
-                  textAlign: TextAlign.center,
-                ),
-                if (actionLabel != null && onAction != null) ...[
-                  const SizedBox(height: 16),
-                  TextButton(onPressed: onAction, child: Text(actionLabel!)),
-                ],
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+
+        return Center(child: content);
+      },
     );
   }
 }

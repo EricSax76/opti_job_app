@@ -297,6 +297,10 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     emit(state.copyWith(activeFilters: filters, filteredOffers: filtered));
   }
 
+  void clearFilters() {
+    applyFilters(const JobOfferFilters());
+  }
+
   List<String> _mergeJobTypes(
     List<String> existing,
     Iterable<JobOffer> offers, {
