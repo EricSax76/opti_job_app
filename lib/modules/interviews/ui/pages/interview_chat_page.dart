@@ -50,27 +50,48 @@ class _ChatViewState extends State<_ChatView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Entrevista')),
-      body: Column(
-        children: [
-          Expanded(
-            child: BlocBuilder<InterviewSessionCubit, InterviewSessionState>(
-              builder: (context, state) {
-                // ... Existing logic ...
-                if (state is InterviewSessionLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is InterviewSessionError) {
-                  return Center(child: Text('Error: ${state.message}'));
-                }
-                if (state is InterviewSessionLoaded) {
-                  final messages = state.messages;
-                  final meetingLink = state.interview.meetingLink;
+      body: BlocListener<InterviewSessionCubit, InterviewSessionState>(
+        listenWhen: (previous, current) => current is InterviewSessionActionError,
+        listener: (context, state) {
+          if (state is! InterviewSessionActionError) return;
+          final message = state.error.trim();
+          if (message.isEmpty) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(message)));
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: BlocBuilder<InterviewSessionCubit, InterviewSessionState>(
+                builder: (context, state) {
+                  if (state is InterviewSessionLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is InterviewSessionError) {
+                    return Center(child: Text('Error: ${state.message}'));
+                  }
+
+                  InterviewSessionLoaded? loadedState;
+                  if (state is InterviewSessionLoaded) {
+                    loadedState = state;
+                  } else if (state is InterviewSessionActionError) {
+                    loadedState = state.previousState;
+                  }
+
+                  if (loadedState == null) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final messages = loadedState.messages;
+                  final meetingLink = loadedState.interview.meetingLink;
 
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (meetingLink != null)
                         Container(
-                          width: double.infinity,
                           color: Colors.blue.shade100,
                           padding: const EdgeInsets.symmetric(
                             vertical: 8,
@@ -122,111 +143,114 @@ class _ChatViewState extends State<_ChatView> {
                       ),
                     ],
                   );
-                }
-                return const SizedBox.shrink();
-              },
+                },
+              ),
             ),
-          ),
-          _buildInputArea(context),
-        ],
+            _buildInputArea(context),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildInputArea(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Escribe un mensaje...',
-                border: InputBorder.none,
-              ),
-              onSubmitted: (_) => _sendMessage(),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.calendar_month),
-            onPressed: () async {
-              final date = await showDatePicker(
-                context: context,
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 30)),
-                initialDate: DateTime.now().add(const Duration(days: 1)),
-              );
-              if (date == null) return;
-
-              if (!context.mounted) return;
-
-              final time = await showTimePicker(
-                context: context,
-                initialTime: const TimeOfDay(hour: 10, minute: 0),
-              );
-              if (time == null) return;
-
-              final dateTime = DateTime(
-                date.year,
-                date.month,
-                date.day,
-                time.hour,
-                time.minute,
-              );
-
-              if (context.mounted) {
-                // Ask for time zone or assume local?
-                // For MVP assume local of the device proposing.
-                final timeZone = DateTime.now().timeZoneName;
-                context.read<InterviewSessionCubit>().proposeSlot(
-                  dateTime,
-                  timeZone,
-                );
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.video_call),
-            onPressed: () async {
-              // For MVP: Show dialog to enter link or generate dummy
-              final controller = TextEditingController(
-                text: 'https://meet.google.com/new',
-              );
-              final link = await showDialog<String>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Iniciar Videollamada'),
-                  content: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      labelText: 'Enlace de la reunión',
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, controller.text),
-                      child: const Text('Iniciar'),
-                    ),
-                  ],
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  hintText: 'Escribe un mensaje...',
+                  border: InputBorder.none,
                 ),
-              );
+                onSubmitted: (_) => _sendMessage(),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.calendar_month),
+              onPressed: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 30)),
+                  initialDate: DateTime.now().add(const Duration(days: 1)),
+                );
+                if (date == null) return;
 
-              if (link != null && link.isNotEmpty && context.mounted) {
-                context.read<InterviewSessionCubit>().startMeeting(link);
-              }
-            },
-          ),
-          IconButton(icon: const Icon(Icons.send), onPressed: _sendMessage),
-        ],
+                if (!context.mounted) return;
+
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: const TimeOfDay(hour: 10, minute: 0),
+                );
+                if (time == null) return;
+
+                final dateTime = DateTime(
+                  date.year,
+                  date.month,
+                  date.day,
+                  time.hour,
+                  time.minute,
+                );
+
+                if (context.mounted) {
+                  // Ask for time zone or assume local?
+                  // For MVP assume local of the device proposing.
+                  final timeZone = DateTime.now().timeZoneName;
+                  context.read<InterviewSessionCubit>().proposeSlot(
+                    dateTime,
+                    timeZone,
+                  );
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.video_call),
+              onPressed: () async {
+                // For MVP: Show dialog to enter link or generate dummy
+                final controller = TextEditingController(
+                  text: 'https://meet.google.com/new',
+                );
+                final link = await showDialog<String>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Iniciar Videollamada'),
+                    content: TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(
+                        labelText: 'Enlace de la reunión',
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pop(context, controller.text),
+                        child: const Text('Iniciar'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (link != null && link.isNotEmpty && context.mounted) {
+                  context.read<InterviewSessionCubit>().startMeeting(link);
+                }
+              },
+            ),
+            IconButton(icon: const Icon(Icons.send), onPressed: _sendMessage),
+          ],
+        ),
       ),
     );
   }
@@ -237,8 +261,36 @@ class _MessageBubble extends StatelessWidget {
 
   const _MessageBubble({required this.message});
 
+  String _safeFormatDateTime(DateTime date, String pattern) {
+    try {
+      return DateFormat(pattern).format(date);
+    } catch (_) {
+      return date.toLocal().toIso8601String();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    try {
+      return _buildBubble(context);
+    } catch (_) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.shade200),
+          ),
+          child: const Text('No se pudo renderizar este mensaje.'),
+        ),
+      );
+    }
+  }
+
+  Widget _buildBubble(BuildContext context) {
     // Alignment logic... placeholder:
     // Ideally we need currentUserUid.
     // For MVP, render simple card.
@@ -304,11 +356,9 @@ class _MessageBubble extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              if (message.metadata?.proposedAt != null)
+              if (message.metadata?.proposedAt case final proposedAt?)
                 Text(
-                  DateFormat(
-                    'EEEE d MMM, h:mm a',
-                  ).format(message.metadata!.proposedAt!),
+                  _safeFormatDateTime(proposedAt, 'EEEE d MMM, h:mm a'),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -320,8 +370,9 @@ class _MessageBubble extends StatelessWidget {
 
             if (message.type == MessageType.proposal) ...[
               const SizedBox(height: 12),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   FilledButton.icon(
                     onPressed: () {
@@ -335,10 +386,10 @@ class _MessageBubble extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 40),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
-                  const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () {
                       context.read<InterviewSessionCubit>().respondToSlot(
@@ -351,6 +402,7 @@ class _MessageBubble extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
                       side: const BorderSide(color: Colors.red),
+                      minimumSize: const Size(0, 40),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
@@ -360,7 +412,7 @@ class _MessageBubble extends StatelessWidget {
 
             const SizedBox(height: 4),
             Text(
-              DateFormat.jm().format(message.createdAt),
+              _safeFormatDateTime(message.createdAt, 'jm'),
               style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
             ),
           ],

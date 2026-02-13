@@ -12,11 +12,20 @@ import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { ValidationError } from "../../utils/validation";
-import { Application, JobOffer, Interview } from "../../types/models";
+import { JobOffer, Interview } from "../../types/models";
 
 const logger = createLogger({ function: "startInterview" });
 
-export const startInterview = functions.https.onCall(
+function pickNonEmptyString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (value === null || value === undefined) continue;
+    const normalized = String(value).trim();
+    if (normalized.length > 0) return normalized;
+  }
+  return undefined;
+}
+
+export const startInterview = functions.region("europe-west1").https.onCall(
   async (
     data: { applicationId: string },
     context: functions.https.CallableContext
@@ -51,11 +60,26 @@ export const startInterview = functions.https.onCall(
         if (!appDoc.exists) {
           throw new ValidationError("Application not found");
         }
-        const application = appDoc.data() as Application;
+        const application = appDoc.data() as Record<string, unknown>;
+        const jobOfferId = pickNonEmptyString(
+          application.job_offer_id,
+          application.jobOfferId
+        );
+        const candidateUid = pickNonEmptyString(
+          application.candidate_uid,
+          application.candidateId,
+          application.candidate_id
+        );
+        if (!jobOfferId) {
+          throw new ValidationError("Application is missing job offer reference");
+        }
+        if (!candidateUid) {
+          throw new ValidationError("Application is missing candidate reference");
+        }
 
         // Verify Company Ownership
         // We check against job offer to be sure, or if application has companyUid
-        const offerRef = db.collection("jobOffers").doc(application.job_offer_id);
+        const offerRef = db.collection("jobOffers").doc(jobOfferId);
         const offerDoc = await transaction.get(offerRef);
         
         if (!offerDoc.exists) {
@@ -88,10 +112,10 @@ export const startInterview = functions.https.onCall(
         const interview: Interview = {
           id: applicationId,
           applicationId: applicationId,
-          jobOfferId: application.job_offer_id,
+          jobOfferId: jobOfferId,
           companyUid: companyUid,
-          candidateUid: application.candidate_uid,
-          participants: [companyUid, application.candidate_uid],
+          candidateUid: candidateUid,
+          participants: [companyUid, candidateUid],
           status: "scheduling",
           createdAt: now,
           updatedAt: now,
@@ -103,6 +127,9 @@ export const startInterview = functions.https.onCall(
         transaction.update(appRef, {
           status: "interview",
           updated_at: now,
+          updatedAt: now,
+          job_offer_id: jobOfferId,
+          candidate_uid: candidateUid,
         });
 
         // 6. Add System Message

@@ -14,7 +14,7 @@ import { Interview, Message } from "../../types/models";
 
 const logger = createLogger({ function: "proposeInterviewSlot" });
 
-export const proposeInterviewSlot = functions.https.onCall(
+export const proposeInterviewSlot = functions.region("europe-west1").https.onCall(
   async (
     data: { interviewId: string; proposedAt: string; timeZone: string },
     context: functions.https.CallableContext

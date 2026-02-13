@@ -7,10 +7,10 @@ import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.d
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_pages.dart';
-import 'package:opti_job_app/modules/candidates/ui/pages/models/candidate_dashboard_navigation.dart';
-import 'package:opti_job_app/modules/candidates/ui/pages/widgets/candidate_dashboard_app_bar.dart';
-import 'package:opti_job_app/modules/candidates/ui/pages/widgets/candidate_dashboard_drawer.dart';
-import 'package:opti_job_app/modules/candidates/ui/pages/widgets/candidate_dashboard_sidebar.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navigation.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_app_bar.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_drawer.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_sidebar.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_interviews_badge.dart';
 import 'package:opti_job_app/core/config/feature_flags.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
@@ -132,10 +132,25 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         uid: widget.uid,
         index: _selectedIndex,
       );
-      if (path != null) {
+      final currentBrowserPath = _currentBrowserPath();
+      final interviewChatIsVisible = currentBrowserPath.startsWith(
+        '/interviews/',
+      );
+      final alreadyAtTargetPath = currentBrowserPath == path;
+
+      if (path != null && !interviewChatIsVisible && !alreadyAtTargetPath) {
         pushBrowserPath(path);
       }
     }
+  }
+
+  String _currentBrowserPath() {
+    final uri = Uri.base;
+    final fragmentPath = uri.fragment;
+    if (fragmentPath.startsWith('/')) {
+      return fragmentPath;
+    }
+    return uri.path;
   }
 
   void _handleDrawerSelection(int index) {

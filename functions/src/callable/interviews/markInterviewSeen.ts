@@ -13,7 +13,7 @@ import { Interview } from "../../types/models";
 
 const logger = createLogger({ function: "markInterviewSeen" });
 
-export const markInterviewSeen = functions.https.onCall(
+export const markInterviewSeen = functions.region("europe-west1").https.onCall(
   async (
     data: { interviewId: string },
     context: functions.https.CallableContext

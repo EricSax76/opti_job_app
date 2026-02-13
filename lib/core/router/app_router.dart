@@ -241,7 +241,7 @@ class AppRouter {
     final bool loggingInCompany =
         location == '/CompanyLogin' || location == '/companyregister';
     final bool onboardingRoute = location == '/onboarding';
-    final bool companyArea = location.startsWith('/company');
+    final bool companyArea = location.startsWith('/company/');
     final bool candidateArea = location.startsWith('/candidate/');
     final routeUid = state.pathParameters['uid'];
 

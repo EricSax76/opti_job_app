@@ -80,7 +80,7 @@ class AppScope extends StatelessWidget {
                   previous.isAuthenticated != current.isAuthenticated,
               listener: (context, state) {
                 if (state.isAuthenticated) {
-                  context.read<JobOffersCubit>().loadOffers();
+                  context.read<JobOffersCubit>().loadOffers(forceRefresh: true);
                 }
               },
             ),
@@ -89,7 +89,7 @@ class AppScope extends StatelessWidget {
                   previous.isAuthenticated != current.isAuthenticated,
               listener: (context, state) {
                 if (state.isAuthenticated) {
-                  context.read<JobOffersCubit>().loadOffers();
+                  context.read<JobOffersCubit>().loadOffers(forceRefresh: true);
                 }
               },
             ),

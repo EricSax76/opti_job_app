@@ -14,7 +14,7 @@ import { Interview, Message } from "../../types/models";
 
 const logger = createLogger({ function: "completeInterview" });
 
-export const completeInterview = functions.https.onCall(
+export const completeInterview = functions.region("europe-west1").https.onCall(
   async (
     data: { interviewId: string; notes?: string },
     context: functions.https.CallableContext

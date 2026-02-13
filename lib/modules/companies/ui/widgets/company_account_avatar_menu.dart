@@ -14,6 +14,8 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final router = GoRouter.of(context);
+    final authCubit = context.read<CompanyAuthCubit>();
 
     final company = context.watch<CompanyAuthCubit>().state.company;
     final avatarUrl = company?.avatarUrl;
@@ -23,10 +25,14 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
       onSelected: (action) {
         switch (action) {
           case CompanyAccountAction.profile:
-            context.pushNamed('company-profile');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              router.pushNamed('company-profile');
+            });
             break;
           case CompanyAccountAction.logout:
-            context.read<CompanyAuthCubit>().logout();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              authCubit.logout();
+            });
             break;
         }
       },

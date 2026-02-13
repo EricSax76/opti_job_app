@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/auth/cubits/auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart'
     show CandidateAuthCubit;
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart'
@@ -18,7 +17,7 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCandidate = context.select(
-      (AuthCubit cubit) => cubit.state.isCandidate,
+      (CandidateAuthCubit cubit) => cubit.state.isAuthenticated,
     );
     final candidateName = context.select(
       (ProfileCubit cubit) => cubit.state.candidate?.name,

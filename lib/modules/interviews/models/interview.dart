@@ -35,27 +35,36 @@ class Interview extends Equatable {
   final String? meetingLink;
 
   factory Interview.fromJson(Map<String, dynamic> json) {
+    final createdAt = _parseDateTime(json['createdAt'] ?? json['created_at']);
+    final updatedAt = _parseDateTime(json['updatedAt'] ?? json['updated_at']);
     return Interview(
-      id: json['id'] as String,
-      applicationId: json['applicationId'] as String,
-      jobOfferId: json['jobOfferId'] as String,
-      companyUid: json['companyUid'] as String,
-      candidateUid: json['candidateUid'] as String,
-      participants: List<String>.from(json['participants'] as List),
-      status: InterviewStatus.fromString(json['status'] as String),
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
-      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
-      scheduledAt: (json['scheduledAt'] as Timestamp?)?.toDate(),
-      timeZone: json['timeZone'] as String?,
-      unreadCounts: (json['unreadCounts'] as Map<String, dynamic>?)?.map(
-        (key, value) => MapEntry(key, value as int),
+      id: _readString(json['id']),
+      applicationId: _readString(
+        json['applicationId'] ?? json['application_id'],
       ),
-      lastMessage: json['lastMessage'] != null
+      jobOfferId: _readString(json['jobOfferId'] ?? json['job_offer_id']),
+      companyUid: _readString(json['companyUid'] ?? json['company_uid']),
+      candidateUid: _readString(
+        json['candidateUid'] ??
+            json['candidate_uid'] ??
+            json['candidateId'] ??
+            json['candidate_id'],
+      ),
+      participants: _readStringList(json['participants']),
+      status: InterviewStatus.fromString(
+        _readString(json['status'], fallback: InterviewStatus.scheduling.value),
+      ),
+      createdAt: createdAt ?? DateTime.now(),
+      updatedAt: updatedAt ?? createdAt ?? DateTime.now(),
+      scheduledAt: _parseDateTime(json['scheduledAt'] ?? json['scheduled_at']),
+      timeZone: _readNullableString(json['timeZone'] ?? json['time_zone']),
+      unreadCounts: _readUnreadCounts(json['unreadCounts']),
+      lastMessage: json['lastMessage'] is Map<String, dynamic>
           ? InterviewLastMessage.fromJson(
               json['lastMessage'] as Map<String, dynamic>,
             )
           : null,
-      meetingLink: json['meetingLink'] as String?,
+      meetingLink: _readNullableString(json['meetingLink'] ?? json['meeting_link']),
     );
   }
 
@@ -161,9 +170,11 @@ class InterviewLastMessage extends Equatable {
 
   factory InterviewLastMessage.fromJson(Map<String, dynamic> json) {
     return InterviewLastMessage(
-      content: json['content'] as String,
-      senderUid: json['senderUid'] as String,
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      content: _readString(json['content']),
+      senderUid: _readString(json['senderUid'] ?? json['sender_uid']),
+      createdAt:
+          _parseDateTime(json['createdAt'] ?? json['created_at']) ??
+          DateTime.now(),
     );
   }
 
@@ -177,4 +188,58 @@ class InterviewLastMessage extends Equatable {
 
   @override
   List<Object?> get props => [content, senderUid, createdAt];
+}
+
+DateTime? _parseDateTime(dynamic value) {
+  if (value == null) return null;
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  if (value is String && value.trim().isNotEmpty) {
+    return DateTime.tryParse(value);
+  }
+  if (value is int) {
+    return DateTime.fromMillisecondsSinceEpoch(value);
+  }
+  return null;
+}
+
+String _readString(dynamic value, {String fallback = ''}) {
+  if (value == null) return fallback;
+  final normalized = value.toString().trim();
+  return normalized.isEmpty ? fallback : normalized;
+}
+
+String? _readNullableString(dynamic value) {
+  final normalized = _readString(value);
+  return normalized.isEmpty ? null : normalized;
+}
+
+List<String> _readStringList(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .map((entry) => entry?.toString().trim() ?? '')
+      .where((entry) => entry.isNotEmpty)
+      .toList(growable: false);
+}
+
+Map<String, int>? _readUnreadCounts(dynamic value) {
+  if (value is! Map) return null;
+  final result = <String, int>{};
+  value.forEach((key, rawValue) {
+    final id = key.toString().trim();
+    if (id.isEmpty) return;
+    if (rawValue is int) {
+      result[id] = rawValue;
+      return;
+    }
+    if (rawValue is num) {
+      result[id] = rawValue.toInt();
+      return;
+    }
+    if (rawValue is String) {
+      final parsed = int.tryParse(rawValue);
+      if (parsed != null) result[id] = parsed;
+    }
+  });
+  return result;
 }

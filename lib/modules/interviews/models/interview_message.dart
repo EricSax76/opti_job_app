@@ -25,17 +25,19 @@ class InterviewMessage extends Equatable {
 
   factory InterviewMessage.fromJson(Map<String, dynamic> json) {
     return InterviewMessage(
-      id: json['id'] as String,
-      senderUid: json['senderUid'] as String,
-      content: json['content'] as String,
-      type: MessageType.fromString(json['type'] as String),
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
-      metadata: json['metadata'] != null
+      id: _readString(json['id']),
+      senderUid: _readString(json['senderUid'] ?? json['sender_uid']),
+      content: _readString(json['content']),
+      type: MessageType.fromString(
+        _readString(json['type'], fallback: MessageType.text.value),
+      ),
+      createdAt:
+          _parseDateTime(json['createdAt'] ?? json['created_at']) ??
+          DateTime.now(),
+      metadata: json['metadata'] is Map<String, dynamic>
           ? MessageMetadata.fromJson(json['metadata'] as Map<String, dynamic>)
           : null,
-      readByData: (json['readByData'] as Map<String, dynamic>?)?.map(
-        (key, value) => MapEntry(key, (value as Timestamp).toDate()),
-      ),
+      readByData: _readByDataMap(json['readByData'] ?? json['read_by_data']),
     );
   }
 
@@ -97,9 +99,9 @@ class MessageMetadata extends Equatable {
 
   factory MessageMetadata.fromJson(Map<String, dynamic> json) {
     return MessageMetadata(
-      proposalId: json['proposalId'] as String?,
-      proposedAt: (json['proposedAt'] as Timestamp?)?.toDate(),
-      timeZone: json['timeZone'] as String?,
+      proposalId: _readNullableString(json['proposalId'] ?? json['proposal_id']),
+      proposedAt: _parseDateTime(json['proposedAt'] ?? json['proposed_at']),
+      timeZone: _readNullableString(json['timeZone'] ?? json['time_zone']),
     );
   }
 
@@ -113,4 +115,42 @@ class MessageMetadata extends Equatable {
 
   @override
   List<Object?> get props => [proposalId, proposedAt, timeZone];
+}
+
+DateTime? _parseDateTime(dynamic value) {
+  if (value == null) return null;
+  if (value is Timestamp) return value.toDate();
+  if (value is DateTime) return value;
+  if (value is String && value.trim().isNotEmpty) {
+    return DateTime.tryParse(value);
+  }
+  if (value is int) {
+    return DateTime.fromMillisecondsSinceEpoch(value);
+  }
+  return null;
+}
+
+String _readString(dynamic value, {String fallback = ''}) {
+  if (value == null) return fallback;
+  final normalized = value.toString().trim();
+  return normalized.isEmpty ? fallback : normalized;
+}
+
+String? _readNullableString(dynamic value) {
+  final normalized = _readString(value);
+  return normalized.isEmpty ? null : normalized;
+}
+
+Map<String, DateTime>? _readByDataMap(dynamic value) {
+  if (value is! Map) return null;
+  final readBy = <String, DateTime>{};
+  value.forEach((key, rawValue) {
+    final uid = key.toString().trim();
+    if (uid.isEmpty) return;
+    final parsed = _parseDateTime(rawValue);
+    if (parsed != null) {
+      readBy[uid] = parsed;
+    }
+  });
+  return readBy;
 }

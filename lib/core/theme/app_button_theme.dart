@@ -7,7 +7,7 @@ class AppButtonTheme {
         style: FilledButton.styleFrom(
           backgroundColor: uiInk,
           foregroundColor: uiWhite,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(64, 52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(uiFieldRadius),
           ),
@@ -27,7 +27,7 @@ class AppButtonTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: uiInk,
           side: const BorderSide(color: uiBorder),
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size(64, 52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(uiFieldRadius),
           ),

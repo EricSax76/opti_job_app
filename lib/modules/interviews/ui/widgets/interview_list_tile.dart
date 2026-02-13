@@ -14,6 +14,14 @@ class InterviewListTile extends StatelessWidget {
   final Interview interview;
   final bool isCompany;
 
+  String _safeFormatDateTime(DateTime date, String pattern) {
+    try {
+      return DateFormat(pattern).format(date);
+    } catch (_) {
+      return date.toLocal().toIso8601String();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -32,13 +40,13 @@ class InterviewListTile extends StatelessWidget {
     // We should probably rely on a join or future builder if we want names.
     // Or just show "Candidato" for now.
     
-    final title = isCompany 
-        ? 'Candidato (ID: ${interview.candidateUid.substring(0, 5)}...)' 
-        : 'Empresa (ID: ${interview.companyUid.substring(0, 5)}...)';
+    final title = isCompany
+        ? 'Candidato (ID: ${_shortUid(interview.candidateUid)})'
+        : 'Empresa (ID: ${_shortUid(interview.companyUid)})';
         
     final lastMsg = interview.lastMessage?.content ?? 'Nueva entrevista';
     final date = interview.lastMessage?.createdAt ?? interview.updatedAt;
-    final timeStr = DateFormat.jm().format(date);
+    final timeStr = _safeFormatDateTime(date, 'jm');
     
     // Unread count
     // current user uid needed to check unreadCounts
@@ -101,7 +109,7 @@ class InterviewListTile extends StatelessWidget {
               if (interview.status == InterviewStatus.scheduled && interview.scheduledAt != null) ...[
                  const SizedBox(height: 4),
                  Text(
-                    DateFormat('MMM d, h:mm a').format(interview.scheduledAt!),
+                    _safeFormatDateTime(interview.scheduledAt!, 'MMM d, h:mm a'),
                     style: TextStyle(fontSize: 11, color: colorScheme.primary, fontWeight: FontWeight.bold),
                  ),
               ],
@@ -137,14 +145,21 @@ class InterviewListTile extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.5)),
+            border: Border.all(color: color.withValues(alpha: 0.5)),
         ),
         child: Text(
             label,
             style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
         ),
       );
+  }
+
+  String _shortUid(String uid) {
+    final trimmed = uid.trim();
+    if (trimmed.isEmpty) return 'N/A';
+    if (trimmed.length <= 5) return trimmed;
+    return '${trimmed.substring(0, 5)}...';
   }
 }

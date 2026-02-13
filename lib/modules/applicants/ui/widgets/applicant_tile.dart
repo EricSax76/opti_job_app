@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
@@ -112,6 +113,17 @@ class ApplicantTile extends StatelessWidget {
                           context.pushNamed(
                             'interview-chat',
                             pathParameters: {'id': interviewId},
+                          );
+                        }
+                      } on FirebaseFunctionsException catch (e) {
+                        if (context.mounted) {
+                          final message = e.message?.trim().isNotEmpty == true
+                              ? e.message!
+                              : 'No se pudo iniciar la entrevista.';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error (${e.code}): $message'),
+                            ),
                           );
                         }
                       } catch (e) {

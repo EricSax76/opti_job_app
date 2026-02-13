@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/core/theme/theme_state.dart';
-import 'package:opti_job_app/modules/candidates/ui/pages/models/candidate_dashboard_navigation.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navigation.dart';
 
 class CandidateDashboardDrawer extends StatelessWidget {
   const CandidateDashboardDrawer({

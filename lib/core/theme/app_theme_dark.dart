@@ -63,7 +63,7 @@ ThemeData buildDarkTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: uiAccent,
         foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(52),
+        minimumSize: const Size(64, 52),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(uiFieldRadius),
         ),
@@ -81,7 +81,7 @@ ThemeData buildDarkTheme() {
       style: OutlinedButton.styleFrom(
         foregroundColor: uiDarkInk,
         side: const BorderSide(color: uiDarkBorder),
-        minimumSize: const Size.fromHeight(52),
+        minimumSize: const Size(64, 52),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(uiFieldRadius),
         ),

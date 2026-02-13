@@ -14,7 +14,7 @@ import { Interview, Message } from "../../types/models";
 
 const logger = createLogger({ function: "cancelInterview" });
 
-export const cancelInterview = functions.https.onCall(
+export const cancelInterview = functions.region("europe-west1").https.onCall(
   async (
     data: { interviewId: string; reason?: string },
     context: functions.https.CallableContext

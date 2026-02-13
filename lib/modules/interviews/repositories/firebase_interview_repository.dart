@@ -5,6 +5,8 @@ import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 
 class FirebaseInterviewRepository implements InterviewRepository {
+  static const String _primaryFunctionsRegion = 'europe-west1';
+
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
 
@@ -12,7 +14,9 @@ class FirebaseInterviewRepository implements InterviewRepository {
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _functions = functions ?? FirebaseFunctions.instance;
+        _functions =
+            functions ??
+            FirebaseFunctions.instanceFor(region: _primaryFunctionsRegion);
 
   CollectionReference<Map<String, dynamic>> get _interviewsRef =>
       _firestore.collection('interviews');
@@ -54,9 +58,21 @@ class FirebaseInterviewRepository implements InterviewRepository {
 
   @override
   Future<String> startInterview(String applicationId) async {
-    final callable = _functions.httpsCallable('startInterview');
-    final result = await callable.call({'applicationId': applicationId});
-    return result.data['interviewId'] as String;
+    final payload = {'applicationId': applicationId};
+    try {
+      final result = await _callWithRegionFallback('startInterview', payload);
+      return _extractInterviewId(result);
+    } on FirebaseFunctionsException catch (error) {
+      if (!_isRecoverableStartInterviewError(error)) rethrow;
+      final repaired = await _backfillLegacyApplicationFields(applicationId);
+      if (!repaired) rethrow;
+
+      final retryResult = await _callWithRegionFallback(
+        'startInterview',
+        payload,
+      );
+      return _extractInterviewId(retryResult);
+    }
   }
 
   @override
@@ -66,8 +82,7 @@ class FirebaseInterviewRepository implements InterviewRepository {
     MessageType type = MessageType.text,
     MessageMetadata? metadata,
   }) async {
-    final callable = _functions.httpsCallable('sendInterviewMessage');
-    await callable.call({
+    await _callWithRegionFallback('sendInterviewMessage', {
       'interviewId': interviewId,
       'content': content,
       'type': type.value,
@@ -81,8 +96,7 @@ class FirebaseInterviewRepository implements InterviewRepository {
     required DateTime proposedAt,
     required String timeZone,
   }) async {
-    final callable = _functions.httpsCallable('proposeInterviewSlot');
-    await callable.call({
+    await _callWithRegionFallback('proposeInterviewSlot', {
       'interviewId': interviewId,
       'proposedAt': proposedAt.toIso8601String(),
       'timeZone': timeZone,
@@ -95,8 +109,7 @@ class FirebaseInterviewRepository implements InterviewRepository {
     required String proposalId,
     required bool accept,
   }) async {
-    final callable = _functions.httpsCallable('respondInterviewSlot');
-    await callable.call({
+    await _callWithRegionFallback('respondInterviewSlot', {
       'interviewId': interviewId,
       'proposalId': proposalId,
       'response': accept ? 'accept' : 'reject',
@@ -105,14 +118,14 @@ class FirebaseInterviewRepository implements InterviewRepository {
 
   @override
   Future<void> markAsSeen(String interviewId) async {
-    final callable = _functions.httpsCallable('markInterviewSeen');
-    await callable.call({'interviewId': interviewId});
+    await _callWithRegionFallback('markInterviewSeen', {
+      'interviewId': interviewId,
+    });
   }
 
   @override
   Future<void> cancelInterview(String interviewId, {String? reason}) async {
-    final callable = _functions.httpsCallable('cancelInterview');
-    await callable.call({
+    await _callWithRegionFallback('cancelInterview', {
       'interviewId': interviewId,
       'reason': reason,
     });
@@ -120,8 +133,7 @@ class FirebaseInterviewRepository implements InterviewRepository {
 
   @override
   Future<void> completeInterview(String interviewId, {String? notes}) async {
-    final callable = _functions.httpsCallable('completeInterview');
-    await callable.call({
+    await _callWithRegionFallback('completeInterview', {
       'interviewId': interviewId,
       'notes': notes,
     });
@@ -161,5 +173,92 @@ class FirebaseInterviewRepository implements InterviewRepository {
     });
 
     await batch.commit();
+  }
+
+  Future<HttpsCallableResult<dynamic>> _callWithRegionFallback(
+    String functionName,
+    Map<String, dynamic> payload,
+  ) async {
+    try {
+      return await _functions.httpsCallable(functionName).call(payload);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found') rethrow;
+      return FirebaseFunctions.instance.httpsCallable(functionName).call(payload);
+    }
+  }
+
+  String _extractInterviewId(HttpsCallableResult<dynamic> result) {
+    final data = result.data;
+    if (data is Map && data['interviewId'] is String) {
+      final interviewId = (data['interviewId'] as String).trim();
+      if (interviewId.isNotEmpty) return interviewId;
+    }
+    throw FirebaseFunctionsException(
+      code: 'internal',
+      message: 'Cloud Function response did not include interviewId.',
+    );
+  }
+
+  bool _isRecoverableStartInterviewError(FirebaseFunctionsException error) {
+    return error.code == 'invalid-argument' ||
+        error.code == 'internal' ||
+        error.code == 'unknown' ||
+        error.code == 'failed-precondition';
+  }
+
+  Future<bool> _backfillLegacyApplicationFields(String applicationId) async {
+    final appRef = _firestore.collection('applications').doc(applicationId);
+    final appSnapshot = await appRef.get();
+    final data = appSnapshot.data();
+    if (!appSnapshot.exists || data == null) return false;
+
+    final jobOfferId = _readNonEmptyString(
+      data['job_offer_id'] ?? data['jobOfferId'],
+    );
+    final candidateUid = _readNonEmptyString(
+      data['candidate_uid'] ?? data['candidateId'] ?? data['candidate_id'],
+    );
+    final companyUid = _readNonEmptyString(
+      data['company_uid'] ?? data['companyUid'],
+    );
+    final candidateName = _readNonEmptyString(
+      data['candidate_name'] ?? data['candidateName'],
+    );
+    final candidateEmail = _readNonEmptyString(
+      data['candidate_email'] ?? data['candidateEmail'],
+    );
+
+    final updates = <String, dynamic>{};
+    final existingJobOfferId = _readNonEmptyString(data['job_offer_id']);
+    final existingCandidateUid = _readNonEmptyString(data['candidate_uid']);
+    final existingCompanyUid = _readNonEmptyString(data['company_uid']);
+
+    if (existingJobOfferId == null && jobOfferId != null) {
+      updates['job_offer_id'] = jobOfferId;
+    }
+    if (existingCandidateUid == null && candidateUid != null) {
+      updates['candidate_uid'] = candidateUid;
+    }
+    if (existingCompanyUid == null && companyUid != null) {
+      updates['company_uid'] = companyUid;
+    }
+    if (data['candidate_name'] == null && candidateName != null) {
+      updates['candidate_name'] = candidateName;
+    }
+    if (data['candidate_email'] == null && candidateEmail != null) {
+      updates['candidate_email'] = candidateEmail;
+    }
+
+    if (updates.isEmpty) return false;
+    updates['updated_at'] = FieldValue.serverTimestamp();
+
+    await appRef.update(updates);
+    return true;
+  }
+
+  String? _readNonEmptyString(dynamic value) {
+    if (value == null) return null;
+    final normalized = value.toString().trim();
+    return normalized.isEmpty ? null : normalized;
   }
 }

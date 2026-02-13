@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/widgets/app_card.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/cards/candidate_offer_card_logic.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/cards/models/candidate_offer_card_models.dart';
+import 'package:opti_job_app/modules/candidates/logic/candidate_offer_card_logic.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate_offer_card_models.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/cards/candidate_offer_card_widgets.dart';
 
 class CandidateOfferCardBase extends StatefulWidget {
@@ -69,7 +69,8 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
       location: widget.location,
       modality: widget.modality,
     );
-    final tags = widget.tags
+    final tags =
+        widget.tags
             ?.where((tag) => tag.trim().isNotEmpty)
             .take(2)
             .toList(growable: false) ??
@@ -162,11 +163,12 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Description (Optional)
-                      if (widget.description != null && widget.description!.isNotEmpty) ...[
+                      if (widget.description != null &&
+                          widget.description!.isNotEmpty) ...[
                         Text(
                           _normalizeDescription(widget.description),
                           style: TextStyle(
@@ -186,21 +188,27 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
                         runSpacing: 8,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          ...tags.map((tag) => CandidateOfferTagPill(
-                                label: tag,
-                                palette: palette,
-                              )),
+                          ...tags.map(
+                            (tag) => CandidateOfferTagPill(
+                              label: tag,
+                              palette: palette,
+                            ),
+                          ),
                           if (tags.isNotEmpty && metrics.isNotEmpty)
-                             VerticalDivider(width: 1, color: palette.borderColor),
-                          ...metrics.map((metric) => CandidateOfferMetricPill(
-                                metric: metric,
-                              )),
+                            VerticalDivider(
+                              width: 1,
+                              color: palette.borderColor,
+                            ),
+                          ...metrics.map(
+                            (metric) =>
+                                CandidateOfferMetricPill(metric: metric),
+                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Keep the action indicator subtle at bottom right or remove if redundant
                 // For now, let's just use the card tap. If an explicit action is needed:
                 if (hasTapAction)
@@ -221,7 +229,6 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
     );
   }
 }
-
 
 String _normalizeDescription(String? value) {
   if (value == null || value.trim().isEmpty) {

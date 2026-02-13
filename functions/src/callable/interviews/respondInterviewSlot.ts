@@ -14,7 +14,7 @@ import { Interview, Message } from "../../types/models";
 
 const logger = createLogger({ function: "respondInterviewSlot" });
 
-export const respondInterviewSlot = functions.https.onCall(
+export const respondInterviewSlot = functions.region("europe-west1").https.onCall(
   async (
     data: { interviewId: string; proposalId: string; response: "accept" | "reject" },
     context: functions.https.CallableContext
@@ -107,6 +107,28 @@ export const respondInterviewSlot = functions.https.onCall(
 
         transaction.set(messagesRef, message);
         transaction.update(interviewRef, interviewUpdates);
+
+        // SYNC WITH CALENDAR
+        if (response === 'accept' && proposal.metadata?.proposedAt) {
+          const participants = interview.participants;
+          const proposedAt = proposal.metadata.proposedAt; // Timestamp
+
+          for (const uid of participants) {
+             const eventRef = db.collection('calendarEvents').doc();
+             transaction.set(eventRef, {
+               title: "Entrevista Programada",
+               description: `Entrevista para la posición de la aplicación ${interview.applicationId}`,
+               date: proposedAt,
+               owner_uid: uid,
+               owner_type: 'user',
+               created_at: now,
+               metadata: {
+                 interviewId: interviewId,
+                 type: "interview"
+               }
+             });
+          }
+        }
       });
 
       return { messageId: "sent" };

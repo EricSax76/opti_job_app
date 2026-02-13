@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import 'package:opti_job_app/modules/candidates/ui/pages/models/candidate_dashboard_navigation.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navigation.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_interviews_badge.dart';
 import 'package:opti_job_app/core/config/feature_flags.dart';
 
@@ -42,14 +42,16 @@ class CandidateDashboardAppBar extends StatelessWidget
     final accountMenu = PopupMenuButton<_CandidateAccountAction>(
       tooltip: 'Cuenta',
       onSelected: (action) {
-        switch (action) {
-          case _CandidateAccountAction.profile:
-            onOpenProfile();
-            break;
-          case _CandidateAccountAction.logout:
-            onLogout();
-            break;
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          switch (action) {
+            case _CandidateAccountAction.profile:
+              onOpenProfile();
+              break;
+            case _CandidateAccountAction.logout:
+              onLogout();
+              break;
+          }
+        });
       },
       itemBuilder: (context) => const [
         PopupMenuItem(

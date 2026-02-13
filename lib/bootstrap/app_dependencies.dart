@@ -20,7 +20,7 @@ import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
 import 'package:opti_job_app/modules/companies/repositories/companies_repository.dart';
-import 'package:opti_job_app/modules/companies/data/repositories/firebase_companies_repository.dart';
+import 'package:opti_job_app/modules/companies/repositories/firebase_companies_repository.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/applicants/data/repositories/firebase_applicants_repository.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
