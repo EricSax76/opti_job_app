@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
-import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_meeting_banner.dart';
-import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_messages_list.dart';
+import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_chat_loaded_body.dart';
 
 class InterviewChatSessionBody extends StatelessWidget {
-  const InterviewChatSessionBody({super.key});
+  const InterviewChatSessionBody({
+    super.key,
+    required this.onRespondToProposal,
+  });
+
+  final void Function(String proposalId, bool accept) onRespondToProposal;
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +28,9 @@ class InterviewChatSessionBody extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (loadedState.interview.meetingLink case final meetingLink?)
-              InterviewMeetingBanner(meetingLink: meetingLink),
-            Expanded(child: InterviewMessagesList(messages: loadedState.messages)),
-          ],
+        return InterviewChatLoadedBody(
+          state: loadedState,
+          onRespondToProposal: onRespondToProposal,
         );
       },
     );

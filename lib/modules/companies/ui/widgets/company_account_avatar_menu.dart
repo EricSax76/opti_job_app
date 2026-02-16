@@ -14,7 +14,6 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final router = GoRouter.of(context);
     final authCubit = context.read<CompanyAuthCubit>();
 
     final company = context.watch<CompanyAuthCubit>().state.company;
@@ -26,7 +25,8 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
         switch (action) {
           case CompanyAccountAction.profile:
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              router.pushNamed('company-profile');
+              final router = _tryResolveRouter(context);
+              router?.pushNamed('company-profile');
             });
             break;
           case CompanyAccountAction.logout:
@@ -66,5 +66,13 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  GoRouter? _tryResolveRouter(BuildContext context) {
+    try {
+      return GoRouter.of(context);
+    } catch (_) {
+      return null;
+    }
   }
 }

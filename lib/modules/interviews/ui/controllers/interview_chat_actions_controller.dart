@@ -48,6 +48,10 @@ class InterviewChatActionsController {
     _sessionCubit.proposeSlot(proposedDate, DateTime.now().timeZoneName);
   }
 
+  void respondToProposal(String proposalId, bool accept) {
+    _sessionCubit.respondToSlot(proposalId, accept);
+  }
+
   Future<void> startMeeting(BuildContext context) async {
     final link = await _askForMeetingLink(context);
     if (link == null || !context.mounted) return;
@@ -64,7 +68,9 @@ class InterviewChatActionsController {
           title: const Text('Iniciar Videollamada'),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(labelText: 'Enlace de la reunión'),
+            decoration: const InputDecoration(
+              labelText: 'Enlace de la reunión',
+            ),
           ),
           actions: [
             TextButton(

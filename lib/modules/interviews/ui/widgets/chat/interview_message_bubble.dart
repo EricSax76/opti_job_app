@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
 import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
 
 class InterviewMessageBubble extends StatelessWidget {
-  const InterviewMessageBubble({super.key, required this.message});
+  const InterviewMessageBubble({
+    super.key,
+    required this.message,
+    required this.onRespondToProposal,
+  });
 
   final InterviewMessage message;
+  final void Function(String proposalId, bool accept) onRespondToProposal;
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +102,7 @@ class InterviewMessageBubble extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   FilledButton.icon(
-                    onPressed: () => _respondToProposal(context, accept: true),
+                    onPressed: () => onRespondToProposal(message.id, true),
                     icon: const Icon(Icons.check, size: 18),
                     label: const Text('Aceptar'),
                     style: FilledButton.styleFrom(
@@ -110,7 +113,7 @@ class InterviewMessageBubble extends StatelessWidget {
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () => _respondToProposal(context, accept: false),
+                    onPressed: () => onRespondToProposal(message.id, false),
                     icon: const Icon(Icons.close, size: 18),
                     label: const Text('Rechazar'),
                     style: OutlinedButton.styleFrom(
@@ -132,10 +135,6 @@ class InterviewMessageBubble extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _respondToProposal(BuildContext context, {required bool accept}) {
-    context.read<InterviewSessionCubit>().respondToSlot(message.id, accept);
   }
 
   String _safeFormatDateTime(DateTime date, String pattern) {

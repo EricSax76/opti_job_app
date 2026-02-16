@@ -3,9 +3,14 @@ import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_message_bubble.dart';
 
 class InterviewMessagesList extends StatelessWidget {
-  const InterviewMessagesList({super.key, required this.messages});
+  const InterviewMessagesList({
+    super.key,
+    required this.messages,
+    required this.onRespondToProposal,
+  });
 
   final List<InterviewMessage> messages;
+  final void Function(String proposalId, bool accept) onRespondToProposal;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,10 @@ class InterviewMessagesList extends StatelessWidget {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
-        return InterviewMessageBubble(message: message);
+        return InterviewMessageBubble(
+          message: message,
+          onRespondToProposal: onRespondToProposal,
+        );
       },
     );
   }

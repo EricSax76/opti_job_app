@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/interviews/models/interview.dart';
-import 'package:intl/intl.dart';
+import 'package:opti_job_app/modules/interviews/ui/widgets/list/interview_list_tile_title.dart';
+import 'package:opti_job_app/modules/interviews/ui/widgets/list/interview_status_badge.dart';
 
 class InterviewListTile extends StatelessWidget {
   const InterviewListTile({
@@ -14,50 +17,21 @@ class InterviewListTile extends StatelessWidget {
   final Interview interview;
   final bool isCompany;
 
-  String _safeFormatDateTime(DateTime date, String pattern) {
-    try {
-      return DateFormat(pattern).format(date);
-    } catch (_) {
-      return date.toLocal().toIso8601String();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
-    // Determine title (other participant name)
-    // Note: In real app, we might need to fetch the profile of the other user
-    // or store basic info in the interview doc (denormalization).
-    // For now, let's use the UID or a placeholder until we have denormalized data.
-    // Actually Application has candidateName/companyName. 
-    // Ideally Interview should have this too. 
-    // MVP: Show "Candidato" / "Empresa" or fetch? 
-    // Let's assume we want to show updated info.
-    // But for MVP speed, let's use "Entrevista [ID]" or generic if we don't have name.
-    // Wait, Application doc has names. Interview doc as defined in models.ts doesn't have names.
-    // We should probably rely on a join or future builder if we want names.
-    // Or just show "Candidato" for now.
-    
-    final title = isCompany
-        ? 'Candidato (ID: ${_shortUid(interview.candidateUid)})'
-        : 'Empresa (ID: ${_shortUid(interview.companyUid)})';
-        
-    final lastMsg = interview.lastMessage?.content ?? 'Nueva entrevista';
+
+    final lastMessage = interview.lastMessage?.content ?? 'Nueva entrevista';
     final date = interview.lastMessage?.createdAt ?? interview.updatedAt;
-    final timeStr = _safeFormatDateTime(date, 'jm');
-    
-    // Unread count
-    // current user uid needed to check unreadCounts
-    // passed implicitly or found via auth? 
-    // We don't have auth in this widget easily without context.read or passing it.
-    // Let's assume passed isCompany implies we know which side.
-    // But we need exact UID for unreadCounts keys.
-    // Let's just show dot if unreadCounts has ANY value for now? 
-    // No, unreadCounts is Map<uid, int>.
-    // effectively we need currentUserUid.
-    
+    final timeText = _safeFormatDateTime(date, 'jm');
+
+    final scheduledLabel =
+        interview.status == InterviewStatus.scheduled &&
+            interview.scheduledAt != null
+        ? _safeFormatDateTime(interview.scheduledAt!, 'MMM d, h:mm a')
+        : null;
+
     return Card(
       elevation: 0,
       color: colorScheme.surfaceContainer,
@@ -68,98 +42,107 @@ class InterviewListTile extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         onTap: () {
-            // Navigate to chat
-             context.pushNamed('interview-chat', pathParameters: {'id': interview.id});
+          context.pushNamed(
+            'interview-chat',
+            pathParameters: {'id': interview.id},
+          );
         },
         leading: CircleAvatar(
           backgroundColor: colorScheme.primaryContainer,
           child: Icon(Icons.person, color: colorScheme.onPrimaryContainer),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+        title: InterviewListTileTitle(
+          interview: interview,
+          isCompany: isCompany,
         ),
-        subtitle: Row(
-          children: [
-            Expanded(
-              child: Text(
-                lastMsg,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: colorScheme.onSurfaceVariant),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              timeStr,
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.outline,
-              ),
-            ),
-          ],
+        subtitle: _InterviewListSubtitle(
+          messagePreview: lastMessage,
+          timeText: timeText,
+          textColor: colorScheme.onSurfaceVariant,
+          timeColor: colorScheme.outline,
         ),
         subtitleTextStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-        isThreeLine: interview.status == InterviewStatus.scheduled && interview.scheduledAt != null,
-        trailing: Column(
-           mainAxisAlignment: MainAxisAlignment.center,
-           crossAxisAlignment: CrossAxisAlignment.end,
-           children: [
-              _buildStatusBadge(context, interview.status),
-              if (interview.status == InterviewStatus.scheduled && interview.scheduledAt != null) ...[
-                 const SizedBox(height: 4),
-                 Text(
-                    _safeFormatDateTime(interview.scheduledAt!, 'MMM d, h:mm a'),
-                    style: TextStyle(fontSize: 11, color: colorScheme.primary, fontWeight: FontWeight.bold),
-                 ),
-              ],
-           ],
+        isThreeLine: scheduledLabel != null,
+        trailing: _InterviewListTrailing(
+          status: interview.status,
+          scheduledLabel: scheduledLabel,
+          scheduledColor: colorScheme.primary,
         ),
       ),
     );
   }
-  
-  Widget _buildStatusBadge(BuildContext context, InterviewStatus status) {
-      Color color;
-      String label;
-      
-      switch (status) {
-        case InterviewStatus.scheduling:
-          color = Colors.orange;
-          label = 'Agendando';
-          break;
-        case InterviewStatus.scheduled:
-          color = Colors.blue;
-          label = 'Agendada';
-          break;
-        case InterviewStatus.completed:
-          color = Colors.green;
-          label = 'Completada';
-          break;
-        case InterviewStatus.cancelled:
-           color = Colors.red;
-           label = 'Cancelada';
-           break;
-      }
-      
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.5)),
-        ),
-        child: Text(
-            label,
-            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
-        ),
-      );
-  }
 
-  String _shortUid(String uid) {
-    final trimmed = uid.trim();
-    if (trimmed.isEmpty) return 'N/A';
-    if (trimmed.length <= 5) return trimmed;
-    return '${trimmed.substring(0, 5)}...';
+  String _safeFormatDateTime(DateTime date, String pattern) {
+    try {
+      return DateFormat(pattern).format(date);
+    } catch (_) {
+      return date.toLocal().toIso8601String();
+    }
+  }
+}
+
+class _InterviewListSubtitle extends StatelessWidget {
+  const _InterviewListSubtitle({
+    required this.messagePreview,
+    required this.timeText,
+    required this.textColor,
+    required this.timeColor,
+  });
+
+  final String messagePreview;
+  final String timeText;
+  final Color textColor;
+  final Color timeColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            messagePreview,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: textColor),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(timeText, style: TextStyle(fontSize: 12, color: timeColor)),
+      ],
+    );
+  }
+}
+
+class _InterviewListTrailing extends StatelessWidget {
+  const _InterviewListTrailing({
+    required this.status,
+    required this.scheduledLabel,
+    required this.scheduledColor,
+  });
+
+  final InterviewStatus status;
+  final String? scheduledLabel;
+  final Color scheduledColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        InterviewStatusBadge(status: status),
+        if (scheduledLabel != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            scheduledLabel!,
+            style: TextStyle(
+              fontSize: 11,
+              color: scheduledColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
