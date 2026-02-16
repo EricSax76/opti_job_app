@@ -1,11 +1,14 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/applicant_tile.dart';
+import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class OfferApplicantsSection extends StatelessWidget {
@@ -88,14 +91,94 @@ class OfferApplicantsSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final application = applicants[index];
                 return ApplicantTile(
-                  offerId: offer.id,
                   application: application,
-                  companyUid: resolvedCompanyUid,
+                  onTap: application.candidateUid.trim().isEmpty
+                      ? null
+                      : () => context.push(
+                            '/company/offers/${offer.id}/applicants/${application.candidateUid}/cv',
+                          ),
+                  onStatusChanged: application.id == null
+                      ? null
+                      : (newStatus) {
+                          context
+                              .read<OfferApplicantsCubit>()
+                              .updateApplicationStatus(
+                                offerId: offer.id,
+                                applicationId: application.id!,
+                                newStatus: newStatus,
+                                companyUid: resolvedCompanyUid,
+                              );
+                        },
+                  onStartInterview: application.id == null
+                      ? null
+                      : () => _handleStartInterview(
+                            context,
+                            application.id!,
+                          ),
                 );
               },
             );
         }
       },
     );
+  }
+
+  Future<void> _handleStartInterview(
+    BuildContext context,
+    String applicationId,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Iniciar entrevista'),
+        content: const Text(
+          'Esto creará una sala de chat con el candidato. ¿Continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Iniciar'),
+          ),
+        ],
+      ),
+    );
+
+    if (!context.mounted) return;
+
+    if (confirm == true) {
+      try {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Iniciando entrevista...')),
+        );
+        final repo = context.read<InterviewRepository>();
+        final interviewId = await repo.startInterview(applicationId);
+
+        if (context.mounted) {
+          context.pushNamed(
+            'interview-chat',
+            pathParameters: {'id': interviewId},
+          );
+        }
+      } on FirebaseFunctionsException catch (e) {
+        if (context.mounted) {
+          final message = e.message?.trim().isNotEmpty == true
+              ? e.message!
+              : 'No se pudo iniciar la entrevista.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error (${e.code}): $message')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      }
+    }
   }
 }

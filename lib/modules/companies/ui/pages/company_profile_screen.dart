@@ -6,6 +6,8 @@ import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_profile_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar_menu.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/company_avatar_picker.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/company_profile_form_fields.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
 class CompanyProfileScreen extends StatelessWidget {
@@ -31,9 +33,7 @@ class _CompanyProfileView extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final surface = theme.cardTheme.color ?? colorScheme.surface;
-    final surfaceContainer = colorScheme.surfaceContainerHighest;
     final border = colorScheme.outline;
-    final ink = colorScheme.onSurface;
     final muted = colorScheme.onSurfaceVariant;
 
     final company = context.watch<CompanyAuthCubit>().state.company;
@@ -70,18 +70,7 @@ class _CompanyProfileView extends StatelessWidget {
                 }
               },
               builder: (context, state) {
-                final avatarUrl = state.company?.avatarUrl;
-                final avatarBytes = state.avatarBytes;
-                ImageProvider? avatarImage;
-                if (avatarBytes != null) {
-                  avatarImage = ResizeImage(
-                    MemoryImage(avatarBytes),
-                    width: 256,
-                    height: 256,
-                  );
-                } else if (avatarUrl != null && avatarUrl.isNotEmpty) {
-                  avatarImage = NetworkImage(avatarUrl);
-                }
+                final cubit = context.read<CompanyProfileFormCubit>();
 
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
@@ -98,109 +87,23 @@ class _CompanyProfileView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
-                              child: Stack(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 44,
-                                    backgroundColor: surfaceContainer,
-                                    backgroundImage: avatarImage,
-                                    child: avatarImage == null
-                                        ? Icon(
-                                            Icons.business_outlined,
-                                            size: 40,
-                                            color: muted,
-                                          )
-                                        : null,
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 0,
-                                    child: InkWell(
-                                      onTap: context
-                                          .read<CompanyProfileFormCubit>()
-                                          .pickAvatar,
-                                      borderRadius: BorderRadius.circular(
-                                        uiTileRadius,
-                                      ),
-                                      child: CircleAvatar(
-                                        radius: 16,
-                                        backgroundColor: colorScheme.primary,
-                                        child: Icon(
-                                          Icons.camera_alt,
-                                          size: 16,
-                                          color: colorScheme.onPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            CompanyAvatarPicker(
+                              avatarUrl: state.company?.avatarUrl,
+                              avatarBytes: state.avatarBytes,
+                              onPickAvatar: cubit.pickAvatar,
                             ),
                             const SizedBox(height: 20),
-                            Text(
-                              'Datos de la empresa',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: ink,
-                                  ),
-                            ),
-                            const SizedBox(height: 14),
-                            TextFormField(
-                              controller: context
-                                  .read<CompanyProfileFormCubit>()
-                                  .nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Nombre',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              initialValue: company.email,
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                labelText: 'Correo',
-                                helperText: 'Este dato no se puede modificar.',
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: colorScheme.primary,
-                                  foregroundColor: colorScheme.onPrimary,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                ),
-                                onPressed: state.canSubmit
-                                    ? () => context
-                                          .read<CompanyProfileFormCubit>()
-                                          .submit()
-                                    : null,
-                                child: state.isSaving
-                                    ? SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                colorScheme.onPrimary,
-                                              ),
-                                        ),
-                                      )
-                                    : const Text('Guardar cambios'),
-                              ),
+                            CompanyProfileFormFields(
+                              nameController: cubit.nameController,
+                              email: company.email,
+                              canSubmit: state.canSubmit,
+                              isSaving: state.isSaving,
+                              onSubmit: cubit.submit,
                             ),
                             const SizedBox(height: 12),
                             Text(
                               'Sesión activa como ${company.name}',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(color: muted),
+                              style: theme.textTheme.bodySmall?.copyWith(color: muted),
                             ),
                           ],
                         ),

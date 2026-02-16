@@ -6,10 +6,9 @@ import 'package:opti_job_app/features/ai/models/ai_job_offer_draft.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
-import 'package:opti_job_app/modules/companies/ui/widgets/company_dashboard_header.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/company_offer_creation_content.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
-import 'package:opti_job_app/modules/job_offers/ui/widgets/create_offer_card.dart';
 import 'package:opti_job_app/modules/job_offers/models/generate_offer_dialog.dart';
 
 class CompanyOfferCreationTab extends StatefulWidget {
@@ -42,20 +41,13 @@ class _CompanyOfferCreationTabState extends State<CompanyOfferCreationTab> {
           _resetForm();
         }
       },
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-        children: [
-          if (company != null)
-            CompanyDashboardHeader(companyName: company.name),
-          const SizedBox(height: 24),
-          CreateOfferCard(
-            formKey: _formKey,
-            controllers: _formControllers,
-            onSubmit: () => _submit(context),
-            onGenerateWithAi: () => _generateWithAi(context),
-            isGenerating: _isGeneratingOffer,
-          ),
-        ],
+      child: CompanyOfferCreationContent(
+        companyName: company?.name,
+        formKey: _formKey,
+        formControllers: _formControllers,
+        isGeneratingOffer: _isGeneratingOffer,
+        onSubmit: () => _submit(context),
+        onGenerateWithAi: () => _generateWithAi(context),
       ),
     );
   }
