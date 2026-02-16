@@ -6,9 +6,11 @@ import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_chat_l
 class InterviewChatSessionBody extends StatelessWidget {
   const InterviewChatSessionBody({
     super.key,
+    required this.currentUid,
     required this.onRespondToProposal,
   });
 
+  final String? currentUid;
   final void Function(String proposalId, bool accept) onRespondToProposal;
 
   @override
@@ -30,6 +32,7 @@ class InterviewChatSessionBody extends StatelessWidget {
 
         return InterviewChatLoadedBody(
           state: loadedState,
+          currentUid: currentUid,
           onRespondToProposal: onRespondToProposal,
         );
       },

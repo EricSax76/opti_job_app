@@ -8,10 +8,12 @@ class InterviewChatLoadedBody extends StatelessWidget {
   const InterviewChatLoadedBody({
     super.key,
     required this.state,
+    required this.currentUid,
     required this.onRespondToProposal,
   });
 
   final InterviewSessionLoaded state;
+  final String? currentUid;
   final void Function(String proposalId, bool accept) onRespondToProposal;
 
   @override
@@ -24,6 +26,7 @@ class InterviewChatLoadedBody extends StatelessWidget {
         Expanded(
           child: InterviewMessagesList(
             messages: state.messages,
+            currentUid: currentUid,
             onRespondToProposal: onRespondToProposal,
           ),
         ),

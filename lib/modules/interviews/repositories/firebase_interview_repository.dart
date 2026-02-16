@@ -13,10 +13,10 @@ class FirebaseInterviewRepository implements InterviewRepository {
   FirebaseInterviewRepository({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _functions =
-            functions ??
-            FirebaseFunctions.instanceFor(region: _primaryFunctionsRegion);
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions =
+           functions ??
+           FirebaseFunctions.instanceFor(region: _primaryFunctionsRegion);
 
   CollectionReference<Map<String, dynamic>> get _interviewsRef =>
       _firestore.collection('interviews');
@@ -28,10 +28,10 @@ class FirebaseInterviewRepository implements InterviewRepository {
         .orderBy('updatedAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => Interview.fromJson(doc.data()..['id'] = doc.id))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => Interview.fromJson(doc.data()..['id'] = doc.id))
+              .toList();
+        });
   }
 
   @override
@@ -50,10 +50,12 @@ class FirebaseInterviewRepository implements InterviewRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => InterviewMessage.fromJson(doc.data()..['id'] = doc.id))
-          .toList();
-    });
+          return snapshot.docs
+              .map(
+                (doc) => InterviewMessage.fromJson(doc.data()..['id'] = doc.id),
+              )
+              .toList();
+        });
   }
 
   @override
@@ -138,31 +140,31 @@ class FirebaseInterviewRepository implements InterviewRepository {
       'notes': notes,
     });
   }
+
   @override
   Future<void> startMeeting({
     required String interviewId,
     required String meetingLink,
   }) async {
     final batch = _firestore.batch();
-    
+
     // Update interview with meeting link
     final interviewRef = _interviewsRef.doc(interviewId);
     batch.update(interviewRef, {
       'meetingLink': meetingLink,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-    
+
     // Add system message
     final messageRef = interviewRef.collection('messages').doc();
-    final message = InterviewMessage(
-      id: messageRef.id,
-      senderUid: 'system',
-      content: 'Inició una videollamada. Únete aquí: $meetingLink',
-      type: MessageType.system,
-      createdAt: DateTime.now(),
-    );
-    batch.set(messageRef, message.toJson());
-    
+    batch.set(messageRef, {
+      'id': messageRef.id,
+      'senderUid': 'system',
+      'content': 'Inició una videollamada. Únete aquí: $meetingLink',
+      'type': MessageType.system.value,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
     // Update last message
     batch.update(interviewRef, {
       'lastMessage': {
@@ -183,7 +185,9 @@ class FirebaseInterviewRepository implements InterviewRepository {
       return await _functions.httpsCallable(functionName).call(payload);
     } on FirebaseFunctionsException catch (error) {
       if (error.code != 'not-found') rethrow;
-      return FirebaseFunctions.instance.httpsCallable(functionName).call(payload);
+      return FirebaseFunctions.instance
+          .httpsCallable(functionName)
+          .call(payload);
     }
   }
 

@@ -15,31 +15,34 @@ class InterviewListCubit extends Cubit<InterviewListState> {
   InterviewListCubit({
     required InterviewRepository repository,
     required String uid,
-  })  : _repository = repository,
-        _uid = uid,
-        super(InterviewListInitial()) {
+  }) : _repository = repository,
+       _uid = uid,
+       super(InterviewListInitial()) {
     _subscribe();
   }
 
   void _subscribe() {
     emit(InterviewListLoading());
-    _subscription = _repository.interviewsStream(_uid).listen(
-      (interviews) {
-        if (interviews.isEmpty) {
-          emit(InterviewListEmpty());
-        } else {
-          emit(InterviewListLoaded(interviews));
-        }
-      },
-      onError: (error) {
-        emit(InterviewListError(error.toString()));
-      },
-    );
+    _subscription = _repository
+        .interviewsStream(_uid)
+        .listen(
+          (interviews) {
+            if (interviews.isEmpty) {
+              emit(InterviewListEmpty());
+            } else {
+              emit(InterviewListLoaded(interviews));
+            }
+          },
+          onError: (error) {
+            emit(InterviewListError(error.toString()));
+          },
+        );
   }
 
   Future<void> refresh() async {
-    // Re-subscription logic if needed, or just let stream handle updates
-    // For manual refresh in stream-based arch, usually not needed unless connection lost
+    await _subscription?.cancel();
+    _subscription = null;
+    _subscribe();
   }
 
   @override

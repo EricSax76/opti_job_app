@@ -6,10 +6,12 @@ class InterviewMessagesList extends StatelessWidget {
   const InterviewMessagesList({
     super.key,
     required this.messages,
+    required this.currentUid,
     required this.onRespondToProposal,
   });
 
   final List<InterviewMessage> messages;
+  final String? currentUid;
   final void Function(String proposalId, bool accept) onRespondToProposal;
 
   @override
@@ -26,6 +28,7 @@ class InterviewMessagesList extends StatelessWidget {
         final message = messages[index];
         return InterviewMessageBubble(
           message: message,
+          currentUid: currentUid,
           onRespondToProposal: onRespondToProposal,
         );
       },

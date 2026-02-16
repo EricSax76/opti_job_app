@@ -6,10 +6,12 @@ class InterviewMessageBubble extends StatelessWidget {
   const InterviewMessageBubble({
     super.key,
     required this.message,
+    required this.currentUid,
     required this.onRespondToProposal,
   });
 
   final InterviewMessage message;
+  final String? currentUid;
   final void Function(String proposalId, bool accept) onRespondToProposal;
 
   @override
@@ -95,7 +97,7 @@ class InterviewMessageBubble extends StatelessWidget {
               const SizedBox(height: 8),
             ],
             Text(message.content),
-            if (message.type == MessageType.proposal) ...[
+            if (_showProposalActions) ...[
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -135,6 +137,15 @@ class InterviewMessageBubble extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool get _showProposalActions {
+    if (message.type != MessageType.proposal) return false;
+
+    final viewerUid = currentUid?.trim();
+    if (viewerUid == null || viewerUid.isEmpty) return true;
+
+    return message.senderUid.trim() != viewerUid;
   }
 
   String _safeFormatDateTime(DateTime date, String pattern) {

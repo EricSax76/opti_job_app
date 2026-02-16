@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
 import 'package:opti_job_app/modules/interviews/ui/controllers/interview_chat_actions_controller.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_chat_session_body.dart';
@@ -33,11 +35,14 @@ class _InterviewChatContainerState extends State<InterviewChatContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUid = _resolveCurrentUid(context);
+
     return BlocListener<InterviewSessionCubit, InterviewSessionState>(
       listenWhen: (_, current) => current is InterviewSessionActionError,
       listener: _handleActionError,
       child: InterviewChatView(
         body: InterviewChatSessionBody(
+          currentUid: currentUid,
           onRespondToProposal: _actions.respondToProposal,
         ),
         inputArea: InterviewMessageInputArea(
@@ -48,6 +53,24 @@ class _InterviewChatContainerState extends State<InterviewChatContainer> {
         ),
       ),
     );
+  }
+
+  String? _resolveCurrentUid(BuildContext context) {
+    final candidateUid = context.select<CandidateAuthCubit, String?>(
+      (cubit) => cubit.state.candidate?.uid,
+    );
+    if (candidateUid != null && candidateUid.trim().isNotEmpty) {
+      return candidateUid;
+    }
+
+    final companyUid = context.select<CompanyAuthCubit, String?>(
+      (cubit) => cubit.state.company?.uid,
+    );
+    if (companyUid != null && companyUid.trim().isNotEmpty) {
+      return companyUid;
+    }
+
+    return null;
   }
 
   void _handleActionError(BuildContext context, InterviewSessionState state) {
