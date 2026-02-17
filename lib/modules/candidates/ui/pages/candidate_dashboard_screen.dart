@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/platform/web_history.dart';
 import 'package:opti_job_app/core/config/feature_flags.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
-import 'package:opti_job_app/modules/applications/logic/application_service.dart';
+
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_dashboard_cubit.dart';
 import 'package:opti_job_app/modules/candidates/logic/candidate_dashboard_screen_logic.dart';
@@ -22,10 +22,12 @@ class CandidateDashboardScreen extends StatefulWidget {
     super.key,
     required this.uid,
     required this.initialIndex,
+    required this.applicationsCubit,
   });
 
   final String uid;
   final int initialIndex;
+  final MyApplicationsCubit applicationsCubit;
 
   @override
   State<CandidateDashboardScreen> createState() =>
@@ -36,7 +38,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final CandidateDashboardCubit _dashboardCubit;
-  late final MyApplicationsCubit _applicationsCubit;
   late final InterviewListCubit _interviewsCubit;
   late final List<Widget?> _dashboardPages;
   bool _isProgrammaticTabChange = false;
@@ -64,10 +65,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     );
     _ensureDashboardPageLoaded(_dashboardCubit.state.selectedIndex);
 
-    _applicationsCubit = MyApplicationsCubit(
-      applicationService: context.read<ApplicationService>(),
-      candidateAuthCubit: context.read<CandidateAuthCubit>(),
-    )..start();
+    // _applicationsCubit is now passed via constructor
 
     _interviewsCubit = InterviewListCubit(
       repository: context.read<InterviewRepository>(),
@@ -80,7 +78,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     _tabController.removeListener(_onTabControllerChanged);
     _tabController.dispose();
     _dashboardCubit.close();
-    _applicationsCubit.close();
+    // _applicationsCubit.close(); // Managed by parent provider
     _interviewsCubit.close();
     super.dispose();
   }
@@ -107,7 +105,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _dashboardCubit),
-        BlocProvider.value(value: _applicationsCubit),
+        BlocProvider.value(value: widget.applicationsCubit),
         BlocProvider.value(value: _interviewsCubit),
       ],
       child: BlocListener<CandidateDashboardCubit, CandidateDashboardState>(

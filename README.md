@@ -153,6 +153,10 @@ Notas de frontera:
 - No importar BLoC/servicios/repositorios de `video_curriculum` desde `cover_letter` (ni viceversa).
 - Compartir integración por DI, navegación y contratos públicos de cada feature.
 
+## Refactors de arquitectura
+
+- Fase 4 (DI): contención de GetIt/locator en composition root y páginas raíz, con dependencias explícitas por constructor: `docs/fase_4_contencion_getit.md`.
+
 ## Próximos pasos
 
 - Añadir internacionalización (`flutter_localizations`).

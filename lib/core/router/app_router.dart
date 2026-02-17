@@ -12,20 +12,26 @@ import 'package:opti_job_app/home/pages/onboarding_screen.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';
+import 'package:opti_job_app/home/pages/landing_screen.dart';
+import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_list_screen.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_detail_screen.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
+import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
 import 'package:opti_job_app/modules/applicants/ui/pages/applicant_curriculum_screen.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
-import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_detail_screen.dart';
-import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_list_screen.dart';
-import 'package:opti_job_app/home/pages/landing_screen.dart';
-import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
-import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
-import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/interviews/ui/pages/interview_chat_page.dart';
+import 'package:get_it/get_it.dart';
+import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
+import 'package:opti_job_app/modules/applicants/cubits/applicant_curriculum_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
+import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
+import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 
 /// Listens to a stream and notifies GoRouter when auth state changes.
 class GoRouterCombinedRefreshStream extends ChangeNotifier {
@@ -95,56 +101,140 @@ class AppRouter {
           builder: (context, state) {
             final uid =
                 context.read<CandidateAuthCubit>().state.candidate?.uid ?? '';
-            return CandidateDashboardScreen(uid: uid, initialIndex: 0);
+            final applicationsCubit = MyApplicationsCubit(
+              applicationService: GetIt.I<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..start();
+
+            return BlocProvider(
+              create: (_) => applicationsCubit,
+              child: CandidateDashboardScreen(
+                uid: uid,
+                initialIndex: 0,
+                applicationsCubit: applicationsCubit,
+              ),
+            );
           },
         ),
         GoRoute(
           path: '/candidate/:uid/dashboard',
           name: 'candidate-dashboard',
-          builder: (context, state) => CandidateDashboardScreen(
-            uid: state.pathParameters['uid'] ?? '',
-            initialIndex: 0,
-          ),
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final applicationsCubit = MyApplicationsCubit(
+              applicationService: GetIt.I<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..start();
+
+            return BlocProvider(
+              create: (_) => applicationsCubit,
+              child: CandidateDashboardScreen(
+                uid: uid,
+                initialIndex: 0,
+                applicationsCubit: applicationsCubit,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: '/candidate/:uid/applications',
           name: 'candidate-applications',
-          builder: (context, state) => CandidateDashboardScreen(
-            uid: state.pathParameters['uid'] ?? '',
-            initialIndex: 1,
-          ),
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final applicationsCubit = MyApplicationsCubit(
+              applicationService: GetIt.I<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..start();
+
+            return BlocProvider(
+              create: (_) => applicationsCubit,
+              child: CandidateDashboardScreen(
+                uid: uid,
+                initialIndex: 1,
+                applicationsCubit: applicationsCubit,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: '/candidate/:uid/interviews',
           name: 'candidate-interviews',
-          builder: (context, state) => CandidateDashboardScreen(
-            uid: state.pathParameters['uid'] ?? '',
-            initialIndex: 2,
-          ),
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final applicationsCubit = MyApplicationsCubit(
+              applicationService: GetIt.I<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..start();
+
+            return BlocProvider(
+              create: (_) => applicationsCubit,
+              child: CandidateDashboardScreen(
+                uid: uid,
+                initialIndex: 2,
+                applicationsCubit: applicationsCubit,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: '/candidate/:uid/cv',
           name: 'candidate-cv',
-          builder: (context, state) => CandidateDashboardScreen(
-            uid: state.pathParameters['uid'] ?? '',
-            initialIndex: 3,
-          ),
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final applicationsCubit = MyApplicationsCubit(
+              applicationService: GetIt.I<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..start();
+
+            return BlocProvider(
+              create: (_) => applicationsCubit,
+              child: CandidateDashboardScreen(
+                uid: uid,
+                initialIndex: 3,
+                applicationsCubit: applicationsCubit,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: '/candidate/:uid/cover-letter',
           name: 'candidate-cover-letter',
-          builder: (context, state) => CandidateDashboardScreen(
-            uid: state.pathParameters['uid'] ?? '',
-            initialIndex: 4,
-          ),
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final applicationsCubit = MyApplicationsCubit(
+              applicationService: GetIt.I<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..start();
+
+            return BlocProvider(
+              create: (_) => applicationsCubit,
+              child: CandidateDashboardScreen(
+                uid: uid,
+                initialIndex: 4,
+                applicationsCubit: applicationsCubit,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: '/candidate/:uid/video-cv',
           name: 'candidate-video-cv',
-          builder: (context, state) => CandidateDashboardScreen(
-            uid: state.pathParameters['uid'] ?? '',
-            initialIndex: 5,
-          ),
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final applicationsCubit = MyApplicationsCubit(
+              applicationService: GetIt.I<ApplicationService>(),
+              candidateAuthCubit: context.read<CandidateAuthCubit>(),
+            )..start();
+
+            return BlocProvider(
+              create: (_) => applicationsCubit,
+              child: CandidateDashboardScreen(
+                uid: uid,
+                initialIndex: 5,
+                applicationsCubit: applicationsCubit,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: '/DashboardCompany',
@@ -161,7 +251,7 @@ class AppRouter {
               ),
               BlocProvider(
                 create: (context) =>
-                    OfferApplicantsCubit(context.read<ApplicantsRepository>()),
+                    OfferApplicantsCubit(GetIt.I<ApplicantsRepository>()),
               ),
             ],
             child: const CompanyDashboardScreen(),
@@ -172,15 +262,29 @@ class AppRouter {
           name: 'company-profile',
           builder: (context, state) => const CompanyProfileScreen(),
         ),
+
+        // ... (existing imports)
         GoRoute(
           path: '/company/offers/:offerId/applicants/:uid/cv',
           name: 'company-applicant-cv',
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
             final offerId = state.pathParameters['offerId'] ?? '';
-            return ApplicantCurriculumScreen(
-              candidateUid: uid,
-              offerId: offerId,
+
+            final cubit = ApplicantCurriculumCubit(
+              profileRepository: GetIt.I<ProfileRepository>(),
+              curriculumRepository: GetIt.I<CurriculumRepository>(),
+              jobOfferRepository: GetIt.I<JobOfferRepository>(),
+              aiRepository: GetIt.I<AiRepository>(),
+            )..start(candidateUid: uid, offerId: offerId);
+
+            return BlocProvider(
+              create: (_) => cubit,
+              child: ApplicantCurriculumScreen(
+                cubit: cubit,
+                candidateUid: uid,
+                offerId: offerId,
+              ),
             );
           },
         ),
