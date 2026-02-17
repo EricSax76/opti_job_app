@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class CallToActionSection extends StatelessWidget {
-  const CallToActionSection({super.key});
+  const CallToActionSection({
+    super.key,
+    required this.onCompanyRegister,
+    required this.onCandidateRegister,
+    required this.onSeeOffers,
+  });
+
+  final VoidCallback onCompanyRegister;
+  final VoidCallback onCandidateRegister;
+  final VoidCallback onSeeOffers;
+
   static final ButtonStyle _filledButtonStyle = FilledButton.styleFrom(
     backgroundColor: uiInk,
     foregroundColor: Colors.white,
@@ -42,17 +51,17 @@ class CallToActionSection extends StatelessWidget {
             children: [
               FilledButton(
                 style: _filledButtonStyle,
-                onPressed: () => context.go('/companyregister'),
+                onPressed: onCompanyRegister,
                 child: Text(l10n.ctaCompanyRegister),
               ),
               OutlinedButton(
                 style: _outlinedButtonStyle,
-                onPressed: () => context.go('/candidateregister'),
+                onPressed: onCandidateRegister,
                 child: Text(l10n.ctaCandidateRegister),
               ),
               TextButton(
                 style: _textButtonStyle,
-                onPressed: () => context.go('/job-offer'),
+                onPressed: onSeeOffers,
                 child: Text(l10n.ctaOffers),
               ),
             ],

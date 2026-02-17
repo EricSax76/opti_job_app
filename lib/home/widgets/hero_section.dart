@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class HeroSection extends StatelessWidget {
-  const HeroSection({super.key, required this.onSeeOffers});
+  const HeroSection({
+    super.key,
+    required this.onCandidateLogin,
+    required this.onCompanyLogin,
+    required this.onSeeOffers,
+  });
 
+  final VoidCallback onCandidateLogin;
+  final VoidCallback onCompanyLogin;
   final VoidCallback onSeeOffers;
   static final ButtonStyle _filledButtonStyle = FilledButton.styleFrom(
     backgroundColor: uiInk,
@@ -51,12 +57,12 @@ class HeroSection extends StatelessWidget {
             children: [
               FilledButton(
                 style: _filledButtonStyle,
-                onPressed: () => context.go('/CandidateLogin'),
+                onPressed: onCandidateLogin,
                 child: Text(l10n.heroCandidateCta),
               ),
               OutlinedButton(
                 style: _outlinedButtonStyle,
-                onPressed: () => context.go('/CompanyLogin'),
+                onPressed: onCompanyLogin,
                 child: Text(l10n.heroCompanyCta),
               ),
               TextButton(

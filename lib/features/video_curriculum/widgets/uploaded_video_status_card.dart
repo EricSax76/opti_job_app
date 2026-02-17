@@ -1,17 +1,31 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:opti_job_app/features/video_curriculum/widgets/inline_video_preview.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/video_curriculum_playback_helpers.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 
-class UploadedVideoStatusCard extends StatelessWidget {
-  const UploadedVideoStatusCard({super.key});
+class UploadedVideoStatusCardContainer extends StatelessWidget {
+  const UploadedVideoStatusCardContainer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final candidate = context.watch<ProfileCubit>().state.candidate;
-    final video = candidate?.videoCurriculum;
+    final uploadedVideo = context.select(
+      (ProfileCubit cubit) => cubit.state.candidate?.videoCurriculum,
+    );
+    return UploadedVideoStatusCard(video: uploadedVideo);
+  }
+}
+
+class UploadedVideoStatusCard extends StatelessWidget {
+  const UploadedVideoStatusCard({super.key, required this.video});
+
+  final CandidateVideoCurriculum? video;
+
+  @override
+  Widget build(BuildContext context) {
     final storagePath = video?.storagePath.trim() ?? '';
     final hasUploaded = storagePath.isNotEmpty;
 
@@ -82,7 +96,7 @@ class UploadedVideoStatusCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Tamaño: ${formatBytes(video.sizeBytes)}'),
+                Text('Tamaño: ${formatBytes(video!.sizeBytes)}'),
                 if (snapshot.connectionState == ConnectionState.waiting)
                   const Padding(
                     padding: EdgeInsets.only(top: 12),

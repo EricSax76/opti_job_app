@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:opti_job_app/features/video_curriculum/bloc/video_curriculum_bloc.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/inline_video_preview.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/video_curriculum_playback_helpers.dart';
 
-class RecordedVideoStatusCard extends StatelessWidget {
-  const RecordedVideoStatusCard({super.key});
+class RecordedVideoStatusCardContainer extends StatelessWidget {
+  const RecordedVideoStatusCardContainer({super.key});
 
   @override
   Widget build(BuildContext context) {
     final recordedPath = context.select(
       (VideoCurriculumBloc bloc) => bloc.state.recordedVideoPath,
     );
+    return RecordedVideoStatusCard(recordedPath: recordedPath);
+  }
+}
 
+class RecordedVideoStatusCard extends StatelessWidget {
+  const RecordedVideoStatusCard({super.key, required this.recordedPath});
+
+  final String? recordedPath;
+
+  @override
+  Widget build(BuildContext context) {
     final safePath = recordedPath ?? '';
     final hasRecorded = safePath.trim().isNotEmpty;
     final fileName = hasRecorded ? safePath.split('/').last : null;
