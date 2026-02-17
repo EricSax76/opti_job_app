@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class CompanyAvatarPicker extends StatelessWidget {
   const CompanyAvatarPicker({
@@ -35,15 +36,11 @@ class CompanyAvatarPicker extends StatelessWidget {
       child: Stack(
         children: [
           CircleAvatar(
-            radius: 44,
+            radius: uiSpacing48 - uiSpacing4,
             backgroundColor: surfaceContainer,
             backgroundImage: avatarImage,
             child: avatarImage == null
-                ? Icon(
-                    Icons.business_outlined,
-                    size: 40,
-                    color: muted,
-                  )
+                ? Icon(Icons.business_outlined, size: 40, color: muted)
                 : null,
           ),
           Positioned(
@@ -51,13 +48,13 @@ class CompanyAvatarPicker extends StatelessWidget {
             right: 0,
             child: InkWell(
               onTap: onPickAvatar,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(uiSpacing16),
               child: CircleAvatar(
-                radius: 16,
+                radius: uiSpacing16,
                 backgroundColor: colorScheme.primary,
                 child: Icon(
                   Icons.camera_alt,
-                  size: 16,
+                  size: uiSpacing16,
                   color: colorScheme.onPrimary,
                 ),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 
 enum CompanyAccountAction { profile, logout }
@@ -49,9 +50,9 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
         ),
       ],
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: uiSpacing12),
         child: CircleAvatar(
-          radius: 16,
+          radius: uiSpacing16,
           backgroundColor: colorScheme.surface,
           backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
               ? NetworkImage(avatarUrl)
@@ -59,7 +60,7 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
           child: (avatarUrl == null || avatarUrl.isEmpty)
               ? Icon(
                   Icons.business_outlined,
-                  size: 18,
+                  size: uiSpacing16 + 2,
                   color: colorScheme.onSurfaceVariant,
                 )
               : null,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:opti_job_app/core/shell/core_shell.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_footer.dart';
-import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 import 'package:opti_job_app/home/widgets/landing_content.dart';
 
 class LandingScreen extends StatelessWidget {
@@ -10,8 +10,8 @@ class LandingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppNavBar(),
+    return CoreShell(
+      variant: CoreShellVariant.public,
       backgroundColor: uiBackground,
       body: LandingContent(
         onCandidateLogin: () => context.go('/CandidateLogin'),

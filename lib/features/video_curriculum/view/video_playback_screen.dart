@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 
 import 'package:opti_job_app/features/video_curriculum/view/video_playback_controller.dart';
 
+/// shell-ex-002 (Fase 6.5): immersive playback stays outside CoreShell.
 class VideoPlaybackScreen extends StatefulWidget {
   const VideoPlaybackScreen({
     super.key,

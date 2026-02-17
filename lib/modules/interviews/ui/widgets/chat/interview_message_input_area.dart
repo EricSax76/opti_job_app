@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class InterviewMessageInputArea extends StatelessWidget {
   const InterviewMessageInputArea({
@@ -16,22 +17,40 @@ class InterviewMessageInputArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(uiSpacing8),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
+          border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
         ),
         child: Row(
           children: [
             Expanded(
               child: TextField(
                 controller: controller,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Escribe un mensaje...',
-                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: uiSpacing12,
+                    vertical: uiSpacing8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(uiFieldRadius),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(uiFieldRadius),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(uiFieldRadius),
+                    borderSide: BorderSide(color: colorScheme.primary),
+                  ),
                 ),
                 onSubmitted: (_) => onSend(),
               ),

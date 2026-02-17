@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/candidates/cubits/job_offer_filter_cubit.dart';
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_options.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_components.dart';
+import 'package:opti_job_app/modules/candidates/ui/models/job_offer_filter_options.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_field_decorators.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_field_widgets.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_shell_widgets.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_models.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_tokens.dart';
 
@@ -25,17 +28,13 @@ class JobOfferFilterSidebar extends StatelessWidget {
         initialFilters: currentFilters,
         onFiltersChanged: onFiltersChanged,
       ),
-      child: _JobOfferFilterSidebarContent(
-        currentFilters: currentFilters,
-      ),
+      child: _JobOfferFilterSidebarContent(currentFilters: currentFilters),
     );
   }
 }
 
 class _JobOfferFilterSidebarContent extends StatelessWidget {
-  const _JobOfferFilterSidebarContent({
-    required this.currentFilters,
-  });
+  const _JobOfferFilterSidebarContent({required this.currentFilters});
 
   final JobOfferFilters currentFilters;
 
@@ -48,12 +47,8 @@ class _JobOfferFilterSidebarContent extends StatelessWidget {
     return BlocListener<JobOfferFilterCubit, JobOfferFilterState>(
       listenWhen: (previous, current) => previous.filters != current.filters,
       listener: (context, state) {
-        if (state.filters != currentFilters) {
-           // We could sync back here if needed, but the parent updates the widget
-           // and the Cubit has a sync method.
-           // However, standard flow is: Parent passes filters -> Cubit inits.
-           // If parent changes filters -> Widget rebuilds -> we need to sync Cubit.
-        }
+        // Parent owns source of truth. Cubit synchronization is handled in didUpdateWidget.
+        if (state.filters == currentFilters) return;
       },
       child: _SidebarBody(
         palette: palette,
@@ -84,9 +79,9 @@ class _SidebarBodyState extends State<_SidebarBody> {
   void didUpdateWidget(covariant _SidebarBody oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.currentFilters != oldWidget.currentFilters) {
-      context
-          .read<JobOfferFilterCubit>()
-          .syncExternalFilters(widget.currentFilters);
+      context.read<JobOfferFilterCubit>().syncExternalFilters(
+        widget.currentFilters,
+      );
     }
   }
 
@@ -100,10 +95,15 @@ class _SidebarBodyState extends State<_SidebarBody> {
         return Container(
           width: JobOfferFilterSidebarTokens.sidebarWidth,
           decoration: BoxDecoration(
-            color: widget.palette.surface
-                .withValues(alpha: widget.isDark ? 1.0 : 0.8),
+            color: widget.palette.surface.withValues(
+              alpha: widget.isDark ? 1.0 : 0.8,
+            ),
             border: Border(
-                right: BorderSide(color: widget.palette.border, width: 1)),
+              right: BorderSide(
+                color: widget.palette.border,
+                width: uiSpacing4 / 4,
+              ),
+            ),
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(

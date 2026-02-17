@@ -8,6 +8,8 @@ void openVideoPlayer(
   required String title,
   required bool allowExternalFallback,
 }) {
+  // shell-ex-002 (Fase 6.5): approved exception for immersive video playback.
+  // Source of truth: docs/fase_6_5_registro_excepciones_shell_core.md
   Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => VideoPlaybackScreen(

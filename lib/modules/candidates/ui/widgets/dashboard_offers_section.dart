@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/candidates/logic/dashboard_offers_section_logic.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_offers_grid.dart';
@@ -28,6 +29,14 @@ class DashboardOffersSection extends StatelessWidget {
           state: state,
           appliedOfferIds: appliedOfferIds,
         );
+        const allowedStatuses = {'initial', 'loading', 'failure', 'success'};
+        if (!allowedStatuses.contains(viewModel.status)) {
+          return const StateMessage(
+            title: 'Estado de ofertas no soportado',
+            message:
+                'No se pudo renderizar el tablero de ofertas. Intenta refrescar.',
+          );
+        }
 
         return DashboardOffersGrid(
           status: viewModel.status,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/features/cover_letter/view/models/cover_letter_view_model.dart';
 
 class CoverLetterContent extends StatelessWidget {
@@ -18,7 +19,7 @@ class CoverLetterContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(uiSpacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -26,7 +27,7 @@ class CoverLetterContent extends StatelessWidget {
             'Carta de presentación',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: uiSpacing8),
           TextField(
             controller: controller,
             maxLines: 8,
@@ -36,7 +37,7 @@ class CoverLetterContent extends StatelessWidget {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: uiSpacing16),
           ElevatedButton.icon(
             onPressed: viewModel.isImproving ? null : onImprove,
             icon: viewModel.isImproving
@@ -54,17 +55,17 @@ class CoverLetterContent extends StatelessWidget {
               backgroundColor: Theme.of(context).colorScheme.secondary,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: uiSpacing24),
           ElevatedButton(
             onPressed: onSave,
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: uiSpacing16),
             ),
             child: const Text('Guardar carta'),
           ),
           if (viewModel.isLoading)
             const Padding(
-              padding: EdgeInsets.only(top: 12),
+              padding: EdgeInsets.only(top: uiSpacing12),
               child: LinearProgressIndicator(minHeight: 2),
             ),
         ],

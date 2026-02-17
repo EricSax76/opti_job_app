@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
 
 class MatchResultDialog extends StatelessWidget {
@@ -18,7 +19,7 @@ class MatchResultDialog extends StatelessWidget {
           children: [
             if (result.summary != null) ...[
               Text(result.summary!),
-              const SizedBox(height: 12),
+              const SizedBox(height: uiSpacing12),
             ],
             if (result.reasons.isNotEmpty) ...[
               Text(
@@ -27,16 +28,16 @@ class MatchResultDialog extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: uiSpacing8),
               for (final reason in result.reasons)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: uiSpacing8),
                   child: _BulletText(
                     icon: Icons.check_circle_outline,
                     text: reason,
                   ),
                 ),
-              const SizedBox(height: 8),
+              const SizedBox(height: uiSpacing8),
             ],
             if (result.recommendations.isNotEmpty) ...[
               Text(
@@ -45,10 +46,10 @@ class MatchResultDialog extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: uiSpacing8),
               for (final recommendation in result.recommendations)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: uiSpacing8),
                   child: _BulletText(
                     icon: Icons.tips_and_updates_outlined,
                     text: recommendation,
@@ -83,8 +84,8 @@ class _BulletText extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18),
-        const SizedBox(width: 8),
+        Icon(icon, size: uiSpacing16 + 2),
+        const SizedBox(width: uiSpacing8),
         Expanded(child: Text(text)),
       ],
     );

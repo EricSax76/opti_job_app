@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_nav_bar.dart';
 
@@ -14,6 +15,14 @@ class CompanyDashboardAuthenticatedBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (tabPages.isEmpty) {
+      return const StateMessage(
+        title: 'Sin contenido de dashboard',
+        message:
+            'No hay secciones disponibles para esta cuenta en este momento.',
+      );
+    }
+
     return Column(
       children: [
         CompanyDashboardNavBar(controller: tabController),

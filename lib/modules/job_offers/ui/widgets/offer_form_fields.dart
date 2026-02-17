@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 
@@ -22,7 +23,7 @@ class OfferFormFields extends StatelessWidget {
             return null;
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         TextFormField(
           controller: controllers.description,
           maxLines: 4,
@@ -34,7 +35,7 @@ class OfferFormFields extends StatelessWidget {
             return null;
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         TextFormField(
           controller: controllers.location,
           decoration: _inputDecoration(labelText: 'Ubicación'),
@@ -45,12 +46,12 @@ class OfferFormFields extends StatelessWidget {
             return null;
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         TextFormField(
           controller: controllers.jobType,
           decoration: _inputDecoration(labelText: 'Tipología'),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         Row(
           children: [
             Expanded(
@@ -65,7 +66,7 @@ class OfferFormFields extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: uiSpacing12),
             Expanded(
               child: TextFormField(
                 controller: controllers.salaryMax,
@@ -81,12 +82,12 @@ class OfferFormFields extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         TextFormField(
           controller: controllers.education,
           decoration: _inputDecoration(labelText: 'Educación requerida'),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         TextFormField(
           controller: controllers.keyIndicators,
           maxLines: 2,

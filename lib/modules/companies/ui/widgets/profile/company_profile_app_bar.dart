@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/shell/core_shell.dart';
 
 class CompanyProfileAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   const CompanyProfileAppBar({
     super.key,
-    required this.borderColor,
     required this.showActions,
     required this.showLogoutAction,
     this.onLogout,
     this.accountMenu,
   });
 
-  final Color borderColor;
   final bool showActions;
   final bool showLogoutAction;
   final VoidCallback? onLogout;
@@ -31,12 +30,9 @@ class CompanyProfileAppBar extends StatelessWidget
           ]
         : null;
 
-    return AppBar(
-      title: const Text('Perfil'),
-      centerTitle: true,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      shape: Border(bottom: BorderSide(color: borderColor, width: 1)),
+    return CoreShellAppBar(
+      variant: CoreShellVariant.company,
+      title: 'Perfil',
       actions: actions,
     );
   }

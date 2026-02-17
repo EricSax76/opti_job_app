@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/applicants/ui/widgets/dashboard_candidates_card.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard_home_header.dart';
@@ -15,12 +16,17 @@ class CompanyHomeDashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+      padding: const EdgeInsets.fromLTRB(
+        uiSpacing24,
+        uiSpacing24,
+        uiSpacing24,
+        uiSpacing32,
+      ),
       children: [
         const DashboardHomeHeader(),
-        const SizedBox(height: 16),
+        const SizedBox(height: uiSpacing16),
         DashboardOffersCard(onLoadCandidates: onLoadCandidates),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         DashboardCandidatesCard(onLoadCandidates: onLoadCandidates),
       ],
     );

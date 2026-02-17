@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_field_decorators.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_models.dart';
@@ -130,7 +131,7 @@ class JobOfferSalaryRangeFilter extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: uiSpacing8),
         RangeSlider(
           values: RangeValues(minSalary, maxSalary),
           min: JobOfferFilterSidebarTokens.minSalary,

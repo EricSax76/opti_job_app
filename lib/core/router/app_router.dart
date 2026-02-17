@@ -39,7 +39,6 @@ import 'package:opti_job_app/modules/applicants/repositories/applicants_reposito
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/interviews/ui/pages/interview_chat_page.dart';
 
-
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/applicants/cubits/applicant_curriculum_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
@@ -561,6 +560,8 @@ class AppRouter {
           name: 'onboarding',
           builder: (context, state) => const OnboardingScreen(),
         ),
+        // shell-ex-001 (Fase 6.5): approved exception for immersive interview chat.
+        // Source of truth: docs/fase_6_5_registro_excepciones_shell_core.md
         GoRoute(
           path: '/interviews/:id',
           name: 'interview-chat',

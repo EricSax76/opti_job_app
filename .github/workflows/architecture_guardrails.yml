@@ -20,3 +20,9 @@ jobs:
 
       - name: Check Firebase DI policy
         run: bash tool/check_firebase_di_policy.sh
+
+      - name: Check CoreShell policy
+        run: bash tool/check_core_shell_policy.sh
+
+      - name: Check Core widget import policy
+        run: bash tool/check_core_widget_policy.sh

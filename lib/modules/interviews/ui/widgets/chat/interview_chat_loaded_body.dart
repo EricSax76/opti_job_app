@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_meeting_banner.dart';
@@ -21,8 +22,10 @@ class InterviewChatLoadedBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (state.interview.meetingLink case final meetingLink?)
+        if (state.interview.meetingLink case final meetingLink?) ...[
           InterviewMeetingBanner(meetingLink: meetingLink),
+          const SizedBox(height: uiSpacing8),
+        ],
         Expanded(
           child: InterviewMessagesList(
             messages: state.messages,

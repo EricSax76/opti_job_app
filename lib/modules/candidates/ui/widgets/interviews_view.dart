@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/interview_list_tile.dart';
 
@@ -17,80 +19,46 @@ class _InterviewsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocBuilder<InterviewListCubit, InterviewListState>(
-        builder: (context, state) {
-          if (state is InterviewListLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is InterviewListError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text('Error: ${state.message}'),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () =>
-                        context.read<InterviewListCubit>().refresh(),
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            );
-          }
-          if (state is InterviewListEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No tienes entrevistas activas',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Cuando una empresa inicie una entrevista,\naparecerá aquí.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-          if (state is InterviewListLoaded) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                await context.read<InterviewListCubit>().refresh();
+    return BlocBuilder<InterviewListCubit, InterviewListState>(
+      builder: (context, state) {
+        if (state is InterviewListLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is InterviewListError) {
+          return StateMessage(
+            title: 'No se pudieron cargar tus entrevistas',
+            message: state.message,
+            actionLabel: 'Reintentar',
+            onAction: () => context.read<InterviewListCubit>().refresh(),
+          );
+        }
+        if (state is InterviewListEmpty) {
+          return const StateMessage(
+            title: 'No tienes entrevistas activas',
+            message:
+                'Cuando una empresa inicie una entrevista, aparecera aqui.',
+          );
+        }
+        if (state is InterviewListLoaded) {
+          return RefreshIndicator(
+            onRefresh: () async {
+              await context.read<InterviewListCubit>().refresh();
+            },
+            child: ListView.separated(
+              padding: const EdgeInsets.all(uiSpacing16),
+              itemCount: state.interviews.length,
+              separatorBuilder: (_, _) => const SizedBox(height: uiSpacing12),
+              itemBuilder: (context, index) {
+                return InterviewListTile(
+                  interview: state.interviews[index],
+                  isCompany: false,
+                );
               },
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: state.interviews.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  return InterviewListTile(
-                    interview: state.interviews[index],
-                    isCompany: false,
-                  );
-                },
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

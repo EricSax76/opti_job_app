@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/modern_job_offer_card.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_offer_card_base.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
 
@@ -21,7 +21,8 @@ class DashboardOffersGrid extends StatelessWidget {
     required this.onOfferTap,
   });
 
-  final String status; // Using String to avoid direct dependency on JobOffersStatus enum if possible, or just import it. Let's import it for type safety if it's the pattern. Actually, let's keep it pure.
+  final String
+  status; // Using String to avoid direct dependency on JobOffersStatus enum if possible, or just import it. Let's import it for type safety if it's the pattern. Actually, let's keep it pure.
   final List<JobOffer> offers;
   final Map<int, dynamic> companiesById; // Keys are int companyId
   final bool showTwoColumns;
@@ -38,10 +39,10 @@ class DashboardOffersGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We'll use strings for status to keep it decoupled from the Cubit's enum if desired, 
+    // We'll use strings for status to keep it decoupled from the Cubit's enum if desired,
     // but typically we can import the enum if it's a domain model.
     // For now, let's assume the caller handles the status mapping or we use the strings.
-    
+
     if (status == 'loading' || status == 'initial') {
       return const Center(child: CircularProgressIndicator());
     }
@@ -81,12 +82,8 @@ class DashboardOffersGrid extends StatelessWidget {
               ),
               itemCount: offers.length,
               padding: const EdgeInsets.symmetric(vertical: 8),
-              itemBuilder: (context, index) => _buildOfferCard(
-                context,
-                offers[index],
-                index,
-                isGrid: true,
-              ),
+              itemBuilder: (context, index) =>
+                  _buildOfferCard(context, offers[index], index, isGrid: true),
             ),
           );
           if (!isLoadingMore) return grid;
@@ -123,16 +120,23 @@ class DashboardOffersGrid extends StatelessWidget {
     int index, {
     required bool isGrid,
   }) {
-    final company = offer.companyId == null ? null : companiesById[offer.companyId!];
-    
-    // We can't easily avoid the company dynamic type here without a specific model, 
+    final company = offer.companyId == null
+        ? null
+        : companiesById[offer.companyId!];
+
+    // We can't easily avoid the company dynamic type here without a specific model,
     // but we can assume it has the name and avatarUrl properties or handle them.
     // In the original code, companiesById was Map<String, Company>.
-    
-    final companyName = (offer.companyName ?? (company != null ? (company as dynamic).name : null)) ?? 'Empresa no especificada';
-    final avatarUrl = offer.companyAvatarUrl ?? (company != null ? (company as dynamic).avatarUrl : null);
 
-    return ModernJobOfferCard(
+    final companyName =
+        (offer.companyName ??
+            (company != null ? (company as dynamic).name : null)) ??
+        'Empresa no especificada';
+    final avatarUrl =
+        offer.companyAvatarUrl ??
+        (company != null ? (company as dynamic).avatarUrl : null);
+
+    return CandidateOfferCardBase(
       title: offer.title,
       company: companyName,
       description: offer.description,
@@ -142,6 +146,7 @@ class DashboardOffersGrid extends StatelessWidget {
       modality: offer.jobType ?? 'Modalidad no especificada',
       tags: _extractTags(offer),
       heroTag: '${isGrid ? 'offers-grid' : 'offers-list'}-$index-${offer.id}',
+      heroTagPrefix: 'job_offer_avatar',
       onTap: () => onOfferTap(offer),
     );
   }
@@ -162,10 +167,8 @@ class DashboardOffersGrid extends StatelessWidget {
     if (notification.metrics.axis != Axis.vertical) return false;
     final distanceToBottom =
         notification.metrics.maxScrollExtent - notification.metrics.pixels;
-    
-    if (distanceToBottom <= _paginationThreshold &&
-        hasMore &&
-        !isLoadingMore) {
+
+    if (distanceToBottom <= _paginationThreshold && hasMore && !isLoadingMore) {
       onLoadMore();
     }
     return false;

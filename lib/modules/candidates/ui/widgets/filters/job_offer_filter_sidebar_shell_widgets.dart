@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_models.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_tokens.dart';
@@ -17,7 +18,7 @@ class JobOfferFilterSidebarHeader extends StatelessWidget {
           color: palette.accent,
           size: JobOfferFilterSidebarTokens.headerIconSize,
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: uiSpacing8),
         Text(
           'Filtros',
           style: TextStyle(
@@ -57,7 +58,7 @@ class JobOfferFilterSection extends StatelessWidget {
               size: JobOfferFilterSidebarTokens.sectionIconSize,
               color: palette.ink,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: uiSpacing8 - 2),
             Text(
               title,
               style: TextStyle(
@@ -68,7 +69,7 @@ class JobOfferFilterSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: uiSpacing8),
         child,
       ],
     );
@@ -91,13 +92,15 @@ class JobOfferClearFiltersButton extends StatelessWidget {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: const Icon(Icons.clear_all, size: 18),
+        icon: const Icon(Icons.clear_all, size: uiSpacing16 + 2),
         label: const Text('Limpiar filtros'),
         style: OutlinedButton.styleFrom(
           foregroundColor: palette.ink,
           side: BorderSide(color: palette.border),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(vertical: uiSpacing12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(uiSpacing8),
+          ),
         ),
       ),
     );

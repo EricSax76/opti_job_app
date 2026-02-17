@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/shell/core_shell.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
-import 'package:opti_job_app/core/widgets/app_nav_bar.dart';
 import 'package:opti_job_app/modules/job_offers/ui/containers/job_offer_detail_container.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,13 +24,11 @@ class JobOfferDetailScreen extends StatelessWidget {
 
     return BlocProvider.value(
       value: cubit,
-      child: Scaffold(
+      child: CoreShell(
+        variant: CoreShellVariant.public,
         backgroundColor: background,
-        appBar: const AppNavBar(),
-        body: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-          child: const JobOfferDetailContainer(),
-        ),
+        bodyPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+        body: const JobOfferDetailContainer(),
       ),
     );
   }

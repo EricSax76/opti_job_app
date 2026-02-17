@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/shell/core_shell.dart';
 
 class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
   const AppNavBar({super.key});
@@ -8,12 +9,9 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      centerTitle: true,
-      title: const Text(
-        'OPTIJOB',
-        style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
-      ),
+    return const CoreShellAppBar(
+      variant: CoreShellVariant.public,
+      title: 'OPTIJOB',
     );
   }
 }

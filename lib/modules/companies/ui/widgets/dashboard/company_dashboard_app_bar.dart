@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/shell/core_shell.dart';
 
 class CompanyDashboardAppBar extends StatelessWidget
     implements PreferredSizeWidget {
@@ -28,13 +29,10 @@ class CompanyDashboardAppBar extends StatelessWidget
           ]
         : null;
 
-    return AppBar(
-      title: const Text(
-        'OPTIJOB',
-        style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
-      ),
+    return CoreShellAppBar(
+      variant: CoreShellVariant.company,
+      title: 'OPTIJOB',
       automaticallyImplyLeading: false,
-      centerTitle: true,
       actions: actions,
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_message_bubble.dart';
 
@@ -17,12 +19,15 @@ class InterviewMessagesList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (messages.isEmpty) {
-      return const Center(child: Text('No hay mensajes aún.'));
+      return const StateMessage(
+        title: 'Sin mensajes',
+        message: 'Todavia no hay mensajes en esta entrevista.',
+      );
     }
 
     return ListView.builder(
       reverse: true,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(uiSpacing16),
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];

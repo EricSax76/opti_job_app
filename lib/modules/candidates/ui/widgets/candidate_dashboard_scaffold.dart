@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/config/feature_flags.dart';
+import 'package:opti_job_app/core/shell/core_shell.dart';
 import 'package:opti_job_app/modules/candidates/logic/candidate_dashboard_scaffold_controller.dart';
 import 'package:opti_job_app/modules/candidates/logic/candidate_dashboard_screen_logic.dart';
 import 'package:opti_job_app/modules/candidates/ui/models/candidate_dashboard_screen_view_model.dart';
@@ -35,7 +36,6 @@ class CandidateDashboardScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final selectedIndex = viewModel.selectedIndex;
 
     final content = _CandidateDashboardContent(
@@ -47,8 +47,9 @@ class CandidateDashboardScaffold extends StatelessWidget {
           onSelectIndex(CandidateDashboardScreenLogic.interviewsIndex),
     );
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+    return CoreShell(
+      variant: CoreShellVariant.candidate,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CandidateDashboardAppBar(
         tabController: tabController,
         avatarUrl: viewModel.avatarUrl,
@@ -68,17 +69,13 @@ class CandidateDashboardScaffold extends StatelessWidget {
       bottomNavigationBar: viewModel.showBottomNavigationBar
           ? _buildBottomBar(viewModel)
           : null,
-      body: viewModel.showNavigationSidebar
-          ? Row(
-              children: [
-                CandidateDashboardSidebar(
-                  selectedIndex: selectedIndex,
-                  onSelected: onSelectIndex,
-                ),
-                Expanded(child: content),
-              ],
+      sidebar: viewModel.showNavigationSidebar
+          ? CandidateDashboardSidebar(
+              selectedIndex: selectedIndex,
+              onSelected: onSelectIndex,
             )
-          : content,
+          : null,
+      body: content,
     );
   }
 

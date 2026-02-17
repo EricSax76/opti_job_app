@@ -6,7 +6,7 @@ import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/applications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/applications/ui/widgets/application_status_badge.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/modern_application_card.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_offer_card_base.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
 
 class GenericApplicationsView extends StatelessWidget {
@@ -49,8 +49,7 @@ class GenericApplicationsView extends StatelessWidget {
         }
 
         return RefreshIndicator(
-          onRefresh: () =>
-              context.read<MyApplicationsCubit>().refresh(),
+          onRefresh: () => context.read<MyApplicationsCubit>().refresh(),
           child: ApplicationsList(
             applications: applications,
             heroTagPrefix: heroTagPrefix,
@@ -116,7 +115,9 @@ class ApplicationsList extends StatelessWidget {
         ((fallbackTitle != null && fallbackTitle.trim().isNotEmpty)
             ? fallbackTitle
             : 'Oferta');
-    final statusChip = ApplicationStatusBadge.fromString(entry.application.status);
+    final statusChip = ApplicationStatusBadge.fromString(
+      entry.application.status,
+    );
     final company = offer?.companyName ?? 'Empresa no especificada';
     final salary = offer?.formattedSalary;
     final location = offer?.location;
@@ -126,7 +127,7 @@ class ApplicationsList extends StatelessWidget {
 
     final heroId = entry.application.id ?? entry.application.jobOfferId;
 
-    return ModernApplicationCard(
+    return CandidateOfferCardBase(
       title: title,
       company: company,
       description: offer?.description,
@@ -134,8 +135,9 @@ class ApplicationsList extends StatelessWidget {
       salary: salary,
       location: location,
       modality: modality,
-      statusBadge: statusChip,
+      topRightBadge: statusChip,
       heroTag: '$heroTagPrefix-$index-$heroId',
+      heroTagPrefix: 'application_avatar',
       onTap: offer == null
           ? null
           : () => context.push('/job-offer/${offer.id}'),

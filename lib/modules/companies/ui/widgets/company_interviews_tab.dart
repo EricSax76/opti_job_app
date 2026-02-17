@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/companies/logic/company_interviews_tab_controller.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/interview_list_tile.dart';
@@ -14,7 +16,6 @@ class CompanyInterviewsTab extends StatelessWidget {
     );
     if (companyUid == null) return const SizedBox.shrink();
 
-
     return const _CompanyInterviewsView();
   }
 }
@@ -24,37 +25,41 @@ class _CompanyInterviewsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocBuilder<InterviewListCubit, InterviewListState>(
-        builder: (context, state) {
-          if (state is InterviewListLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is InterviewListError) {
-            return Center(child: Text('Error: ${state.message}'));
-          }
-          if (state is InterviewListEmpty) {
-            return const Center(child: Text('No hay entrevistas activas.'));
-          }
-          if (state is InterviewListLoaded) {
-            return RefreshIndicator(
-              onRefresh: () => CompanyInterviewsTabController.refresh(context),
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: state.interviews.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  return InterviewListTile(
-                    interview: state.interviews[index],
-                    isCompany: true,
-                  );
-                },
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
+    return BlocBuilder<InterviewListCubit, InterviewListState>(
+      builder: (context, state) {
+        if (state is InterviewListLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is InterviewListError) {
+          return StateMessage(
+            title: 'No se pudieron cargar las entrevistas',
+            message: state.message,
+          );
+        }
+        if (state is InterviewListEmpty) {
+          return const StateMessage(
+            title: 'Sin entrevistas activas',
+            message: 'Cuando recibas respuestas de candidatos apareceran aqui.',
+          );
+        }
+        if (state is InterviewListLoaded) {
+          return RefreshIndicator(
+            onRefresh: () => CompanyInterviewsTabController.refresh(context),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(uiSpacing16),
+              itemCount: state.interviews.length,
+              separatorBuilder: (_, _) => const SizedBox(height: uiSpacing12),
+              itemBuilder: (context, index) {
+                return InterviewListTile(
+                  interview: state.interviews[index],
+                  isCompany: true,
+                );
+              },
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

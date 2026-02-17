@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class InterviewListTileTitle extends StatelessWidget {
   const InterviewListTileTitle({super.key, required this.title});
@@ -7,6 +8,10 @@ class InterviewListTileTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title, style: const TextStyle(fontWeight: FontWeight.w600));
+    final style = Theme.of(context).textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w600,
+      fontSize: uiSpacing12 + 2,
+    );
+    return Text(title, style: style);
   }
 }

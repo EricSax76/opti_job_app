@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/applicants/cubits/company_candidates_cubit.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
@@ -82,7 +83,7 @@ class _CompanyCandidatesContent extends StatelessWidget {
                       text:
                           'Aún no hay candidatos cargados. Pulsa para cargar postulaciones de tus ofertas.',
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: uiSpacing8 + 2),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
@@ -105,7 +106,7 @@ class _CompanyCandidatesContent extends StatelessWidget {
             return SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 if (index.isOdd) {
-                  return const SizedBox(height: 12);
+                  return const SizedBox(height: uiSpacing12);
                 }
 
                 final groupIndex = index ~/ 2;

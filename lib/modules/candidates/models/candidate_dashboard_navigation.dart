@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/shell/core_shell_breakpoints.dart';
 
 class CandidateDashboardNavItem {
   const CandidateDashboardNavItem({
@@ -24,7 +25,7 @@ class CandidateDashboardNavItem {
   final bool showInDrawer;
 }
 
-const candidateDashboardSidebarBreakpoint = 900.0;
+const candidateDashboardSidebarBreakpoint = coreShellNavigationBreakpoint;
 
 const candidateDashboardNavItems = <CandidateDashboardNavItem>[
   CandidateDashboardNavItem(
@@ -80,21 +81,21 @@ const candidateDashboardNavItems = <CandidateDashboardNavItem>[
 
 final List<CandidateDashboardNavItem> candidateDashboardTabItems =
     List.unmodifiable(
-  candidateDashboardNavItems.where((item) => item.showInTabs),
-);
+      candidateDashboardNavItems.where((item) => item.showInTabs),
+    );
 
 final List<CandidateDashboardNavItem> candidateDashboardDrawerItems =
     List.unmodifiable(
-  candidateDashboardNavItems.where((item) => item.showInDrawer),
-);
+      candidateDashboardNavItems.where((item) => item.showInDrawer),
+    );
 
 final List<CandidateDashboardNavItem> candidateDashboardSidebarItems =
     List.unmodifiable(candidateDashboardNavItems);
 
 int get candidateDashboardMaxIndex => candidateDashboardNavItems.fold<int>(
-      0,
-      (maxIndex, item) => item.index > maxIndex ? item.index : maxIndex,
-    );
+  0,
+  (maxIndex, item) => item.index > maxIndex ? item.index : maxIndex,
+);
 
 int candidateDashboardClampIndex(int index) {
   if (index < 0) return 0;

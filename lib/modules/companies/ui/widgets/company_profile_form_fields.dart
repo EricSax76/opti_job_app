@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class CompanyProfileFormFields extends StatelessWidget {
   const CompanyProfileFormFields({
@@ -32,14 +33,12 @@ class CompanyProfileFormFields extends StatelessWidget {
             color: ink,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: uiSpacing12),
         TextFormField(
           controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Nombre',
-          ),
+          decoration: const InputDecoration(labelText: 'Nombre'),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: uiSpacing12),
         TextFormField(
           initialValue: email,
           readOnly: true,
@@ -48,14 +47,14 @@ class CompanyProfileFormFields extends StatelessWidget {
             helperText: 'Este dato no se puede modificar.',
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: uiSpacing20),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: uiSpacing12),
             ),
             onPressed: canSubmit ? onSubmit : null,
             child: isSaving

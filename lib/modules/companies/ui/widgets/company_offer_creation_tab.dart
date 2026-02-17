@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
@@ -38,11 +39,19 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
   @override
   Widget build(BuildContext context) {
     final company = context.watch<CompanyAuthCubit>().state.company;
+    if (company == null) {
+      return const StateMessage(
+        title: 'Acceso requerido',
+        message:
+            'Inicia sesion como empresa para publicar ofertas y usar generacion con IA.',
+      );
+    }
+
     final isGeneratingOffer = context.select(
       (CompanyOfferCreationCubit cubit) => cubit.state.isGeneratingOffer,
     );
     final viewModel = CompanyOfferCreationLogic.buildViewModel(
-      companyName: company?.name,
+      companyName: company.name,
       isGeneratingOffer: isGeneratingOffer,
     );
 

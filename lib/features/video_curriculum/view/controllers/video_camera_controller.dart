@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/video_curriculum/bloc/video_curriculum_bloc.dart';
 import 'package:opti_job_app/features/video_curriculum/logic/video_camera_logic.dart';
-import 'package:opti_job_app/features/video_curriculum/widgets/camera_session_controller.dart';
+import 'package:opti_job_app/features/video_curriculum/view/controllers/camera_session_controller.dart';
 
 class VideoCameraController {
   const VideoCameraController._();

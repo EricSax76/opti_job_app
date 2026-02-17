@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/theme_cubit.dart';
+import 'package:opti_job_app/core/shell/core_shell.dart';
 import 'package:opti_job_app/auth/ui/pages/unauthenticated_company_message.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
@@ -76,7 +77,6 @@ class _CompanyDashboardContent extends StatefulWidget {
 
 class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
     with SingleTickerProviderStateMixin {
- 
   late final TabController _tabController;
   var _initialOffersLoadHandled = false;
 
@@ -122,7 +122,8 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
           },
         ),
       ],
-      child: Scaffold(
+      child: CoreShell(
+        variant: CoreShellVariant.company,
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: CompanyDashboardAppBar(
           showAccountActions: authState.company != null,
@@ -148,7 +149,7 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Oferta publicada con éxito.')),
       );
-     
+
       final companyUid = widget.dashboardCubit.state.loadedCompanyUid;
       if (companyUid != null) {
         context.read<CompanyJobOffersCubit>().start(companyUid);

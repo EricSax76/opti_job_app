@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/features/video_curriculum/view/video_playback_controller.dart';
 import 'package:video_player/video_player.dart';
 
@@ -51,7 +52,7 @@ class _InlineVideoPreviewState extends State<InlineVideoPreview> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(uiSpacing12),
       child: AspectRatio(
         aspectRatio: 16 / 9,
         child: Material(

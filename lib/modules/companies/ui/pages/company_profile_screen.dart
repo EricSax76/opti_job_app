@@ -34,7 +34,6 @@ class _CompanyProfileView extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: CompanyProfileAppBar(
-          borderColor: Theme.of(context).colorScheme.outline,
           showActions: context.watch<CompanyAuthCubit>().state.company != null,
           showLogoutAction: kIsWeb,
           onLogout: () => context.read<CompanyAuthCubit>().logout(),

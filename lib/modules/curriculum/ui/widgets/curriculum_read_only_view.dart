@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/curriculum/logic/curriculum_read_only_logic.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/read_only/curriculum_read_only_sections.dart';
+import 'package:opti_job_app/modules/curriculum/ui/curriculum_read_only_exports.dart';
 
 class CurriculumReadOnlyView extends StatelessWidget {
   const CurriculumReadOnlyView({super.key, required this.curriculum});

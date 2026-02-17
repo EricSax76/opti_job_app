@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/applicants/cubits/applicant_curriculum_cubit.dart';
 import 'package:opti_job_app/modules/applicants/logic/applicant_curriculum_screen_controller.dart';
-import 'package:opti_job_app/modules/applicants/ui/widgets/applicant_curriculum_widgets.dart';
+import 'package:opti_job_app/modules/applicants/ui/applicant_curriculum_exports.dart';
 
 class ApplicantCurriculumScreen extends StatelessWidget {
   const ApplicantCurriculumScreen({

@@ -1,5 +1,5 @@
 import 'package:opti_job_app/features/video_curriculum/view/models/recorded_video_status_view_model.dart';
-import 'package:opti_job_app/features/video_curriculum/widgets/video_curriculum_playback_helpers.dart';
+import 'package:opti_job_app/features/video_curriculum/view/video_curriculum_playback_helpers.dart';
 
 class RecordedVideoStatusLogic {
   const RecordedVideoStatusLogic._();

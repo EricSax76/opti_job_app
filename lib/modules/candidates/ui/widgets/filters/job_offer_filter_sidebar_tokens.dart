@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class JobOfferFilterSidebarTokens {
   const JobOfferFilterSidebarTokens._();
@@ -9,26 +10,26 @@ class JobOfferFilterSidebarTokens {
   static const int salaryDivisions = 100;
 
   static const double headerIconSize = 24;
-  static const double sectionIconSize = 18;
+  static const double sectionIconSize = uiSpacing16 + 2;
 
-  static const double panelPadding = 20;
-  static const double searchToNextSectionSpacing = 24;
-  static const double sectionSpacing = 20;
-  static const double clearButtonTopSpacing = 24;
+  static const double panelPadding = uiSpacing20;
+  static const double searchToNextSectionSpacing = uiSpacing24;
+  static const double sectionSpacing = uiSpacing20;
+  static const double clearButtonTopSpacing = uiSpacing24;
 
-  static const double searchFieldBorderRadius = 12;
-  static const double regularFieldBorderRadius = 8;
-  static const double searchFontSize = 16;
-  static const double regularFontSize = 14;
-  static const double sectionTitleFontSize = 15;
-  static const double headerTitleFontSize = 20;
+  static const double searchFieldBorderRadius = uiSpacing12;
+  static const double regularFieldBorderRadius = uiSpacing8;
+  static const double searchFontSize = uiSpacing16;
+  static const double regularFontSize = uiSpacing12 + 2;
+  static const double sectionTitleFontSize = uiSpacing16 - 1;
+  static const double headerTitleFontSize = uiSpacing20;
 
   static const EdgeInsets searchFieldContentPadding = EdgeInsets.symmetric(
-    horizontal: 16,
-    vertical: 12,
+    horizontal: uiSpacing16,
+    vertical: uiSpacing12,
   );
   static const EdgeInsets regularFieldContentPadding = EdgeInsets.symmetric(
-    horizontal: 12,
-    vertical: 10,
+    horizontal: uiSpacing12,
+    vertical: uiSpacing12 - 2,
   );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
 import 'package:opti_job_app/modules/interviews/logic/interview_chat_session_logic.dart';
 import 'package:opti_job_app/modules/interviews/ui/models/interview_chat_session_view_model.dart';
@@ -31,7 +32,10 @@ class InterviewChatSessionBody extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       case InterviewChatSessionViewStatus.error:
         final message = viewModel.errorMessage ?? 'No se pudo cargar la sesión';
-        return Center(child: Text('Error: $message'));
+        return StateMessage(
+          title: 'No se pudo cargar la sesion',
+          message: message,
+        );
       case InterviewChatSessionViewStatus.ready:
         final loadedState = viewModel.loadedState;
         if (loadedState == null) {

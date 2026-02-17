@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_models.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_tokens.dart';
@@ -37,7 +38,7 @@ class JobOfferFilterFieldDecorators {
         palette,
         style.borderRadius,
         color: palette.accent,
-        width: 2,
+        width: uiSpacing4 / 2,
       ),
       fillColor: palette.inputFill,
       filled: true,

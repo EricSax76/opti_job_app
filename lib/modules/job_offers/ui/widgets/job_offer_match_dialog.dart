@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
 
 class JobOfferMatchResultDialog extends StatelessWidget {
@@ -17,17 +18,17 @@ class JobOfferMatchResultDialog extends StatelessWidget {
           children: [
             if (result.summary != null) ...[
               Text(result.summary!),
-              const SizedBox(height: 12),
+              const SizedBox(height: uiSpacing12),
             ],
             if (result.reasons.isNotEmpty) ...[
               const Text(
                 'Puntos clave',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: uiSpacing8),
               for (final reason in result.reasons)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.only(bottom: uiSpacing8 - 2),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -38,15 +39,15 @@ class JobOfferMatchResultDialog extends StatelessWidget {
                 ),
             ],
             if (result.recommendations.isNotEmpty) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: uiSpacing12 + 2),
               const Text(
                 'Recomendaciones',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: uiSpacing8),
               for (final recommendation in result.recommendations)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.only(bottom: uiSpacing8 - 2),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

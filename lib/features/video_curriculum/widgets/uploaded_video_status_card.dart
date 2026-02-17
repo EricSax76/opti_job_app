@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/features/video_curriculum/logic/uploaded_video_status_logic.dart';
 import 'package:opti_job_app/features/video_curriculum/view/controllers/uploaded_video_status_controller.dart';
+import 'package:opti_job_app/features/video_curriculum/view/video_curriculum_playback_helpers.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/inline_video_preview.dart';
-import 'package:opti_job_app/features/video_curriculum/widgets/video_curriculum_playback_helpers.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 
@@ -66,26 +68,24 @@ class _UploadedVideoStatusCardState extends State<UploadedVideoStatusCard> {
     final viewModel = UploadedVideoStatusLogic.buildViewModel(widget.video);
 
     if (!viewModel.hasUploadedVideo) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.cloud_off_outlined),
-                  const SizedBox(width: 8),
-                  Text(
-                    viewModel.title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(viewModel.description),
-            ],
-          ),
+      return AppCard(
+        padding: const EdgeInsets.all(uiSpacing12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.cloud_off_outlined),
+                const SizedBox(width: uiSpacing8),
+                Text(
+                  viewModel.title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: uiSpacing8),
+            Text(viewModel.description),
+          ],
         ),
       );
     }
@@ -96,61 +96,59 @@ class _UploadedVideoStatusCardState extends State<UploadedVideoStatusCard> {
         final uri = UploadedVideoStatusLogic.parseDownloadUri(snapshot.data);
         final canPlay = uri != null;
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.cloud_done_outlined),
-                    const SizedBox(width: 8),
-                    Text(
-                      viewModel.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    if (canPlay)
-                      IconButton(
-                        tooltip: 'Ver',
-                        icon: const Icon(Icons.play_circle_outline),
-                        onPressed: () => openVideoPlayer(
-                          context,
-                          uri,
-                          title: 'Videocurrículum',
-                          allowExternalFallback: true,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(viewModel.description),
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (snapshot.hasError)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Text(
-                      'No se pudo cargar el enlace del vídeo (verifica permisos).',
-                    ),
-                  )
-                else if (canPlay) ...[
-                  const SizedBox(height: 12),
-                  InlineVideoPreview(
-                    uri: uri,
-                    onOpen: () => openVideoPlayer(
-                      context,
-                      uri,
-                      title: 'Videocurrículum',
-                      allowExternalFallback: true,
-                    ),
+        return AppCard(
+          padding: const EdgeInsets.all(uiSpacing12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.cloud_done_outlined),
+                  const SizedBox(width: uiSpacing8),
+                  Text(
+                    viewModel.title,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  if (canPlay)
+                    IconButton(
+                      tooltip: 'Ver',
+                      icon: const Icon(Icons.play_circle_outline),
+                      onPressed: () => openVideoPlayer(
+                        context,
+                        uri,
+                        title: 'Videocurrículum',
+                        allowExternalFallback: true,
+                      ),
+                    ),
                 ],
+              ),
+              const SizedBox(height: uiSpacing8),
+              Text(viewModel.description),
+              if (snapshot.connectionState == ConnectionState.waiting)
+                const Padding(
+                  padding: EdgeInsets.only(top: uiSpacing12),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (snapshot.hasError)
+                const Padding(
+                  padding: EdgeInsets.only(top: uiSpacing12),
+                  child: Text(
+                    'No se pudo cargar el enlace del vídeo (verifica permisos).',
+                  ),
+                )
+              else if (canPlay) ...[
+                const SizedBox(height: uiSpacing12),
+                InlineVideoPreview(
+                  uri: uri,
+                  onOpen: () => openVideoPlayer(
+                    context,
+                    uri,
+                    title: 'Videocurrículum',
+                    allowExternalFallback: true,
+                  ),
+                ),
               ],
-            ),
+            ],
           ),
         );
       },

@@ -1,6 +1,8 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
 class CameraRecordedVideoView extends StatelessWidget {
   const CameraRecordedVideoView({
     super.key,
@@ -23,12 +25,12 @@ class CameraRecordedVideoView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.videocam, color: colorScheme.onSurface, size: 64),
-          const SizedBox(height: 16),
+          const SizedBox(height: uiSpacing16),
           Text(
             'Vídeo grabado. Quedan $attemptsLeft intentos.',
             style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: uiSpacing16),
           if (onRetry != null)
             ElevatedButton(
               onPressed: onRetry,
@@ -77,7 +79,7 @@ class CameraLivePreviewView extends StatelessWidget {
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(uiSpacing24),
             child: FloatingActionButton(
               heroTag: null,
               onPressed: hasAttemptsLeft ? onToggleRecording : null,
@@ -90,7 +92,7 @@ class CameraLivePreviewView extends StatelessWidget {
         Align(
           alignment: Alignment.topRight,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(uiSpacing16),
             child: Chip(
               label: Text('Intentos: $attemptsLeft'),
               backgroundColor: colorScheme.surface.withValues(alpha: 0.85),
@@ -117,18 +119,18 @@ class CameraErrorView extends StatelessWidget {
       color: colorScheme.surfaceContainerHighest,
       alignment: Alignment.center,
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(uiSpacing24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.videocam_off, color: colorScheme.error, size: 56),
-            const SizedBox(height: 12),
+            const SizedBox(height: uiSpacing12),
             Text(
               message,
               textAlign: TextAlign.center,
               style: TextStyle(color: colorScheme.onSurface),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: uiSpacing12),
             ElevatedButton(onPressed: onRetry, child: const Text('Reintentar')),
           ],
         ),
