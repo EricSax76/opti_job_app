@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
-import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/interview_list_tile.dart';
 
 class InterviewsView extends StatelessWidget {
@@ -10,20 +8,7 @@ class InterviewsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final candidateUid = context
-        .read<CandidateAuthCubit>()
-        .state
-        .candidate
-        ?.uid;
-    if (candidateUid == null) return const SizedBox.shrink();
-
-    return BlocProvider(
-      create: (context) => InterviewListCubit(
-        repository: context.read<InterviewRepository>(),
-        uid: candidateUid,
-      ),
-      child: const _InterviewsList(),
-    );
+    return const _InterviewsList();
   }
 }
 

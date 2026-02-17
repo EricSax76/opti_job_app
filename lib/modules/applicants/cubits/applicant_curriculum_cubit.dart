@@ -20,20 +20,21 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
     required this.curriculumRepository,
     required this.jobOfferRepository,
     required this.aiRepository,
+    required this.curriculumPdfService,
+    required this.curriculumShareService,
   }) : super(const ApplicantCurriculumState());
 
   final ProfileRepository profileRepository;
   final CurriculumRepository curriculumRepository;
   final JobOfferRepository jobOfferRepository;
   final AiRepository aiRepository;
+  final CurriculumPdfService curriculumPdfService;
+  final CurriculumShareService curriculumShareService;
 
   String? _candidateUid;
   String? _offerId;
 
-  void start({
-    required String candidateUid,
-    required String offerId,
-  }) {
+  void start({required String candidateUid, required String offerId}) {
     _candidateUid = candidateUid;
     _offerId = offerId;
     loadData(candidateUid: candidateUid, offerId: offerId);
@@ -86,14 +87,14 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
     }
     emit(state.copyWith(isExporting: true));
     try {
-      final pdfBytes = await CurriculumPdfService().buildPdf(
+      final pdfBytes = await curriculumPdfService.buildPdf(
         candidate: state.candidate!,
         curriculum: state.curriculum!,
       );
       final safeName = _safeFileName(
         '${state.candidate!.name}_${state.candidate!.lastName}'.trim(),
       );
-      await CurriculumShareService().sharePdf(
+      await curriculumShareService.sharePdf(
         bytes: pdfBytes,
         fileName: 'CV_$safeName.pdf',
         subject: 'Curriculum - ${state.candidate!.name}',

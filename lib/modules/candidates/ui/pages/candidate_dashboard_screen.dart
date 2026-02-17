@@ -13,7 +13,8 @@ import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navig
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_pages.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_scaffold.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
-import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
+
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/profiles/ui/pages/profile_screen.dart';
 
@@ -23,11 +24,17 @@ class CandidateDashboardScreen extends StatefulWidget {
     required this.uid,
     required this.initialIndex,
     required this.applicationsCubit,
+    required this.interviewsCubit,
+    required this.curriculumFormCubit,
+    required this.profileCubit,
   });
 
   final String uid;
   final int initialIndex;
   final MyApplicationsCubit applicationsCubit;
+  final InterviewListCubit interviewsCubit;
+  final CurriculumFormCubit curriculumFormCubit;
+  final ProfileCubit profileCubit;
 
   @override
   State<CandidateDashboardScreen> createState() =>
@@ -38,7 +45,6 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final CandidateDashboardCubit _dashboardCubit;
-  late final InterviewListCubit _interviewsCubit;
   late final List<Widget?> _dashboardPages;
   bool _isProgrammaticTabChange = false;
 
@@ -66,11 +72,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     _ensureDashboardPageLoaded(_dashboardCubit.state.selectedIndex);
 
     // _applicationsCubit is now passed via constructor
-
-    _interviewsCubit = InterviewListCubit(
-      repository: context.read<InterviewRepository>(),
-      uid: widget.uid,
-    )..start();
+    // _interviewsCubit is now passed via constructor
   }
 
   @override
@@ -79,7 +81,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     _tabController.dispose();
     _dashboardCubit.close();
     // _applicationsCubit.close(); // Managed by parent provider
-    _interviewsCubit.close();
+    // _interviewsCubit.close(); // Managed by parent provider
     super.dispose();
   }
 
@@ -90,7 +92,10 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
   }
 
   void _ensureDashboardPageLoaded(int index) {
-    _dashboardPages[index] ??= candidateDashboardPageForIndex(index);
+    _dashboardPages[index] ??= candidateDashboardPageForIndex(
+      index,
+      curriculumFormCubit: widget.curriculumFormCubit,
+    );
   }
 
   @override
@@ -106,7 +111,9 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       providers: [
         BlocProvider.value(value: _dashboardCubit),
         BlocProvider.value(value: widget.applicationsCubit),
-        BlocProvider.value(value: _interviewsCubit),
+        BlocProvider.value(value: widget.interviewsCubit),
+        BlocProvider.value(value: widget.profileCubit),
+        // CurriculumFormCubit provided by CurriculumScreen
       ],
       child: BlocListener<CandidateDashboardCubit, CandidateDashboardState>(
         bloc: _dashboardCubit,
@@ -127,13 +134,13 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
               tabController: _tabController,
               viewModel: viewModel,
               dashboardPages: _dashboardPages,
-              interviewsCubit: _interviewsCubit,
+              interviewsCubit: widget.interviewsCubit,
               candidateUid: candidateUid,
               onSelectIndex: _dashboardCubit.selectTab,
               onOpenProfile: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const ProfileScreen(),
+                    builder: (_) => ProfileScreen(cubit: widget.profileCubit),
                   ),
                 );
               },

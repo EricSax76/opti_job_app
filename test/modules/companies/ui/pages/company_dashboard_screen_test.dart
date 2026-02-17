@@ -6,8 +6,12 @@ import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_dashboard_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_state.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
+import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 
@@ -138,6 +142,14 @@ Widget _wrap({
   required TestCompanyJobOffersCubit offersCubit,
   required TestJobOfferFormCubit formCubit,
 }) {
+  final dashboardCubit = CompanyDashboardCubit(
+    companyJobOffersCubit: offersCubit,
+  );
+  final offerCreationCubit = TestCompanyOfferCreationCubit(
+    const CompanyOfferCreationState(),
+  );
+  final interviewsCubit = TestInterviewListCubit(InterviewListInitial());
+
   return MultiBlocProvider(
     providers: [
       BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
@@ -147,7 +159,18 @@ Widget _wrap({
       BlocProvider<OfferApplicantsCubit>(
         create: (_) => TestOfferApplicantsCubit(const OfferApplicantsState()),
       ),
+      BlocProvider<CompanyDashboardCubit>(create: (_) => dashboardCubit),
+      BlocProvider<CompanyOfferCreationCubit>(
+        create: (_) => offerCreationCubit,
+      ),
+      BlocProvider<InterviewListCubit>(create: (_) => interviewsCubit),
     ],
-    child: const MaterialApp(home: CompanyDashboardScreen()),
+    child: MaterialApp(
+      home: CompanyDashboardScreen(
+        dashboardCubit: dashboardCubit,
+        offerCreationCubit: offerCreationCubit,
+        interviewsCubit: interviewsCubit,
+      ),
+    ),
   );
 }

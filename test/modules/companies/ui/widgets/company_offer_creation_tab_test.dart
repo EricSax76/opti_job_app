@@ -10,6 +10,9 @@ import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_offer_creation_tab.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_state.dart';
+
 import '../support/test_cubits.dart';
 
 class _MockAiRepository extends Mock implements AiRepository {}
@@ -107,12 +110,16 @@ Widget _wrap({TestJobOfferFormCubit? formCubit}) {
   final resolvedFormCubit =
       formCubit ?? TestJobOfferFormCubit(const JobOfferFormState());
   final aiRepository = _MockAiRepository();
+  final offerCreationCubit = TestCompanyOfferCreationCubit(
+    const CompanyOfferCreationState(),
+  );
 
   return MultiBlocProvider(
     providers: [
       RepositoryProvider<AiRepository>.value(value: aiRepository),
       BlocProvider<CompanyAuthCubit>.value(value: authCubit),
       BlocProvider<JobOfferFormCubit>.value(value: resolvedFormCubit),
+      BlocProvider<CompanyOfferCreationCubit>.value(value: offerCreationCubit),
     ],
     child: const MaterialApp(home: Scaffold(body: CompanyOfferCreationTab())),
   );

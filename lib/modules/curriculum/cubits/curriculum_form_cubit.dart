@@ -15,14 +15,14 @@ export 'curriculum_form_state.dart';
 class CurriculumFormCubit extends Cubit<CurriculumFormState> {
   CurriculumFormCubit({
     required CurriculumCubit curriculumCubit,
-    CvAnalysisService? analysisService,
-  })  : _curriculumCubit = curriculumCubit,
-        _analysisService = analysisService ?? CvAnalysisService(),
-        headlineController = TextEditingController(),
-        summaryController = TextEditingController(),
-        phoneController = TextEditingController(),
-        locationController = TextEditingController(),
-        super(const CurriculumFormState()) {
+    required CvAnalysisService analysisService,
+  }) : _curriculumCubit = curriculumCubit,
+       _analysisService = analysisService,
+       headlineController = TextEditingController(),
+       summaryController = TextEditingController(),
+       phoneController = TextEditingController(),
+       locationController = TextEditingController(),
+       super(const CurriculumFormState()) {
     headlineController.addListener(_handleTextChanged);
     summaryController.addListener(_handleTextChanged);
     phoneController.addListener(_handleTextChanged);
@@ -201,8 +201,9 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
         curriculumState.status == CurriculumStatus.loaded;
 
     final shouldPreserveDraft = state.hasChanges && !justSaved;
-    final nextSkills =
-        shouldPreserveDraft ? state.skills : (curriculum?.skills ?? const []);
+    final nextSkills = shouldPreserveDraft
+        ? state.skills
+        : (curriculum?.skills ?? const []);
     final nextExperiences = shouldPreserveDraft
         ? state.experiences
         : (curriculum?.experiences ?? const []);

@@ -6,6 +6,9 @@ import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
+import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
+import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
+import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 enum JobOfferDetailStatus { initial, loading, success, failure, applying }
@@ -17,6 +20,7 @@ class JobOfferDetailState {
     this.application,
     this.errorMessage,
     this.successMessage,
+    this.matchOutcome,
   });
 
   final JobOfferDetailStatus status;
@@ -24,6 +28,7 @@ class JobOfferDetailState {
   final Application? application;
   final String? errorMessage;
   final String? successMessage;
+  final JobOfferMatchOutcome? matchOutcome;
 
   JobOfferDetailState copyWith({
     JobOfferDetailStatus? status,
@@ -31,10 +36,12 @@ class JobOfferDetailState {
     Application? application,
     String? errorMessage,
     String? successMessage,
+    JobOfferMatchOutcome? matchOutcome,
     bool clearError = false,
     bool clearSuccess = false,
     bool clearOffer = false,
     bool clearApplication = false,
+    bool clearMatchOutcome = false,
   }) {
     return JobOfferDetailState(
       status: status ?? this.status,
@@ -44,16 +51,27 @@ class JobOfferDetailState {
       successMessage: clearSuccess
           ? null
           : successMessage ?? this.successMessage,
+      matchOutcome: clearMatchOutcome
+          ? null
+          : matchOutcome ?? this.matchOutcome,
     );
   }
 }
 
 class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
-  JobOfferDetailCubit(this._repository, this._applicationService)
-    : super(const JobOfferDetailState());
+  JobOfferDetailCubit(
+    this._repository,
+    this._applicationService, {
+    required CurriculumRepository curriculumRepository,
+    required AiRepository aiRepository,
+  }) : _curriculumRepository = curriculumRepository,
+       _aiRepository = aiRepository,
+       super(const JobOfferDetailState());
 
   final JobOfferRepository _repository;
   final ApplicationService _applicationService;
+  final CurriculumRepository _curriculumRepository;
+  final AiRepository _aiRepository;
 
   String? _offerId;
   String? _candidateUid;
@@ -154,6 +172,28 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
         ),
       );
     }
+  }
+
+  Future<void> computeMatch() async {
+    if (state.offer == null || _candidateUid == null) return;
+    
+    emit(state.copyWith(status: JobOfferDetailStatus.loading)); // Or a specific matching status
+
+    final outcome = await JobOfferMatchLogic.computeMatch(
+      curriculumRepository: _curriculumRepository,
+      aiRepository: _aiRepository,
+      candidateUid: _candidateUid!,
+      offer: state.offer!,
+    );
+
+    emit(state.copyWith(
+      status: JobOfferDetailStatus.success,
+      matchOutcome: outcome,
+    ));
+  }
+  
+  void clearMatchOutcome() {
+    emit(state.copyWith(clearMatchOutcome: true));
   }
 
   void clearMessages() {

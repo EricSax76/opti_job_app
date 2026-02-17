@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/controllers/curriculum_editor_actions_controller.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/editor/curriculum_editor_form_layout.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/editor/curriculum_form_state_view.dart';
 
 class CurriculumScreen extends StatelessWidget {
-  const CurriculumScreen({super.key});
+  const CurriculumScreen({
+    super.key,
+    required this.cubit,
+  });
+
+  final CurriculumFormCubit cubit;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          CurriculumFormCubit(curriculumCubit: context.read<CurriculumCubit>()),
+    return BlocProvider.value(
+      value: cubit,
       child: const _CurriculumScreenContainer(),
     );
   }

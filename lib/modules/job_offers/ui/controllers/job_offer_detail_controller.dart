@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
-import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_detail_logic.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
@@ -16,6 +14,12 @@ class JobOfferDetailController {
     BuildContext context,
     JobOfferDetailState state,
   ) {
+    if (state.matchOutcome != null) {
+      _handleMatchOutcome(context, state.matchOutcome!);
+      context.read<JobOfferDetailCubit>().clearMatchOutcome();
+      return;
+    }
+
     final successMessage = JobOfferDetailLogic.successMessage(state);
     if (successMessage != null) {
       _showSnackBar(
@@ -38,35 +42,22 @@ class JobOfferDetailController {
     context.read<JobOfferDetailCubit>().clearMessages();
   }
 
-  static void apply(BuildContext context, JobOfferApplyRequest? request) {
-    if (request == null) return;
-
-    context.read<JobOfferDetailCubit>().apply(
-      candidate: request.candidate,
-      offer: request.offer,
-    );
-  }
-
-  static void navigateBack(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-      return;
+  static void _handleMatchOutcome(
+      BuildContext context, JobOfferMatchOutcome outcome) {
+    if (outcome is JobOfferMatchSuccess) {
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) =>
+            JobOfferMatchResultDialog(result: outcome.result),
+      );
+    } else if (outcome is JobOfferMatchFailure) {
+      _showSnackBar(context, message: outcome.message);
     }
-    context.go('/job-offer');
   }
 
-  static Future<void> showMatchResult(
-    BuildContext context, {
-    required JobOfferMatchRequest request,
-  }) async {
+  static Future<void> showMatchResult(BuildContext context) async {
     final rootNavigator = Navigator.of(context, rootNavigator: true);
     var isLoadingDialogOpen = true;
-
-    void closeLoadingDialogIfNeeded() {
-      if (!isLoadingDialogOpen || !rootNavigator.mounted) return;
-      rootNavigator.pop();
-      isLoadingDialogOpen = false;
-    }
 
     showDialog<void>(
       context: context,
@@ -90,28 +81,30 @@ class JobOfferDetailController {
       isLoadingDialogOpen = false;
     });
 
-    final outcome = await JobOfferMatchLogic.computeMatch(
-      curriculumRepository: context.read<CurriculumRepository>(),
-      aiRepository: context.read<AiRepository>(),
-      candidateUid: request.candidateUid,
-      offer: request.offer,
-    );
-    if (!context.mounted) return;
+    await context.read<JobOfferDetailCubit>().computeMatch();
 
-    closeLoadingDialogIfNeeded();
-    if (outcome is JobOfferMatchSuccess) {
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) =>
-            JobOfferMatchResultDialog(result: outcome.result),
-      );
-      return;
-    }
-
-    if (outcome is JobOfferMatchFailure) {
-      _showSnackBar(context, message: outcome.message);
+    if (isLoadingDialogOpen && rootNavigator.mounted) {
+      rootNavigator.pop();
     }
   }
+
+  static void apply(BuildContext context, JobOfferApplyRequest? request) {
+    if (request == null) return;
+
+    context.read<JobOfferDetailCubit>().apply(
+      candidate: request.candidate,
+      offer: request.offer,
+    );
+  }
+
+  static void navigateBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go('/job-offer');
+  }
+
 
   static void _showSnackBar(
     BuildContext context, {

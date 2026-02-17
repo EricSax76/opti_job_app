@@ -13,12 +13,15 @@ class MyApplicationsCubit extends Cubit<MyApplicationsState> {
   MyApplicationsCubit({
     required ApplicationService applicationService,
     required CandidateAuthCubit candidateAuthCubit,
+    required FirebaseAuth firebaseAuth,
   }) : _applicationService = applicationService,
        _candidateAuthCubit = candidateAuthCubit,
+       _firebaseAuth = firebaseAuth,
        super(const MyApplicationsState());
 
   final ApplicationService _applicationService;
   final CandidateAuthCubit _candidateAuthCubit;
+  final FirebaseAuth _firebaseAuth;
 
   Future<void> start() async {
     final candidate = _candidateAuthCubit.state.candidate;
@@ -33,7 +36,7 @@ class MyApplicationsCubit extends Cubit<MyApplicationsState> {
       return;
     }
 
-    final authUid = FirebaseAuth.instance.currentUser?.uid;
+    final authUid = _firebaseAuth.currentUser?.uid;
     if (authUid == null || authUid != candidateUid) {
       emit(
         state.copyWith(

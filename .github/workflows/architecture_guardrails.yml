@@ -1,0 +1,19 @@
+name: Architecture Guardrails
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  locator-policy:
+    name: Locator Policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check locator/get_it policy
+        run: bash tool/check_locator_policy.sh

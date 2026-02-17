@@ -24,8 +24,8 @@ class JobOffersPage {
 class JobOfferService {
   static const int _defaultPageSize = 20;
 
-  JobOfferService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  JobOfferService({required FirebaseFirestore firestore})
+    : _firestore = firestore;
 
   final FirebaseFirestore _firestore;
 

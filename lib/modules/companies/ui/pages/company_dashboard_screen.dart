@@ -11,10 +11,21 @@ import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dash
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_tab_pages.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
+import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/core/config/feature_flags.dart';
 
 class CompanyDashboardScreen extends StatefulWidget {
-  const CompanyDashboardScreen({super.key});
+  const CompanyDashboardScreen({
+    super.key,
+    required this.dashboardCubit,
+    required this.offerCreationCubit,
+    required this.interviewsCubit,
+  });
+
+  final CompanyDashboardCubit dashboardCubit;
+  final CompanyOfferCreationCubit offerCreationCubit;
+  final InterviewListCubit interviewsCubit;
 
   @override
   State<CompanyDashboardScreen> createState() => _CompanyDashboardScreenState();
@@ -39,17 +50,24 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => CompanyDashboardCubit(
-        companyJobOffersCubit: context.read<CompanyJobOffersCubit>(),
-      ),
-      child: const _CompanyDashboardContent(),
+    return _CompanyDashboardContent(
+      dashboardCubit: widget.dashboardCubit,
+      offerCreationCubit: widget.offerCreationCubit,
+      interviewsCubit: widget.interviewsCubit,
     );
   }
 }
 
 class _CompanyDashboardContent extends StatefulWidget {
-  const _CompanyDashboardContent();
+  const _CompanyDashboardContent({
+    required this.dashboardCubit,
+    required this.offerCreationCubit,
+    required this.interviewsCubit,
+  });
+
+  final CompanyDashboardCubit dashboardCubit;
+  final CompanyOfferCreationCubit offerCreationCubit;
+  final InterviewListCubit interviewsCubit;
 
   @override
   State<_CompanyDashboardContent> createState() =>
@@ -75,7 +93,7 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
     if (_initialOffersLoadHandled) return;
     _initialOffersLoadHandled = true;
     final companyUid = context.read<CompanyAuthCubit>().state.company?.uid;
-    context.read<CompanyDashboardCubit>().checkAndLoadCompanyOffers(companyUid);
+    widget.dashboardCubit.checkAndLoadCompanyOffers(companyUid);
   }
 
   @override
@@ -100,9 +118,7 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
         ),
         BlocListener<CompanyAuthCubit, CompanyAuthState>(
           listener: (context, state) {
-            context
-                .read<CompanyDashboardCubit>()
-                .checkAndLoadCompanyOffers(state.company?.uid);
+            widget.dashboardCubit.checkAndLoadCompanyOffers(state.company?.uid);
           },
         ),
       ],
@@ -133,8 +149,7 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
         const SnackBar(content: Text('Oferta publicada con éxito.')),
       );
      
-      final companyUid =
-          context.read<CompanyDashboardCubit>().state.loadedCompanyUid;
+      final companyUid = widget.dashboardCubit.state.loadedCompanyUid;
       if (companyUid != null) {
         context.read<CompanyJobOffersCubit>().start(companyUid);
       }

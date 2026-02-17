@@ -14,13 +14,8 @@ class CompanyInterviewsTab extends StatelessWidget {
     );
     if (companyUid == null) return const SizedBox.shrink();
 
-    return BlocProvider(
-      create: (context) => CompanyInterviewsTabController.createCubit(
-        context: context,
-        companyUid: companyUid,
-      ),
-      child: const _CompanyInterviewsView(),
-    );
+
+    return const _CompanyInterviewsView();
   }
 }
 

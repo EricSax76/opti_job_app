@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
+import 'package:opti_job_app/features/ai/models/ai_job_offer_draft.dart';
+import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
@@ -9,6 +11,9 @@ import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_state.dart';
+import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 
 class TestCompanyAuthCubit extends Cubit<CompanyAuthState>
     implements CompanyAuthCubit {
@@ -127,4 +132,45 @@ class TestJobOfferFormCubit extends Cubit<JobOfferFormState>
   Future<void> submit(JobOfferPayload payload) async {
     submittedPayloads.add(payload);
   }
+}
+
+class TestCompanyOfferCreationCubit extends Cubit<CompanyOfferCreationState>
+    implements CompanyOfferCreationCubit {
+  TestCompanyOfferCreationCubit(super.initialState);
+
+  void emitState(CompanyOfferCreationState nextState) => emit(nextState);
+
+  @override
+  AiRepository get aiRepository =>
+      throw UnimplementedError('aiRepository is not used in this test cubit.');
+
+  @override
+  Future<AiJobOfferDraft?> generateJobOffer({
+    required Map<String, dynamic> criteria,
+  }) async {
+    return null;
+  }
+}
+
+class TestInterviewListCubit extends Cubit<InterviewListState>
+    implements InterviewListCubit {
+  TestInterviewListCubit(super.initialState);
+
+  var startCalled = false;
+  var refreshCalled = false;
+
+  void emitState(InterviewListState nextState) => emit(nextState);
+
+  @override
+  Future<void> start() async {
+    startCalled = true;
+  }
+
+  @override
+  Future<void> refresh() async {
+    refreshCalled = true;
+  }
+
+  @override
+  void retry() => unawaited(refresh());
 }

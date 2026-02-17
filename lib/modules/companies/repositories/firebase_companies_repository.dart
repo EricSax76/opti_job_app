@@ -6,10 +6,10 @@ import 'package:opti_job_app/modules/companies/repositories/companies_repository
 
 class FirebaseCompaniesRepository implements CompaniesRepository {
   FirebaseCompaniesRepository({
-    FirebaseFirestore? firestore,
-    FirebaseStorage? storage,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+    required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
+  }) : _firestore = firestore,
+       _storage = storage;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
@@ -82,7 +82,7 @@ class FirebaseCompaniesRepository implements CompaniesRepository {
     final avatarUrlForOffers = (newAvatarUrl != null && newAvatarUrl.isNotEmpty)
         ? newAvatarUrl
         : existingAvatarUrl;
-    
+
     // Also update company name/avatar in job offers
     final offersQuery = await _firestore
         .collection('jobOffers')

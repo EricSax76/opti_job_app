@@ -4,8 +4,8 @@ import 'package:opti_job_app/modules/applications/data/mappers/application_mappe
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 
 class FirebaseApplicantsRepository implements ApplicantsRepository {
-  FirebaseApplicantsRepository({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseApplicantsRepository({required FirebaseFirestore firestore})
+    : _firestore = firestore;
 
   final FirebaseFirestore _firestore;
 

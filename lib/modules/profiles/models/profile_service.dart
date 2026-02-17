@@ -7,9 +7,11 @@ import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.da
 import 'package:opti_job_app/modules/companies/models/company.dart';
 
 class ProfileService {
-  ProfileService({FirebaseFirestore? firestore, FirebaseStorage? storage})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _storage = storage ?? FirebaseStorage.instance;
+  ProfileService({
+    required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
+  }) : _firestore = firestore,
+       _storage = storage;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;

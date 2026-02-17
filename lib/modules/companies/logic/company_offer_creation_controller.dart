@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/features/ai/models/ai_job_offer_draft.dart';
-import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
+
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
@@ -12,12 +12,6 @@ import 'package:opti_job_app/modules/job_offers/models/generate_offer_dialog.dar
 
 class CompanyOfferCreationController {
   const CompanyOfferCreationController._();
-
-  static CompanyOfferCreationCubit createCubit(BuildContext context) {
-    return CompanyOfferCreationCubit(
-      aiRepository: context.read<AiRepository>(),
-    );
-  }
 
   static void handleJobOfferFormStatus({
     required JobOfferFormState state,

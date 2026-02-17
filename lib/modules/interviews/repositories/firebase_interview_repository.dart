@@ -5,18 +5,17 @@ import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 
 class FirebaseInterviewRepository implements InterviewRepository {
-  static const String _primaryFunctionsRegion = 'europe-west1';
-
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   FirebaseInterviewRepository({
-    FirebaseFirestore? firestore,
-    FirebaseFunctions? functions,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _functions =
-           functions ??
-           FirebaseFunctions.instanceFor(region: _primaryFunctionsRegion);
+    required FirebaseFirestore firestore,
+    required FirebaseFunctions functions,
+    required FirebaseFunctions fallbackFunctions,
+  }) : _firestore = firestore,
+       _functions = functions,
+       _fallbackFunctions = fallbackFunctions;
 
   CollectionReference<Map<String, dynamic>> get _interviewsRef =>
       _firestore.collection('interviews');
@@ -185,9 +184,7 @@ class FirebaseInterviewRepository implements InterviewRepository {
       return await _functions.httpsCallable(functionName).call(payload);
     } on FirebaseFunctionsException catch (error) {
       if (error.code != 'not-found') rethrow;
-      return FirebaseFunctions.instance
-          .httpsCallable(functionName)
-          .call(payload);
+      return _fallbackFunctions.httpsCallable(functionName).call(payload);
     }
   }
 

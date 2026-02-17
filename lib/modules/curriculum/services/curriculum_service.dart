@@ -6,9 +6,11 @@ import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/data/mappers/curriculum_mapper.dart';
 
 class CurriculumService {
-  CurriculumService({FirebaseFirestore? firestore, FirebaseStorage? storage})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _storage = storage ?? FirebaseStorage.instance;
+  CurriculumService({
+    required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
+  }) : _firestore = firestore,
+       _storage = storage;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;

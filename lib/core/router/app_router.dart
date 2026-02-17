@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -21,14 +22,28 @@ import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_detail_screen
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_profile_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_dashboard_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
+import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
+import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
+import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum_pdf_service.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum_share_service.dart';
+import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
 import 'package:opti_job_app/modules/applicants/ui/pages/applicant_curriculum_screen.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/interviews/ui/pages/interview_chat_page.dart';
+
 import 'package:get_it/get_it.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/applicants/cubits/applicant_curriculum_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
@@ -74,7 +89,16 @@ class AppRouter {
         GoRoute(
           path: '/job-offer',
           name: 'job-offers',
-          builder: (context, state) => const JobOfferListScreen(),
+          builder: (context, state) {
+            final cubit = JobOffersCubit(
+              context.read<JobOfferRepository>(),
+              profileRepository: context.read<ProfileRepository>(),
+            );
+            return BlocProvider(
+              create: (_) => cubit,
+              child: JobOfferListScreen(cubit: cubit),
+            );
+          },
         ),
         GoRoute(
           path: '/job-offer/:id',
@@ -86,12 +110,17 @@ class AppRouter {
                 .state
                 .candidate
                 ?.uid;
+
+            final cubit = JobOfferDetailCubit(
+              context.read<JobOfferRepository>(),
+              GetIt.I<ApplicationService>(),
+              curriculumRepository: context.read<CurriculumRepository>(),
+              aiRepository: GetIt.I<AiRepository>(),
+            )..start(id, candidateUid: candidateUid);
+
             return BlocProvider(
-              create: (context) => JobOfferDetailCubit(
-                context.read<JobOfferRepository>(),
-                context.read<ApplicationService>(),
-              )..start(id, candidateUid: candidateUid),
-              child: JobOfferDetailScreen(offerId: id),
+              create: (_) => cubit,
+              child: JobOfferDetailScreen(offerId: id, cubit: cubit),
             );
           },
         ),
@@ -104,14 +133,33 @@ class AppRouter {
             final applicationsCubit = MyApplicationsCubit(
               applicationService: GetIt.I<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
+              firebaseAuth: FirebaseAuth.instance,
             )..start();
 
-            return BlocProvider(
-              create: (_) => applicationsCubit,
+            final interviewsCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: uid,
+            )..start();
+
+            final curriculumCubit = context.read<CurriculumCubit>();
+            final curriculumFormCubit = CurriculumFormCubit(
+              curriculumCubit: curriculumCubit,
+              analysisService: CvAnalysisService(),
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => applicationsCubit),
+                BlocProvider(create: (_) => interviewsCubit),
+                BlocProvider(create: (_) => curriculumFormCubit),
+              ],
               child: CandidateDashboardScreen(
                 uid: uid,
                 initialIndex: 0,
                 applicationsCubit: applicationsCubit,
+                interviewsCubit: interviewsCubit,
+                curriculumFormCubit: curriculumFormCubit,
+                profileCubit: context.read<ProfileCubit>(),
               ),
             );
           },
@@ -124,14 +172,33 @@ class AppRouter {
             final applicationsCubit = MyApplicationsCubit(
               applicationService: GetIt.I<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
+              firebaseAuth: FirebaseAuth.instance,
             )..start();
 
-            return BlocProvider(
-              create: (_) => applicationsCubit,
+            final interviewsCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: uid,
+            )..start();
+
+            final curriculumCubit = context.read<CurriculumCubit>();
+            final curriculumFormCubit = CurriculumFormCubit(
+              curriculumCubit: curriculumCubit,
+              analysisService: CvAnalysisService(),
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => applicationsCubit),
+                BlocProvider(create: (_) => interviewsCubit),
+                BlocProvider(create: (_) => curriculumFormCubit),
+              ],
               child: CandidateDashboardScreen(
                 uid: uid,
                 initialIndex: 0,
                 applicationsCubit: applicationsCubit,
+                interviewsCubit: interviewsCubit,
+                curriculumFormCubit: curriculumFormCubit,
+                profileCubit: context.read<ProfileCubit>(),
               ),
             );
           },
@@ -144,14 +211,33 @@ class AppRouter {
             final applicationsCubit = MyApplicationsCubit(
               applicationService: GetIt.I<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
+              firebaseAuth: FirebaseAuth.instance,
             )..start();
 
-            return BlocProvider(
-              create: (_) => applicationsCubit,
+            final interviewsCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: uid,
+            )..start();
+
+            final curriculumCubit = context.read<CurriculumCubit>();
+            final curriculumFormCubit = CurriculumFormCubit(
+              curriculumCubit: curriculumCubit,
+              analysisService: CvAnalysisService(),
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => applicationsCubit),
+                BlocProvider(create: (_) => interviewsCubit),
+                BlocProvider(create: (_) => curriculumFormCubit),
+              ],
               child: CandidateDashboardScreen(
                 uid: uid,
                 initialIndex: 1,
                 applicationsCubit: applicationsCubit,
+                interviewsCubit: interviewsCubit,
+                curriculumFormCubit: curriculumFormCubit,
+                profileCubit: context.read<ProfileCubit>(),
               ),
             );
           },
@@ -164,14 +250,33 @@ class AppRouter {
             final applicationsCubit = MyApplicationsCubit(
               applicationService: GetIt.I<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
+              firebaseAuth: FirebaseAuth.instance,
             )..start();
 
-            return BlocProvider(
-              create: (_) => applicationsCubit,
+            final interviewsCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: uid,
+            )..start();
+
+            final curriculumCubit = context.read<CurriculumCubit>();
+            final curriculumFormCubit = CurriculumFormCubit(
+              curriculumCubit: curriculumCubit,
+              analysisService: CvAnalysisService(),
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => applicationsCubit),
+                BlocProvider(create: (_) => interviewsCubit),
+                BlocProvider(create: (_) => curriculumFormCubit),
+              ],
               child: CandidateDashboardScreen(
                 uid: uid,
                 initialIndex: 2,
                 applicationsCubit: applicationsCubit,
+                interviewsCubit: interviewsCubit,
+                curriculumFormCubit: curriculumFormCubit,
+                profileCubit: context.read<ProfileCubit>(),
               ),
             );
           },
@@ -184,14 +289,33 @@ class AppRouter {
             final applicationsCubit = MyApplicationsCubit(
               applicationService: GetIt.I<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
+              firebaseAuth: FirebaseAuth.instance,
             )..start();
 
-            return BlocProvider(
-              create: (_) => applicationsCubit,
+            final interviewsCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: uid,
+            )..start();
+
+            final curriculumCubit = context.read<CurriculumCubit>();
+            final curriculumFormCubit = CurriculumFormCubit(
+              curriculumCubit: curriculumCubit,
+              analysisService: CvAnalysisService(),
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => applicationsCubit),
+                BlocProvider(create: (_) => interviewsCubit),
+                BlocProvider(create: (_) => curriculumFormCubit),
+              ],
               child: CandidateDashboardScreen(
                 uid: uid,
                 initialIndex: 3,
                 applicationsCubit: applicationsCubit,
+                interviewsCubit: interviewsCubit,
+                curriculumFormCubit: curriculumFormCubit,
+                profileCubit: context.read<ProfileCubit>(),
               ),
             );
           },
@@ -204,14 +328,33 @@ class AppRouter {
             final applicationsCubit = MyApplicationsCubit(
               applicationService: GetIt.I<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
+              firebaseAuth: FirebaseAuth.instance,
             )..start();
 
-            return BlocProvider(
-              create: (_) => applicationsCubit,
+            final interviewsCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: uid,
+            )..start();
+
+            final curriculumCubit = context.read<CurriculumCubit>();
+            final curriculumFormCubit = CurriculumFormCubit(
+              curriculumCubit: curriculumCubit,
+              analysisService: CvAnalysisService(),
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => applicationsCubit),
+                BlocProvider(create: (_) => interviewsCubit),
+                BlocProvider(create: (_) => curriculumFormCubit),
+              ],
               child: CandidateDashboardScreen(
                 uid: uid,
                 initialIndex: 4,
                 applicationsCubit: applicationsCubit,
+                interviewsCubit: interviewsCubit,
+                curriculumFormCubit: curriculumFormCubit,
+                profileCubit: context.read<ProfileCubit>(),
               ),
             );
           },
@@ -224,14 +367,33 @@ class AppRouter {
             final applicationsCubit = MyApplicationsCubit(
               applicationService: GetIt.I<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
+              firebaseAuth: FirebaseAuth.instance,
             )..start();
 
-            return BlocProvider(
-              create: (_) => applicationsCubit,
+            final interviewsCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: uid,
+            )..start();
+
+            final curriculumCubit = context.read<CurriculumCubit>();
+            final curriculumFormCubit = CurriculumFormCubit(
+              curriculumCubit: curriculumCubit,
+              analysisService: CvAnalysisService(),
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => applicationsCubit),
+                BlocProvider(create: (_) => interviewsCubit),
+                BlocProvider(create: (_) => curriculumFormCubit),
+              ],
               child: CandidateDashboardScreen(
                 uid: uid,
                 initialIndex: 5,
                 applicationsCubit: applicationsCubit,
+                interviewsCubit: interviewsCubit,
+                curriculumFormCubit: curriculumFormCubit,
+                profileCubit: context.read<ProfileCubit>(),
               ),
             );
           },
@@ -239,28 +401,68 @@ class AppRouter {
         GoRoute(
           path: '/DashboardCompany',
           name: 'company-dashboard',
-          builder: (context, state) => MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) =>
-                    JobOfferFormCubit(context.read<JobOfferRepository>()),
+          builder: (context, state) {
+            final companyJobOffersCubit = CompanyJobOffersCubit(
+              context.read<JobOfferRepository>(),
+            );
+
+            final jobOfferFormCubit = JobOfferFormCubit(
+              context.read<JobOfferRepository>(),
+            );
+
+            final offerApplicantsCubit = OfferApplicantsCubit(
+              GetIt.I<ApplicantsRepository>(),
+            );
+
+            final companyDashboardCubit = CompanyDashboardCubit(
+              companyJobOffersCubit: companyJobOffersCubit,
+            );
+
+            final companyOfferCreationCubit = CompanyOfferCreationCubit(
+              aiRepository: GetIt.I<AiRepository>(),
+            );
+
+            // We need companyUid for InterviewListCubit.
+            // We can try to get it from auth state, but it might be null if not fully initialized?
+            // However, the redirect logic ensures we are authenticated.
+            final companyUid =
+                context.read<CompanyAuthCubit>().state.company?.uid ?? '';
+
+            final interviewListCubit = InterviewListCubit(
+              repository: GetIt.I<InterviewRepository>(),
+              uid: companyUid,
+            );
+
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => companyJobOffersCubit),
+                BlocProvider(create: (_) => jobOfferFormCubit),
+                BlocProvider(create: (_) => offerApplicantsCubit),
+                BlocProvider(create: (_) => companyDashboardCubit),
+                BlocProvider(create: (_) => companyOfferCreationCubit),
+                BlocProvider(create: (_) => interviewListCubit),
+              ],
+              child: CompanyDashboardScreen(
+                dashboardCubit: companyDashboardCubit,
+                offerCreationCubit: companyOfferCreationCubit,
+                interviewsCubit: interviewListCubit,
               ),
-              BlocProvider(
-                create: (context) =>
-                    CompanyJobOffersCubit(context.read<JobOfferRepository>()),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    OfferApplicantsCubit(GetIt.I<ApplicantsRepository>()),
-              ),
-            ],
-            child: const CompanyDashboardScreen(),
-          ),
+            );
+          },
         ),
         GoRoute(
           path: '/company/profile',
           name: 'company-profile',
-          builder: (context, state) => const CompanyProfileScreen(),
+          builder: (context, state) {
+            final cubit = CompanyProfileFormCubit(
+              profileRepository: GetIt.I<ProfileRepository>(),
+              companyAuthCubit: context.read<CompanyAuthCubit>(),
+            );
+            return BlocProvider(
+              create: (_) => cubit,
+              child: CompanyProfileScreen(cubit: cubit),
+            );
+          },
         ),
 
         // ... (existing imports)
@@ -276,6 +478,8 @@ class AppRouter {
               curriculumRepository: GetIt.I<CurriculumRepository>(),
               jobOfferRepository: GetIt.I<JobOfferRepository>(),
               aiRepository: GetIt.I<AiRepository>(),
+              curriculumPdfService: CurriculumPdfService(),
+              curriculumShareService: CurriculumShareService(),
             )..start(candidateUid: uid, offerId: offerId);
 
             return BlocProvider(
@@ -318,7 +522,19 @@ class AppRouter {
           name: 'interview-chat',
           builder: (context, state) {
             final id = state.pathParameters['id'] ?? '';
-            return InterviewChatPage(interviewId: id);
+            final cubit =
+                InterviewSessionCubit(
+                    repository: GetIt.I<InterviewRepository>(),
+                    interviewId: id,
+                  )
+                  ..start()
+                  ..markAsSeen();
+
+            // Wrap in BlocProvider to ensure it gets closed when the route is popped
+            return BlocProvider(
+              create: (_) => cubit,
+              child: InterviewChatPage(cubit: cubit),
+            );
           },
         ),
       ],

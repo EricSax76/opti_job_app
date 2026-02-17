@@ -7,6 +7,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_profile_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
@@ -134,9 +135,18 @@ Widget _wrap({
 }) {
   return MultiBlocProvider(
     providers: [BlocProvider<CompanyAuthCubit>.value(value: authCubit)],
-    child: RepositoryProvider<ProfileRepository>.value(
-      value: profileRepository,
-      child: const MaterialApp(home: CompanyProfileScreen()),
+    child: BlocProvider<CompanyProfileFormCubit>(
+      create: (_) => CompanyProfileFormCubit(
+        profileRepository: profileRepository,
+        companyAuthCubit: authCubit,
+      ),
+      child: Builder(
+        builder: (context) => MaterialApp(
+          home: CompanyProfileScreen(
+            cubit: context.read<CompanyProfileFormCubit>(),
+          ),
+        ),
+      ),
     ),
   );
 }

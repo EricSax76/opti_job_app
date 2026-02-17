@@ -13,10 +13,7 @@ class CompanyOfferCreationTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: CompanyOfferCreationController.createCubit,
-      child: const _CompanyOfferCreationView(),
-    );
+    return const _CompanyOfferCreationView();
   }
 }
 

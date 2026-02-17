@@ -43,10 +43,7 @@ class JobOfferDetailContainer extends StatelessWidget {
                 JobOfferDetailController.apply(context, viewModel.applyRequest),
             onMatch: matchRequest == null
                 ? null
-                : () => JobOfferDetailController.showMatchResult(
-                    context,
-                    request: matchRequest,
-                  ),
+                : () => JobOfferDetailController.showMatchResult(context),
             onBack: () => JobOfferDetailController.navigateBack(context),
           );
         },

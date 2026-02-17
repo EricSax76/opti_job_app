@@ -156,6 +156,7 @@ Notas de frontera:
 ## Refactors de arquitectura
 
 - Fase 4 (DI): contención de GetIt/locator en composition root y páginas raíz, con dependencias explícitas por constructor: `docs/fase_4_contencion_getit.md`.
+- Guardrail automático de locator/get_it (escanea todos los `.dart` trackeados): `bash tool/check_locator_policy.sh` (también corre en CI).
 
 ## Próximos pasos
 

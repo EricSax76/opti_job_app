@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:opti_job_app/auth/models/auth_service.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
@@ -24,31 +26,52 @@ import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repositor
 import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
-void setupGetIt({FirebaseFirestore? firestore}) {
+void setupGetIt({
+  FirebaseFirestore? firestore,
+  FirebaseStorage? storage,
+  FirebaseFunctions? functions,
+  FirebaseFunctions? fallbackFunctions,
+}) {
   final getIt = GetIt.instance;
   final firestoreInstance = firestore ?? FirebaseFirestore.instance;
+  final storageInstance = storage ?? FirebaseStorage.instance;
+  final functionsInstance =
+      functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
+  final fallbackFunctionsInstance =
+      fallbackFunctions ?? FirebaseFunctions.instance;
 
   // External
   getIt.registerSingleton<FirebaseFirestore>(firestoreInstance);
+  getIt.registerSingleton<FirebaseStorage>(storageInstance);
 
   // Auth
   getIt.registerLazySingleton(() => AuthService());
   getIt.registerLazySingleton(() => AuthRepository(getIt<AuthService>()));
 
   // Job Offers
-  getIt.registerLazySingleton(() => JobOfferService());
+  getIt.registerLazySingleton(
+    () => JobOfferService(firestore: getIt<FirebaseFirestore>()),
+  );
   getIt.registerLazySingleton(
     () => JobOfferRepository(getIt<JobOfferService>()),
   );
 
   // Profiles
-  getIt.registerLazySingleton(() => ProfileService());
   getIt.registerLazySingleton(
-    () => ProfileRepository(getIt<ProfileService>()),
+    () => ProfileService(
+      firestore: getIt<FirebaseFirestore>(),
+      storage: getIt<FirebaseStorage>(),
+    ),
   );
+  getIt.registerLazySingleton(() => ProfileRepository(getIt<ProfileService>()));
 
   // Curriculum
-  getIt.registerLazySingleton(() => CurriculumService());
+  getIt.registerLazySingleton(
+    () => CurriculumService(
+      firestore: getIt<FirebaseFirestore>(),
+      storage: getIt<FirebaseStorage>(),
+    ),
+  );
   getIt.registerLazySingleton(
     () => CurriculumRepository(getIt<CurriculumService>()),
   );
@@ -68,7 +91,10 @@ void setupGetIt({FirebaseFirestore? firestore}) {
 
   // Companies
   getIt.registerLazySingleton<CompaniesRepository>(
-    () => FirebaseCompaniesRepository(firestore: getIt<FirebaseFirestore>()),
+    () => FirebaseCompaniesRepository(
+      firestore: getIt<FirebaseFirestore>(),
+      storage: getIt<FirebaseStorage>(),
+    ),
   );
 
   // Applicants
@@ -98,6 +124,10 @@ void setupGetIt({FirebaseFirestore? firestore}) {
 
   // Interviews
   getIt.registerLazySingleton<InterviewRepository>(
-    () => FirebaseInterviewRepository(firestore: getIt<FirebaseFirestore>()),
+    () => FirebaseInterviewRepository(
+      firestore: getIt<FirebaseFirestore>(),
+      functions: functionsInstance,
+      fallbackFunctions: fallbackFunctionsInstance,
+    ),
   );
 }
