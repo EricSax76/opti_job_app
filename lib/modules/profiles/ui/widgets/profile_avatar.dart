@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/profiles/logic/profile_avatar_logic.dart';
 
 class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({
@@ -21,7 +22,10 @@ class ProfileAvatar extends StatelessWidget {
     const inkColor = uiInk;
     const mutedColor = uiMuted;
 
-    final imageProvider = _getImageProvider();
+    final imageProvider = ProfileAvatarLogic.resolveImageProvider(
+      avatarBytes: avatarBytes,
+      avatarUrl: avatarUrl,
+    );
 
     return Center(
       child: Stack(
@@ -50,13 +54,5 @@ class ProfileAvatar extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  ImageProvider? _getImageProvider() {
-    if (avatarBytes != null) return MemoryImage(avatarBytes!);
-    if (avatarUrl != null && avatarUrl!.isNotEmpty) {
-      return NetworkImage(avatarUrl!);
-    }
-    return null;
   }
 }

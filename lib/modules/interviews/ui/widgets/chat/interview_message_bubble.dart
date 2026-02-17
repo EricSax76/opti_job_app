@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:opti_job_app/modules/interviews/logic/interview_message_bubble_logic.dart';
 import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
 
 class InterviewMessageBubble extends StatelessWidget {
@@ -16,27 +16,12 @@ class InterviewMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    try {
-      return _buildBubble(context);
-    } catch (_) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.orange.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.orange.shade200),
-          ),
-          child: const Text('No se pudo renderizar este mensaje.'),
-        ),
-      );
-    }
-  }
+    final viewModel = InterviewMessageBubbleLogic.buildViewModel(
+      message: message,
+      currentUid: currentUid,
+    );
 
-  Widget _buildBubble(BuildContext context) {
-    if (message.type == MessageType.system) {
+    if (viewModel.isSystem) {
       return Center(
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
@@ -45,7 +30,7 @@ class InterviewMessageBubble extends StatelessWidget {
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(message.content, style: const TextStyle(fontSize: 12)),
+          child: Text(viewModel.content, style: const TextStyle(fontSize: 12)),
         ),
       );
     }
@@ -58,7 +43,7 @@ class InterviewMessageBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.blue.shade50,
           borderRadius: BorderRadius.circular(12),
-          border: message.type == MessageType.proposal
+          border: viewModel.isProposal
               ? Border.all(color: Colors.blue.shade200)
               : null,
         ),
@@ -66,7 +51,7 @@ class InterviewMessageBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (message.type == MessageType.proposal) ...[
+            if (viewModel.isProposal) ...[
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -86,9 +71,9 @@ class InterviewMessageBubble extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              if (message.metadata?.proposedAt case final proposedAt?)
+              if (viewModel.proposalDateText case final proposalDateText?)
                 Text(
-                  _safeFormatDateTime(proposedAt, 'EEEE d MMM, h:mm a'),
+                  proposalDateText,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -96,8 +81,8 @@ class InterviewMessageBubble extends StatelessWidget {
                 ),
               const SizedBox(height: 8),
             ],
-            Text(message.content),
-            if (_showProposalActions) ...[
+            Text(viewModel.content),
+            if (viewModel.showProposalActions) ...[
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -130,29 +115,12 @@ class InterviewMessageBubble extends StatelessWidget {
             ],
             const SizedBox(height: 4),
             Text(
-              _safeFormatDateTime(message.createdAt, 'jm'),
+              viewModel.createdAtText,
               style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
             ),
           ],
         ),
       ),
     );
-  }
-
-  bool get _showProposalActions {
-    if (message.type != MessageType.proposal) return false;
-
-    final viewerUid = currentUid?.trim();
-    if (viewerUid == null || viewerUid.isEmpty) return true;
-
-    return message.senderUid.trim() != viewerUid;
-  }
-
-  String _safeFormatDateTime(DateTime date, String pattern) {
-    try {
-      return DateFormat(pattern).format(date);
-    } catch (_) {
-      return date.toLocal().toIso8601String();
-    }
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
+import 'package:opti_job_app/modules/interviews/logic/interview_chat_logic.dart';
 import 'package:opti_job_app/modules/interviews/ui/controllers/interview_chat_actions_controller.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_chat_session_body.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_chat_view.dart';
@@ -35,11 +36,26 @@ class _InterviewChatContainerState extends State<InterviewChatContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUid = _resolveCurrentUid(context);
+    final candidateUid = context.select<CandidateAuthCubit, String?>(
+      (cubit) => cubit.state.candidate?.uid,
+    );
+    final companyUid = context.select<CompanyAuthCubit, String?>(
+      (cubit) => cubit.state.company?.uid,
+    );
+    final currentUid = InterviewChatLogic.resolveCurrentUid(
+      candidateUid: candidateUid,
+      companyUid: companyUid,
+    );
 
     return BlocListener<InterviewSessionCubit, InterviewSessionState>(
       listenWhen: (_, current) => current is InterviewSessionActionError,
-      listener: _handleActionError,
+      listener: (context, state) {
+        final message = InterviewChatLogic.actionErrorMessage(state);
+        if (message == null) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(message)));
+      },
       child: InterviewChatView(
         body: InterviewChatSessionBody(
           currentUid: currentUid,
@@ -53,33 +69,5 @@ class _InterviewChatContainerState extends State<InterviewChatContainer> {
         ),
       ),
     );
-  }
-
-  String? _resolveCurrentUid(BuildContext context) {
-    final candidateUid = context.select<CandidateAuthCubit, String?>(
-      (cubit) => cubit.state.candidate?.uid,
-    );
-    if (candidateUid != null && candidateUid.trim().isNotEmpty) {
-      return candidateUid;
-    }
-
-    final companyUid = context.select<CompanyAuthCubit, String?>(
-      (cubit) => cubit.state.company?.uid,
-    );
-    if (companyUid != null && companyUid.trim().isNotEmpty) {
-      return companyUid;
-    }
-
-    return null;
-  }
-
-  void _handleActionError(BuildContext context, InterviewSessionState state) {
-    if (state is! InterviewSessionActionError) return;
-    final message = state.error.trim();
-    if (message.isEmpty) return;
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

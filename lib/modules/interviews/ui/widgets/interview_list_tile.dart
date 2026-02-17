@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/interviews/logic/interview_list_tile_logic.dart';
 import 'package:opti_job_app/modules/interviews/models/interview.dart';
+import 'package:opti_job_app/modules/interviews/ui/models/interview_status_view_model.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/list/interview_list_tile_title.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/list/interview_status_badge.dart';
 
@@ -21,16 +22,10 @@ class InterviewListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    final lastMessage = interview.lastMessage?.content ?? 'Nueva entrevista';
-    final date = interview.lastMessage?.createdAt ?? interview.updatedAt;
-    final timeText = _safeFormatDateTime(date, 'jm');
-
-    final scheduledLabel =
-        interview.status == InterviewStatus.scheduled &&
-            interview.scheduledAt != null
-        ? _safeFormatDateTime(interview.scheduledAt!, 'MMM d, h:mm a')
-        : null;
+    final viewModel = InterviewListTileLogic.buildViewModel(
+      interview: interview,
+      isCompany: isCompany,
+    );
 
     return Card(
       elevation: 0,
@@ -44,40 +39,29 @@ class InterviewListTile extends StatelessWidget {
         onTap: () {
           context.pushNamed(
             'interview-chat',
-            pathParameters: {'id': interview.id},
+            pathParameters: {'id': viewModel.interviewId},
           );
         },
         leading: CircleAvatar(
           backgroundColor: colorScheme.primaryContainer,
           child: Icon(Icons.person, color: colorScheme.onPrimaryContainer),
         ),
-        title: InterviewListTileTitle(
-          interview: interview,
-          isCompany: isCompany,
-        ),
+        title: InterviewListTileTitle(title: viewModel.title),
         subtitle: _InterviewListSubtitle(
-          messagePreview: lastMessage,
-          timeText: timeText,
+          messagePreview: viewModel.messagePreview,
+          timeText: viewModel.timeText,
           textColor: colorScheme.onSurfaceVariant,
           timeColor: colorScheme.outline,
         ),
         subtitleTextStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-        isThreeLine: scheduledLabel != null,
+        isThreeLine: viewModel.isThreeLine,
         trailing: _InterviewListTrailing(
-          status: interview.status,
-          scheduledLabel: scheduledLabel,
+          status: viewModel.status,
+          scheduledLabel: viewModel.scheduledLabel,
           scheduledColor: colorScheme.primary,
         ),
       ),
     );
-  }
-
-  String _safeFormatDateTime(DateTime date, String pattern) {
-    try {
-      return DateFormat(pattern).format(date);
-    } catch (_) {
-      return date.toLocal().toIso8601String();
-    }
   }
 }
 
@@ -120,7 +104,7 @@ class _InterviewListTrailing extends StatelessWidget {
     required this.scheduledColor,
   });
 
-  final InterviewStatus status;
+  final InterviewStatusViewModel status;
   final String? scheduledLabel;
   final Color scheduledColor;
 
@@ -130,7 +114,7 @@ class _InterviewListTrailing extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        InterviewStatusBadge(status: status),
+        InterviewStatusBadge(viewModel: status),
         if (scheduledLabel != null) ...[
           const SizedBox(height: 4),
           Text(

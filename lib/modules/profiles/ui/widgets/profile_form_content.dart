@@ -4,6 +4,7 @@ import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_form_state.dart';
+import 'package:opti_job_app/modules/profiles/logic/profile_form_logic.dart';
 import 'package:opti_job_app/modules/profiles/ui/widgets/profile_avatar.dart';
 
 class ProfileFormContent extends StatelessWidget {
@@ -28,6 +29,8 @@ class ProfileFormContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = ProfileFormLogic.buildViewModel(state);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(uiSpacing16),
       child: Center(
@@ -41,8 +44,8 @@ class ProfileFormContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ProfileAvatar(
-                    avatarBytes: state.avatarBytes,
-                    avatarUrl: state.avatarUrl,
+                    avatarBytes: viewModel.avatarBytes,
+                    avatarUrl: viewModel.avatarUrl,
                     onPickImage: onPickAvatar,
                   ),
                   const SizedBox(height: uiSpacing24),
@@ -55,9 +58,7 @@ class ProfileFormContent extends StatelessWidget {
                   const SizedBox(height: uiSpacing24),
                   TextFormField(
                     controller: nameController,
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'El nombre es obligatorio'
-                        : null,
+                    validator: ProfileFormLogic.validateFirstName,
                     decoration: const InputDecoration(
                       labelText: 'Nombre',
                       prefixIcon: Icon(Icons.person_outline),
@@ -66,9 +67,7 @@ class ProfileFormContent extends StatelessWidget {
                   const SizedBox(height: uiSpacing16),
                   TextFormField(
                     controller: lastNameController,
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Los apellidos son obligatorios'
-                        : null,
+                    validator: ProfileFormLogic.validateLastName,
                     decoration: const InputDecoration(
                       labelText: 'Apellidos',
                       prefixIcon: Icon(Icons.badge_outlined),
@@ -86,8 +85,8 @@ class ProfileFormContent extends StatelessWidget {
                   ),
                   const SizedBox(height: uiSpacing24),
                   FilledButton(
-                    onPressed: state.canSubmit ? onSubmit : null,
-                    child: state.isSaving
+                    onPressed: viewModel.canSubmit ? onSubmit : null,
+                    child: viewModel.isSaving
                         ? const SizedBox(
                             width: 18,
                             height: 18,
@@ -102,7 +101,7 @@ class ProfileFormContent extends StatelessWidget {
                   ),
                   const SizedBox(height: uiSpacing16),
                   Text(
-                    'Sesión activa como ${state.candidateName}',
+                    viewModel.sessionLabel,
                     textAlign: TextAlign.center,
                     style: Theme.of(
                       context,

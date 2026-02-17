@@ -17,9 +17,9 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
   InterviewSessionCubit({
     required InterviewRepository repository,
     required String interviewId,
-  })  : _repository = repository,
-        _interviewId = interviewId,
-        super(InterviewSessionInitial()) {
+  }) : _repository = repository,
+       _interviewId = interviewId,
+       super(InterviewSessionInitial()) {
     _subscribeManual();
   }
 
@@ -30,10 +30,7 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
     final interview = _latestInterview;
     if (interview == null) return;
     emit(
-      InterviewSessionLoaded(
-        interview: interview,
-        messages: _latestMessages,
-      ),
+      InterviewSessionLoaded(interview: interview, messages: _latestMessages),
     );
   }
 
@@ -49,26 +46,16 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
         _latestInterview = interview;
         _updateState();
       },
-      onError: (e) => emit(InterviewSessionError(e.toString())),
+      onError: (error) =>
+          emit(InterviewSessionError(_normalizeErrorMessage(error))),
     );
 
-    _messagesSubscription = _repository.messagesStream(_interviewId).listen(
-      (messages) {
-        _latestMessages = messages;
-        _updateState();
-      },
-      onError: (e) {
-        final previousState = state is InterviewSessionLoaded
-            ? state as InterviewSessionLoaded
-            : (_latestInterview == null
-                  ? null
-                  : InterviewSessionLoaded(
-                      interview: _latestInterview!,
-                      messages: _latestMessages,
-                    ));
-        emit(InterviewSessionActionError(previousState, e.toString()));
-      },
-    );
+    _messagesSubscription = _repository.messagesStream(_interviewId).listen((
+      messages,
+    ) {
+      _latestMessages = messages;
+      _updateState();
+    }, onError: _emitActionError);
   }
 
   Future<void> markAsSeen() async {
@@ -82,69 +69,80 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
 
   Future<void> sendMessage(String content) async {
     if (content.trim().isEmpty) return;
-    try {
-      await _repository.sendMessage(
+    await _runAction(() {
+      return _repository.sendMessage(
         interviewId: _interviewId,
         content: content,
       );
-    } catch (e) {
-      emit(InterviewSessionActionError(
-        (state is InterviewSessionLoaded)
-            ? (state as InterviewSessionLoaded)
-            : null,
-        e.toString(),
-      ));
-    }
+    });
   }
 
   Future<void> proposeSlot(DateTime date, String timeZone) async {
-    try {
-      await _repository.proposeSlot(
+    await _runAction(() {
+      return _repository.proposeSlot(
         interviewId: _interviewId,
         proposedAt: date,
         timeZone: timeZone,
       );
-    } catch (e) {
-      emit(InterviewSessionActionError(
-        (state is InterviewSessionLoaded)
-            ? (state as InterviewSessionLoaded)
-            : null,
-        e.toString(),
-      ));
-    }
+    });
   }
 
   Future<void> respondToSlot(String proposalId, bool accept) async {
-    try {
-      await _repository.respondToSlot(
+    await _runAction(() {
+      return _repository.respondToSlot(
         interviewId: _interviewId,
         proposalId: proposalId,
         accept: accept,
       );
-    } catch (e) {
-      emit(InterviewSessionActionError(
-        (state is InterviewSessionLoaded)
-            ? (state as InterviewSessionLoaded)
-            : null,
-        e.toString(),
-      ));
-    }
+    });
   }
 
   Future<void> startMeeting(String link) async {
-    try {
-      await _repository.startMeeting(
+    if (link.trim().isEmpty) return;
+    await _runAction(() {
+      return _repository.startMeeting(
         interviewId: _interviewId,
         meetingLink: link,
       );
-    } catch (e) {
-      emit(InterviewSessionActionError(
-        (state is InterviewSessionLoaded)
-            ? (state as InterviewSessionLoaded)
-            : null,
-        e.toString(),
-      ));
+    });
+  }
+
+  Future<void> _runAction(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (error) {
+      _emitActionError(error);
     }
+  }
+
+  void _emitActionError(Object error) {
+    emit(
+      InterviewSessionActionError(
+        _resolveLoadedStateSnapshot(),
+        _normalizeErrorMessage(error),
+      ),
+    );
+  }
+
+  InterviewSessionLoaded? _resolveLoadedStateSnapshot() {
+    if (state is InterviewSessionLoaded) {
+      return state as InterviewSessionLoaded;
+    }
+    final interview = _latestInterview;
+    if (interview == null) return null;
+
+    return InterviewSessionLoaded(
+      interview: interview,
+      messages: _latestMessages,
+    );
+  }
+
+  String _normalizeErrorMessage(Object error) {
+    final message = error.toString().trim();
+    if (message.isEmpty) {
+      return 'No se pudo completar la acción.';
+    }
+    return message;
   }
 
   @override

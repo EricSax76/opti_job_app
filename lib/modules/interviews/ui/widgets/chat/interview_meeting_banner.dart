@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:opti_job_app/modules/interviews/ui/controllers/interview_meeting_actions_controller.dart';
 
 class InterviewMeetingBanner extends StatelessWidget {
   const InterviewMeetingBanner({super.key, required this.meetingLink});
@@ -24,16 +24,13 @@ class InterviewMeetingBanner extends StatelessWidget {
               ),
             ),
           ),
-          FilledButton(onPressed: _openMeeting, child: const Text('Unirse')),
+          FilledButton(
+            onPressed: () =>
+                InterviewMeetingActionsController.openMeeting(meetingLink),
+            child: const Text('Unirse'),
+          ),
         ],
       ),
     );
-  }
-
-  Future<void> _openMeeting() async {
-    final uri = Uri.tryParse(meetingLink);
-    if (uri == null) return;
-    if (!await canLaunchUrl(uri)) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
-import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
+import 'package:opti_job_app/modules/interviews/ui/controllers/interview_chat_page_controller.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_chat_container.dart';
 
 class InterviewChatPage extends StatelessWidget {
@@ -12,10 +11,10 @@ class InterviewChatPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => InterviewSessionCubit(
-        repository: context.read<InterviewRepository>(),
+      create: (context) => InterviewChatPageController.createSessionCubit(
+        context: context,
         interviewId: interviewId,
-      )..markAsSeen(),
+      ),
       child: const InterviewChatContainer(),
     );
   }

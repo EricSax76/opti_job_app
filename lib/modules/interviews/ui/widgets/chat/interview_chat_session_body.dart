@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
+import 'package:opti_job_app/modules/interviews/logic/interview_chat_session_logic.dart';
+import 'package:opti_job_app/modules/interviews/ui/models/interview_chat_session_view_model.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/chat/interview_chat_loaded_body.dart';
 
 class InterviewChatSessionBody extends StatelessWidget {
@@ -17,35 +19,29 @@ class InterviewChatSessionBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<InterviewSessionCubit, InterviewSessionState>(
       builder: (context, state) {
-        if (state is InterviewSessionLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        final viewModel = InterviewChatSessionLogic.buildViewModel(state);
+        return _buildFromViewModel(viewModel);
+      },
+    );
+  }
 
-        if (state is InterviewSessionError) {
-          return Center(child: Text('Error: ${state.message}'));
-        }
-
-        final loadedState = _resolveLoadedState(state);
+  Widget _buildFromViewModel(InterviewChatSessionViewModel viewModel) {
+    switch (viewModel.status) {
+      case InterviewChatSessionViewStatus.loading:
+        return const Center(child: CircularProgressIndicator());
+      case InterviewChatSessionViewStatus.error:
+        final message = viewModel.errorMessage ?? 'No se pudo cargar la sesión';
+        return Center(child: Text('Error: $message'));
+      case InterviewChatSessionViewStatus.ready:
+        final loadedState = viewModel.loadedState;
         if (loadedState == null) {
           return const Center(child: CircularProgressIndicator());
         }
-
         return InterviewChatLoadedBody(
           state: loadedState,
           currentUid: currentUid,
           onRespondToProposal: onRespondToProposal,
         );
-      },
-    );
-  }
-
-  InterviewSessionLoaded? _resolveLoadedState(InterviewSessionState state) {
-    if (state is InterviewSessionLoaded) {
-      return state;
     }
-    if (state is InterviewSessionActionError) {
-      return state.previousState;
-    }
-    return null;
   }
 }

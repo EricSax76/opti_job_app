@@ -3,24 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
-import 'package:opti_job_app/modules/companies/models/company.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
+import 'package:opti_job_app/modules/job_offers/logic/job_offer_list_logic.dart';
+import 'package:opti_job_app/modules/job_offers/ui/models/job_offer_list_view_model.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/list/job_offer_type_filter.dart';
-
-const double _paginationThreshold = 280;
 
 class JobOfferListContent extends StatelessWidget {
   const JobOfferListContent({
     super.key,
-    required this.offers,
-    required this.companiesById,
-    required this.availableJobTypes,
-    required this.selectedJobType,
-    required this.isRefreshing,
-    required this.isLoadingMore,
-    required this.hasMore,
+    required this.viewModel,
     required this.onSelectJobType,
     required this.onClearJobType,
     required this.onShowAllOffers,
@@ -28,13 +19,7 @@ class JobOfferListContent extends StatelessWidget {
     required this.onOpenOffer,
   });
 
-  final List<JobOffer> offers;
-  final Map<int, Company> companiesById;
-  final List<String> availableJobTypes;
-  final String? selectedJobType;
-  final bool isRefreshing;
-  final bool isLoadingMore;
-  final bool hasMore;
+  final JobOfferListViewModel viewModel;
   final ValueChanged<String?> onSelectJobType;
   final VoidCallback onClearJobType;
   final VoidCallback onShowAllOffers;
@@ -59,8 +44,8 @@ class JobOfferListContent extends StatelessWidget {
                   ),
                   const SizedBox(height: uiSpacing20),
                   JobOfferTypeFilter(
-                    availableJobTypes: availableJobTypes,
-                    selectedJobType: selectedJobType,
+                    availableJobTypes: viewModel.availableJobTypes,
+                    selectedJobType: viewModel.selectedJobType,
                     onChanged: onSelectJobType,
                     onClear: onClearJobType,
                   ),
@@ -68,7 +53,7 @@ class JobOfferListContent extends StatelessWidget {
               ),
             ),
           ),
-          if (isRefreshing)
+          if (viewModel.isRefreshing)
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -80,7 +65,7 @@ class JobOfferListContent extends StatelessWidget {
                 child: LinearProgressIndicator(minHeight: 2),
               ),
             ),
-          if (offers.isEmpty)
+          if (viewModel.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
@@ -102,32 +87,23 @@ class JobOfferListContent extends StatelessWidget {
               ),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final offer = offers[index];
-                  final company = offer.companyId == null
-                      ? null
-                      : companiesById[offer.companyId!];
-                  final companyName =
-                      offer.companyName ??
-                      company?.name ??
-                      'Empresa no especificada';
-                  final avatarUrl =
-                      offer.companyAvatarUrl ?? company?.avatarUrl;
+                  final item = viewModel.items[index];
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: uiSpacing12),
                     child: JobOfferSummaryCard(
-                      title: offer.title,
-                      company: companyName,
-                      avatarUrl: avatarUrl,
-                      salary: offer.formattedSalary,
-                      modality: offer.jobType,
-                      onTap: () => onOpenOffer(offer.id),
+                      title: item.title,
+                      company: item.companyName,
+                      avatarUrl: item.avatarUrl,
+                      salary: item.salary,
+                      modality: item.modality,
+                      onTap: () => onOpenOffer(item.offerId),
                     ),
                   );
-                }, childCount: offers.length),
+                }, childCount: viewModel.items.length),
               ),
             ),
-          if (isLoadingMore)
+          if (viewModel.isLoadingMore)
             const SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.only(bottom: uiSpacing20),
@@ -145,12 +121,13 @@ class JobOfferListContent extends StatelessWidget {
   }
 
   bool _handleScroll(ScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical) return false;
-    if (isLoadingMore || isRefreshing || !hasMore) return false;
-
-    final pixels = notification.metrics.pixels;
-    final max = notification.metrics.maxScrollExtent;
-    if (max - pixels <= _paginationThreshold) {
+    final shouldLoadMore = JobOfferListLogic.shouldLoadMore(
+      notification: notification,
+      isLoadingMore: viewModel.isLoadingMore,
+      isRefreshing: viewModel.isRefreshing,
+      hasMore: viewModel.hasMore,
+    );
+    if (shouldLoadMore) {
       onLoadMore();
     }
     return false;

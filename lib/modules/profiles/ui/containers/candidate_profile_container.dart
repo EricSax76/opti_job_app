@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_form_cubit.dart';
+import 'package:opti_job_app/modules/profiles/logic/profile_form_logic.dart';
+import 'package:opti_job_app/modules/profiles/ui/controllers/candidate_profile_controller.dart';
 import 'package:opti_job_app/modules/profiles/ui/containers/profile_form_container.dart';
 import 'package:opti_job_app/modules/profiles/ui/widgets/profile_form_state_view.dart';
 
@@ -24,17 +26,14 @@ class _CandidateProfileContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formCubit = context.read<ProfileFormCubit>();
-
     return BlocConsumer<ProfileFormCubit, ProfileFormState>(
-      listener: (context, state) {
-        if (state.notice == null || state.noticeMessage == null) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(state.noticeMessage!)));
-        formCubit.clearNotice();
-      },
+      listenWhen: (previous, current) => ProfileFormLogic.shouldHandleNotice(
+        previous: previous,
+        current: current,
+      ),
+      listener: CandidateProfileController.handleNotice,
       builder: (context, state) {
+        final formCubit = context.read<ProfileFormCubit>();
         return ProfileFormStateView(
           viewStatus: state.viewStatus,
           errorMessage: state.errorMessage,
