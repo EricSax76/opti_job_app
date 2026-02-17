@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_styles.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class CurriculumSectionHeader extends StatelessWidget {
   const CurriculumSectionHeader({
@@ -13,6 +13,7 @@ class CurriculumSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -22,12 +23,12 @@ class CurriculumSectionHeader extends StatelessWidget {
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: uiSpacing4),
         Text(
           subtitle,
           style: Theme.of(
             context,
-          ).textTheme.bodySmall?.copyWith(color: cvMuted),
+          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
       ],
     );

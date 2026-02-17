@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/offer_form_fields.dart';
@@ -24,20 +25,12 @@ class CreateOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final surface = theme.cardTheme.color ?? colorScheme.surface;
-    final border = colorScheme.outline;
+    final colorScheme = Theme.of(context).colorScheme;
     final muted = colorScheme.onSurfaceVariant;
     final ink = colorScheme.onSurface;
 
-    return Container(
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(uiCardRadius),
-        border: Border.all(color: border),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(uiSpacing24 + 4),
       child: Form(
         key: formKey,
         child: Column(
@@ -103,7 +96,9 @@ class CreateOfferCard extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: uiSpacing12,
+                      ),
                     ),
                     onPressed: isSubmitting ? null : onSubmit,
                     child: isSubmitting

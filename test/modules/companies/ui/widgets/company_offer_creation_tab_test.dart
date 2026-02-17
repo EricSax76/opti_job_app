@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
+import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
@@ -9,6 +11,8 @@ import 'package:opti_job_app/modules/companies/ui/widgets/company_offer_creation
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 
 import '../support/test_cubits.dart';
+
+class _MockAiRepository extends Mock implements AiRepository {}
 
 void main() {
   testWidgets('renders company header and submit action', (tester) async {
@@ -102,9 +106,11 @@ Widget _wrap({TestJobOfferFormCubit? formCubit}) {
   );
   final resolvedFormCubit =
       formCubit ?? TestJobOfferFormCubit(const JobOfferFormState());
+  final aiRepository = _MockAiRepository();
 
   return MultiBlocProvider(
     providers: [
+      RepositoryProvider<AiRepository>.value(value: aiRepository),
       BlocProvider<CompanyAuthCubit>.value(value: authCubit),
       BlocProvider<JobOfferFormCubit>.value(value: resolvedFormCubit),
     ],

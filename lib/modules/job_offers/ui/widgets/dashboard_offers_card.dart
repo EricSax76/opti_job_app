@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/ui/controllers/dashboard_offers_card_controller.dart';
@@ -12,20 +13,12 @@ class DashboardOffersCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final surface = theme.cardTheme.color ?? colorScheme.surface;
-    final border = colorScheme.outline;
+    final colorScheme = Theme.of(context).colorScheme;
     final muted = colorScheme.onSurfaceVariant;
     final ink = colorScheme.onSurface;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(uiCardRadius),
-        border: Border.all(color: border),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(uiSpacing16 + 2),
       child: BlocBuilder<CompanyJobOffersCubit, CompanyJobOffersState>(
         builder: (context, state) {
           if (state.status == CompanyJobOffersStatus.loading ||
@@ -98,7 +91,7 @@ class DashboardOffersCard extends StatelessWidget {
                   children: [
                     for (final offer in offers.take(3))
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.only(bottom: uiSpacing8),
                         child: _OfferRow(offer: offer),
                       ),
                   ],
