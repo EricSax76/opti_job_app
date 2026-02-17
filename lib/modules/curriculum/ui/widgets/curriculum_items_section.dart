@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/modules/curriculum/logic/curriculum_items_section_logic.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 
 class CurriculumItemsSection extends StatelessWidget {
@@ -23,6 +24,8 @@ class CurriculumItemsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = CurriculumItemsSectionLogic.buildViewModel(items);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -41,7 +44,7 @@ class CurriculumItemsSection extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  items.isEmpty ? 'Pendiente' : '${items.length} elementos',
+                  viewModel.statusLabel,
                   style: const TextStyle(fontSize: 12, color: uiMuted),
                 ),
               ],
@@ -60,7 +63,7 @@ class CurriculumItemsSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: uiSpacing16),
-        if (items.isEmpty)
+        if (viewModel.isEmpty)
           AppCard(
             padding: const EdgeInsets.all(uiSpacing24),
             borderColor: uiBorder,
@@ -85,19 +88,19 @@ class CurriculumItemsSection extends StatelessWidget {
         else
           Column(
             children: [
-              for (var i = 0; i < items.length; i++)
+              for (final entry in viewModel.entries)
                 Padding(
                   padding: const EdgeInsets.only(bottom: uiSpacing12),
                   child: AppCard(
                     padding: EdgeInsets.zero,
-                    onTap: () => onEdit(i, items[i]),
+                    onTap: () => onEdit(entry.index, items[entry.index]),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: uiSpacing16,
                         vertical: uiSpacing8,
                       ),
                       title: Text(
-                        items[i].title.isEmpty ? 'Sin título' : items[i].title,
+                        entry.title,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: uiInk,
@@ -106,25 +109,24 @@ class CurriculumItemsSection extends StatelessWidget {
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: uiSpacing4),
                         child: Text(
-                          [
-                            if (items[i].subtitle.trim().isNotEmpty)
-                              items[i].subtitle.trim(),
-                            if (items[i].period.trim().isNotEmpty)
-                              items[i].period.trim(),
-                          ].join(' · '),
+                          entry.subtitle,
                           style: const TextStyle(fontSize: 13, color: uiMuted),
-                         ),
+                        ),
                       ),
                       trailing: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded, size: 20, color: uiMuted),
+                        icon: const Icon(
+                          Icons.more_vert_rounded,
+                          size: 20,
+                          color: uiMuted,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(uiTileRadius),
                         ),
                         onSelected: (value) async {
                           if (value == 'edit') {
-                            await onEdit(i, items[i]);
+                            await onEdit(entry.index, items[entry.index]);
                           } else if (value == 'remove') {
-                            onRemove(i);
+                            onRemove(entry.index);
                           }
                         },
                         itemBuilder: (context) => [
@@ -132,7 +134,11 @@ class CurriculumItemsSection extends StatelessWidget {
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit_outlined, size: 20, color: uiInk),
+                                Icon(
+                                  Icons.edit_outlined,
+                                  size: 20,
+                                  color: uiInk,
+                                ),
                                 SizedBox(width: uiSpacing12),
                                 Text('Editar'),
                               ],
@@ -142,9 +148,16 @@ class CurriculumItemsSection extends StatelessWidget {
                             value: 'remove',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, size: 20, color: uiError),
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                  color: uiError,
+                                ),
                                 SizedBox(width: uiSpacing12),
-                                Text('Eliminar', style: TextStyle(color: uiError)),
+                                Text(
+                                  'Eliminar',
+                                  style: TextStyle(color: uiError),
+                                ),
                               ],
                             ),
                           ),

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
-import 'package:opti_job_app/modules/companies/logic/company_candidates_logic.dart';
+import 'package:opti_job_app/modules/applicants/logic/company_candidates_logic.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 void main() {

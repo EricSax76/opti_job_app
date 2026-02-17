@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/modules/applications/models/candidate_application_entry.dart';
-import 'package:opti_job_app/modules/applications/ui/application_status.dart';
+import 'package:opti_job_app/modules/applications/ui/widgets/application_status_badge.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/modern_application_card.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_extensions.dart';
 
@@ -116,7 +116,7 @@ class ApplicationsList extends StatelessWidget {
         ((fallbackTitle != null && fallbackTitle.trim().isNotEmpty)
             ? fallbackTitle
             : 'Oferta');
-    final statusChip = applicationStatusChip(entry.application.status);
+    final statusChip = ApplicationStatusBadge.fromString(entry.application.status);
     final company = offer?.companyName ?? 'Empresa no especificada';
     final salary = offer?.formattedSalary;
     final location = offer?.location;

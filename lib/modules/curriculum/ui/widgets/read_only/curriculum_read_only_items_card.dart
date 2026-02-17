@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
-import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
+import 'package:opti_job_app/modules/curriculum/ui/models/curriculum_read_only_view_model.dart';
 
 class CurriculumReadOnlyItemsCard extends StatelessWidget {
   const CurriculumReadOnlyItemsCard({super.key, required this.items});
 
-  final List<CurriculumItem> items;
+  final List<CurriculumReadOnlyItemViewModel> items;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class CurriculumReadOnlyItemsCard extends StatelessWidget {
 class _CurriculumItemBlock extends StatelessWidget {
   const _CurriculumItemBlock({required this.item});
 
-  final CurriculumItem item;
+  final CurriculumReadOnlyItemViewModel item;
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +48,10 @@ class _CurriculumItemBlock extends StatelessWidget {
             color: uiInk,
           ),
         ),
-        if (item.subtitle.isNotEmpty) ...[
+        if (item.hasSubtitle) ...[
           const SizedBox(height: uiSpacing4),
           Text(
-            item.subtitle,
+            item.subtitle!,
             style: const TextStyle(
               color: uiMuted,
               fontWeight: FontWeight.w600,
@@ -59,17 +59,17 @@ class _CurriculumItemBlock extends StatelessWidget {
             ),
           ),
         ],
-        if (item.period.isNotEmpty) ...[
+        if (item.hasPeriod) ...[
           const SizedBox(height: uiSpacing4),
           Text(
-            item.period,
+            item.period!,
             style: const TextStyle(color: uiMuted, fontSize: 13),
           ),
         ],
-        if (item.description.isNotEmpty) ...[
+        if (item.hasDescription) ...[
           const SizedBox(height: uiSpacing8),
           Text(
-            item.description,
+            item.description!,
             style: const TextStyle(color: uiInk, height: 1.4, fontSize: 14),
           ),
         ],

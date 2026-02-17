@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/companies/cubits/company_profile_form_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_profile_form_state.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar_menu.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/profile/company_profile_app_bar.dart';

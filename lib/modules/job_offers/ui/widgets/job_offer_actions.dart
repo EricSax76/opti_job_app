@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
-import 'package:opti_job_app/modules/applications/ui/application_status.dart';
+import 'package:opti_job_app/modules/applications/models/application_status.dart';
 
 class JobOfferActions extends StatelessWidget {
   const JobOfferActions({
@@ -38,7 +38,7 @@ class JobOfferActions extends StatelessWidget {
                   )
                 : Text(
                     hasApplied
-                        ? 'Postulación: ${applicationStatusLabel(applicationStatus!)}'
+                        ? 'Postulación: ${ApplicationStatus.fromString(applicationStatus).label}'
                         : 'Postularme',
                   ),
           ),

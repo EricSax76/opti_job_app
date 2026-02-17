@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
-import 'package:opti_job_app/modules/applications/ui/application_status.dart';
+import 'package:opti_job_app/modules/applications/models/application_status.dart';
+import 'package:opti_job_app/modules/applications/ui/widgets/application_status_badge.dart';
 
 class ApplicantTile extends StatelessWidget {
   const ApplicantTile({
@@ -32,7 +33,7 @@ class ApplicantTile extends StatelessWidget {
         application.candidateEmail!.isNotEmpty) {
       subtitleParts.add(application.candidateEmail!);
     }
-    subtitleParts.add('Estado: ${applicationStatusLabel(application.status)}');
+    subtitleParts.add('Estado: ${ApplicationStatus.fromString(application.status).label}');
 
     final canChangeStatus = onStatusChanged != null && onStartInterview != null;
 
@@ -66,48 +67,42 @@ class ApplicantTile extends StatelessWidget {
             : PopupMenuButton<String>(
                 tooltip: 'Actualizar estado',
                 onSelected: (value) {
-                  if (value == 'interview') {
+                  if (value == ApplicationStatus.interview.name) {
                     onStartInterview?.call();
                   } else {
                     onStatusChanged?.call(value);
                   }
                 },
                 itemBuilder: (context) {
-                  return _applicationStatuses.map((status) {
-                    final isSelected = status == application.status;
+                  return ApplicationStatus.values
+                      .where((s) =>
+                          s != ApplicationStatus.pending &&
+                          s != ApplicationStatus.unknown &&
+                          s != ApplicationStatus.withdrawn)
+                      .map((status) {
+                    final isSelected = status.name == application.status;
                     return PopupMenuItem<String>(
-                      value: status,
+                      value: status.name,
                       child: Row(
                         children: [
                           if (isSelected)
                             const Icon(Icons.check, size: 16)
                           else
                             const SizedBox(width: 16),
-                          Text(applicationStatusLabel(status)),
+                          Text(status.label),
                         ],
                       ),
                     );
                   }).toList();
                 },
-                child: Chip(
-                  label: Text(applicationStatusLabel(application.status)),
-                  side: BorderSide(color: border),
-                  backgroundColor: colorScheme.surface,
-                  labelStyle: TextStyle(color: ink),
-                ),
+                child: ApplicationStatusBadge.fromString(application.status),
               ),
       ),
     );
   }
 }
 
-const _applicationStatuses = [
-  'submitted',
-  'reviewing',
-  'interview',
-  'accepted',
-  'rejected',
-];
+
 
 String _initials(Application application) {
   final raw =

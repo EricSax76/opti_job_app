@@ -1,4 +1,3 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,10 +9,31 @@ import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/applicant_tile.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/applicants/cubits/applicant_interaction_cubit.dart';
 
 class OfferApplicantsSection extends StatelessWidget {
   const OfferApplicantsSection({
     super.key,
+    required this.offer,
+    required this.companyUid,
+  });
+
+  final JobOffer offer;
+  final String? companyUid;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => ApplicantInteractionCubit(
+        context.read<InterviewRepository>(),
+      ),
+      child: _OfferApplicantsContent(offer: offer, companyUid: companyUid),
+    );
+  }
+}
+
+class _OfferApplicantsContent extends StatelessWidget {
+  const _OfferApplicantsContent({
     required this.offer,
     required this.companyUid,
   });
@@ -36,90 +56,110 @@ class OfferApplicantsSection extends StatelessWidget {
         style: TextStyle(color: muted, height: 1.4),
       );
     }
-    return BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
-      buildWhen: (previous, current) {
-        final prevStatus =
-            previous.statuses[offer.id] ?? OfferApplicantsStatus.initial;
-        final currentStatus =
-            current.statuses[offer.id] ?? OfferApplicantsStatus.initial;
-        final prevApplicants = previous.applicants[offer.id];
-        final currentApplicants = current.applicants[offer.id];
-        final prevError = previous.errors[offer.id];
-        final currentError = current.errors[offer.id];
-        return prevStatus != currentStatus ||
-            prevApplicants != currentApplicants ||
-            prevError != currentError;
-      },
-      builder: (context, state) {
-        final status =
-            state.statuses[offer.id] ?? OfferApplicantsStatus.initial;
-        final applicants = state.applicants[offer.id] ?? const <Application>[];
-        final error = state.errors[offer.id];
 
-        Widget message(String text) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: surfaceContainer,
-              borderRadius: BorderRadius.circular(uiTileRadius),
-              border: Border.all(color: border),
-            ),
-            child: Text(text, style: TextStyle(color: muted, height: 1.4)),
+    return BlocListener<ApplicantInteractionCubit, ApplicantInteractionState>(
+      listener: (context, state) {
+        if (state is ApplicantInteractionSuccess) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          context.pushNamed(
+            'interview-chat',
+            pathParameters: {'id': state.interviewId},
+          );
+        } else if (state is ApplicantInteractionFailure) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        } else if (state is ApplicantInteractionLoading) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Iniciando entrevista...')),
           );
         }
-
-        switch (status) {
-          case OfferApplicantsStatus.initial:
-            return message(l10n.applicantsExpandToLoad);
-          case OfferApplicantsStatus.loading:
-            return const Padding(
-              padding: EdgeInsets.all(8),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          case OfferApplicantsStatus.failure:
-            return message(error ?? l10n.applicantsLoadError);
-          case OfferApplicantsStatus.success:
-            if (applicants.isEmpty) {
-              return message(l10n.applicantsEmpty);
-            }
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: applicants.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final application = applicants[index];
-                return ApplicantTile(
-                  application: application,
-                  onTap: application.candidateUid.trim().isEmpty
-                      ? null
-                      : () => context.push(
-                            '/company/offers/${offer.id}/applicants/${application.candidateUid}/cv',
-                          ),
-                  onStatusChanged: application.id == null
-                      ? null
-                      : (newStatus) {
-                          context
-                              .read<OfferApplicantsCubit>()
-                              .updateApplicationStatus(
-                                offerId: offer.id,
-                                applicationId: application.id!,
-                                newStatus: newStatus,
-                                companyUid: resolvedCompanyUid,
-                              );
-                        },
-                  onStartInterview: application.id == null
-                      ? null
-                      : () => _handleStartInterview(
-                            context,
-                            application.id!,
-                          ),
-                );
-              },
-            );
-        }
       },
+      child: BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
+        buildWhen: (previous, current) {
+          final prevStatus =
+              previous.statuses[offer.id] ?? OfferApplicantsStatus.initial;
+          final currentStatus =
+              current.statuses[offer.id] ?? OfferApplicantsStatus.initial;
+          final prevApplicants = previous.applicants[offer.id];
+          final currentApplicants = current.applicants[offer.id];
+          final prevError = previous.errors[offer.id];
+          final currentError = current.errors[offer.id];
+          return prevStatus != currentStatus ||
+              prevApplicants != currentApplicants ||
+              prevError != currentError;
+        },
+        builder: (context, state) {
+          final status =
+              state.statuses[offer.id] ?? OfferApplicantsStatus.initial;
+          final applicants = state.applicants[offer.id] ?? const <Application>[];
+          final error = state.errors[offer.id];
+
+          Widget message(String text) {
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: surfaceContainer,
+                borderRadius: BorderRadius.circular(uiTileRadius),
+                border: Border.all(color: border),
+              ),
+              child: Text(text, style: TextStyle(color: muted, height: 1.4)),
+            );
+          }
+
+          switch (status) {
+            case OfferApplicantsStatus.initial:
+              return message(l10n.applicantsExpandToLoad);
+            case OfferApplicantsStatus.loading:
+              return const Padding(
+                padding: EdgeInsets.all(8),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            case OfferApplicantsStatus.failure:
+              return message(error ?? l10n.applicantsLoadError);
+            case OfferApplicantsStatus.success:
+              if (applicants.isEmpty) {
+                return message(l10n.applicantsEmpty);
+              }
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: applicants.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final application = applicants[index];
+                  return ApplicantTile(
+                    application: application,
+                    onTap: application.candidateUid.trim().isEmpty
+                        ? null
+                        : () => context.push(
+                              '/company/offers/${offer.id}/applicants/${application.candidateUid}/cv',
+                            ),
+                    onStatusChanged: application.id == null
+                        ? null
+                        : (newStatus) {
+                            context
+                                .read<OfferApplicantsCubit>()
+                                .updateApplicationStatus(
+                                  offerId: offer.id,
+                                  applicationId: application.id!,
+                                  newStatus: newStatus,
+                                  companyUid: resolvedCompanyUid,
+                                );
+                          },
+                    onStartInterview: application.id == null
+                        ? null
+                        : () => _handleStartInterview(
+                              context,
+                              application.id!,
+                            ),
+                  );
+                },
+              );
+          }
+        },
+      ),
     );
   }
 
@@ -150,35 +190,7 @@ class OfferApplicantsSection extends StatelessWidget {
     if (!context.mounted) return;
 
     if (confirm == true) {
-      try {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Iniciando entrevista...')),
-        );
-        final repo = context.read<InterviewRepository>();
-        final interviewId = await repo.startInterview(applicationId);
-
-        if (context.mounted) {
-          context.pushNamed(
-            'interview-chat',
-            pathParameters: {'id': interviewId},
-          );
-        }
-      } on FirebaseFunctionsException catch (e) {
-        if (context.mounted) {
-          final message = e.message?.trim().isNotEmpty == true
-              ? e.message!
-              : 'No se pudo iniciar la entrevista.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error (${e.code}): $message')),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
-        }
-      }
+      context.read<ApplicantInteractionCubit>().startInterview(applicationId);
     }
   }
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/modules/candidates/cubits/job_offer_filter_cubit.dart';
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_options.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_components.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_logic.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_models.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_tokens.dart';
 
-class JobOfferFilterSidebar extends StatefulWidget {
+class JobOfferFilterSidebar extends StatelessWidget {
   const JobOfferFilterSidebar({
     super.key,
     required this.currentFilters,
@@ -18,37 +19,25 @@ class JobOfferFilterSidebar extends StatefulWidget {
   final ValueChanged<JobOfferFilters> onFiltersChanged;
 
   @override
-  State<JobOfferFilterSidebar> createState() => _JobOfferFilterSidebarState();
-}
-
-class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
-  late final JobOfferFilterSidebarController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = JobOfferFilterSidebarController(
-      initialFilters: widget.currentFilters,
-      onFiltersChanged: widget.onFiltersChanged,
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => JobOfferFilterCubit(
+        initialFilters: currentFilters,
+        onFiltersChanged: onFiltersChanged,
+      ),
+      child: _JobOfferFilterSidebarContent(
+        currentFilters: currentFilters,
+      ),
     );
   }
+}
 
-  @override
-  void didUpdateWidget(JobOfferFilterSidebar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.onFiltersChanged != oldWidget.onFiltersChanged) {
-      _controller.updateOnFiltersChanged(widget.onFiltersChanged);
-    }
-    if (widget.currentFilters != oldWidget.currentFilters) {
-      _controller.syncExternalFilters(widget.currentFilters);
-    }
-  }
+class _JobOfferFilterSidebarContent extends StatelessWidget {
+  const _JobOfferFilterSidebarContent({
+    required this.currentFilters,
+  });
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final JobOfferFilters currentFilters;
 
   @override
   Widget build(BuildContext context) {
@@ -56,15 +45,65 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
     final isDark = theme.brightness == Brightness.dark;
     final palette = JobOfferFilterPalette.fromTheme(theme);
 
-    return ValueListenableBuilder<JobOfferFilterSidebarViewState>(
-      valueListenable: _controller.state,
-      builder: (context, viewState, _) {
-        final filters = viewState.filters;
+    return BlocListener<JobOfferFilterCubit, JobOfferFilterState>(
+      listenWhen: (previous, current) => previous.filters != current.filters,
+      listener: (context, state) {
+        if (state.filters != currentFilters) {
+           // We could sync back here if needed, but the parent updates the widget
+           // and the Cubit has a sync method.
+           // However, standard flow is: Parent passes filters -> Cubit inits.
+           // If parent changes filters -> Widget rebuilds -> we need to sync Cubit.
+        }
+      },
+      child: _SidebarBody(
+        palette: palette,
+        isDark: isDark,
+        currentFilters: currentFilters,
+      ),
+    );
+  }
+}
+
+class _SidebarBody extends StatefulWidget {
+  const _SidebarBody({
+    required this.palette,
+    required this.isDark,
+    required this.currentFilters,
+  });
+
+  final JobOfferFilterPalette palette;
+  final bool isDark;
+  final JobOfferFilters currentFilters;
+
+  @override
+  State<_SidebarBody> createState() => _SidebarBodyState();
+}
+
+class _SidebarBodyState extends State<_SidebarBody> {
+  @override
+  void didUpdateWidget(covariant _SidebarBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentFilters != oldWidget.currentFilters) {
+      context
+          .read<JobOfferFilterCubit>()
+          .syncExternalFilters(widget.currentFilters);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<JobOfferFilterCubit, JobOfferFilterState>(
+      builder: (context, state) {
+        final cubit = context.read<JobOfferFilterCubit>();
+        final filters = state.filters;
+
         return Container(
           width: JobOfferFilterSidebarTokens.sidebarWidth,
           decoration: BoxDecoration(
-            color: palette.surface.withValues(alpha: isDark ? 1.0 : 0.8),
-            border: Border(right: BorderSide(color: palette.border, width: 1)),
+            color: widget.palette.surface
+                .withValues(alpha: widget.isDark ? 1.0 : 0.8),
+            border: Border(
+                right: BorderSide(color: widget.palette.border, width: 1)),
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(
@@ -73,14 +112,14 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                JobOfferFilterSidebarHeader(palette: palette),
+                JobOfferFilterSidebarHeader(palette: widget.palette),
                 const SizedBox(
                   height: JobOfferFilterSidebarTokens.panelPadding,
                 ),
                 JobOfferFilterTextField(
-                  palette: palette,
+                  palette: widget.palette,
                   hintText: 'Buscar ofertas...',
-                  controller: _controller.searchController,
+                  controller: cubit.searchController,
                   prefixIcon: Icons.search,
                   textFontSize: JobOfferFilterSidebarTokens.searchFontSize,
                   inputStyle: const JobOfferFilterInputStyle(
@@ -90,8 +129,8 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                     contentPadding:
                         JobOfferFilterSidebarTokens.searchFieldContentPadding,
                   ),
-                  onClear: _controller.clearSearchQuery,
-                  onChanged: _controller.updateSearchQuery,
+                  onClear: cubit.clearSearchQuery,
+                  onChanged: cubit.updateSearchQuery,
                 ),
                 const SizedBox(
                   height:
@@ -100,13 +139,13 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                 JobOfferFilterSection(
                   title: 'Ubicación',
                   icon: Icons.location_on_outlined,
-                  palette: palette,
+                  palette: widget.palette,
                   child: JobOfferFilterTextField(
-                    palette: palette,
+                    palette: widget.palette,
                     hintText: 'Ej: Madrid, Barcelona',
-                    controller: _controller.locationController,
+                    controller: cubit.locationController,
                     inputStyle: const JobOfferFilterInputStyle(),
-                    onChanged: _controller.updateLocation,
+                    onChanged: (val) => cubit.updateLocation(val),
                   ),
                 ),
                 const SizedBox(
@@ -115,14 +154,14 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                 JobOfferFilterSection(
                   title: 'Modalidad',
                   icon: Icons.work_outline,
-                  palette: palette,
+                  palette: widget.palette,
                   child: JobOfferFilterDropdownField(
-                    palette: palette,
+                    palette: widget.palette,
                     fieldKey: ValueKey(filters.jobType),
                     initialValue: filters.jobType,
                     items: jobOfferFilterJobTypes,
                     inputStyle: const JobOfferFilterInputStyle(),
-                    onChanged: _controller.updateJobType,
+                    onChanged: cubit.updateJobType,
                   ),
                 ),
                 const SizedBox(
@@ -131,13 +170,13 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                 JobOfferFilterSection(
                   title: 'Rango Salarial',
                   icon: Icons.payments_outlined,
-                  palette: palette,
+                  palette: widget.palette,
                   child: JobOfferSalaryRangeFilter(
-                    palette: palette,
-                    minSalary: viewState.minSalary,
-                    maxSalary: viewState.maxSalary,
-                    onChanged: _controller.updateSalaryPreview,
-                    onChangeEnd: _controller.commitSalaryRange,
+                    palette: widget.palette,
+                    minSalary: state.minSalary,
+                    maxSalary: state.maxSalary,
+                    onChanged: cubit.updateSalaryPreview,
+                    onChangeEnd: cubit.commitSalaryRange,
                   ),
                 ),
                 const SizedBox(
@@ -146,14 +185,14 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                 JobOfferFilterSection(
                   title: 'Educación',
                   icon: Icons.school_outlined,
-                  palette: palette,
+                  palette: widget.palette,
                   child: JobOfferFilterDropdownField(
-                    palette: palette,
+                    palette: widget.palette,
                     fieldKey: ValueKey(filters.education),
                     initialValue: filters.education,
                     items: jobOfferFilterEducationLevels,
                     inputStyle: const JobOfferFilterInputStyle(),
-                    onChanged: _controller.updateEducation,
+                    onChanged: cubit.updateEducation,
                   ),
                 ),
                 const SizedBox(
@@ -162,22 +201,22 @@ class _JobOfferFilterSidebarState extends State<JobOfferFilterSidebar> {
                 JobOfferFilterSection(
                   title: 'Empresa',
                   icon: Icons.business_outlined,
-                  palette: palette,
+                  palette: widget.palette,
                   child: JobOfferFilterTextField(
-                    palette: palette,
+                    palette: widget.palette,
                     hintText: 'Nombre de la empresa',
-                    controller: _controller.companyController,
+                    controller: cubit.companyController,
                     inputStyle: const JobOfferFilterInputStyle(),
-                    onChanged: _controller.updateCompany,
+                    onChanged: (val) => cubit.updateCompany(val),
                   ),
                 ),
                 const SizedBox(
                   height: JobOfferFilterSidebarTokens.clearButtonTopSpacing,
                 ),
-                if (viewState.hasActiveFilters)
+                if (state.hasActiveFilters)
                   JobOfferClearFiltersButton(
-                    palette: palette,
-                    onPressed: _controller.clearAllFilters,
+                    palette: widget.palette,
+                    onPressed: cubit.clearAllFilters,
                   ),
               ],
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/curriculum/logic/curriculum_read_only_logic.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/read_only/curriculum_read_only_sections.dart';
 
@@ -10,14 +11,16 @@ class CurriculumReadOnlyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = CurriculumReadOnlyLogic.buildViewModel(curriculum);
+
     return SelectionArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (curriculum.headline.trim().isNotEmpty) ...[
+          if (viewModel.hasHeadline) ...[
             const CurriculumReadOnlySectionTitle(text: 'Titular'),
             CurriculumReadOnlyTextCard(
-              text: curriculum.headline.trim(),
+              text: viewModel.headline,
               style: const TextStyle(
                 color: uiInk,
                 fontSize: 16,
@@ -27,46 +30,42 @@ class CurriculumReadOnlyView extends StatelessWidget {
             ),
             const SizedBox(height: uiSpacing24),
           ],
-          if (curriculum.summary.trim().isNotEmpty) ...[
+          if (viewModel.hasSummary) ...[
             const CurriculumReadOnlySectionTitle(text: 'Resumen Profesional'),
             CurriculumReadOnlyTextCard(
-              text: curriculum.summary.trim(),
+              text: viewModel.summary,
               style: const TextStyle(color: uiInk, fontSize: 15, height: 1.6),
             ),
             const SizedBox(height: uiSpacing24),
           ],
-          if (curriculum.phone.trim().isNotEmpty ||
-              curriculum.location.trim().isNotEmpty) ...[
+          if (viewModel.hasContactInfo) ...[
             const CurriculumReadOnlySectionTitle(
               text: 'Información de Contacto',
             ),
-            CurriculumReadOnlyContactCard(
-              phone: curriculum.phone,
-              location: curriculum.location,
-            ),
+            CurriculumReadOnlyContactCard(viewModel: viewModel.contact),
             const SizedBox(height: uiSpacing24),
           ],
-          if (curriculum.skills.isNotEmpty) ...[
+          if (viewModel.hasSkills) ...[
             const CurriculumReadOnlySectionTitle(
               text: 'Habilidades y Conocimientos',
             ),
-            CurriculumReadOnlySkillsCard(skills: curriculum.skills),
+            CurriculumReadOnlySkillsCard(skills: viewModel.skills),
             const SizedBox(height: uiSpacing24),
           ],
-          if (curriculum.experiences.isNotEmpty) ...[
+          if (viewModel.hasExperiences) ...[
             const CurriculumReadOnlySectionTitle(text: 'Experiencia Laboral'),
-            CurriculumReadOnlyItemsCard(items: curriculum.experiences),
+            CurriculumReadOnlyItemsCard(items: viewModel.experiences),
             const SizedBox(height: uiSpacing24),
           ],
-          if (curriculum.education.isNotEmpty) ...[
+          if (viewModel.hasEducation) ...[
             const CurriculumReadOnlySectionTitle(text: 'Formación Académica'),
-            CurriculumReadOnlyItemsCard(items: curriculum.education),
+            CurriculumReadOnlyItemsCard(items: viewModel.education),
             const SizedBox(height: uiSpacing24),
           ],
-          if (curriculum.attachment != null) ...[
+          if (viewModel.hasAttachment) ...[
             const CurriculumReadOnlySectionTitle(text: 'Curriculum Adjunto'),
             CurriculumReadOnlyAttachmentCard(
-              fileName: curriculum.attachment!.fileName,
+              fileName: viewModel.attachmentFileName!,
             ),
           ],
         ],

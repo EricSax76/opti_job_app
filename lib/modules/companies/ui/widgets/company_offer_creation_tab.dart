@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/features/ai/models/ai_job_offer_draft.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_offer_creation_content.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 import 'package:opti_job_app/modules/job_offers/models/generate_offer_dialog.dart';
 
-class CompanyOfferCreationTab extends StatefulWidget {
+class CompanyOfferCreationTab extends StatelessWidget {
   const CompanyOfferCreationTab({super.key});
 
   @override
-  State<CompanyOfferCreationTab> createState() =>
-      _CompanyOfferCreationTabState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => CompanyOfferCreationCubit(
+        aiRepository: context.read<AiRepository>(),
+      ),
+      child: const _CompanyOfferCreationView(),
+    );
+  }
 }
 
-class _CompanyOfferCreationTabState extends State<CompanyOfferCreationTab> {
+class _CompanyOfferCreationView extends StatefulWidget {
+  const _CompanyOfferCreationView();
+
+  @override
+  State<_CompanyOfferCreationView> createState() =>
+      _CompanyOfferCreationViewState();
+}
+
+class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
   final _formKey = GlobalKey<FormState>();
   final _formControllers = OfferFormControllers();
-  var _isGeneratingOffer = false;
 
   @override
   void dispose() {
@@ -33,6 +46,9 @@ class _CompanyOfferCreationTabState extends State<CompanyOfferCreationTab> {
   @override
   Widget build(BuildContext context) {
     final company = context.watch<CompanyAuthCubit>().state.company;
+    final isGeneratingOffer = context.select(
+      (CompanyOfferCreationCubit cubit) => cubit.state.isGeneratingOffer,
+    );
 
     return BlocListener<JobOfferFormCubit, JobOfferFormState>(
       listenWhen: (previous, current) => previous.status != current.status,
@@ -45,7 +61,7 @@ class _CompanyOfferCreationTabState extends State<CompanyOfferCreationTab> {
         companyName: company?.name,
         formKey: _formKey,
         formControllers: _formControllers,
-        isGeneratingOffer: _isGeneratingOffer,
+        isGeneratingOffer: isGeneratingOffer,
         onSubmit: () => _submit(context),
         onGenerateWithAi: () => _generateWithAi(context),
       ),
@@ -99,7 +115,8 @@ class _CompanyOfferCreationTabState extends State<CompanyOfferCreationTab> {
   }
 
   Future<void> _generateWithAi(BuildContext context) async {
-    if (_isGeneratingOffer) return;
+    final cubit = context.read<CompanyOfferCreationCubit>();
+    if (cubit.state.isGeneratingOffer) return;
 
     final company = context.read<CompanyAuthCubit>().state.company;
     if (company == null) {
@@ -133,16 +150,14 @@ class _CompanyOfferCreationTabState extends State<CompanyOfferCreationTab> {
     if (criteria == null) return;
     if (!context.mounted) return;
 
-    setState(() => _isGeneratingOffer = true);
     try {
-      final draft = await context.read<AiRepository>().generateJobOffer(
-        criteria: criteria,
-      );
-      if (!context.mounted) return;
-      _applyDraftToForm(draft);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Borrador generado. Revisa y publica.')),
-      );
+      final draft = await cubit.generateJobOffer(criteria: criteria);
+      if (draft != null && context.mounted) {
+        _applyDraftToForm(draft);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Borrador generado. Revisa y publica.')),
+        );
+      }
     } on AiConfigurationException catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
@@ -158,8 +173,6 @@ class _CompanyOfferCreationTabState extends State<CompanyOfferCreationTab> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo generar la oferta con IA.')),
       );
-    } finally {
-      if (mounted) setState(() => _isGeneratingOffer = false);
     }
   }
 

@@ -2,32 +2,29 @@ import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/modules/curriculum/ui/models/curriculum_read_only_view_model.dart';
 
 class CurriculumReadOnlyContactCard extends StatelessWidget {
-  const CurriculumReadOnlyContactCard({super.key, this.phone, this.location});
+  const CurriculumReadOnlyContactCard({super.key, required this.viewModel});
 
-  final String? phone;
-  final String? location;
+  final CurriculumReadOnlyContactViewModel viewModel;
 
   @override
   Widget build(BuildContext context) {
-    final hasPhone = phone != null && phone!.trim().isNotEmpty;
-    final hasLocation = location != null && location!.trim().isNotEmpty;
-
     return AppCard(
       padding: const EdgeInsets.all(uiSpacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasPhone)
-            _ContactRow(icon: Icons.phone_outlined, label: phone!.trim()),
-          if (hasPhone && hasLocation)
+          if (viewModel.hasPhone)
+            _ContactRow(icon: Icons.phone_outlined, label: viewModel.phone!),
+          if (viewModel.showDivider)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: uiSpacing12),
               child: Divider(height: 1),
             ),
-          if (hasLocation)
-            _ContactRow(icon: Icons.place_outlined, label: location!.trim()),
+          if (viewModel.hasLocation)
+            _ContactRow(icon: Icons.place_outlined, label: viewModel.location!),
         ],
       ),
     );

@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
-import 'package:opti_job_app/modules/companies/logic/company_candidates_logic.dart';
-import 'package:opti_job_app/modules/applications/ui/application_status.dart';
+import 'package:opti_job_app/modules/applicants/logic/company_candidates_logic.dart';
+import 'package:opti_job_app/modules/applications/models/application_status.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 class CandidateCard extends StatelessWidget {
@@ -140,7 +140,7 @@ class CandidateCard extends StatelessWidget {
                   child: ListTile(
                     title: Text(entry.offerTitle),
                     subtitle: Text(
-                      'Estado: ${applicationStatusLabel(entry.status)}',
+                      'Estado: ${ApplicationStatus.fromString(entry.status).label}',
                     ),
                     trailing: const Icon(Icons.open_in_new),
                     onTap: () {

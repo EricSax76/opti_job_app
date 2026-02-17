@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
-import 'package:opti_job_app/modules/curriculum/logic/curriculum_actions.dart';
+import 'package:opti_job_app/modules/curriculum/ui/controllers/curriculum_summary_actions_controller.dart';
 
 class CurriculumPersonalInfoForm extends StatefulWidget {
   const CurriculumPersonalInfoForm({super.key, required this.state});
@@ -17,6 +17,19 @@ class CurriculumPersonalInfoForm extends StatefulWidget {
 class _CurriculumPersonalInfoFormState
     extends State<CurriculumPersonalInfoForm> {
   var _isImprovingSummary = false;
+
+  Future<void> _handleImproveSummary() async {
+    if (widget.state.isSaving || _isImprovingSummary) return;
+    setState(() => _isImprovingSummary = true);
+    try {
+      await CurriculumSummaryActionsController.improveSummary(
+        context: context,
+        state: widget.state,
+      );
+    } finally {
+      if (mounted) setState(() => _isImprovingSummary = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,50 +71,7 @@ class _CurriculumPersonalInfoFormState
               child: TextButton.icon(
                 onPressed: widget.state.isSaving || _isImprovingSummary
                     ? null
-                    : () async {
-                        setState(() => _isImprovingSummary = true);
-                        try {
-                          final result = await CurriculumLogic.improveSummary(
-                            context: context,
-                            state: widget.state,
-                          );
-                          if (!context.mounted) return;
-                          
-                          if (result is ActionFailure) {
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text((result as ActionFailure).message)),
-                             );
-                          } else if (result is ActionSuccess<String>) {
-                             final suggestion = result.data;
-                             if (suggestion != null) {
-                                final shouldApply = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: const Text('Resumen sugerido'),
-                                      content: SingleChildScrollView(child: SelectableText(suggestion)),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.of(context).pop(false),
-                                          child: const Text('Cancelar'),
-                                        ),
-                                        FilledButton(
-                                          onPressed: () => Navigator.of(context).pop(true),
-                                          child: const Text('Aplicar'),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                                if (shouldApply == true && context.mounted) {
-                                  context.read<CurriculumFormCubit>().summaryController.text = suggestion;
-                                }
-                             }
-                          }
-                        } finally {
-                          if (mounted) setState(() => _isImprovingSummary = false);
-                        }
-                    },
+                    : _handleImproveSummary,
                 style: TextButton.styleFrom(
                   backgroundColor: uiAccentSoft,
                   padding: const EdgeInsets.symmetric(horizontal: uiSpacing12),
@@ -118,7 +88,10 @@ class _CurriculumPersonalInfoFormState
                     : const Icon(Icons.auto_awesome, size: 16),
                 label: Text(
                   _isImprovingSummary ? 'Mejorando...' : 'Mejorar con IA',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -152,4 +125,3 @@ class _CurriculumPersonalInfoFormState
     );
   }
 }
-

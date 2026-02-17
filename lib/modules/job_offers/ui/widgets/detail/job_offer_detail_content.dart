@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/widgets/state_message.dart';
-import 'package:opti_job_app/modules/applications/ui/application_status.dart';
+import 'package:opti_job_app/modules/applications/ui/widgets/application_status_badge.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_actions.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_details.dart';
@@ -57,7 +57,7 @@ class JobOfferDetailContent extends StatelessWidget {
           companyAvatarUrl: companyAvatarUrl,
           statusChip: application == null
               ? null
-              : applicationStatusChip(application.status),
+              : ApplicationStatusBadge.fromString(application.status),
         ),
         const SizedBox(height: 14),
         Expanded(child: JobOfferDetails(offer: offer)),
