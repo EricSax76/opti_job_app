@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/applicants/logic/dashboard_candidates_card_logic.dart';
+import 'package:opti_job_app/modules/applicants/ui/models/dashboard_candidates_card_view_model.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 
 class DashboardCandidatesCard extends StatelessWidget {
@@ -26,10 +28,7 @@ class DashboardCandidatesCard extends StatelessWidget {
       ),
       child: BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
         builder: (context, state) {
-          final candidates = _uniqueCandidates(state);
-          final isLoading = state.statuses.values.any(
-            (s) => s == OfferApplicantsStatus.loading,
-          );
+          final viewModel = DashboardCandidatesCardLogic.buildViewModel(state);
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +44,7 @@ class DashboardCandidatesCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                '${candidates.length}',
+                '${viewModel.totalCandidates}',
                 style: TextStyle(
                   color: ink,
                   fontSize: 34,
@@ -53,9 +52,9 @@ class DashboardCandidatesCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              if (isLoading && candidates.isEmpty)
+              if (viewModel.shouldShowLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (candidates.isEmpty)
+              else if (viewModel.shouldShowEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -74,7 +73,7 @@ class DashboardCandidatesCard extends StatelessWidget {
               else
                 Column(
                   children: [
-                    for (final candidate in candidates.take(5))
+                    for (final candidate in viewModel.topCandidates())
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: _CandidateRow(candidate: candidate),
@@ -89,39 +88,9 @@ class DashboardCandidatesCard extends StatelessWidget {
   }
 }
 
-class _CandidateSummary {
-  const _CandidateSummary({
-    required this.candidateUid,
-    required this.displayName,
-  });
-  final String candidateUid;
-  final String displayName;
-}
-
-List<_CandidateSummary> _uniqueCandidates(OfferApplicantsState state) {
-  final byUid = <String, _CandidateSummary>{};
-  for (final applications in state.applicants.values) {
-    for (final application in applications) {
-      final uid = application.candidateUid.trim();
-      if (uid.isEmpty) continue;
-      if (byUid.containsKey(uid)) continue;
-      final displayName = (application.candidateName?.trim().isNotEmpty == true)
-          ? application.candidateName!.trim()
-          : (application.candidateEmail?.trim().isNotEmpty == true)
-          ? application.candidateEmail!.trim()
-          : uid;
-      byUid[uid] = _CandidateSummary(
-        candidateUid: uid,
-        displayName: displayName,
-      );
-    }
-  }
-  return byUid.values.toList();
-}
-
 class _CandidateRow extends StatelessWidget {
   const _CandidateRow({required this.candidate});
-  final _CandidateSummary candidate;
+  final DashboardCandidateSummaryViewModel candidate;
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
-import 'package:opti_job_app/features/ai/models/ai_job_offer_draft.dart';
-import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
+import 'package:opti_job_app/modules/companies/logic/company_offer_creation_controller.dart';
+import 'package:opti_job_app/modules/companies/logic/company_offer_creation_logic.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_offer_creation_content.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
-import 'package:opti_job_app/modules/job_offers/models/generate_offer_dialog.dart';
 
 class CompanyOfferCreationTab extends StatelessWidget {
   const CompanyOfferCreationTab({super.key});
@@ -17,9 +14,7 @@ class CompanyOfferCreationTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CompanyOfferCreationCubit(
-        aiRepository: context.read<AiRepository>(),
-      ),
+      create: CompanyOfferCreationController.createCubit,
       child: const _CompanyOfferCreationView(),
     );
   }
@@ -49,146 +44,34 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
     final isGeneratingOffer = context.select(
       (CompanyOfferCreationCubit cubit) => cubit.state.isGeneratingOffer,
     );
+    final viewModel = CompanyOfferCreationLogic.buildViewModel(
+      companyName: company?.name,
+      isGeneratingOffer: isGeneratingOffer,
+    );
 
     return BlocListener<JobOfferFormCubit, JobOfferFormState>(
-      listenWhen: (previous, current) => previous.status != current.status,
-      listener: (context, state) {
-        if (state.status == JobOfferFormStatus.success) {
-          _resetForm();
-        }
-      },
+      listenWhen: CompanyOfferCreationLogic.shouldResetFormOnStatusChange,
+      listener: (_, state) =>
+          CompanyOfferCreationController.handleJobOfferFormStatus(
+            state: state,
+            formKey: _formKey,
+            formControllers: _formControllers,
+          ),
       child: CompanyOfferCreationContent(
-        companyName: company?.name,
+        companyName: viewModel.companyName,
         formKey: _formKey,
         formControllers: _formControllers,
-        isGeneratingOffer: isGeneratingOffer,
-        onSubmit: () => _submit(context),
-        onGenerateWithAi: () => _generateWithAi(context),
+        isGeneratingOffer: viewModel.isGeneratingOffer,
+        onSubmit: () => CompanyOfferCreationController.submit(
+          context: context,
+          formKey: _formKey,
+          formControllers: _formControllers,
+        ),
+        onGenerateWithAi: () => CompanyOfferCreationController.generateWithAi(
+          context: context,
+          formControllers: _formControllers,
+        ),
       ),
     );
-  }
-
-  void _resetForm() {
-    _formKey.currentState?.reset();
-    _formControllers.clear();
-  }
-
-  void _submit(BuildContext context) {
-    if (!_formKey.currentState!.validate()) return;
-
-    final company = context.read<CompanyAuthCubit>().state.company;
-    if (company == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Debes iniciar sesión como empresa para publicar.'),
-        ),
-      );
-      return;
-    }
-
-    context.read<JobOfferFormCubit>().submit(
-      JobOfferPayload(
-        title: _formControllers.title.text.trim(),
-        description: _formControllers.description.text.trim(),
-        location: _formControllers.location.text.trim(),
-        companyId: company.id,
-        companyUid: company.uid,
-        companyName: company.name,
-        companyAvatarUrl: company.avatarUrl,
-        jobType: _formControllers.jobType.text.trim().isEmpty
-            ? null
-            : _formControllers.jobType.text.trim(),
-        salaryMin: _formControllers.salaryMin.text.trim().isEmpty
-            ? null
-            : _formControllers.salaryMin.text.trim(),
-        salaryMax: _formControllers.salaryMax.text.trim().isEmpty
-            ? null
-            : _formControllers.salaryMax.text.trim(),
-        education: _formControllers.education.text.trim().isEmpty
-            ? null
-            : _formControllers.education.text.trim(),
-        keyIndicators: _formControllers.keyIndicators.text.trim().isEmpty
-            ? null
-            : _formControllers.keyIndicators.text.trim(),
-      ),
-    );
-  }
-
-  Future<void> _generateWithAi(BuildContext context) async {
-    final cubit = context.read<CompanyOfferCreationCubit>();
-    if (cubit.state.isGeneratingOffer) return;
-
-    final company = context.read<CompanyAuthCubit>().state.company;
-    if (company == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Debes iniciar sesión como empresa para generar ofertas.',
-          ),
-        ),
-      );
-      return;
-    }
-
-    final criteria = await showDialog<Map<String, dynamic>>(
-      context: context,
-      useRootNavigator: false,
-      builder: (dialogContext) {
-        return GenerateOfferDialog(
-          companyName: company.name,
-          initialRole: _formControllers.title.text.trim(),
-          initialLocation: _formControllers.location.text.trim(),
-          initialJobType: _formControllers.jobType.text.trim(),
-          initialSalaryMin: _formControllers.salaryMin.text.trim(),
-          initialSalaryMax: _formControllers.salaryMax.text.trim(),
-          initialEducation: _formControllers.education.text.trim(),
-          initialKeyIndicators: _formControllers.keyIndicators.text.trim(),
-        );
-      },
-    );
-
-    if (criteria == null) return;
-    if (!context.mounted) return;
-
-    try {
-      final draft = await cubit.generateJobOffer(criteria: criteria);
-      if (draft != null && context.mounted) {
-        _applyDraftToForm(draft);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Borrador generado. Revisa y publica.')),
-        );
-      }
-    } on AiConfigurationException catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
-    } on AiRequestException catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo generar la oferta con IA.')),
-      );
-    }
-  }
-
-  void _applyDraftToForm(AiJobOfferDraft draft) {
-    _formControllers.title.text = draft.title;
-    _formControllers.description.text = draft.description;
-    _formControllers.location.text = draft.location;
-    _formControllers.jobType.text =
-        draft.jobType ?? _formControllers.jobType.text;
-    _formControllers.education.text =
-        draft.education ?? _formControllers.education.text;
-    _formControllers.salaryMin.text =
-        draft.salaryMin ?? _formControllers.salaryMin.text;
-    _formControllers.salaryMax.text =
-        draft.salaryMax ?? _formControllers.salaryMax.text;
-    _formControllers.keyIndicators.text =
-        draft.keyIndicators ?? _formControllers.keyIndicators.text;
   }
 }

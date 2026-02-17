@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/applicants/cubits/applicant_curriculum_cubit.dart';
+import 'package:opti_job_app/modules/applicants/logic/applicant_curriculum_screen_controller.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/applicant_curriculum_widgets.dart';
-import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
-import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
-import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
-import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
-class ApplicantCurriculumScreen extends StatelessWidget {
+class ApplicantCurriculumScreen extends StatefulWidget {
   const ApplicantCurriculumScreen({
     super.key,
     required this.candidateUid,
@@ -19,17 +16,37 @@ class ApplicantCurriculumScreen extends StatelessWidget {
   final String offerId;
 
   @override
+  State<ApplicantCurriculumScreen> createState() =>
+      _ApplicantCurriculumScreenState();
+}
+
+class _ApplicantCurriculumScreenState extends State<ApplicantCurriculumScreen> {
+  late final ApplicantCurriculumCubit _cubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = ApplicantCurriculumScreenController.createCubit(context);
+    ApplicantCurriculumScreenController.loadInitialData(
+      cubit: _cubit,
+      candidateUid: widget.candidateUid,
+      offerId: widget.offerId,
+    );
+  }
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ApplicantCurriculumCubit(
-        profileRepository: context.read<ProfileRepository>(),
-        curriculumRepository: context.read<CurriculumRepository>(),
-        jobOfferRepository: context.read<JobOfferRepository>(),
-        aiRepository: context.read<AiRepository>(),
-      )..loadData(candidateUid: candidateUid, offerId: offerId),
+    return BlocProvider.value(
+      value: _cubit,
       child: _ApplicantCurriculumView(
-        candidateUid: candidateUid,
-        offerId: offerId,
+        candidateUid: widget.candidateUid,
+        offerId: widget.offerId,
       ),
     );
   }
@@ -47,25 +64,8 @@ class _ApplicantCurriculumView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ApplicantCurriculumCubit, ApplicantCurriculumState>(
-      listenWhen: (previous, current) {
-        return previous.infoMessage != current.infoMessage ||
-            previous.matchResult != current.matchResult;
-      },
-      listener: (context, state) {
-        final infoMessage = state.infoMessage;
-        if (infoMessage != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(infoMessage)));
-        }
-        final matchResult = state.matchResult;
-        if (matchResult != null) {
-          showDialog(
-            context: context,
-            builder: (_) => MatchResultDialog(result: matchResult),
-          );
-        }
-      },
+      listenWhen: ApplicantCurriculumScreenController.shouldListen,
+      listener: ApplicantCurriculumScreenController.handleSideEffects,
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(title: const Text('CV del aplicante')),

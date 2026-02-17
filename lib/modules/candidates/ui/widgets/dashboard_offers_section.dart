@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
+import 'package:opti_job_app/modules/candidates/logic/dashboard_offers_section_logic.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_offers_grid.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 
@@ -15,34 +16,28 @@ class DashboardOffersSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<JobOffersCubit>();
     final appliedOfferIds = context.select<MyApplicationsCubit, Set<String>>(
-      (cubit) => cubit.state.applications
-          .map((entry) => entry.application.jobOfferId)
-          .toSet(),
+      (applicationsCubit) => DashboardOffersSectionLogic.resolveAppliedOfferIds(
+        applicationsCubit.state,
+      ),
     );
 
     return BlocBuilder<JobOffersCubit, JobOffersState>(
-      buildWhen: (previous, current) =>
-          previous.status != current.status ||
-          previous.offers != current.offers ||
-          previous.filteredOffers != current.filteredOffers ||
-          previous.companiesById != current.companiesById ||
-          previous.errorMessage != current.errorMessage ||
-          previous.activeFilters != current.activeFilters ||
-          previous.isLoadingMore != current.isLoadingMore,
+      buildWhen: DashboardOffersSectionLogic.shouldRebuild,
       builder: (context, state) {
-        final offers = state.displayedOffers
-            .where((offer) => !appliedOfferIds.contains(offer.id))
-            .toList(growable: false);
+        final viewModel = DashboardOffersSectionLogic.buildViewModel(
+          state: state,
+          appliedOfferIds: appliedOfferIds,
+        );
 
         return DashboardOffersGrid(
-          status: state.status.name, // Using status name as string
-          offers: offers,
-          companiesById: state.companiesById,
+          status: viewModel.status,
+          offers: viewModel.offers,
+          companiesById: viewModel.companiesById,
           showTwoColumns: showTwoColumns,
-          isLoadingMore: state.isLoadingMore,
-          hasMore: state.hasMore,
-          hasActiveFilters: state.activeFilters.hasActiveFilters,
-          errorMessage: state.errorMessage,
+          isLoadingMore: viewModel.isLoadingMore,
+          hasMore: viewModel.hasMore,
+          hasActiveFilters: viewModel.hasActiveFilters,
+          errorMessage: viewModel.errorMessage,
           onRetry: () => cubit.loadOffers(forceRefresh: true),
           onClearFilters: () => cubit.clearFilters(),
           onLoadMore: () => cubit.loadMoreOffers(),

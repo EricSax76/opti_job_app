@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/config/feature_flags.dart';
+import 'package:opti_job_app/modules/candidates/logic/candidate_dashboard_scaffold_controller.dart';
 import 'package:opti_job_app/modules/candidates/logic/candidate_dashboard_screen_logic.dart';
 import 'package:opti_job_app/modules/candidates/ui/models/candidate_dashboard_screen_view_model.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_app_bar.dart';
@@ -64,8 +65,9 @@ class CandidateDashboardScaffold extends StatelessWidget {
               },
             )
           : null,
-      bottomNavigationBar:
-          viewModel.showBottomNavigationBar ? _buildBottomBar(viewModel) : null,
+      bottomNavigationBar: viewModel.showBottomNavigationBar
+          ? _buildBottomBar(viewModel)
+          : null,
       body: viewModel.showNavigationSidebar
           ? Row(
               children: [
@@ -125,15 +127,11 @@ class _CandidateDashboardContent extends StatelessWidget {
             candidateUid: candidateUid,
             interviewsEnabled: FeatureFlags.interviews,
           ),
-      listener: (context, state) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Tienes nuevos mensajes de entrevista'),
-            action: SnackBarAction(label: 'Ver', onPressed: onOpenInterviews),
-            behavior: SnackBarBehavior.floating,
+      listener: (context, _) =>
+          CandidateDashboardScaffoldController.showNewInterviewMessage(
+            context: context,
+            onOpenInterviews: onOpenInterviews,
           ),
-        );
-      },
       child: IndexedStack(
         index: selectedIndex,
         children: List<Widget>.generate(

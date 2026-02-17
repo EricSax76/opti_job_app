@@ -5,11 +5,11 @@ import 'package:opti_job_app/l10n/app_localizations.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
-import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/applicant_tile.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/applicants/cubits/applicant_interaction_cubit.dart';
+import 'package:opti_job_app/modules/applicants/logic/offer_applicants_section_logic.dart';
 
 class OfferApplicantsSection extends StatelessWidget {
   const OfferApplicantsSection({
@@ -24,9 +24,8 @@ class OfferApplicantsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ApplicantInteractionCubit(
-        context.read<InterviewRepository>(),
-      ),
+      create: (context) =>
+          ApplicantInteractionCubit(context.read<InterviewRepository>()),
       child: _OfferApplicantsContent(offer: offer, companyUid: companyUid),
     );
   }
@@ -58,42 +57,19 @@ class _OfferApplicantsContent extends StatelessWidget {
     }
 
     return BlocListener<ApplicantInteractionCubit, ApplicantInteractionState>(
-      listener: (context, state) {
-        if (state is ApplicantInteractionSuccess) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          context.pushNamed(
-            'interview-chat',
-            pathParameters: {'id': state.interviewId},
-          );
-        } else if (state is ApplicantInteractionFailure) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
-        } else if (state is ApplicantInteractionLoading) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Iniciando entrevista...')),
-          );
-        }
-      },
+      listener: OfferApplicantsSectionLogic.handleInteractionState,
       child: BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
-        buildWhen: (previous, current) {
-          final prevStatus =
-              previous.statuses[offer.id] ?? OfferApplicantsStatus.initial;
-          final currentStatus =
-              current.statuses[offer.id] ?? OfferApplicantsStatus.initial;
-          final prevApplicants = previous.applicants[offer.id];
-          final currentApplicants = current.applicants[offer.id];
-          final prevError = previous.errors[offer.id];
-          final currentError = current.errors[offer.id];
-          return prevStatus != currentStatus ||
-              prevApplicants != currentApplicants ||
-              prevError != currentError;
-        },
+        buildWhen: (previous, current) =>
+            OfferApplicantsSectionLogic.shouldRebuildOfferApplicants(
+              previous: previous,
+              current: current,
+              offerId: offer.id,
+            ),
         builder: (context, state) {
-          final status =
-              state.statuses[offer.id] ?? OfferApplicantsStatus.initial;
-          final applicants = state.applicants[offer.id] ?? const <Application>[];
-          final error = state.errors[offer.id];
+          final viewModel = OfferApplicantsSectionLogic.buildViewModel(
+            state: state,
+            offerId: offer.id,
+          );
 
           Widget message(String text) {
             return Container(
@@ -108,7 +84,7 @@ class _OfferApplicantsContent extends StatelessWidget {
             );
           }
 
-          switch (status) {
+          switch (viewModel.status) {
             case OfferApplicantsStatus.initial:
               return message(l10n.applicantsExpandToLoad);
             case OfferApplicantsStatus.loading:
@@ -117,25 +93,28 @@ class _OfferApplicantsContent extends StatelessWidget {
                 child: Center(child: CircularProgressIndicator()),
               );
             case OfferApplicantsStatus.failure:
-              return message(error ?? l10n.applicantsLoadError);
+              return message(
+                viewModel.errorMessage ?? l10n.applicantsLoadError,
+              );
             case OfferApplicantsStatus.success:
-              if (applicants.isEmpty) {
+              if (viewModel.applicants.isEmpty) {
                 return message(l10n.applicantsEmpty);
               }
               return ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: applicants.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemCount: viewModel.applicants.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 10),
                 itemBuilder: (context, index) {
-                  final application = applicants[index];
+                  final application = viewModel.applicants[index];
                   return ApplicantTile(
                     application: application,
                     onTap: application.candidateUid.trim().isEmpty
                         ? null
                         : () => context.push(
-                              '/company/offers/${offer.id}/applicants/${application.candidateUid}/cv',
-                            ),
+                            '/company/offers/${offer.id}/applicants/${application.candidateUid}/cv',
+                          ),
                     onStatusChanged: application.id == null
                         ? null
                         : (newStatus) {
@@ -150,10 +129,13 @@ class _OfferApplicantsContent extends StatelessWidget {
                           },
                     onStartInterview: application.id == null
                         ? null
-                        : () => _handleStartInterview(
-                              context,
-                              application.id!,
-                            ),
+                        : () =>
+                              OfferApplicantsSectionLogic.requestInterviewStart(
+                                context: context,
+                                interactionCubit: context
+                                    .read<ApplicantInteractionCubit>(),
+                                applicationId: application.id!,
+                              ),
                   );
                 },
               );
@@ -161,36 +143,5 @@ class _OfferApplicantsContent extends StatelessWidget {
         },
       ),
     );
-  }
-
-  Future<void> _handleStartInterview(
-    BuildContext context,
-    String applicationId,
-  ) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Iniciar entrevista'),
-        content: const Text(
-          'Esto creará una sala de chat con el candidato. ¿Continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Iniciar'),
-          ),
-        ],
-      ),
-    );
-
-    if (!context.mounted) return;
-
-    if (confirm == true) {
-      context.read<ApplicantInteractionCubit>().startInterview(applicationId);
-    }
   }
 }
