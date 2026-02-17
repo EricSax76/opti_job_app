@@ -14,6 +14,9 @@ import 'package:opti_job_app/modules/curriculum/repositories/curriculum_reposito
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
+import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AppDependencies {
   AppDependencies._({
@@ -23,6 +26,7 @@ class AppDependencies {
     required this.companiesRepository,
     required this.applicantsRepository,
     required this.curriculumRepository,
+    required this.cvAnalysisService,
     required this.calendarRepository,
     required this.applicationRepository,
     required this.applicationService,
@@ -30,6 +34,7 @@ class AppDependencies {
     required this.coverLetterRepository,
     required this.videoCurriculumRepository,
     required this.interviewRepository,
+    required this.firebaseAuth,
   });
 
   factory AppDependencies.create() {
@@ -46,6 +51,7 @@ class AppDependencies {
       companiesRepository: getIt<CompaniesRepository>(),
       applicantsRepository: getIt<ApplicantsRepository>(),
       curriculumRepository: getIt<CurriculumRepository>(),
+      cvAnalysisService: getIt<CvAnalysisService>(),
       calendarRepository: getIt<CalendarRepository>(),
       applicationRepository: getIt<ApplicationRepository>(),
       applicationService: getIt<ApplicationService>(),
@@ -53,6 +59,7 @@ class AppDependencies {
       coverLetterRepository: getIt<CoverLetterRepository>(),
       videoCurriculumRepository: getIt<VideoCurriculumRepository>(),
       interviewRepository: getIt<InterviewRepository>(),
+      firebaseAuth: getIt<FirebaseAuth>(),
     );
   }
 
@@ -62,6 +69,7 @@ class AppDependencies {
   final CompaniesRepository companiesRepository;
   final ApplicantsRepository applicantsRepository;
   final CurriculumRepository curriculumRepository;
+  final CvAnalysisService cvAnalysisService;
   final CalendarRepository calendarRepository;
   final ApplicationRepository applicationRepository;
   final ApplicationService applicationService;
@@ -69,4 +77,5 @@ class AppDependencies {
   final CoverLetterRepository coverLetterRepository;
   final VideoCurriculumRepository videoCurriculumRepository;
   final InterviewRepository interviewRepository;
+  final FirebaseAuth firebaseAuth;
 }

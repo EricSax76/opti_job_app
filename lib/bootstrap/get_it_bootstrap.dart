@@ -1,8 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:opti_job_app/auth/models/auth_service.dart';
+import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
+import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/features/ai/models/ai_service.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
@@ -31,6 +36,8 @@ void setupGetIt({
   FirebaseStorage? storage,
   FirebaseFunctions? functions,
   FirebaseFunctions? fallbackFunctions,
+  FirebaseAuth? auth,
+  FirebaseAI? firebaseAI,
 }) {
   final getIt = GetIt.instance;
   final firestoreInstance = firestore ?? FirebaseFirestore.instance;
@@ -39,13 +46,22 @@ void setupGetIt({
       functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
   final fallbackFunctionsInstance =
       fallbackFunctions ?? FirebaseFunctions.instance;
+  final authInstance = auth ?? FirebaseAuth.instance;
+  final firebaseAIInstance = firebaseAI ?? _createFirebaseAI(authInstance);
 
   // External
   getIt.registerSingleton<FirebaseFirestore>(firestoreInstance);
   getIt.registerSingleton<FirebaseStorage>(storageInstance);
+  getIt.registerSingleton<FirebaseAuth>(authInstance);
+  getIt.registerSingleton<FirebaseAI>(firebaseAIInstance);
 
   // Auth
-  getIt.registerLazySingleton(() => AuthService());
+  getIt.registerLazySingleton(
+    () => AuthService(
+      firebaseAuth: getIt<FirebaseAuth>(),
+      firestore: getIt<FirebaseFirestore>(),
+    ),
+  );
   getIt.registerLazySingleton(() => AuthRepository(getIt<AuthService>()));
 
   // Job Offers
@@ -75,9 +91,17 @@ void setupGetIt({
   getIt.registerLazySingleton(
     () => CurriculumRepository(getIt<CurriculumService>()),
   );
+  getIt.registerLazySingleton(
+    () => CvAnalysisService(aiClient: getIt<FirebaseAiClient>()),
+  );
 
   // Calendar
-  getIt.registerLazySingleton(() => CalendarRepository());
+  getIt.registerLazySingleton(
+    () => CalendarRepository(
+      firestore: getIt<FirebaseFirestore>(),
+      firebaseAuth: getIt<FirebaseAuth>(),
+    ),
+  );
 
   // Application
   getIt.registerLazySingleton(
@@ -103,7 +127,15 @@ void setupGetIt({
   );
 
   // AI
-  getIt.registerLazySingleton(() => AiService());
+  getIt.registerLazySingleton<FirebaseAiClient>(
+    () => FirebaseAiClient(
+      firebaseAI: getIt<FirebaseAI>(),
+      auth: getIt<FirebaseAuth>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => AiService(client: getIt<FirebaseAiClient>()),
+  );
   getIt.registerLazySingleton(() => AiRepository(getIt<AiService>()));
 
   // Cover Letter
@@ -116,7 +148,10 @@ void setupGetIt({
 
   // Video Curriculum
   getIt.registerLazySingleton(
-    () => VideoCurriculumService(firestore: getIt<FirebaseFirestore>()),
+    () => VideoCurriculumService(
+      firestore: getIt<FirebaseFirestore>(),
+      storage: getIt<FirebaseStorage>(),
+    ),
   );
   getIt.registerLazySingleton(
     () => VideoCurriculumRepository(getIt<VideoCurriculumService>()),
@@ -129,5 +164,26 @@ void setupGetIt({
       functions: functionsInstance,
       fallbackFunctions: fallbackFunctionsInstance,
     ),
+  );
+}
+
+FirebaseAI _createFirebaseAI(FirebaseAuth auth) {
+  const backend = String.fromEnvironment(
+    'FIREBASE_AI_BACKEND',
+    defaultValue: 'vertex',
+  ); // 'vertex' | 'google'
+
+  if (backend == 'google') {
+    return FirebaseAI.googleAI(auth: auth, appCheck: FirebaseAppCheck.instance);
+  }
+
+  const location = String.fromEnvironment(
+    'FIREBASE_AI_LOCATION',
+    defaultValue: 'europe-southwest1',
+  );
+  return FirebaseAI.vertexAI(
+    auth: auth,
+    location: location,
+    appCheck: FirebaseAppCheck.instance,
   );
 }

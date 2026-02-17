@@ -12,6 +12,7 @@ import 'package:opti_job_app/modules/candidates/logic/candidate_dashboard_screen
 import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navigation.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_pages.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_scaffold.dart';
+import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 
@@ -26,6 +27,7 @@ class CandidateDashboardScreen extends StatefulWidget {
     required this.applicationsCubit,
     required this.interviewsCubit,
     required this.curriculumFormCubit,
+    required this.calendarCubit,
     required this.profileCubit,
   });
 
@@ -34,6 +36,7 @@ class CandidateDashboardScreen extends StatefulWidget {
   final MyApplicationsCubit applicationsCubit;
   final InterviewListCubit interviewsCubit;
   final CurriculumFormCubit curriculumFormCubit;
+  final CalendarCubit calendarCubit;
   final ProfileCubit profileCubit;
 
   @override
@@ -112,6 +115,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
         BlocProvider.value(value: _dashboardCubit),
         BlocProvider.value(value: widget.applicationsCubit),
         BlocProvider.value(value: widget.interviewsCubit),
+        BlocProvider.value(value: widget.calendarCubit),
         BlocProvider.value(value: widget.profileCubit),
         // CurriculumFormCubit provided by CurriculumScreen
       ],

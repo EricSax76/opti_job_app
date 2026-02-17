@@ -39,7 +39,7 @@ import 'package:opti_job_app/modules/applicants/repositories/applicants_reposito
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/interviews/ui/pages/interview_chat_page.dart';
 
-import 'package:get_it/get_it.dart';
+
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/applicants/cubits/applicant_curriculum_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
@@ -47,6 +47,8 @@ import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
+import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
+import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
 
 /// Listens to a stream and notifies GoRouter when auth state changes.
 class GoRouterCombinedRefreshStream extends ChangeNotifier {
@@ -113,9 +115,9 @@ class AppRouter {
 
             final cubit = JobOfferDetailCubit(
               context.read<JobOfferRepository>(),
-              GetIt.I<ApplicationService>(),
+              context.read<ApplicationService>(),
               curriculumRepository: context.read<CurriculumRepository>(),
-              aiRepository: GetIt.I<AiRepository>(),
+              aiRepository: context.read<AiRepository>(),
             )..start(id, candidateUid: candidateUid);
 
             return BlocProvider(
@@ -131,27 +133,32 @@ class AppRouter {
             final uid =
                 context.read<CandidateAuthCubit>().state.candidate?.uid ?? '';
             final applicationsCubit = MyApplicationsCubit(
-              applicationService: GetIt.I<ApplicationService>(),
+              applicationService: context.read<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-              firebaseAuth: FirebaseAuth.instance,
+              firebaseAuth: context.read<FirebaseAuth>(),
             )..start();
 
             final interviewsCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: uid,
             )..start();
 
             final curriculumCubit = context.read<CurriculumCubit>();
             final curriculumFormCubit = CurriculumFormCubit(
               curriculumCubit: curriculumCubit,
-              analysisService: CvAnalysisService(),
+              analysisService: context.read<CvAnalysisService>(),
             );
+
+            final calendarCubit = CalendarCubit(
+              context.read<CalendarRepository>(),
+            )..loadMonth(DateTime.now());
 
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => applicationsCubit),
                 BlocProvider(create: (_) => interviewsCubit),
                 BlocProvider(create: (_) => curriculumFormCubit),
+                BlocProvider(create: (_) => calendarCubit),
               ],
               child: CandidateDashboardScreen(
                 uid: uid,
@@ -159,6 +166,7 @@ class AppRouter {
                 applicationsCubit: applicationsCubit,
                 interviewsCubit: interviewsCubit,
                 curriculumFormCubit: curriculumFormCubit,
+                calendarCubit: calendarCubit,
                 profileCubit: context.read<ProfileCubit>(),
               ),
             );
@@ -170,27 +178,32 @@ class AppRouter {
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
             final applicationsCubit = MyApplicationsCubit(
-              applicationService: GetIt.I<ApplicationService>(),
+              applicationService: context.read<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-              firebaseAuth: FirebaseAuth.instance,
+              firebaseAuth: context.read<FirebaseAuth>(),
             )..start();
 
             final interviewsCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: uid,
             )..start();
 
             final curriculumCubit = context.read<CurriculumCubit>();
             final curriculumFormCubit = CurriculumFormCubit(
               curriculumCubit: curriculumCubit,
-              analysisService: CvAnalysisService(),
+              analysisService: context.read<CvAnalysisService>(),
             );
+
+            final calendarCubit = CalendarCubit(
+              context.read<CalendarRepository>(),
+            )..loadMonth(DateTime.now());
 
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => applicationsCubit),
                 BlocProvider(create: (_) => interviewsCubit),
                 BlocProvider(create: (_) => curriculumFormCubit),
+                BlocProvider(create: (_) => calendarCubit),
               ],
               child: CandidateDashboardScreen(
                 uid: uid,
@@ -198,6 +211,7 @@ class AppRouter {
                 applicationsCubit: applicationsCubit,
                 interviewsCubit: interviewsCubit,
                 curriculumFormCubit: curriculumFormCubit,
+                calendarCubit: calendarCubit,
                 profileCubit: context.read<ProfileCubit>(),
               ),
             );
@@ -209,27 +223,32 @@ class AppRouter {
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
             final applicationsCubit = MyApplicationsCubit(
-              applicationService: GetIt.I<ApplicationService>(),
+              applicationService: context.read<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-              firebaseAuth: FirebaseAuth.instance,
+              firebaseAuth: context.read<FirebaseAuth>(),
             )..start();
 
             final interviewsCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: uid,
             )..start();
 
             final curriculumCubit = context.read<CurriculumCubit>();
             final curriculumFormCubit = CurriculumFormCubit(
               curriculumCubit: curriculumCubit,
-              analysisService: CvAnalysisService(),
+              analysisService: context.read<CvAnalysisService>(),
             );
+
+            final calendarCubit = CalendarCubit(
+              context.read<CalendarRepository>(),
+            )..loadMonth(DateTime.now());
 
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => applicationsCubit),
                 BlocProvider(create: (_) => interviewsCubit),
                 BlocProvider(create: (_) => curriculumFormCubit),
+                BlocProvider(create: (_) => calendarCubit),
               ],
               child: CandidateDashboardScreen(
                 uid: uid,
@@ -237,6 +256,7 @@ class AppRouter {
                 applicationsCubit: applicationsCubit,
                 interviewsCubit: interviewsCubit,
                 curriculumFormCubit: curriculumFormCubit,
+                calendarCubit: calendarCubit,
                 profileCubit: context.read<ProfileCubit>(),
               ),
             );
@@ -248,27 +268,32 @@ class AppRouter {
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
             final applicationsCubit = MyApplicationsCubit(
-              applicationService: GetIt.I<ApplicationService>(),
+              applicationService: context.read<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-              firebaseAuth: FirebaseAuth.instance,
+              firebaseAuth: context.read<FirebaseAuth>(),
             )..start();
 
             final interviewsCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: uid,
             )..start();
 
             final curriculumCubit = context.read<CurriculumCubit>();
             final curriculumFormCubit = CurriculumFormCubit(
               curriculumCubit: curriculumCubit,
-              analysisService: CvAnalysisService(),
+              analysisService: context.read<CvAnalysisService>(),
             );
+
+            final calendarCubit = CalendarCubit(
+              context.read<CalendarRepository>(),
+            )..loadMonth(DateTime.now());
 
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => applicationsCubit),
                 BlocProvider(create: (_) => interviewsCubit),
                 BlocProvider(create: (_) => curriculumFormCubit),
+                BlocProvider(create: (_) => calendarCubit),
               ],
               child: CandidateDashboardScreen(
                 uid: uid,
@@ -276,6 +301,7 @@ class AppRouter {
                 applicationsCubit: applicationsCubit,
                 interviewsCubit: interviewsCubit,
                 curriculumFormCubit: curriculumFormCubit,
+                calendarCubit: calendarCubit,
                 profileCubit: context.read<ProfileCubit>(),
               ),
             );
@@ -287,27 +313,32 @@ class AppRouter {
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
             final applicationsCubit = MyApplicationsCubit(
-              applicationService: GetIt.I<ApplicationService>(),
+              applicationService: context.read<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-              firebaseAuth: FirebaseAuth.instance,
+              firebaseAuth: context.read<FirebaseAuth>(),
             )..start();
 
             final interviewsCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: uid,
             )..start();
 
             final curriculumCubit = context.read<CurriculumCubit>();
             final curriculumFormCubit = CurriculumFormCubit(
               curriculumCubit: curriculumCubit,
-              analysisService: CvAnalysisService(),
+              analysisService: context.read<CvAnalysisService>(),
             );
+
+            final calendarCubit = CalendarCubit(
+              context.read<CalendarRepository>(),
+            )..loadMonth(DateTime.now());
 
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => applicationsCubit),
                 BlocProvider(create: (_) => interviewsCubit),
                 BlocProvider(create: (_) => curriculumFormCubit),
+                BlocProvider(create: (_) => calendarCubit),
               ],
               child: CandidateDashboardScreen(
                 uid: uid,
@@ -315,6 +346,7 @@ class AppRouter {
                 applicationsCubit: applicationsCubit,
                 interviewsCubit: interviewsCubit,
                 curriculumFormCubit: curriculumFormCubit,
+                calendarCubit: calendarCubit,
                 profileCubit: context.read<ProfileCubit>(),
               ),
             );
@@ -326,27 +358,32 @@ class AppRouter {
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
             final applicationsCubit = MyApplicationsCubit(
-              applicationService: GetIt.I<ApplicationService>(),
+              applicationService: context.read<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-              firebaseAuth: FirebaseAuth.instance,
+              firebaseAuth: context.read<FirebaseAuth>(),
             )..start();
 
             final interviewsCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: uid,
             )..start();
 
             final curriculumCubit = context.read<CurriculumCubit>();
             final curriculumFormCubit = CurriculumFormCubit(
               curriculumCubit: curriculumCubit,
-              analysisService: CvAnalysisService(),
+              analysisService: context.read<CvAnalysisService>(),
             );
+
+            final calendarCubit = CalendarCubit(
+              context.read<CalendarRepository>(),
+            )..loadMonth(DateTime.now());
 
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => applicationsCubit),
                 BlocProvider(create: (_) => interviewsCubit),
                 BlocProvider(create: (_) => curriculumFormCubit),
+                BlocProvider(create: (_) => calendarCubit),
               ],
               child: CandidateDashboardScreen(
                 uid: uid,
@@ -354,6 +391,7 @@ class AppRouter {
                 applicationsCubit: applicationsCubit,
                 interviewsCubit: interviewsCubit,
                 curriculumFormCubit: curriculumFormCubit,
+                calendarCubit: calendarCubit,
                 profileCubit: context.read<ProfileCubit>(),
               ),
             );
@@ -365,27 +403,32 @@ class AppRouter {
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
             final applicationsCubit = MyApplicationsCubit(
-              applicationService: GetIt.I<ApplicationService>(),
+              applicationService: context.read<ApplicationService>(),
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-              firebaseAuth: FirebaseAuth.instance,
+              firebaseAuth: context.read<FirebaseAuth>(),
             )..start();
 
             final interviewsCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: uid,
             )..start();
 
             final curriculumCubit = context.read<CurriculumCubit>();
             final curriculumFormCubit = CurriculumFormCubit(
               curriculumCubit: curriculumCubit,
-              analysisService: CvAnalysisService(),
+              analysisService: context.read<CvAnalysisService>(),
             );
+
+            final calendarCubit = CalendarCubit(
+              context.read<CalendarRepository>(),
+            )..loadMonth(DateTime.now());
 
             return MultiBlocProvider(
               providers: [
                 BlocProvider(create: (_) => applicationsCubit),
                 BlocProvider(create: (_) => interviewsCubit),
                 BlocProvider(create: (_) => curriculumFormCubit),
+                BlocProvider(create: (_) => calendarCubit),
               ],
               child: CandidateDashboardScreen(
                 uid: uid,
@@ -393,6 +436,7 @@ class AppRouter {
                 applicationsCubit: applicationsCubit,
                 interviewsCubit: interviewsCubit,
                 curriculumFormCubit: curriculumFormCubit,
+                calendarCubit: calendarCubit,
                 profileCubit: context.read<ProfileCubit>(),
               ),
             );
@@ -411,7 +455,7 @@ class AppRouter {
             );
 
             final offerApplicantsCubit = OfferApplicantsCubit(
-              GetIt.I<ApplicantsRepository>(),
+              context.read<ApplicantsRepository>(),
             );
 
             final companyDashboardCubit = CompanyDashboardCubit(
@@ -419,7 +463,7 @@ class AppRouter {
             );
 
             final companyOfferCreationCubit = CompanyOfferCreationCubit(
-              aiRepository: GetIt.I<AiRepository>(),
+              aiRepository: context.read<AiRepository>(),
             );
 
             // We need companyUid for InterviewListCubit.
@@ -429,7 +473,7 @@ class AppRouter {
                 context.read<CompanyAuthCubit>().state.company?.uid ?? '';
 
             final interviewListCubit = InterviewListCubit(
-              repository: GetIt.I<InterviewRepository>(),
+              repository: context.read<InterviewRepository>(),
               uid: companyUid,
             );
 
@@ -455,7 +499,7 @@ class AppRouter {
           name: 'company-profile',
           builder: (context, state) {
             final cubit = CompanyProfileFormCubit(
-              profileRepository: GetIt.I<ProfileRepository>(),
+              profileRepository: context.read<ProfileRepository>(),
               companyAuthCubit: context.read<CompanyAuthCubit>(),
             );
             return BlocProvider(
@@ -474,10 +518,10 @@ class AppRouter {
             final offerId = state.pathParameters['offerId'] ?? '';
 
             final cubit = ApplicantCurriculumCubit(
-              profileRepository: GetIt.I<ProfileRepository>(),
-              curriculumRepository: GetIt.I<CurriculumRepository>(),
-              jobOfferRepository: GetIt.I<JobOfferRepository>(),
-              aiRepository: GetIt.I<AiRepository>(),
+              profileRepository: context.read<ProfileRepository>(),
+              curriculumRepository: context.read<CurriculumRepository>(),
+              jobOfferRepository: context.read<JobOfferRepository>(),
+              aiRepository: context.read<AiRepository>(),
               curriculumPdfService: CurriculumPdfService(),
               curriculumShareService: CurriculumShareService(),
             )..start(candidateUid: uid, offerId: offerId);
@@ -524,7 +568,7 @@ class AppRouter {
             final id = state.pathParameters['id'] ?? '';
             final cubit =
                 InterviewSessionCubit(
-                    repository: GetIt.I<InterviewRepository>(),
+                    repository: context.read<InterviewRepository>(),
                     interviewId: id,
                   )
                   ..start()

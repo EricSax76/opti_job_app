@@ -6,12 +6,12 @@ import 'package:opti_job_app/features/calendar/models/calendar_event.dart';
 
 class CalendarRepository {
   CalendarRepository({
-    FirebaseFirestore? firestore,
-    FirebaseAuth? firebaseAuth,
+    required FirebaseFirestore firestore,
+    required FirebaseAuth firebaseAuth,
     Uuid? uuid,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = firebaseAuth ?? FirebaseAuth.instance,
-        _uuid = uuid ?? const Uuid();
+  }) : _firestore = firestore,
+       _auth = firebaseAuth,
+       _uuid = uuid ?? const Uuid();
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -38,7 +38,9 @@ class CalendarRepository {
           (error.message?.toLowerCase().contains('index') ?? false);
       if (!needsFallback) rethrow;
 
-      final snapshot = await _collection.where('owner_uid', isEqualTo: uid).get();
+      final snapshot = await _collection
+          .where('owner_uid', isEqualTo: uid)
+          .get();
       final events = snapshot.docs.map(_mapEvent).where((event) {
         final eventDate = event.date;
         return !eventDate.isBefore(start) && eventDate.isBefore(end);
@@ -70,12 +72,13 @@ class CalendarRepository {
           (error.message?.toLowerCase().contains('index') ?? false);
       if (!needsFallback) rethrow;
 
-      final snapshot = await _collection.where('owner_uid', isEqualTo: uid).get();
+      final snapshot = await _collection
+          .where('owner_uid', isEqualTo: uid)
+          .get();
       events = snapshot.docs.map(_mapEvent).where((event) {
         final eventDate = event.date;
         return !eventDate.isBefore(start) && eventDate.isBefore(end);
-      }).toList()
-        ..sort((a, b) => a.date.compareTo(b.date));
+      }).toList()..sort((a, b) => a.date.compareTo(b.date));
     }
 
     final byDay = <DateTime, List<CalendarEvent>>{};

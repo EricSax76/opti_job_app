@@ -17,3 +17,6 @@ jobs:
 
       - name: Check locator/get_it policy
         run: bash tool/check_locator_policy.sh
+
+      - name: Check Firebase DI policy
+        run: bash tool/check_firebase_di_policy.sh

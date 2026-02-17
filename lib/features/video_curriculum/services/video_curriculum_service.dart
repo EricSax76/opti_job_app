@@ -7,10 +7,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class VideoCurriculumService {
   VideoCurriculumService({
-    FirebaseFirestore? firestore,
-    FirebaseStorage? storage,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _storage = storage ?? FirebaseStorage.instance;
+    required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
+  }) : _firestore = firestore,
+       _storage = storage;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;

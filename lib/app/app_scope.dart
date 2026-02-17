@@ -9,7 +9,6 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
-import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
@@ -29,6 +28,7 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.companiesRepository),
         RepositoryProvider.value(value: dependencies.applicantsRepository),
         RepositoryProvider.value(value: dependencies.curriculumRepository),
+        RepositoryProvider.value(value: dependencies.cvAnalysisService),
         RepositoryProvider.value(value: dependencies.calendarRepository),
         RepositoryProvider.value(value: dependencies.applicationRepository),
         RepositoryProvider.value(value: dependencies.applicationService),
@@ -36,6 +36,7 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.coverLetterRepository),
         RepositoryProvider.value(value: dependencies.videoCurriculumRepository),
         RepositoryProvider.value(value: dependencies.interviewRepository),
+        RepositoryProvider.value(value: dependencies.firebaseAuth),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -54,11 +55,6 @@ class AppScope extends StatelessWidget {
               dependencies.jobOfferRepository,
               profileRepository: dependencies.profileRepository,
             ),
-          ),
-          BlocProvider<CalendarCubit>(
-            create: (_) =>
-                CalendarCubit(dependencies.calendarRepository)
-                  ..loadMonth(DateTime.now()),
           ),
           BlocProvider<ProfileCubit>(
             create: (context) => ProfileCubit(

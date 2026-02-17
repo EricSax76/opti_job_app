@@ -1,50 +1,28 @@
 import 'dart:convert';
 
 import 'package:firebase_ai/firebase_ai.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 
 class FirebaseAiClient {
-  FirebaseAiClient({FirebaseAI? firebaseAI, FirebaseAuth? auth, String? model})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _modelName =
-          model ??
-          const String.fromEnvironment(
-            'FIREBASE_AI_MODEL',
-            defaultValue: 'gemini-2.0-flash',
-          ),
-      _firebaseAI = firebaseAI ?? _createFirebaseAI(auth: auth);
+  FirebaseAiClient({
+    required FirebaseAI firebaseAI,
+    required FirebaseAuth auth,
+    String? model,
+  })  : _auth = auth,
+        _modelName =
+            model ??
+            const String.fromEnvironment(
+              'FIREBASE_AI_MODEL',
+              defaultValue: 'gemini-2.0-flash',
+            ),
+        _firebaseAI = firebaseAI;
 
   final FirebaseAI _firebaseAI;
   final FirebaseAuth _auth;
   final String _modelName;
-
-  static FirebaseAI _createFirebaseAI({FirebaseAuth? auth}) {
-    const backend = String.fromEnvironment(
-      'FIREBASE_AI_BACKEND',
-      defaultValue: 'vertex',
-    ); // 'vertex' | 'google'
-
-    if (backend == 'google') {
-      return FirebaseAI.googleAI(
-        auth: auth ?? FirebaseAuth.instance,
-        appCheck: FirebaseAppCheck.instance,
-      );
-    }
-
-    const location = String.fromEnvironment(
-      'FIREBASE_AI_LOCATION',
-      defaultValue: 'europe-southwest1',
-    );
-    return FirebaseAI.vertexAI(
-      auth: auth ?? FirebaseAuth.instance,
-      location: location,
-      appCheck: FirebaseAppCheck.instance,
-    );
-  }
 
   GenerativeModel _model({GenerationConfig? generationConfig}) {
     return _firebaseAI.generativeModel(

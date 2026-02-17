@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CoverLetterService {
-  CoverLetterService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  CoverLetterService({required FirebaseFirestore firestore})
+    : _firestore = firestore;
 
   final FirebaseFirestore _firestore;
 

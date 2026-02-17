@@ -7,8 +7,7 @@ import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 class CvAnalysisService {
   final FirebaseAiClient _aiClient;
 
-  CvAnalysisService({FirebaseAiClient? aiClient})
-    : _aiClient = aiClient ?? FirebaseAiClient();
+  CvAnalysisService({required FirebaseAiClient aiClient}) : _aiClient = aiClient;
 
   Future<CvAnalysisResult> analyzeCvFile(
     Uint8List bytes,

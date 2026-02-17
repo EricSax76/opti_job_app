@@ -7,14 +7,17 @@ import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/auth/models/auth_exceptions.dart';
 
 class AuthService {
-  AuthService({FirebaseAuth? firebaseAuth, FirebaseFirestore? firestore})
-    : _auth = firebaseAuth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance;
+  AuthService({
+    required FirebaseAuth firebaseAuth,
+    required FirebaseFirestore firestore,
+  }) : _auth = firebaseAuth,
+       _firestore = firestore;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
-  Stream<String?> get uidStream => _auth.authStateChanges().map((user) => user?.uid);
+  Stream<String?> get uidStream =>
+      _auth.authStateChanges().map((user) => user?.uid);
 
   CollectionReference<Map<String, dynamic>> get _candidatesCollection =>
       _firestore.collection('candidates');

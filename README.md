@@ -156,7 +156,9 @@ Notas de frontera:
 ## Refactors de arquitectura
 
 - Fase 4 (DI): contención de GetIt/locator en composition root y páginas raíz, con dependencias explícitas por constructor: `docs/fase_4_contencion_getit.md`.
+- Fase 5 (Data/Firebase): inversion de dependencias en capa data para eliminar construccion implicita de infraestructura: `docs/fase_5_inversion_dependencias_data_firebase.md`.
 - Guardrail automático de locator/get_it (escanea todos los `.dart` trackeados): `bash tool/check_locator_policy.sh` (también corre en CI).
+- Guardrail automático de Firebase DI (bloquea `?? Firebase*.instance` fuera de `lib/bootstrap/*` y `lib/main.dart`): `bash tool/check_firebase_di_policy.sh` (también corre en CI).
 
 ## Próximos pasos
 
