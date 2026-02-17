@@ -13,6 +13,8 @@ class InterviewChatPageController {
     return InterviewSessionCubit(
       repository: context.read<InterviewRepository>(),
       interviewId: interviewId,
-    )..markAsSeen();
+    )
+      ..start()
+      ..markAsSeen();
   }
 }

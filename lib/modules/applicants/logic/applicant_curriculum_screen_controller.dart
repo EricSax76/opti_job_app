@@ -20,12 +20,12 @@ class ApplicantCurriculumScreenController {
     );
   }
 
-  static Future<void> loadInitialData({
+  static void loadInitialData({
     required ApplicantCurriculumCubit cubit,
     required String candidateUid,
     required String offerId,
   }) {
-    return cubit.loadData(candidateUid: candidateUid, offerId: offerId);
+    cubit.start(candidateUid: candidateUid, offerId: offerId);
   }
 
   static bool shouldListen(

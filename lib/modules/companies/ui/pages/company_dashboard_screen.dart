@@ -60,12 +60,22 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
     with SingleTickerProviderStateMixin {
  
   late final TabController _tabController;
+  var _initialOffersLoadHandled = false;
 
   @override
   void initState() {
     super.initState();
     final tabCount = FeatureFlags.interviews ? 5 : 4;
     _tabController = TabController(length: tabCount, vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialOffersLoadHandled) return;
+    _initialOffersLoadHandled = true;
+    final companyUid = context.read<CompanyAuthCubit>().state.company?.uid;
+    context.read<CompanyDashboardCubit>().checkAndLoadCompanyOffers(companyUid);
   }
 
   @override
@@ -126,7 +136,7 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
       final companyUid =
           context.read<CompanyDashboardCubit>().state.loadedCompanyUid;
       if (companyUid != null) {
-        context.read<CompanyJobOffersCubit>().loadCompanyOffers(companyUid);
+        context.read<CompanyJobOffersCubit>().start(companyUid);
       }
       return;
     }

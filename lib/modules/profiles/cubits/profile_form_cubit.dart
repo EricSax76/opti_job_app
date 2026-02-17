@@ -22,9 +22,14 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
       super(const ProfileFormState()) {
     nameController.addListener(_handleTextChanged);
     lastNameController.addListener(_handleTextChanged);
+  }
+
+  Future<void> start() async {
+    if (_profileSubscription != null) return;
     _profileSubscription = _profileCubit.stream.listen(_syncFromProfile);
     _syncFromProfile(_profileCubit.state);
   }
+
 
   final ProfileCubit _profileCubit;
   final TextEditingController nameController;
@@ -36,9 +41,12 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   String _initialLastName = '';
   ProfileStatus? _lastProfileStatus;
 
-  void refresh() {
-    _profileCubit.refreshProfile();
+  Future<void> refresh() async {
+    await _profileCubit.refresh();
   }
+
+  void retry() => unawaited(refresh());
+
 
   void submit() {
     final name = nameController.text.trim();

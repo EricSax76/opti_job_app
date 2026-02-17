@@ -49,11 +49,7 @@ void main() {
         );
       });
 
-      await cubit.loadOffers(
-        jobType: 'Remoto',
-        forceRefresh: true,
-        preserveCurrentJobType: false,
-      );
+      await cubit.start(jobType: 'Remoto');
       expect(cubit.state.selectedJobType, 'Remoto');
 
       cubit.selectJobType(null);
@@ -102,7 +98,7 @@ void main() {
         );
       });
 
-      await cubit.loadOffers(forceRefresh: true);
+      await cubit.start();
       expect(cubit.state.availableJobTypes, ['Hibrido', 'Remoto']);
 
       cubit.selectJobType('Remoto');
@@ -138,8 +134,8 @@ void main() {
       throw Exception('network error');
     });
 
-    await cubit.loadOffers(forceRefresh: true);
-    await cubit.loadOffers(forceRefresh: true);
+    await cubit.start();
+    await cubit.refresh();
 
     expect(cubit.state.status, JobOffersStatus.success);
     expect(cubit.state.errorMessage, 'No se pudieron actualizar las ofertas.');

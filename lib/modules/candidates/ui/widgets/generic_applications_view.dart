@@ -50,7 +50,7 @@ class GenericApplicationsView extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: () =>
-              context.read<MyApplicationsCubit>().loadMyApplications(),
+              context.read<MyApplicationsCubit>().refresh(),
           child: ApplicationsList(
             applications: applications,
             heroTagPrefix: heroTagPrefix,

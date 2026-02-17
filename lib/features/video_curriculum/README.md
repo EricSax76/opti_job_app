@@ -35,7 +35,7 @@ Dependencias no permitidas:
 - Contrato de subida:
   - `VideoCurriculumRepository.uploadVideoCurriculum({candidateUid, filePath})`.
 - Efecto esperado tras éxito de guardado:
-  - `ProfileCubit.refreshProfile()` para refrescar metadatos del candidato.
+  - `ProfileCubit.refresh()` para refrescar metadatos del candidato.
 
 ## Reglas de mantenimiento
 - Mantener esta feature autocontenida en `features/video_curriculum`.

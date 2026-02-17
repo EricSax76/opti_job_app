@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/auth/cubits/auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
@@ -39,11 +39,7 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         return;
       }
       emit(state.copyWith(status: AuthStatus.authenticated, company: company));
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('[Auth] restoreSession (company) failed: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (_) {
       emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
   }
@@ -59,11 +55,7 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         password: password,
       );
       emit(state.copyWith(status: AuthStatus.authenticated, company: company));
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('[Auth] loginCompany failed: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (error) {
       final authException = _repository.mapException(error);
       emit(
         state.copyWith(
@@ -94,11 +86,7 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
           needsOnboarding: true,
         ),
       );
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('[Auth] registerCompany failed: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (error) {
       final authException = _repository.mapException(error);
       emit(
         state.copyWith(

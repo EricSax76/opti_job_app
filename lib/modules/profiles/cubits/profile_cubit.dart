@@ -14,16 +14,20 @@ class ProfileCubit extends Cubit<ProfileState> {
     required CandidateAuthCubit candidateAuthCubit,
   }) : _repository = repository,
        _candidateAuthCubit = candidateAuthCubit,
-       super(const ProfileState()) {
-    _authSubscription = _candidateAuthCubit.stream.listen(
-      _onAuthStateChanged,
-    ); // ignore: avoid_types_on_closure_parameters
-    _onAuthStateChanged(_candidateAuthCubit.state);
-  }
+       super(const ProfileState());
 
   final ProfileRepository _repository;
   final CandidateAuthCubit _candidateAuthCubit;
   StreamSubscription<CandidateAuthState>? _authSubscription;
+
+  Future<void> start() async {
+    if (_authSubscription != null) return;
+    _authSubscription = _candidateAuthCubit.stream.listen(
+      _onAuthStateChanged,
+    );
+    await _onAuthStateChanged(_candidateAuthCubit.state);
+  }
+
 
   Future<void> _onAuthStateChanged(CandidateAuthState authState) async {
     if (!authState.isAuthenticated) {
@@ -52,9 +56,12 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  Future<void> refreshProfile() async {
+  Future<void> refresh() async {
     await _onAuthStateChanged(_candidateAuthCubit.state);
   }
+
+  void retry() => unawaited(refresh());
+
 
   Future<void> updateCandidateProfile({
     required String name,

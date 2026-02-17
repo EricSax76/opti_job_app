@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
+
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/applications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
@@ -19,7 +20,7 @@ class MyApplicationsCubit extends Cubit<MyApplicationsState> {
   final ApplicationService _applicationService;
   final CandidateAuthCubit _candidateAuthCubit;
 
-  Future<void> loadMyApplications() async {
+  Future<void> start() async {
     final candidate = _candidateAuthCubit.state.candidate;
     final candidateUid = candidate?.uid;
     if (candidateUid == null) {
@@ -54,9 +55,6 @@ class MyApplicationsCubit extends Cubit<MyApplicationsState> {
         ),
       );
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('MyApplicationsCubit.loadMyApplications error: $e');
-      }
       emit(
         state.copyWith(
           status: ApplicationsStatus.error,
@@ -65,4 +63,8 @@ class MyApplicationsCubit extends Cubit<MyApplicationsState> {
       );
     }
   }
+
+  Future<void> refresh() => start();
+
+  void retry() => unawaited(start());
 }

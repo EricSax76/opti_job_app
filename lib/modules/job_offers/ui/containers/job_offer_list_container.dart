@@ -21,7 +21,7 @@ class _JobOfferListContainerState extends State<JobOfferListContainer> {
     super.initState();
     final cubit = context.read<JobOffersCubit>();
     if (JobOfferListLogic.shouldLoadInitialOffers(cubit.state)) {
-      cubit.loadOffers();
+      cubit.start();
     }
   }
 
@@ -47,7 +47,7 @@ class _JobOfferListContainerState extends State<JobOfferListContainer> {
             title: 'Error',
             message: state.errorMessage ?? 'Error al cargar las ofertas.',
             actionLabel: 'Reintentar',
-            onAction: () => cubit.loadOffers(forceRefresh: true),
+            onAction: () => cubit.retry(),
           );
         }
 

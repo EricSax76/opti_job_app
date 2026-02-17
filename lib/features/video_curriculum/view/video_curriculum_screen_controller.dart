@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/video_curriculum/bloc/video_curriculum_bloc.dart';
@@ -54,7 +56,7 @@ class VideoCurriculumScreenController {
     }
 
     if (state.status == VideoCurriculumStatus.success) {
-      context.read<ProfileCubit>().refreshProfile();
+      unawaited(context.read<ProfileCubit>().refresh());
       _showSnackBar(context, const SnackBar(content: Text('Vídeo guardado.')));
     }
   }

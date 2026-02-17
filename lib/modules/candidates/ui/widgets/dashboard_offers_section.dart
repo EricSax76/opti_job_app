@@ -38,7 +38,7 @@ class DashboardOffersSection extends StatelessWidget {
           hasMore: viewModel.hasMore,
           hasActiveFilters: viewModel.hasActiveFilters,
           errorMessage: viewModel.errorMessage,
-          onRetry: () => cubit.loadOffers(forceRefresh: true),
+          onRetry: cubit.refresh,
           onClearFilters: () => cubit.clearFilters(),
           onLoadMore: () => cubit.loadMoreOffers(),
           onOfferTap: (offer) => context.push('/job-offer/${offer.id}'),

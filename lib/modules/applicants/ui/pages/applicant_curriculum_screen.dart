@@ -104,8 +104,7 @@ class _ApplicantCurriculumBody extends StatelessWidget {
           title: 'No se pudo cargar el CV del aplicante',
           message: state.errorMessage ?? 'Intenta nuevamente en unos segundos.',
           actionLabel: 'Reintentar',
-          onAction: () =>
-              cubit.loadData(candidateUid: candidateUid, offerId: offerId),
+          onAction: () => cubit.retry(),
         );
       case ApplicantCurriculumStatus.success:
         final candidate = state.candidate;

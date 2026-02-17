@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
+
 
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
@@ -91,14 +91,7 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
           errors: nextErrors,
         ),
       );
-    } on TimeoutException catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint(
-          'OfferApplicantsCubit.loadApplicantsForOffers timeout '
-          'offers=$toLoad companyUid=$companyUid error=$error',
-        );
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } on TimeoutException {
       final nextStatuses = Map<String, OfferApplicantsStatus>.from(
         state.statuses,
       );
@@ -108,14 +101,7 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
         nextErrors[offerId] = 'Tiempo de espera agotado al cargar aplicantes.';
       }
       emit(state.copyWith(statuses: nextStatuses, errors: nextErrors));
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint(
-          'OfferApplicantsCubit.loadApplicantsForOffers error '
-          'offers=$toLoad companyUid=$companyUid error=$error',
-        );
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (_) {
       final nextStatuses = Map<String, OfferApplicantsStatus>.from(
         state.statuses,
       );

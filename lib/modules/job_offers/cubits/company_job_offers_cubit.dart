@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -12,12 +14,18 @@ class CompanyJobOffersCubit extends Cubit<CompanyJobOffersState> {
 
   final JobOfferRepository _repository;
 
-  Future<void> loadCompanyOffers(String companyUid) async {
+  Future<void> start(String companyUid) async {
+    _companyUid = companyUid;
+    return refresh();
+  }
+
+  Future<void> refresh() async {
+    if (_companyUid == null) return;
     emit(
       state.copyWith(status: CompanyJobOffersStatus.loading, clearError: true),
     );
     try {
-      final offers = await _repository.fetchByCompanyUid(companyUid);
+      final offers = await _repository.fetchByCompanyUid(_companyUid!);
       emit(
         state.copyWith(status: CompanyJobOffersStatus.success, offers: offers),
       );
@@ -30,4 +38,9 @@ class CompanyJobOffersCubit extends Cubit<CompanyJobOffersState> {
       );
     }
   }
+
+  void retry() => unawaited(refresh());
+
+  String? _companyUid;
+
 }

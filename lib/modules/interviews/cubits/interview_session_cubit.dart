@@ -19,9 +19,7 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
     required String interviewId,
   }) : _repository = repository,
        _interviewId = interviewId,
-       super(InterviewSessionInitial()) {
-    _subscribeManual();
-  }
+       super(InterviewSessionInitial());
 
   Interview? _latestInterview;
   List<InterviewMessage> _latestMessages = const [];
@@ -34,7 +32,8 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
     );
   }
 
-  void _subscribeManual() {
+  Future<void> start() async {
+    if (_interviewSubscription != null) return;
     emit(InterviewSessionLoading());
 
     _interviewSubscription = _repository.interviewStream(_interviewId).listen(
@@ -57,6 +56,17 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
       _updateState();
     }, onError: _emitActionError);
   }
+
+  Future<void> refresh() async {
+    await _interviewSubscription?.cancel();
+    await _messagesSubscription?.cancel();
+    _interviewSubscription = null;
+    _messagesSubscription = null;
+    await start();
+  }
+
+  void retry() => unawaited(refresh());
+
 
   Future<void> markAsSeen() async {
     try {

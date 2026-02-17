@@ -9,6 +9,6 @@ class DashboardOffersCardController {
   static void retryLoad(BuildContext context) {
     final companyUid = context.read<CompanyAuthCubit>().state.company?.uid;
     if (companyUid == null || companyUid.trim().isEmpty) return;
-    context.read<CompanyJobOffersCubit>().loadCompanyOffers(companyUid);
+    context.read<CompanyJobOffersCubit>().start(companyUid);
   }
 }

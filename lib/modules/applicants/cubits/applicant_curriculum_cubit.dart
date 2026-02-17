@@ -27,6 +27,27 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
   final JobOfferRepository jobOfferRepository;
   final AiRepository aiRepository;
 
+  String? _candidateUid;
+  String? _offerId;
+
+  void start({
+    required String candidateUid,
+    required String offerId,
+  }) {
+    _candidateUid = candidateUid;
+    _offerId = offerId;
+    loadData(candidateUid: candidateUid, offerId: offerId);
+  }
+
+  Future<void> refresh() async {
+    if (_candidateUid == null || _offerId == null) return;
+    await loadData(candidateUid: _candidateUid!, offerId: _offerId!);
+  }
+
+  void retry() {
+    refresh();
+  }
+
   Future<void> loadData({
     required String candidateUid,
     required String offerId,

@@ -13,7 +13,7 @@ class CompanyDashboardCubit extends Cubit<CompanyDashboardState> {
     if (currentCompanyUid != null &&
         currentCompanyUid != state.loadedCompanyUid) {
       emit(state.copyWith(loadedCompanyUid: currentCompanyUid));
-      companyJobOffersCubit.loadCompanyOffers(currentCompanyUid);
+      companyJobOffersCubit.start(currentCompanyUid);
     }
   }
 }

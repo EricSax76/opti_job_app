@@ -40,7 +40,7 @@ class CompanyCandidatesCubit extends Cubit<CompanyCandidatesState> {
   var _hasRequestedInitialLoad = false;
   String? _initialLoadCompanyUid;
 
-  void initialize() {
+  void start() {
     _companyJobOffersSubscription = _companyJobOffersCubit.stream.listen((_) {
       _syncFromExternalState();
       _maybeLoadInitialApplicants();
@@ -51,6 +51,14 @@ class CompanyCandidatesCubit extends Cubit<CompanyCandidatesState> {
 
     _syncFromExternalState();
     _maybeLoadInitialApplicants();
+  }
+
+  Future<void> refresh() {
+    return loadApplicantsForAllOffers(force: true);
+  }
+
+  void retry() {
+    refresh();
   }
 
   Future<void> loadApplicantsForAllOffers({bool force = true}) async {
@@ -169,7 +177,7 @@ class CompanyCandidatesCubit extends Cubit<CompanyCandidatesState> {
         (state as CompanyCandidatesLoaded).copyWith(profiles: currentProfiles),
       );
     } catch (e) {
-      debugPrint('Error fetching profiles: $e');
+      // Ignored: profile fetch failure shouldn't break the list
     } finally {
       _profilesInFlight.removeAll(uids);
     }

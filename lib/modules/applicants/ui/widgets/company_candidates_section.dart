@@ -19,7 +19,7 @@ class CompanyCandidatesSection extends StatelessWidget {
         offerApplicantsCubit: context.read<OfferApplicantsCubit>(),
         companyJobOffersCubit: context.read<CompanyJobOffersCubit>(),
         companyAuthCubit: context.read<CompanyAuthCubit>(),
-      )..initialize(),
+      )..start(),
       child: const _CompanyCandidatesContent(),
     );
   }

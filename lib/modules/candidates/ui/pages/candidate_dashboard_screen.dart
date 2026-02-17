@@ -67,12 +67,12 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     _applicationsCubit = MyApplicationsCubit(
       applicationService: context.read<ApplicationService>(),
       candidateAuthCubit: context.read<CandidateAuthCubit>(),
-    )..loadMyApplications();
+    )..start();
 
     _interviewsCubit = InterviewListCubit(
       repository: context.read<InterviewRepository>(),
       uid: widget.uid,
-    );
+    )..start();
   }
 
   @override

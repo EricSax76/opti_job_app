@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/applications/models/application.dart';
@@ -53,7 +55,17 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
   final JobOfferRepository _repository;
   final ApplicationService _applicationService;
 
-  Future<void> loadOffer(String id, {String? candidateUid}) async {
+  String? _offerId;
+  String? _candidateUid;
+
+  Future<void> start(String id, {String? candidateUid}) async {
+    _offerId = id;
+    _candidateUid = candidateUid;
+    return refresh();
+  }
+
+  Future<void> refresh() async {
+    if (_offerId == null) return;
     emit(
       state.copyWith(
         status: JobOfferDetailStatus.loading,
@@ -64,14 +76,15 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
       ),
     );
     try {
-      final offer = await _repository.fetchById(id);
+      final offer = await _repository.fetchById(_offerId!);
       Application? application;
-      if (candidateUid != null && candidateUid.isNotEmpty) {
+      if (_candidateUid != null && _candidateUid!.isNotEmpty) {
         try {
-          application = await _applicationService.getApplicationForCandidateOffer(
-            jobOfferId: offer.id,
-            candidateUid: candidateUid,
-          );
+          application =
+              await _applicationService.getApplicationForCandidateOffer(
+                jobOfferId: offer.id,
+                candidateUid: _candidateUid!,
+              );
         } catch (_) {
           application = null;
         }
@@ -92,6 +105,9 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
       );
     }
   }
+
+  void retry() => unawaited(refresh());
+
 
   Future<void> apply({
     required Candidate candidate,

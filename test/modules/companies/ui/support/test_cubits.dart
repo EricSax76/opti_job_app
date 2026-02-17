@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
@@ -64,13 +66,25 @@ class TestCompanyJobOffersCubit extends Cubit<CompanyJobOffersState>
   TestCompanyJobOffersCubit(super.initialState);
 
   final List<String> loadedCompanyUids = <String>[];
+  String? _companyUid;
 
   void emitState(CompanyJobOffersState nextState) => emit(nextState);
 
   @override
-  Future<void> loadCompanyOffers(String companyUid) async {
+  Future<void> start(String companyUid) async {
+    _companyUid = companyUid;
     loadedCompanyUids.add(companyUid);
   }
+
+  @override
+  Future<void> refresh() async {
+    final companyUid = _companyUid;
+    if (companyUid == null) return;
+    loadedCompanyUids.add(companyUid);
+  }
+
+  @override
+  void retry() => unawaited(refresh());
 }
 
 class TestOfferApplicantsCubit extends Cubit<OfferApplicantsState>

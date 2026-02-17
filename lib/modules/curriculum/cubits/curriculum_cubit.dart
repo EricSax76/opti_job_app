@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
@@ -15,13 +14,17 @@ class CurriculumCubit extends Cubit<CurriculumState> {
     required CandidateAuthCubit candidateAuthCubit,
   }) : _repository = repository,
        _candidateAuthCubit = candidateAuthCubit,
-       super(const CurriculumState()) {
+       super(const CurriculumState());
+
+  Future<void> start() async {
+    if (_authSubscription != null) return;
     _authSubscription = _candidateAuthCubit.stream
         .map(_effectiveAuthUid)
         .distinct()
-        .listen(_onAuthUidChanged);
-    _onAuthUidChanged(_effectiveAuthUid(_candidateAuthCubit.state));
+        .listen(_start);
+    await _start(_effectiveAuthUid(_candidateAuthCubit.state));
   }
+
 
   final CurriculumRepository _repository;
   final CandidateAuthCubit _candidateAuthCubit;
@@ -34,7 +37,7 @@ class CurriculumCubit extends Cubit<CurriculumState> {
     return uid;
   }
 
-  Future<void> _onAuthUidChanged(String? uid) async {
+  Future<void> _start(String? uid) async {
     if (uid == null) {
       emit(const CurriculumState(status: CurriculumStatus.empty));
       return;
@@ -56,9 +59,9 @@ class CurriculumCubit extends Cubit<CurriculumState> {
     }
   }
 
-  Future<void> refresh() {
-    return _onAuthUidChanged(_effectiveAuthUid(_candidateAuthCubit.state));
-  }
+
+
+  void retry() => unawaited(refresh());
 
   void setCurriculum(Curriculum curriculum) {
     emit(
@@ -90,11 +93,7 @@ class CurriculumCubit extends Cubit<CurriculumState> {
         curriculum: curriculum,
       );
       emit(state.copyWith(status: CurriculumStatus.loaded, curriculum: saved));
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('[Curriculum] save failed: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (error) {
       emit(
         state.copyWith(
           status: CurriculumStatus.failure,
@@ -106,6 +105,10 @@ class CurriculumCubit extends Cubit<CurriculumState> {
 
   String _userFacingSaveErrorMessage(Object error) {
     return _repository.mapException(error);
+  }
+
+  Future<void> refresh() {
+    return _start(_effectiveAuthUid(_candidateAuthCubit.state));
   }
 
   @override

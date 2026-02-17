@@ -84,7 +84,7 @@ class AppRouter {
               create: (context) => JobOfferDetailCubit(
                 context.read<JobOfferRepository>(),
                 context.read<ApplicationService>(),
-              )..loadOffer(id, candidateUid: candidateUid),
+              )..start(id, candidateUid: candidateUid),
               child: JobOfferDetailScreen(offerId: id),
             );
           },

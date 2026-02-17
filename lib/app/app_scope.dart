@@ -64,13 +64,13 @@ class AppScope extends StatelessWidget {
             create: (context) => ProfileCubit(
               repository: dependencies.profileRepository,
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-            ),
+            )..start(),
           ),
           BlocProvider<CurriculumCubit>(
             create: (context) => CurriculumCubit(
               repository: dependencies.curriculumRepository,
               candidateAuthCubit: context.read<CandidateAuthCubit>(),
-            ),
+            )..start(),
           ),
         ],
         child: MultiBlocListener(
@@ -80,7 +80,7 @@ class AppScope extends StatelessWidget {
                   previous.isAuthenticated != current.isAuthenticated,
               listener: (context, state) {
                 if (state.isAuthenticated) {
-                  context.read<JobOffersCubit>().loadOffers(forceRefresh: true);
+                  context.read<JobOffersCubit>().refresh();
                 }
               },
             ),
@@ -89,7 +89,7 @@ class AppScope extends StatelessWidget {
                   previous.isAuthenticated != current.isAuthenticated,
               listener: (context, state) {
                 if (state.isAuthenticated) {
-                  context.read<JobOffersCubit>().loadOffers(forceRefresh: true);
+                  context.read<JobOffersCubit>().refresh();
                 }
               },
             ),

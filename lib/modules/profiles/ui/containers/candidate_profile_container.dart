@@ -15,7 +15,7 @@ class CandidateProfileContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          ProfileFormCubit(profileCubit: context.read<ProfileCubit>()),
+          ProfileFormCubit(profileCubit: context.read<ProfileCubit>())..start(),
       child: const _CandidateProfileContent(),
     );
   }

@@ -17,11 +17,10 @@ class InterviewListCubit extends Cubit<InterviewListState> {
     required String uid,
   }) : _repository = repository,
        _uid = uid,
-       super(InterviewListInitial()) {
-    _subscribe();
-  }
+       super(InterviewListInitial());
 
-  void _subscribe() {
+  Future<void> start() async {
+    if (_subscription != null) return;
     emit(InterviewListLoading());
     _subscription = _repository
         .interviewsStream(_uid)
@@ -42,8 +41,11 @@ class InterviewListCubit extends Cubit<InterviewListState> {
   Future<void> refresh() async {
     await _subscription?.cancel();
     _subscription = null;
-    _subscribe();
+    await start();
   }
+
+  void retry() => unawaited(refresh());
+
 
   @override
   Future<void> close() {

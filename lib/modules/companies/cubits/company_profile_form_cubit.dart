@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -72,11 +73,7 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
           ),
         ),
       );
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('CompanyProfileFormCubit.pickAvatar error: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (_) {
       emit(
         state.copyWith(
           notice: CompanyProfileFormNotice.error,
@@ -131,11 +128,7 @@ class CompanyProfileFormCubit extends Cubit<CompanyProfileFormState> {
           noticeMessage: 'Perfil actualizado.',
         ),
       );
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('CompanyProfileFormCubit.submit error: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (_) {
       emit(
         state.copyWith(
           isSaving: false,

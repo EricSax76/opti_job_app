@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
@@ -91,7 +93,17 @@ class JobOffersCubit extends Cubit<JobOffersState> {
   JobOffersPageCursor? _nextPageCursor;
   int _requestSequence = 0;
 
-  Future<void> loadOffers({
+  Future<void> start({String? jobType}) async {
+    return _loadOffers(jobType: jobType);
+  }
+
+  Future<void> refresh() async {
+    return _loadOffers(jobType: state.selectedJobType, forceRefresh: true);
+  }
+
+  void retry() => unawaited(refresh());
+
+  Future<void> _loadOffers({
     String? jobType,
     bool forceRefresh = false,
     bool preserveCurrentJobType = true,
@@ -201,6 +213,7 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     }
   }
 
+
   Future<void> loadMoreOffers() async {
     if (state.status != JobOffersStatus.success ||
         state.isLoadingMore ||
@@ -267,7 +280,7 @@ class JobOffersCubit extends Cubit<JobOffersState> {
         state.status != JobOffersStatus.failure) {
       return;
     }
-    loadOffers(
+    _loadOffers(
       jobType: normalizedJobType,
       forceRefresh: true,
       preserveCurrentJobType: false,

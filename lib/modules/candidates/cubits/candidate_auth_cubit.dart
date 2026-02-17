@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/auth/cubits/auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
@@ -40,11 +40,7 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
       emit(
         state.copyWith(status: AuthStatus.authenticated, candidate: candidate),
       );
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('[Auth] restoreSession failed: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (_) {
       emit(state.copyWith(status: AuthStatus.unauthenticated));
     }
   }
@@ -62,11 +58,7 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
       emit(
         state.copyWith(status: AuthStatus.authenticated, candidate: candidate),
       );
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('[Auth] loginCandidate failed: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (error) {
       final authException = _repository.mapException(error);
       emit(
         state.copyWith(
@@ -97,11 +89,7 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
           needsOnboarding: true,
         ),
       );
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('[Auth] registerCandidate failed: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+    } catch (error) {
       final authException = _repository.mapException(error);
       emit(
         state.copyWith(
