@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/features/cover_letter/view/models/cover_letter_view_model.dart';
 
 class CoverLetterContent extends StatelessWidget {
   const CoverLetterContent({
     super.key,
     required this.controller,
-    required this.isLoading,
-    required this.isImproving,
+    required this.viewModel,
     required this.onImprove,
     required this.onSave,
   });
 
   final TextEditingController controller;
-  final bool isLoading;
-  final bool isImproving;
+  final CoverLetterViewModel viewModel;
   final VoidCallback onImprove;
   final VoidCallback onSave;
 
@@ -39,15 +38,17 @@ class CoverLetterContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: isImproving ? null : onImprove,
-            icon: isImproving
+            onPressed: viewModel.isImproving ? null : onImprove,
+            icon: viewModel.isImproving
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.auto_awesome),
-            label: Text(isImproving ? 'Generando...' : 'Mejorar con IA'),
+            label: Text(
+              viewModel.isImproving ? 'Generando...' : 'Mejorar con IA',
+            ),
             style: ElevatedButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.onSecondary,
               backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -61,7 +62,7 @@ class CoverLetterContent extends StatelessWidget {
             ),
             child: const Text('Guardar carta'),
           ),
-          if (isLoading)
+          if (viewModel.isLoading)
             const Padding(
               padding: EdgeInsets.only(top: 12),
               child: LinearProgressIndicator(minHeight: 2),

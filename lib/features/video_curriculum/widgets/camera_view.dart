@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/video_curriculum/bloc/video_curriculum_bloc.dart';
+import 'package:opti_job_app/features/video_curriculum/logic/video_camera_logic.dart';
+import 'package:opti_job_app/features/video_curriculum/view/controllers/video_camera_controller.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/camera_view_components.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/camera_session_controller.dart';
 
@@ -26,19 +28,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
-      unawaited(_cameraSessionController.disposeCamera());
-      return;
-    }
-
-    if (state == AppLifecycleState.resumed && mounted) {
-      final hasRecordedVideo =
-          context.read<VideoCurriculumBloc>().state.recordedVideoPath != null;
-      if (!hasRecordedVideo && !_cameraSessionController.isCameraReady) {
-        _cameraSessionController.initializeCamera();
-      }
-    }
+    VideoCameraController.onLifecycleStateChanged(
+      context,
+      state: state,
+      cameraSessionController: _cameraSessionController,
+    );
   }
 
   @override
@@ -48,38 +42,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  void _showNoAttemptsLeftSnackBar() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('No te quedan más intentos.')));
-  }
-
   Future<void> _toggleRecording() async {
-    final bloc = context.read<VideoCurriculumBloc>();
-
-    final result = await _cameraSessionController.toggleRecording(
-      attemptsLeft: bloc.state.attemptsLeft,
-      onRecordingStopped: (path) {
-        if (!mounted) return;
-        bloc.add(VideoRecordingStopped(path));
-      },
+    await VideoCameraController.toggleRecording(
+      context,
+      cameraSessionController: _cameraSessionController,
     );
-    if (!mounted) return;
-
-    if (result.type == CameraToggleResultType.started) {
-      bloc.add(VideoRecordingStarted());
-      return;
-    }
-    if (result.type == CameraToggleResultType.noAttemptsLeft) {
-      _showNoAttemptsLeftSnackBar();
-      return;
-    }
-    if (result.type == CameraToggleResultType.error &&
-        result.errorMessage != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result.errorMessage!)));
-    }
   }
 
   @override
@@ -89,18 +56,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       builder: (context, _) {
         return BlocBuilder<VideoCurriculumBloc, VideoCurriculumState>(
           builder: (context, state) {
-            final hasAttemptsLeft = state.attemptsLeft > 0;
+            final hasAttemptsLeft = VideoCameraLogic.hasAttemptsLeft(
+              state.attemptsLeft,
+            );
 
             if (state.recordedVideoPath != null) {
               return CameraRecordedVideoView(
                 attemptsLeft: state.attemptsLeft,
                 onRetry: hasAttemptsLeft
-                    ? () {
-                        context.read<VideoCurriculumBloc>().add(
-                          RetryVideoRecording(),
-                        );
-                        _cameraSessionController.initializeCamera();
-                      }
+                    ? () => VideoCameraController.retryRecording(
+                        context,
+                        cameraSessionController: _cameraSessionController,
+                      )
                     : null,
               );
             }

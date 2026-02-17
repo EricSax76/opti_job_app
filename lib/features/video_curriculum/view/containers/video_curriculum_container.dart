@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/features/video_curriculum/bloc/video_curriculum_bloc.dart';
+import 'package:opti_job_app/features/video_curriculum/logic/video_curriculum_logic.dart';
 import 'package:opti_job_app/features/video_curriculum/repositories/video_curriculum_repository.dart';
 import 'package:opti_job_app/features/video_curriculum/view/video_curriculum_screen_controller.dart';
 import 'package:opti_job_app/features/video_curriculum/view/widgets/video_curriculum_content.dart';
@@ -49,14 +50,11 @@ class _VideoCurriculumContainerState extends State<VideoCurriculumContainer>
         listenWhen: _screenController.shouldListenWhen,
         listener: _screenController.onBlocStateChanged,
         child: BlocBuilder<VideoCurriculumBloc, VideoCurriculumState>(
-          buildWhen: (previous, current) =>
-              previous.recordedVideoPath != current.recordedVideoPath,
+          buildWhen: VideoCurriculumLogic.shouldRebuildContent,
           builder: (context, state) {
-            final hasRecordedPath =
-                state.recordedVideoPath != null &&
-                state.recordedVideoPath!.trim().isNotEmpty;
+            final viewModel = VideoCurriculumLogic.buildViewModel(state);
             return VideoCurriculumContent(
-              hasRecordedVideo: hasRecordedPath,
+              viewModel: viewModel,
               onSave: _screenController.save,
               uploadedStatusCard: const UploadedVideoStatusCardContainer(),
               recordedStatusCard: const RecordedVideoStatusCardContainer(),

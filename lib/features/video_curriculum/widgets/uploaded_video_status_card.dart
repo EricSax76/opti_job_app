@@ -1,7 +1,8 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/features/video_curriculum/logic/uploaded_video_status_logic.dart';
+import 'package:opti_job_app/features/video_curriculum/view/controllers/uploaded_video_status_controller.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/inline_video_preview.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/video_curriculum_playback_helpers.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
@@ -19,17 +20,52 @@ class UploadedVideoStatusCardContainer extends StatelessWidget {
   }
 }
 
-class UploadedVideoStatusCard extends StatelessWidget {
+class UploadedVideoStatusCard extends StatefulWidget {
   const UploadedVideoStatusCard({super.key, required this.video});
 
   final CandidateVideoCurriculum? video;
 
   @override
-  Widget build(BuildContext context) {
-    final storagePath = video?.storagePath.trim() ?? '';
-    final hasUploaded = storagePath.isNotEmpty;
+  State<UploadedVideoStatusCard> createState() =>
+      _UploadedVideoStatusCardState();
+}
 
-    if (!hasUploaded || video == null) {
+class _UploadedVideoStatusCardState extends State<UploadedVideoStatusCard> {
+  Future<String?>? _downloadUrlFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncDownloadUrlFuture();
+  }
+
+  @override
+  void didUpdateWidget(covariant UploadedVideoStatusCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldStoragePath = UploadedVideoStatusLogic.resolveStoragePath(
+      oldWidget.video,
+    );
+    final newStoragePath = UploadedVideoStatusLogic.resolveStoragePath(
+      widget.video,
+    );
+    if (oldStoragePath == newStoragePath) return;
+    _syncDownloadUrlFuture();
+  }
+
+  void _syncDownloadUrlFuture() {
+    final storagePath = UploadedVideoStatusLogic.resolveStoragePath(
+      widget.video,
+    );
+    _downloadUrlFuture = UploadedVideoStatusController.loadDownloadUrl(
+      storagePath,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = UploadedVideoStatusLogic.buildViewModel(widget.video);
+
+    if (!viewModel.hasUploadedVideo) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -41,31 +77,23 @@ class UploadedVideoStatusCard extends StatelessWidget {
                   const Icon(Icons.cloud_off_outlined),
                   const SizedBox(width: 8),
                   Text(
-                    'Sin videocurrículum subido',
+                    viewModel.title,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Graba y guarda un vídeo para que quede asociado a tu perfil.',
-              ),
+              Text(viewModel.description),
             ],
           ),
         ),
       );
     }
 
-    return FutureBuilder<String>(
-      future: FirebaseStorage.instance
-          .ref()
-          .child(storagePath)
-          .getDownloadURL(),
+    return FutureBuilder<String?>(
+      future: _downloadUrlFuture,
       builder: (context, snapshot) {
-        final downloadUrl = snapshot.data?.trim();
-        final uri = (downloadUrl == null || downloadUrl.isEmpty)
-            ? null
-            : Uri.tryParse(downloadUrl);
+        final uri = UploadedVideoStatusLogic.parseDownloadUri(snapshot.data);
         final canPlay = uri != null;
 
         return Card(
@@ -79,7 +107,7 @@ class UploadedVideoStatusCard extends StatelessWidget {
                     const Icon(Icons.cloud_done_outlined),
                     const SizedBox(width: 8),
                     Text(
-                      'Videocurrículum subido',
+                      viewModel.title,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     if (canPlay)
@@ -96,7 +124,7 @@ class UploadedVideoStatusCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('Tamaño: ${formatBytes(video!.sizeBytes)}'),
+                Text(viewModel.description),
                 if (snapshot.connectionState == ConnectionState.waiting)
                   const Padding(
                     padding: EdgeInsets.only(top: 12),

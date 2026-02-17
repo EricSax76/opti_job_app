@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'package:opti_job_app/features/video_curriculum/view/models/video_curriculum_view_model.dart';
 import 'package:opti_job_app/features/video_curriculum/widgets/camera_view.dart';
 
 class VideoCurriculumContent extends StatelessWidget {
   const VideoCurriculumContent({
     super.key,
-    required this.hasRecordedVideo,
+    required this.viewModel,
     required this.onSave,
     required this.uploadedStatusCard,
     required this.recordedStatusCard,
   });
 
-  final bool hasRecordedVideo;
+  final VideoCurriculumViewModel viewModel;
   final VoidCallback onSave;
   final Widget uploadedStatusCard;
   final Widget recordedStatusCard;
@@ -37,7 +38,7 @@ class VideoCurriculumContent extends StatelessWidget {
         recordedStatusCard,
         const SizedBox(height: 12),
         ElevatedButton(
-          onPressed: hasRecordedVideo ? onSave : null,
+          onPressed: viewModel.hasRecordedVideo ? onSave : null,
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
