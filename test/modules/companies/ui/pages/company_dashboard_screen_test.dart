@@ -63,6 +63,8 @@ void main() {
     );
 
     expect(offersCubit.loadedCompanyUids, ['company-1']);
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
     expect(find.text('Publicar oferta'), findsOneWidget);
     expect(find.text('Mis ofertas'), findsOneWidget);
   });
@@ -144,6 +146,8 @@ Widget _wrap({
 }) {
   final dashboardCubit = CompanyDashboardCubit(
     companyJobOffersCubit: offersCubit,
+    companyUid: 'company-1',
+    initialIndex: 0,
   );
   final offerCreationCubit = TestCompanyOfferCreationCubit(
     const CompanyOfferCreationState(),

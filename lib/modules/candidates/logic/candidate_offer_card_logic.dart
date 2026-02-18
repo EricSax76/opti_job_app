@@ -17,7 +17,7 @@ class CandidateOfferCardLogic {
       borderColor: isHovered
           ? uiAccent.withValues(alpha: isDark ? 0.5 : 0.3)
           : palette.borderColor,
-      borderWidth: isHovered ? 1.5 : 1,
+      borderWidth: 1,
       boxShadow: isDark
           ? null
           : [

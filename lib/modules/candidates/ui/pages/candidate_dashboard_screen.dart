@@ -106,6 +106,16 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     final avatarUrl = context.select(
       (ProfileCubit cubit) => cubit.state.candidate?.avatarUrl,
     );
+    final profileCandidateName = context.select<ProfileCubit, String?>(
+      (cubit) => cubit.state.candidate?.name,
+    );
+    final authCandidateName = context.select<CandidateAuthCubit, String?>(
+      (cubit) => cubit.state.candidate?.name,
+    );
+    final candidateName = _resolveCandidateName(
+      profileCandidateName: profileCandidateName,
+      authCandidateName: authCandidateName,
+    );
     final candidateUid = context.select(
       (CandidateAuthCubit cubit) => cubit.state.candidate?.uid,
     );
@@ -137,6 +147,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
             return CandidateDashboardScaffold(
               tabController: _tabController,
               viewModel: viewModel,
+              candidateName: candidateName,
               dashboardPages: _dashboardPages,
               interviewsCubit: widget.interviewsCubit,
               candidateUid: candidateUid,
@@ -169,5 +180,16 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     if (kIsWeb && state.redirectPath != null) {
       pushBrowserPath(state.redirectPath!);
     }
+  }
+
+  String? _resolveCandidateName({
+    required String? profileCandidateName,
+    required String? authCandidateName,
+  }) {
+    final profileName = profileCandidateName?.trim();
+    if (profileName != null && profileName.isNotEmpty) return profileName;
+    final authName = authCandidateName?.trim();
+    if (authName != null && authName.isNotEmpty) return authName;
+    return null;
   }
 }

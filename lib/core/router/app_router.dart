@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/auth/ui/pages/candidate_login_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/candidate_register_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/company_login_screen.dart';
@@ -75,6 +76,8 @@ class GoRouterCombinedRefreshStream extends ChangeNotifier {
 }
 
 class AppRouter {
+  static const String _authBootstrapPath = '/_auth-bootstrap';
+
   AppRouter({required GoRouterCombinedRefreshStream routerRefreshStream}) {
     _router = GoRouter(
       initialLocation: '/',
@@ -82,6 +85,11 @@ class AppRouter {
       refreshListenable: routerRefreshStream,
       redirect: _redirectLogic,
       routes: [
+        GoRoute(
+          path: _authBootstrapPath,
+          name: 'auth-bootstrap',
+          builder: (context, state) => const _AuthBootstrapScreen(),
+        ),
         GoRoute(
           path: '/',
           name: 'landing',
@@ -443,53 +451,74 @@ class AppRouter {
         ),
         GoRoute(
           path: '/DashboardCompany',
+          name: 'company-dashboard-legacy',
+          builder: (context, state) {
+            final uid =
+                context.read<CompanyAuthCubit>().state.company?.uid ?? '';
+            return _buildCompanyDashboardRoute(
+              context: context,
+              uid: uid,
+              initialIndex: 0,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/company/:uid/dashboard',
           name: 'company-dashboard',
           builder: (context, state) {
-            final companyJobOffersCubit = CompanyJobOffersCubit(
-              context.read<JobOfferRepository>(),
+            final uid = state.pathParameters['uid'] ?? '';
+            return _buildCompanyDashboardRoute(
+              context: context,
+              uid: uid,
+              initialIndex: 0,
             );
-
-            final jobOfferFormCubit = JobOfferFormCubit(
-              context.read<JobOfferRepository>(),
+          },
+        ),
+        GoRoute(
+          path: '/company/:uid/publish-offer',
+          name: 'company-publish-offer',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            return _buildCompanyDashboardRoute(
+              context: context,
+              uid: uid,
+              initialIndex: 1,
             );
-
-            final offerApplicantsCubit = OfferApplicantsCubit(
-              context.read<ApplicantsRepository>(),
+          },
+        ),
+        GoRoute(
+          path: '/company/:uid/offers',
+          name: 'company-offers',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            return _buildCompanyDashboardRoute(
+              context: context,
+              uid: uid,
+              initialIndex: 2,
             );
-
-            final companyDashboardCubit = CompanyDashboardCubit(
-              companyJobOffersCubit: companyJobOffersCubit,
+          },
+        ),
+        GoRoute(
+          path: '/company/:uid/candidates',
+          name: 'company-candidates',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            return _buildCompanyDashboardRoute(
+              context: context,
+              uid: uid,
+              initialIndex: 3,
             );
-
-            final companyOfferCreationCubit = CompanyOfferCreationCubit(
-              aiRepository: context.read<AiRepository>(),
-            );
-
-            // We need companyUid for InterviewListCubit.
-            // We can try to get it from auth state, but it might be null if not fully initialized?
-            // However, the redirect logic ensures we are authenticated.
-            final companyUid =
-                context.read<CompanyAuthCubit>().state.company?.uid ?? '';
-
-            final interviewListCubit = InterviewListCubit(
-              repository: context.read<InterviewRepository>(),
-              uid: companyUid,
-            );
-
-            return MultiBlocProvider(
-              providers: [
-                BlocProvider(create: (_) => companyJobOffersCubit),
-                BlocProvider(create: (_) => jobOfferFormCubit),
-                BlocProvider(create: (_) => offerApplicantsCubit),
-                BlocProvider(create: (_) => companyDashboardCubit),
-                BlocProvider(create: (_) => companyOfferCreationCubit),
-                BlocProvider(create: (_) => interviewListCubit),
-              ],
-              child: CompanyDashboardScreen(
-                dashboardCubit: companyDashboardCubit,
-                offerCreationCubit: companyOfferCreationCubit,
-                interviewsCubit: interviewListCubit,
-              ),
+          },
+        ),
+        GoRoute(
+          path: '/company/:uid/interviews',
+          name: 'company-interviews',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            return _buildCompanyDashboardRoute(
+              context: context,
+              uid: uid,
+              initialIndex: 4,
             );
           },
         ),
@@ -590,10 +619,90 @@ class AppRouter {
 
   GoRouter get router => _router;
 
+  Widget _buildCompanyDashboardRoute({
+    required BuildContext context,
+    required String uid,
+    required int initialIndex,
+  }) {
+    final companyJobOffersCubit = CompanyJobOffersCubit(
+      context.read<JobOfferRepository>(),
+    );
+
+    final jobOfferFormCubit = JobOfferFormCubit(
+      context.read<JobOfferRepository>(),
+    );
+
+    final offerApplicantsCubit = OfferApplicantsCubit(
+      context.read<ApplicantsRepository>(),
+    );
+
+    final companyDashboardCubit = CompanyDashboardCubit(
+      companyJobOffersCubit: companyJobOffersCubit,
+      companyUid: uid,
+      initialIndex: initialIndex,
+    );
+
+    final companyOfferCreationCubit = CompanyOfferCreationCubit(
+      aiRepository: context.read<AiRepository>(),
+    );
+
+    final interviewListCubit = InterviewListCubit(
+      repository: context.read<InterviewRepository>(),
+      uid: uid,
+    );
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => companyJobOffersCubit),
+        BlocProvider(create: (_) => jobOfferFormCubit),
+        BlocProvider(create: (_) => offerApplicantsCubit),
+        BlocProvider(create: (_) => companyDashboardCubit),
+        BlocProvider(create: (_) => companyOfferCreationCubit),
+        BlocProvider(create: (_) => interviewListCubit),
+      ],
+      child: CompanyDashboardScreen(
+        dashboardCubit: companyDashboardCubit,
+        offerCreationCubit: companyOfferCreationCubit,
+        interviewsCubit: interviewListCubit,
+      ),
+    );
+  }
+
+  static const Set<String> _companyDashboardRouteSuffixes = {
+    'dashboard',
+    'publish-offer',
+    'offers',
+    'candidates',
+    'interviews',
+  };
+
+  String _companyDashboardHomePath(String companyUid) {
+    final uid = companyUid.trim();
+    if (uid.isEmpty) return '/DashboardCompany';
+    return '/company/$uid/dashboard';
+  }
+
+  String? _companyDashboardCanonicalPath({
+    required String location,
+    required String companyUid,
+  }) {
+    final uid = companyUid.trim();
+    if (uid.isEmpty) return null;
+
+    final pathSegments = Uri.parse(location).pathSegments;
+    if (pathSegments.length != 3) return null;
+    if (pathSegments.first != 'company') return null;
+
+    final suffix = pathSegments[2];
+    if (!_companyDashboardRouteSuffixes.contains(suffix)) return null;
+    return '/company/$uid/$suffix';
+  }
+
   String? _redirectLogic(BuildContext context, GoRouterState state) {
     final candidateAuthState = context.read<CandidateAuthCubit>().state;
     final companyAuthState = context.read<CompanyAuthCubit>().state;
     final candidateUid = candidateAuthState.candidate?.uid ?? '';
+    final companyUid = companyAuthState.company?.uid ?? '';
 
     // Determine the active auth state based on who is authenticated
     final authState = candidateAuthState.isAuthenticated
@@ -601,14 +710,54 @@ class AppRouter {
         : companyAuthState;
 
     final location = state.matchedLocation;
+    final fullLocation = state.uri.toString();
+    final uriPath = state.uri.path;
     final bool loggingInCandidate =
         location == '/CandidateLogin' || location == '/candidateregister';
     final bool loggingInCompany =
         location == '/CompanyLogin' || location == '/companyregister';
     final bool onboardingRoute = location == '/onboarding';
+    final bool authBootstrapRoute = location == _authBootstrapPath;
     final bool companyArea = location.startsWith('/company/');
     final bool candidateArea = location.startsWith('/candidate/');
+    final companyDashboardCanonicalPath = _companyDashboardCanonicalPath(
+      location: uriPath,
+      companyUid: companyUid,
+    );
     final routeUid = state.pathParameters['uid'];
+    final bool hasAuthenticatedSession =
+        candidateAuthState.isAuthenticated || companyAuthState.isAuthenticated;
+    final bool pendingSessionRestore =
+        !hasAuthenticatedSession &&
+        (candidateAuthState.status == AuthStatus.unknown ||
+            companyAuthState.status == AuthStatus.unknown);
+
+    if (pendingSessionRestore) {
+      if (authBootstrapRoute) return null;
+      final bootstrapUri = Uri(
+        path: _authBootstrapPath,
+        queryParameters: {'from': fullLocation},
+      );
+      return bootstrapUri.toString();
+    }
+
+    if (authBootstrapRoute) {
+      final from = state.uri.queryParameters['from'];
+      final hasValidFrom =
+          from != null &&
+          from.isNotEmpty &&
+          !from.startsWith(_authBootstrapPath);
+      if (hasValidFrom) {
+        return from;
+      }
+      if (!authState.isAuthenticated) return '/';
+      if (authState.needsOnboarding) return '/onboarding';
+      if (authState.isCandidate) {
+        if (candidateUid.isNotEmpty) return '/candidate/$candidateUid/dashboard';
+        return '/CandidateDashboard';
+      }
+      return _companyDashboardHomePath(companyUid);
+    }
 
     if (!authState.isAuthenticated) {
       if (onboardingRoute) return '/';
@@ -626,7 +775,7 @@ class AppRouter {
     if (!authState.needsOnboarding && onboardingRoute) {
       return authState.isCandidate
           ? '/candidate/$candidateUid/dashboard'
-          : '/DashboardCompany';
+          : _companyDashboardHomePath(companyUid);
     }
 
     if (authState.isCandidate && location == '/DashboardCompany') {
@@ -634,11 +783,21 @@ class AppRouter {
     }
 
     if (authState.isCompany && location == '/CandidateDashboard') {
-      return '/DashboardCompany';
+      return _companyDashboardHomePath(companyUid);
     }
 
     if (authState.isCandidate && companyArea) {
       return '/candidate/$candidateUid/dashboard';
+    }
+
+    if (authState.isCompany && location == '/DashboardCompany') {
+      return _companyDashboardHomePath(companyUid);
+    }
+
+    if (authState.isCompany &&
+        companyDashboardCanonicalPath != null &&
+        companyDashboardCanonicalPath != uriPath) {
+      return companyDashboardCanonicalPath;
     }
 
     if (authState.isCandidate && (loggingInCandidate || loggingInCompany)) {
@@ -646,7 +805,7 @@ class AppRouter {
     }
 
     if (authState.isCompany && (loggingInCandidate || loggingInCompany)) {
-      return '/DashboardCompany';
+      return _companyDashboardHomePath(companyUid);
     }
 
     if (authState.isCandidate && location == '/CandidateDashboard') {
@@ -662,5 +821,27 @@ class AppRouter {
     }
 
     return null;
+  }
+}
+
+class _AuthBootstrapScreen extends StatelessWidget {
+  const _AuthBootstrapScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.6,
+            color: colorScheme.primary,
+          ),
+        ),
+      ),
+    );
   }
 }

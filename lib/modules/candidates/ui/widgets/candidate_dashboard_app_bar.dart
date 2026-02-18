@@ -11,6 +11,7 @@ class CandidateDashboardAppBar extends StatelessWidget
     super.key,
     required this.tabController,
     required this.avatarUrl,
+    required this.accountDisplayName,
     required this.onOpenProfile,
     required this.onLogout,
     required this.showTabBar,
@@ -18,6 +19,7 @@ class CandidateDashboardAppBar extends StatelessWidget
 
   final TabController tabController;
   final String? avatarUrl;
+  final String? accountDisplayName;
   final VoidCallback onOpenProfile;
   final VoidCallback onLogout;
   final bool showTabBar;
@@ -31,16 +33,19 @@ class CandidateDashboardAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isMobileLayout =
-        MediaQuery.sizeOf(context).width < candidateDashboardSidebarBreakpoint;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final isMobileLayout = viewportWidth < candidateDashboardSidebarBreakpoint;
+    final showInlineAccountName = !showTabBar && (!isMobileLayout || kIsWeb);
     final avatarImageCacheSize = (32 * MediaQuery.of(context).devicePixelRatio)
         .round();
     final toolbarHeight = kToolbarHeight + (kIsWeb ? 12 : 0);
     final avatarRadius = isMobileLayout ? 16.0 : 18.0;
     final avatarDiameter = avatarRadius * 2;
+    final accountNameMaxWidth = isMobileLayout ? 120.0 : 148.0;
 
     final accountMenu = PopupMenuButton<_CandidateAccountAction>(
       tooltip: 'Cuenta',
+      padding: EdgeInsets.zero,
       onSelected: (action) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           switch (action) {
@@ -64,48 +69,24 @@ class CandidateDashboardAppBar extends StatelessWidget
           child: Text('Cerrar sesión'),
         ),
       ],
-      child: isMobileLayout
-          ? CircleAvatar(
-              radius: avatarRadius,
-              backgroundColor: colorScheme.secondaryContainer,
-              child: (avatarUrl != null && avatarUrl!.isNotEmpty)
-                  ? ClipOval(
-                      child: Image.network(
-                        avatarUrl!,
-                        width: avatarDiameter,
-                        height: avatarDiameter,
-                        fit: BoxFit.cover,
-                        cacheWidth: avatarImageCacheSize,
-                        cacheHeight: avatarImageCacheSize,
-                        filterQuality: FilterQuality.low,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.person,
-                            size: 20,
-                            color: colorScheme.onSecondaryContainer,
-                          );
-                        },
-                      ),
-                    )
-                  : Icon(
-                      Icons.person,
-                      size: 20,
-                      color: colorScheme.onSecondaryContainer,
-                    ),
-            )
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: showInlineAccountName
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (!showTabBar) ...[
-                    Text(
-                      'Mi Cuenta',
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: accountNameMaxWidth),
+                    child: Text(
+                      _resolvedAccountLabel(accountDisplayName),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                  ],
+                  ),
+                  const SizedBox(width: 8),
                   CircleAvatar(
                     radius: avatarRadius,
                     backgroundColor: colorScheme.secondaryContainer,
@@ -136,6 +117,63 @@ class CandidateDashboardAppBar extends StatelessWidget
                   ),
                 ],
               ),
+            )
+          : isMobileLayout
+          ? CircleAvatar(
+              radius: avatarRadius,
+              backgroundColor: colorScheme.secondaryContainer,
+              child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                  ? ClipOval(
+                      child: Image.network(
+                        avatarUrl!,
+                        width: avatarDiameter,
+                        height: avatarDiameter,
+                        fit: BoxFit.cover,
+                        cacheWidth: avatarImageCacheSize,
+                        cacheHeight: avatarImageCacheSize,
+                        filterQuality: FilterQuality.low,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            size: 20,
+                            color: colorScheme.onSecondaryContainer,
+                          );
+                        },
+                      ),
+                    )
+                  : Icon(
+                      Icons.person,
+                      size: 20,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
+            )
+          : CircleAvatar(
+              radius: avatarRadius,
+              backgroundColor: colorScheme.secondaryContainer,
+              child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                  ? ClipOval(
+                      child: Image.network(
+                        avatarUrl!,
+                        width: avatarDiameter,
+                        height: avatarDiameter,
+                        fit: BoxFit.cover,
+                        cacheWidth: avatarImageCacheSize,
+                        cacheHeight: avatarImageCacheSize,
+                        filterQuality: FilterQuality.low,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            size: 20,
+                            color: colorScheme.onSecondaryContainer,
+                          );
+                        },
+                      ),
+                    )
+                  : Icon(
+                      Icons.person,
+                      size: 20,
+                      color: colorScheme.onSecondaryContainer,
+                    ),
             ),
     );
 
@@ -162,14 +200,7 @@ class CandidateDashboardAppBar extends StatelessWidget
       ),
       centerTitle: true,
       actions: [
-        if (!showTabBar && !isMobileLayout)
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search),
-            tooltip: 'Buscar',
-          ),
-        if (!showTabBar && !isMobileLayout) const SizedBox(width: 8),
-        if (isMobileLayout)
+        if (isMobileLayout && !showInlineAccountName)
           SizedBox(
             width: kToolbarHeight,
             child: Center(child: accountMenu),
@@ -201,6 +232,12 @@ class CandidateDashboardAppBar extends StatelessWidget
             )
           : null,
     );
+  }
+
+  static String _resolvedAccountLabel(String? accountDisplayName) {
+    final trimmed = accountDisplayName?.trim();
+    if (trimmed == null || trimmed.isEmpty) return 'Mi Cuenta';
+    return trimmed;
   }
 }
 

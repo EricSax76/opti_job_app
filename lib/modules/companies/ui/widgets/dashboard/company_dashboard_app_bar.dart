@@ -6,25 +6,18 @@ class CompanyDashboardAppBar extends StatelessWidget
   const CompanyDashboardAppBar({
     super.key,
     required this.showAccountActions,
-    required this.isDarkMode,
-    required this.onToggleTheme,
+    required this.showMenuButton,
     this.accountMenu,
   });
 
   final bool showAccountActions;
-  final bool isDarkMode;
-  final VoidCallback onToggleTheme;
+  final bool showMenuButton;
   final Widget? accountMenu;
 
   @override
   Widget build(BuildContext context) {
     final actions = showAccountActions
         ? <Widget>[
-            IconButton(
-              icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              tooltip: isDarkMode ? 'Modo claro' : 'Modo oscuro',
-              onPressed: onToggleTheme,
-            ),
             if (accountMenu != null) accountMenu!,
           ]
         : null;
@@ -32,7 +25,7 @@ class CompanyDashboardAppBar extends StatelessWidget
     return CoreShellAppBar(
       variant: CoreShellVariant.company,
       title: 'OPTIJOB',
-      automaticallyImplyLeading: false,
+      automaticallyImplyLeading: showMenuButton,
       actions: actions,
     );
   }

@@ -75,6 +75,9 @@ class AuthFormScreenLogic {
         state.status == AuthStatus.authenticated &&
         !state.needsOnboarding;
     if (!shouldNavigate) return null;
+
+    final uid = _normalizeText(state.company?.uid);
+    if (uid != null) return '/company/$uid/dashboard';
     return '/DashboardCompany';
   }
 

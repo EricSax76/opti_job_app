@@ -106,11 +106,12 @@ void main() {
         final candidateDoc = await firestore
             .collection('candidates')
             .doc('uid')
+            .collection('cover_letter')
+            .doc('main')
             .get();
         final data = candidateDoc.data();
         expect(data, isNotNull);
-        final coverLetterData = data!['cover_letter'] as Map<String, dynamic>?;
-        expect(coverLetterData?['text'], 'Carta definitiva');
+        expect(data!['text'], 'Carta definitiva');
 
         await bloc.close();
       },
@@ -152,7 +153,7 @@ void main() {
       await bloc.close();
     });
 
-    test('emits failure when firestore update throws', () async {
+    test('saves even when candidate parent document does not exist', () async {
       final firestore = FakeFirebaseFirestore();
       final bloc = CoverLetterBloc(
         aiRepository: _MockAiRepository(),
@@ -164,10 +165,16 @@ void main() {
       bloc.add(const SaveCoverLetterRequested('Texto'));
       await _waitForState(
         bloc,
-        (state) => state.status == CoverLetterStatus.failure,
+        (state) => state.status == CoverLetterStatus.success,
       );
 
-      expect(bloc.state.error, isNotNull);
+      final saved = await firestore
+          .collection('candidates')
+          .doc('uid')
+          .collection('cover_letter')
+          .doc('main')
+          .get();
+      expect(saved.data()?['text'], 'Texto');
       await bloc.close();
     });
   });
@@ -175,9 +182,13 @@ void main() {
   group('LoadCoverLetterRequested', () {
     test('loads and trims saved cover letter text', () async {
       final firestore = FakeFirebaseFirestore();
-      await firestore.collection('candidates').doc('uid').set({
-        'cover_letter': {'text': '  Hola mundo  '},
-      });
+      await firestore.collection('candidates').doc('uid').set({});
+      await firestore
+          .collection('candidates')
+          .doc('uid')
+          .collection('cover_letter')
+          .doc('main')
+          .set({'text': '  Hola mundo  '});
 
       final bloc = CoverLetterBloc(
         aiRepository: _MockAiRepository(),

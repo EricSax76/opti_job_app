@@ -33,7 +33,7 @@ class CoverLetterContent extends StatelessWidget {
             maxLines: 8,
             decoration: const InputDecoration(
               hintText:
-                  'Escribe aquí tu carta de presentación o deja que la IA te ayude...',
+                  'La IA analizará tu CV y generará una carta personalizada. También puedes editarla aquí.',
               border: OutlineInputBorder(),
             ),
           ),
@@ -48,7 +48,7 @@ class CoverLetterContent extends StatelessWidget {
                   )
                 : const Icon(Icons.auto_awesome),
             label: Text(
-              viewModel.isImproving ? 'Generando...' : 'Mejorar con IA',
+              viewModel.isImproving ? 'Generando...' : 'Generar con IA',
             ),
             style: ElevatedButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.onSecondary,

@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 
-import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_nav_bar.dart';
-
 class CompanyDashboardAuthenticatedBody extends StatelessWidget {
   const CompanyDashboardAuthenticatedBody({
     super.key,
-    required this.tabController,
+    required this.selectedIndex,
     required this.tabPages,
   });
 
-  final TabController tabController;
+  final int selectedIndex;
   final List<Widget> tabPages;
 
   @override
@@ -23,13 +21,9 @@ class CompanyDashboardAuthenticatedBody extends StatelessWidget {
       );
     }
 
-    return Column(
-      children: [
-        CompanyDashboardNavBar(controller: tabController),
-        Expanded(
-          child: TabBarView(controller: tabController, children: tabPages),
-        ),
-      ],
+    return IndexedStack(
+      index: selectedIndex,
+      children: tabPages,
     );
   }
 }

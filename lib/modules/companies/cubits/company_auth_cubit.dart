@@ -31,16 +31,35 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
   Future<void> restoreSession() async {
     if (state.isAuthenticated) return;
 
-    emit(state.copyWith(status: AuthStatus.authenticating, clearError: true));
     try {
       final company = await _repository.restoreCompanySession();
       if (company == null) {
-        emit(state.copyWith(status: AuthStatus.unauthenticated));
+        emit(
+          state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearCompany: true,
+            clearError: true,
+            needsOnboarding: false,
+          ),
+        );
         return;
       }
-      emit(state.copyWith(status: AuthStatus.authenticated, company: company));
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          company: company,
+          clearError: true,
+        ),
+      );
     } catch (_) {
-      emit(state.copyWith(status: AuthStatus.unauthenticated));
+      emit(
+        state.copyWith(
+          status: AuthStatus.unauthenticated,
+          clearCompany: true,
+          clearError: true,
+          needsOnboarding: false,
+        ),
+      );
     }
   }
 

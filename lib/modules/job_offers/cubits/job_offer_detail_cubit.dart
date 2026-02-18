@@ -98,8 +98,8 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
       Application? application;
       if (_candidateUid != null && _candidateUid!.isNotEmpty) {
         try {
-          application =
-              await _applicationService.getApplicationForCandidateOffer(
+          application = await _applicationService
+              .getApplicationForCandidateOffer(
                 jobOfferId: offer.id,
                 candidateUid: _candidateUid!,
               );
@@ -126,6 +126,25 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
 
   void retry() => unawaited(refresh());
 
+  Future<JobOfferMatchOutcome> evaluateFitForApplication({
+    required String candidateUid,
+    required JobOffer offer,
+  }) {
+    final normalizedUid = candidateUid.trim();
+    if (normalizedUid.isEmpty) {
+      return Future.value(
+        const JobOfferMatchFailure(
+          'No se pudo identificar tu perfil para evaluar la oferta.',
+        ),
+      );
+    }
+    return JobOfferMatchLogic.computeMatch(
+      curriculumRepository: _curriculumRepository,
+      aiRepository: _aiRepository,
+      candidateUid: normalizedUid,
+      offer: offer,
+    );
+  }
 
   Future<void> apply({
     required Candidate candidate,
@@ -153,10 +172,11 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
         jobOffer: offer,
         candidateProfileId: candidate.id,
       );
-      final application = await _applicationService.getApplicationForCandidateOffer(
-        jobOfferId: offer.id,
-        candidateUid: candidate.uid,
-      );
+      final application = await _applicationService
+          .getApplicationForCandidateOffer(
+            jobOfferId: offer.id,
+            candidateUid: candidate.uid,
+          );
       emit(
         state.copyWith(
           status: JobOfferDetailStatus.success,
@@ -175,23 +195,25 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
   }
 
   Future<void> computeMatch() async {
-    if (state.offer == null || _candidateUid == null) return;
-    
-    emit(state.copyWith(status: JobOfferDetailStatus.loading)); // Or a specific matching status
+    final offer = state.offer;
+    final candidateUid = _candidateUid?.trim();
+    if (offer == null || candidateUid == null || candidateUid.isEmpty) return;
 
-    final outcome = await JobOfferMatchLogic.computeMatch(
-      curriculumRepository: _curriculumRepository,
-      aiRepository: _aiRepository,
-      candidateUid: _candidateUid!,
-      offer: state.offer!,
+    emit(state.copyWith(status: JobOfferDetailStatus.loading));
+
+    final outcome = await evaluateFitForApplication(
+      candidateUid: candidateUid,
+      offer: offer,
     );
 
-    emit(state.copyWith(
-      status: JobOfferDetailStatus.success,
-      matchOutcome: outcome,
-    ));
+    emit(
+      state.copyWith(
+        status: JobOfferDetailStatus.success,
+        matchOutcome: outcome,
+      ),
+    );
   }
-  
+
   void clearMatchOutcome() {
     emit(state.copyWith(clearMatchOutcome: true));
   }

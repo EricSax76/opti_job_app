@@ -16,6 +16,16 @@ class ProfileService {
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
 
+  DocumentReference<Map<String, dynamic>> _coverLetterDocRef(
+    String candidateUid,
+  ) {
+    return _firestore
+        .collection('candidates')
+        .doc(candidateUid)
+        .collection('cover_letter')
+        .doc('main');
+  }
+
   Future<Candidate> fetchCandidateProfile(String uid) async {
     final doc = await _firestore.collection('candidates').doc(uid).get();
     if (!doc.exists) {
@@ -26,9 +36,16 @@ class ProfileService {
       throw StateError('Perfil de candidato no encontrado.');
     }
     final rawUid = data['uid'] as String?;
-    final candidateData = rawUid == null || rawUid.trim().isEmpty
+    final candidateUid = rawUid == null || rawUid.trim().isEmpty
+        ? uid
+        : rawUid.trim();
+    final baseCandidateData = rawUid == null || rawUid.trim().isEmpty
         ? {...data, 'uid': uid}
         : data;
+    final candidateData = await _withCoverLetterData(
+      candidateUid: candidateUid,
+      candidateData: baseCandidateData,
+    );
     return CandidateMapper.fromFirestore(candidateData);
   }
 
@@ -56,9 +73,13 @@ class ProfileService {
         final candidateUid = rawUid == null || rawUid.trim().isEmpty
             ? documentUid
             : rawUid.trim();
-        final candidateData = rawUid == null || rawUid.trim().isEmpty
+        final baseCandidateData = rawUid == null || rawUid.trim().isEmpty
             ? {...data, 'uid': candidateUid}
             : data;
+        final candidateData = await _withCoverLetterData(
+          candidateUid: candidateUid,
+          candidateData: baseCandidateData,
+        );
         candidatesByUid[documentUid] = CandidateMapper.fromFirestore(
           candidateData,
         );
@@ -205,6 +226,18 @@ class ProfileService {
       if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty)
         'avatar_url': avatarUrlForOffers,
     });
+  }
+
+  Future<Map<String, dynamic>> _withCoverLetterData({
+    required String candidateUid,
+    required Map<String, dynamic> candidateData,
+  }) async {
+    final coverLetterSnapshot = await _coverLetterDocRef(candidateUid).get();
+    final coverLetterData = coverLetterSnapshot.data();
+    if (coverLetterData == null) {
+      return candidateData;
+    }
+    return <String, dynamic>{...candidateData, 'cover_letter': coverLetterData};
   }
 }
 

@@ -34,6 +34,13 @@ service cloud.firestore {
         allow read: if (isSignedIn() && request.auth.uid == candidateId)
           || isCompany();
       }
+
+      match /cover_letter/{coverLetterId} {
+        allow create, update, delete: if isSignedIn()
+          && request.auth.uid == candidateId;
+        allow read: if (isSignedIn() && request.auth.uid == candidateId)
+          || isCompany();
+      }
     }
 
     match /companies/{companyId} {

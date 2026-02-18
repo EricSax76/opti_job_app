@@ -15,9 +15,13 @@ void main() {
 
     test('returns trimmed text when cover letter is present', () async {
       final firestore = FakeFirebaseFirestore();
-      await firestore.collection('candidates').doc('candidate-1').set({
-        'cover_letter': {'text': '  Carta final  '},
-      });
+      await firestore.collection('candidates').doc('candidate-1').set({});
+      await firestore
+          .collection('candidates')
+          .doc('candidate-1')
+          .collection('cover_letter')
+          .doc('main')
+          .set({'text': '  Carta final  '});
       final service = CoverLetterService(firestore: firestore);
 
       final result = await service.fetchCoverLetterText('candidate-1');
@@ -27,15 +31,34 @@ void main() {
 
     test('returns null when text is blank', () async {
       final firestore = FakeFirebaseFirestore();
-      await firestore.collection('candidates').doc('candidate-1').set({
-        'cover_letter': {'text': '   '},
-      });
+      await firestore.collection('candidates').doc('candidate-1').set({});
+      await firestore
+          .collection('candidates')
+          .doc('candidate-1')
+          .collection('cover_letter')
+          .doc('main')
+          .set({'text': '   '});
       final service = CoverLetterService(firestore: firestore);
 
       final result = await service.fetchCoverLetterText('candidate-1');
 
       expect(result, isNull);
     });
+
+    test(
+      'falls back to legacy cover_letter field in candidate document',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        await firestore.collection('candidates').doc('candidate-1').set({
+          'cover_letter': {'text': '  Carta legacy  '},
+        });
+        final service = CoverLetterService(firestore: firestore);
+
+        final result = await service.fetchCoverLetterText('candidate-1');
+
+        expect(result, 'Carta legacy');
+      },
+    );
   });
 
   group('CoverLetterService.saveCoverLetterText', () {
@@ -49,18 +72,25 @@ void main() {
         text: 'Mi carta',
       );
 
-      final snapshot = await firestore
+      final coverLetterSnapshot = await firestore
           .collection('candidates')
           .doc('candidate-1')
+          .collection('cover_letter')
+          .doc('main')
           .get();
-      final data = snapshot.data();
+      final data = coverLetterSnapshot.data();
 
       expect(data, isNotNull);
       expect(data!['updated_at'], isNotNull);
-      final coverLetter = data['cover_letter'] as Map<String, dynamic>?;
-      expect(coverLetter, isNotNull);
-      expect(coverLetter!['text'], 'Mi carta');
-      expect(coverLetter['updated_at'], isNotNull);
+      expect(data['text'], 'Mi carta');
+
+      final candidateSnapshot = await firestore
+          .collection('candidates')
+          .doc('candidate-1')
+          .get();
+      final candidateData = candidateSnapshot.data();
+      expect(candidateData, isNotNull);
+      expect(candidateData!['cover_letter'], isNull);
     });
   });
 }

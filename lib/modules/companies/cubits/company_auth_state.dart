@@ -4,7 +4,7 @@ import 'package:opti_job_app/auth/cubits/auth_cubit.dart'; // Import the base Au
 
 class CompanyAuthState extends AuthState {
   const CompanyAuthState({
-    super.status = AuthStatus.unauthenticated,
+    super.status = AuthStatus.unknown,
     this.company,
     super.errorMessage,
     super.needsOnboarding = false,

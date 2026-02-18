@@ -36,6 +36,7 @@ class DashboardOffersGrid extends StatelessWidget {
   final ValueChanged<JobOffer> onOfferTap;
 
   static const double _paginationThreshold = 280;
+  static const double _gridMainAxisExtent = 220;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +77,7 @@ class DashboardOffersGrid extends StatelessWidget {
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                mainAxisExtent: 190,
+                mainAxisExtent: _gridMainAxisExtent,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),

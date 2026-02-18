@@ -30,18 +30,35 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
   Future<void> restoreSession() async {
     if (state.isAuthenticated) return;
 
-    emit(state.copyWith(status: AuthStatus.authenticating, clearError: true));
     try {
       final candidate = await _repository.restoreCandidateSession();
       if (candidate == null) {
-        emit(state.copyWith(status: AuthStatus.unauthenticated));
+        emit(
+          state.copyWith(
+            status: AuthStatus.unauthenticated,
+            clearCandidate: true,
+            clearError: true,
+            needsOnboarding: false,
+          ),
+        );
         return;
       }
       emit(
-        state.copyWith(status: AuthStatus.authenticated, candidate: candidate),
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          candidate: candidate,
+          clearError: true,
+        ),
       );
     } catch (_) {
-      emit(state.copyWith(status: AuthStatus.unauthenticated));
+      emit(
+        state.copyWith(
+          status: AuthStatus.unauthenticated,
+          clearCandidate: true,
+          clearError: true,
+          needsOnboarding: false,
+        ),
+      );
     }
   }
 

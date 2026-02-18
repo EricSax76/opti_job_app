@@ -12,7 +12,8 @@ class JobOfferDetailLogic {
     required JobOfferDetailState current,
   }) {
     return successMessage(previous) != successMessage(current) ||
-        errorMessage(previous) != errorMessage(current);
+        errorMessage(previous) != errorMessage(current) ||
+        previous.matchOutcome != current.matchOutcome;
   }
 
   static String? successMessage(JobOfferDetailState state) {

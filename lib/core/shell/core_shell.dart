@@ -3,6 +3,8 @@ import 'package:opti_job_app/core/shell/core_shell_breakpoints.dart';
 
 enum CoreShellVariant { public, candidate, company, immersive }
 
+enum CoreShellSidebarAlignment { start, end }
+
 class CoreShell extends StatelessWidget {
   const CoreShell({
     super.key,
@@ -19,6 +21,7 @@ class CoreShell extends StatelessWidget {
     this.drawer,
     this.endDrawer,
     this.sidebar,
+    this.sidebarAlignment = CoreShellSidebarAlignment.start,
     this.bottomNavigationBar,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
@@ -42,6 +45,7 @@ class CoreShell extends StatelessWidget {
   final Widget? drawer;
   final Widget? endDrawer;
   final Widget? sidebar;
+  final CoreShellSidebarAlignment sidebarAlignment;
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
   final FloatingActionButtonLocation? floatingActionButtonLocation;
@@ -67,11 +71,14 @@ class CoreShell extends StatelessWidget {
     }
 
     if (usesExpandedNavigation && sidebar != null) {
+      final placesSidebarAtStart =
+          sidebarAlignment == CoreShellSidebarAlignment.start;
       content = Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          sidebar!,
+          if (placesSidebarAtStart) sidebar!,
           Expanded(child: content),
+          if (!placesSidebarAtStart) sidebar!,
         ],
       );
     }

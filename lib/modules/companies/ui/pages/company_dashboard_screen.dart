@@ -1,20 +1,25 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/core/shell/core_shell.dart';
+import 'package:opti_job_app/core/shell/core_shell_breakpoints.dart';
+import 'package:opti_job_app/core/platform/web_history.dart';
 import 'package:opti_job_app/auth/ui/pages/unauthenticated_company_message.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_dashboard_cubit.dart';
+import 'package:opti_job_app/modules/companies/cubits/company_dashboard_state.dart';
+import 'package:opti_job_app/modules/companies/models/company_dashboard_navigation.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar_menu.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_app_bar.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_authenticated_body.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_drawer.dart';
+import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_sidebar.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_tab_pages.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
-import 'package:opti_job_app/core/config/feature_flags.dart';
 
 class CompanyDashboardScreen extends StatefulWidget {
   const CompanyDashboardScreen({
@@ -32,60 +37,8 @@ class CompanyDashboardScreen extends StatefulWidget {
   State<CompanyDashboardScreen> createState() => _CompanyDashboardScreenState();
 }
 
-class _CompanyDashboardScreenState extends State<CompanyDashboardScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    final tabCount = FeatureFlags.interviews ? 5 : 4;
-    _tabController = TabController(length: tabCount, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _CompanyDashboardContent(
-      dashboardCubit: widget.dashboardCubit,
-      offerCreationCubit: widget.offerCreationCubit,
-      interviewsCubit: widget.interviewsCubit,
-    );
-  }
-}
-
-class _CompanyDashboardContent extends StatefulWidget {
-  const _CompanyDashboardContent({
-    required this.dashboardCubit,
-    required this.offerCreationCubit,
-    required this.interviewsCubit,
-  });
-
-  final CompanyDashboardCubit dashboardCubit;
-  final CompanyOfferCreationCubit offerCreationCubit;
-  final InterviewListCubit interviewsCubit;
-
-  @override
-  State<_CompanyDashboardContent> createState() =>
-      _CompanyDashboardContentState();
-}
-
-class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
   var _initialOffersLoadHandled = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final tabCount = FeatureFlags.interviews ? 5 : 4;
-    _tabController = TabController(length: tabCount, vsync: this);
-  }
 
   @override
   void didChangeDependencies() {
@@ -97,18 +50,23 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final authState = context.watch<CompanyAuthCubit>().state;
-    final isDarkMode = context.select(
-      (ThemeCubit cubit) => cubit.state.themeMode == ThemeMode.dark,
-    );
+    final dashboardState = context.watch<CompanyDashboardCubit>().state;
     final theme = Theme.of(context);
+    final showNavigationSidebar =
+        MediaQuery.sizeOf(context).width >= coreShellNavigationBreakpoint;
+    final navItems = companyDashboardNavItems();
+    final tabPages = companyDashboardTabPages();
+    final selectedIndex = companyDashboardClampIndex(dashboardState.selectedIndex);
+    final hasAuthenticatedCompany = authState.company != null;
+
+    if (selectedIndex != dashboardState.selectedIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        widget.dashboardCubit.selectIndex(selectedIndex);
+      });
+    }
 
     return MultiBlocListener(
       listeners: [
@@ -121,21 +79,46 @@ class _CompanyDashboardContentState extends State<_CompanyDashboardContent>
             widget.dashboardCubit.checkAndLoadCompanyOffers(state.company?.uid);
           },
         ),
+        BlocListener<CompanyDashboardCubit, CompanyDashboardState>(
+          listenWhen: (previous, current) =>
+              previous.redirectPath != current.redirectPath,
+          listener: (context, state) {
+            if (!kIsWeb || state.redirectPath == null) return;
+            pushBrowserPath(state.redirectPath!);
+          },
+        ),
       ],
       child: CoreShell(
         variant: CoreShellVariant.company,
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: CompanyDashboardAppBar(
-          showAccountActions: authState.company != null,
-          isDarkMode: isDarkMode,
-          onToggleTheme: () => context.read<ThemeCubit>().toggleTheme(),
+          showAccountActions: hasAuthenticatedCompany,
+          showMenuButton: !showNavigationSidebar && hasAuthenticatedCompany,
           accountMenu: const CompanyAccountAvatarMenu(),
         ),
-        body: authState.company == null
+        drawer: hasAuthenticatedCompany && !showNavigationSidebar
+            ? CompanyDashboardDrawer(
+                items: navItems,
+                selectedIndex: selectedIndex,
+                onSelected: (index) {
+                  Navigator.of(context).pop();
+                  widget.dashboardCubit.selectIndex(index);
+                },
+              )
+            : null,
+        sidebar: hasAuthenticatedCompany && showNavigationSidebar
+            ? CompanyDashboardSidebar(
+                items: navItems,
+                selectedIndex: selectedIndex,
+                onSelected: widget.dashboardCubit.selectIndex,
+              )
+            : null,
+        sidebarAlignment: CoreShellSidebarAlignment.start,
+        body: !hasAuthenticatedCompany
             ? const UnauthenticatedCompanyMessage()
             : CompanyDashboardAuthenticatedBody(
-                tabController: _tabController,
-                tabPages: companyDashboardTabPages(),
+                selectedIndex: selectedIndex,
+                tabPages: tabPages,
               ),
       ),
     );

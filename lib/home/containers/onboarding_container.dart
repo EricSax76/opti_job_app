@@ -51,7 +51,13 @@ class OnboardingContainer extends StatelessWidget {
       return;
     }
 
-    context.read<CompanyAuthCubit>().completeOnboarding();
+    final companyAuthCubit = context.read<CompanyAuthCubit>();
+    companyAuthCubit.completeOnboarding();
+    final uid = companyAuthCubit.state.company?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      context.go('/company/$uid/dashboard');
+      return;
+    }
     context.go('/DashboardCompany');
   }
 }

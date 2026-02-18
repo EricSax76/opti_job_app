@@ -105,6 +105,19 @@ class CurriculumLogic {
         previousAttachment: curriculumCubit.state.curriculum?.attachment,
       );
       curriculumCubit.setCurriculum(updatedCurriculum);
+
+      // Persist extracted form data after import so the parsed content is not
+      // left only in local UI state.
+      if (extension == 'docx') {
+        await curriculumCubit.save(
+          _buildCurriculumFromForm(
+            formCubit: formCubit,
+            attachment: updatedCurriculum.attachment,
+            updatedAt: updatedCurriculum.updatedAt,
+          ),
+        );
+      }
+
       return ActionSuccess(
         extension != 'docx'
             ? 'Archivo importado. (Info: solo .docx soporta extracción automática)'
@@ -169,5 +182,24 @@ class CurriculumLogic {
         return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     }
     return null;
+  }
+
+  static Curriculum _buildCurriculumFromForm({
+    required CurriculumFormCubit formCubit,
+    CurriculumAttachment? attachment,
+    DateTime? updatedAt,
+  }) {
+    final state = formCubit.state;
+    return Curriculum(
+      headline: formCubit.headlineController.text.trim(),
+      summary: formCubit.summaryController.text.trim(),
+      phone: formCubit.phoneController.text.trim(),
+      location: formCubit.locationController.text.trim(),
+      skills: state.skills,
+      experiences: state.experiences,
+      education: state.education,
+      attachment: attachment,
+      updatedAt: updatedAt,
+    );
   }
 }

@@ -126,26 +126,36 @@ $cvText
     required String quality,
   }) {
     final cvJson = jsonEncode(cv);
+    final normalizedDraft = coverLetterText.trim();
+    final hasDraft = normalizedDraft.isNotEmpty;
+    final draftSection = hasDraft
+        ? '''
+Borrador opcional del candidato (úsalo solo como referencia de tono/detalles, no como fuente principal):
+$normalizedDraft
+'''
+        : '''
+No hay borrador previo del candidato. Genera la carta directamente desde el CV.
+''';
     return '''
-Reescribe y mejora esta carta de presentación basándote en el CV del candidato.
+Analiza el CV y redacta una carta de presentación personalizada para este candidato.
 
 Requisitos:
 - Idioma/locale: $locale
 - Calidad: $quality
 - Devuelve SOLO el texto final de la carta (sin JSON, sin comillas, sin Markdown).
-- Tono profesional pero cercano.
+- Tono profesional y cercano, en primera persona.
 - Estructura:
   - Breve introducción.
-  - Párrafo conectando la experiencia del CV con la oferta (aunque no tengamos la oferta, destaca fortalezas generales).
+  - Párrafo conectando experiencia, habilidades y formación del CV con oportunidades laborales acordes al perfil.
   - Párrafo mostrando motivación.
   - Cierre con llamada a la acción (ej. "concertar una entrevista").
-- No inventes datos; si falta información, generaliza.
+- Personaliza el texto con evidencia real del CV (sin inventar logros o tecnologías no presentes).
+- Si falta información en el CV, generaliza sin inventar.
 
 CV del candidato (JSON):
 $cvJson
 
-Carta de presentación original:
-$coverLetterText
+$draftSection
 ''';
   }
 }

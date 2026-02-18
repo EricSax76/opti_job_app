@@ -97,7 +97,7 @@ void main() {
 
       expect(
         AuthFormScreenLogic.companyLoginNavigation(loginState),
-        '/DashboardCompany',
+        '/company/company-1/dashboard',
       );
       expect(
         AuthFormScreenLogic.companyRegisterNavigation(onboardingState),

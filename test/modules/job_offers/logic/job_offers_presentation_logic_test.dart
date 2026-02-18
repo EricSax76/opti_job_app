@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
@@ -6,6 +7,7 @@ import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.da
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_detail_logic.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_list_logic.dart';
+import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
 import 'package:opti_job_app/modules/job_offers/logic/offer_card_logic.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
@@ -154,11 +156,20 @@ void main() {
     });
 
     test(
-      'shouldListenForMessages normalizes success and error message changes',
+      'shouldListenForMessages detects message and match outcome changes',
       () {
         const previous = JobOfferDetailState(successMessage: ' Listo ');
         const currentSameMessage = JobOfferDetailState(successMessage: 'Listo');
         const currentError = JobOfferDetailState(errorMessage: 'Error');
+        final currentMatch = JobOfferDetailState(
+          matchOutcome: JobOfferMatchSuccess(
+            const AiMatchResult(
+              score: 72,
+              reasons: ['Experiencia relevante'],
+              recommendations: ['Destacar logro medible'],
+            ),
+          ),
+        );
 
         expect(
           JobOfferDetailLogic.shouldListenForMessages(
@@ -171,6 +182,13 @@ void main() {
           JobOfferDetailLogic.shouldListenForMessages(
             previous: previous,
             current: currentError,
+          ),
+          isTrue,
+        );
+        expect(
+          JobOfferDetailLogic.shouldListenForMessages(
+            previous: previous,
+            current: currentMatch,
           ),
           isTrue,
         );

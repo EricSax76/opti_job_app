@@ -17,6 +17,7 @@ class CandidateDashboardScaffold extends StatelessWidget {
     super.key,
     required this.tabController,
     required this.viewModel,
+    required this.candidateName,
     required this.dashboardPages,
     required this.interviewsCubit,
     required this.candidateUid,
@@ -27,6 +28,7 @@ class CandidateDashboardScaffold extends StatelessWidget {
 
   final TabController tabController;
   final CandidateDashboardScreenViewModel viewModel;
+  final String? candidateName;
   final List<Widget?> dashboardPages;
   final InterviewListCubit interviewsCubit;
   final String? candidateUid;
@@ -53,6 +55,7 @@ class CandidateDashboardScaffold extends StatelessWidget {
       appBar: CandidateDashboardAppBar(
         tabController: tabController,
         avatarUrl: viewModel.avatarUrl,
+        accountDisplayName: candidateName,
         onOpenProfile: onOpenProfile,
         onLogout: onLogout,
         showTabBar: false,
@@ -73,8 +76,10 @@ class CandidateDashboardScaffold extends StatelessWidget {
           ? CandidateDashboardSidebar(
               selectedIndex: selectedIndex,
               onSelected: onSelectIndex,
+              alignToRight: true,
             )
           : null,
+      sidebarAlignment: CoreShellSidebarAlignment.end,
       body: content,
     );
   }
