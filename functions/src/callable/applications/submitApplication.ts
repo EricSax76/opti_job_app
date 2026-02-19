@@ -19,7 +19,7 @@ const logger = createLogger({ function: "submitApplication" });
 // Rate limiting: max applications per user per day
 const MAX_APPLICATIONS_PER_DAY = 50;
 
-export const submitApplication = functions.https.onCall(
+export const submitApplication = functions.region("europe-west1").https.onCall(
   async (
     data: SubmitApplicationRequest,
     context: functions.https.CallableContext

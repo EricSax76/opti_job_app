@@ -19,14 +19,7 @@ class JobOfferFilterState extends Equatable {
   final double minSalary;
   final double maxSalary;
 
-  bool get hasActiveFilters =>
-      filters.searchQuery != null ||
-      filters.location != null ||
-      filters.jobType != null ||
-      filters.education != null ||
-      filters.companyName != null ||
-      filters.salaryMin != null ||
-      filters.salaryMax != null;
+  bool get hasActiveFilters => filters.hasActiveFilters;
 
   JobOfferFilterState copyWith({
     JobOfferFilters? filters,

@@ -31,6 +31,14 @@ export { markInterviewSeen } from "./callable/interviews/markInterviewSeen";
 export { cancelInterview } from "./callable/interviews/cancelInterview";
 export { completeInterview } from "./callable/interviews/completeInterview";
 
+// Location catalog sync + public JSON endpoints
+export {
+  syncLocationCatalogScheduled,
+  syncLocationCatalogManual,
+  geoCatalogProvinces,
+  geoCatalogMunicipalities,
+} from "./scheduled/syncLocationCatalog";
+
 // TODO: Add more functions as they are implemented
 // export { generateCurriculumPDF } from "./callable/curriculum/generatePDF";
 // export { matchCandidates } from "./callable/candidates/matchCandidates";

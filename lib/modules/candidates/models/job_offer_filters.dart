@@ -4,6 +4,10 @@ class JobOfferFilters extends Equatable {
   const JobOfferFilters({
     this.searchQuery,
     this.location,
+    this.provinceId,
+    this.provinceName,
+    this.municipalityId,
+    this.municipalityName,
     this.jobType,
     this.salaryMin,
     this.salaryMax,
@@ -13,6 +17,10 @@ class JobOfferFilters extends Equatable {
 
   final String? searchQuery;
   final String? location;
+  final String? provinceId;
+  final String? provinceName;
+  final String? municipalityId;
+  final String? municipalityName;
   final String? jobType;
   final double? salaryMin;
   final double? salaryMax;
@@ -22,6 +30,8 @@ class JobOfferFilters extends Equatable {
   bool get hasActiveFilters =>
       searchQuery != null ||
       location != null ||
+      provinceId != null ||
+      municipalityId != null ||
       jobType != null ||
       salaryMin != null ||
       salaryMax != null ||
@@ -31,6 +41,10 @@ class JobOfferFilters extends Equatable {
   JobOfferFilters copyWith({
     String? searchQuery,
     String? location,
+    String? provinceId,
+    String? provinceName,
+    String? municipalityId,
+    String? municipalityName,
     String? jobType,
     double? salaryMin,
     double? salaryMax,
@@ -38,6 +52,10 @@ class JobOfferFilters extends Equatable {
     String? companyName,
     bool clearSearchQuery = false,
     bool clearLocation = false,
+    bool clearProvinceId = false,
+    bool clearProvinceName = false,
+    bool clearMunicipalityId = false,
+    bool clearMunicipalityName = false,
     bool clearJobType = false,
     bool clearSalaryMin = false,
     bool clearSalaryMax = false,
@@ -47,6 +65,16 @@ class JobOfferFilters extends Equatable {
     return JobOfferFilters(
       searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
       location: clearLocation ? null : (location ?? this.location),
+      provinceId: clearProvinceId ? null : (provinceId ?? this.provinceId),
+      provinceName: clearProvinceName
+          ? null
+          : (provinceName ?? this.provinceName),
+      municipalityId: clearMunicipalityId
+          ? null
+          : (municipalityId ?? this.municipalityId),
+      municipalityName: clearMunicipalityName
+          ? null
+          : (municipalityName ?? this.municipalityName),
       jobType: clearJobType ? null : (jobType ?? this.jobType),
       salaryMin: clearSalaryMin ? null : (salaryMin ?? this.salaryMin),
       salaryMax: clearSalaryMax ? null : (salaryMax ?? this.salaryMax),
@@ -63,6 +91,10 @@ class JobOfferFilters extends Equatable {
   List<Object?> get props => [
     searchQuery,
     location,
+    provinceId,
+    provinceName,
+    municipalityId,
+    municipalityName,
     jobType,
     salaryMin,
     salaryMax,

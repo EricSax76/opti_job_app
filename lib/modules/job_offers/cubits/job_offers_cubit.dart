@@ -148,8 +148,14 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     );
 
     try {
+      final serverProvinceId = _normalizeGeoId(state.activeFilters.provinceId);
+      final serverMunicipalityId = _normalizeGeoId(
+        state.activeFilters.municipalityId,
+      );
       final page = await _repository.fetchPage(
         jobType: selectedJobType,
+        provinceId: serverProvinceId,
+        municipalityId: serverMunicipalityId,
         limit: _pageSize,
       );
       if (requestId != _requestSequence) return;
@@ -213,7 +219,6 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     }
   }
 
-
   Future<void> loadMoreOffers() async {
     if (state.status != JobOffersStatus.success ||
         state.isLoadingMore ||
@@ -227,8 +232,14 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     emit(state.copyWith(isLoadingMore: true, clearError: true));
 
     try {
+      final serverProvinceId = _normalizeGeoId(state.activeFilters.provinceId);
+      final serverMunicipalityId = _normalizeGeoId(
+        state.activeFilters.municipalityId,
+      );
       final page = await _repository.fetchPage(
         jobType: state.selectedJobType,
+        provinceId: serverProvinceId,
+        municipalityId: serverMunicipalityId,
         limit: _pageSize,
         startAfter: _nextPageCursor,
       );
@@ -294,6 +305,10 @@ class JobOffersCubit extends Cubit<JobOffersState> {
 
   void applyFilters(JobOfferFilters filters) {
     if (filters == state.activeFilters) return;
+    final shouldRefetch = _requiresRemoteRefetch(
+      previous: state.activeFilters,
+      next: filters,
+    );
 
     if (!filters.hasActiveFilters) {
       emit(
@@ -303,11 +318,21 @@ class JobOffersCubit extends Cubit<JobOffersState> {
           clearFilters: true,
         ),
       );
+      if (shouldRefetch) {
+        unawaited(
+          _loadOffers(jobType: state.selectedJobType, forceRefresh: true),
+        );
+      }
       return;
     }
 
     final filtered = _filterOffers(state.offers, filters);
     emit(state.copyWith(activeFilters: filters, filteredOffers: filtered));
+    if (shouldRefetch) {
+      unawaited(
+        _loadOffers(jobType: state.selectedJobType, forceRefresh: true),
+      );
+    }
   }
 
   void clearFilters() {
@@ -345,6 +370,10 @@ class JobOffersCubit extends Cubit<JobOffersState> {
 
     final query = _normalizedFilter(filters.searchQuery);
     final location = _normalizedFilter(filters.location);
+    final provinceId = _normalizeGeoId(filters.provinceId);
+    final provinceName = _normalizedFilter(filters.provinceName);
+    final municipalityId = _normalizeGeoId(filters.municipalityId);
+    final municipalityName = _normalizedFilter(filters.municipalityName);
     final companyNameFilter = _normalizedFilter(filters.companyName);
     final jobTypeFilter = _normalizedFilter(filters.jobType);
     final educationFilter = _normalizedFilter(filters.education);
@@ -364,6 +393,26 @@ class JobOffersCubit extends Cubit<JobOffersState> {
           if (location != null &&
               !_containsNormalized(offer.location, location)) {
             return false;
+          }
+
+          if (provinceId != null) {
+            final offerProvinceId = _normalizeGeoId(offer.provinceId);
+            if (offerProvinceId != provinceId) {
+              if (provinceName == null ||
+                  !_containsNormalized(offer.location, provinceName)) {
+                return false;
+              }
+            }
+          }
+
+          if (municipalityId != null) {
+            final offerMunicipalityId = _normalizeGeoId(offer.municipalityId);
+            if (offerMunicipalityId != municipalityId) {
+              if (municipalityName == null ||
+                  !_containsNormalized(offer.location, municipalityName)) {
+                return false;
+              }
+            }
           }
 
           if (jobTypeFilter != null &&
@@ -405,6 +454,12 @@ class JobOffersCubit extends Cubit<JobOffersState> {
   String? _normalizedFilter(String? value) {
     final normalized = value == null ? '' : _normalizeText(value);
     return normalized.isEmpty ? null : normalized;
+  }
+
+  String? _normalizeGeoId(String? value) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) return null;
+    return normalized;
   }
 
   bool _containsNormalized(String source, String normalizedNeedle) {
@@ -468,5 +523,15 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     final normalized = jobType?.trim();
     if (normalized == null || normalized.isEmpty) return null;
     return normalized;
+  }
+
+  bool _requiresRemoteRefetch({
+    required JobOfferFilters previous,
+    required JobOfferFilters next,
+  }) {
+    return _normalizeGeoId(previous.provinceId) !=
+            _normalizeGeoId(next.provinceId) ||
+        _normalizeGeoId(previous.municipalityId) !=
+            _normalizeGeoId(next.municipalityId);
   }
 }

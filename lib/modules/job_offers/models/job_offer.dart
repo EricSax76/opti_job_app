@@ -1,10 +1,13 @@
-
 class JobOffer {
   const JobOffer({
     required this.id,
     required this.title,
     required this.description,
     required this.location,
+    this.provinceId,
+    this.provinceName,
+    this.municipalityId,
+    this.municipalityName,
     this.companyId,
     this.companyUid,
     this.companyName,
@@ -21,6 +24,10 @@ class JobOffer {
   final String title;
   final String description;
   final String location;
+  final String? provinceId;
+  final String? provinceName;
+  final String? municipalityId;
+  final String? municipalityName;
   final int? companyId;
   final String? companyUid;
   final String? companyName;
@@ -38,15 +45,29 @@ class JobOffer {
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       location: json['location'] as String? ?? '',
+      provinceId: _readNullableString(
+        json['province_id'] ?? json['provinceId'],
+      ),
+      provinceName: _readNullableString(
+        json['province_name'] ?? json['provinceName'],
+      ),
+      municipalityId: _readNullableString(
+        json['municipality_id'] ?? json['municipalityId'],
+      ),
+      municipalityName: _readNullableString(
+        json['municipality_name'] ?? json['municipalityName'],
+      ),
       companyId: _tryParseInt(
         json['company_id'] ?? json['companyId'] ?? json['owner_id'],
       ),
-      companyUid: json['company_uid'] as String? ??
+      companyUid:
+          json['company_uid'] as String? ??
           json['companyUid'] as String? ??
           json['owner_uid'] as String?,
       companyName:
           json['company_name'] as String? ?? json['companyName'] as String?,
-      companyAvatarUrl: json['company_avatar_url'] as String? ??
+      companyAvatarUrl:
+          json['company_avatar_url'] as String? ??
           json['companyAvatarUrl'] as String?,
       jobType: json['job_type'] as String? ?? json['jobType'] as String?,
       salaryMin: json['salary_min'] as String? ?? json['salaryMin'] as String?,
@@ -64,6 +85,10 @@ class JobOffer {
       'title': title,
       'description': description,
       'location': location,
+      'province_id': provinceId,
+      'province_name': provinceName,
+      'municipality_id': municipalityId,
+      'municipality_name': municipalityName,
       'company_id': companyId,
       'company_uid': companyUid,
       'company_name': companyName,
@@ -82,6 +107,10 @@ class JobOffer {
     String? title,
     String? description,
     String? location,
+    String? provinceId,
+    String? provinceName,
+    String? municipalityId,
+    String? municipalityName,
     int? companyId,
     String? companyUid,
     String? companyName,
@@ -98,6 +127,10 @@ class JobOffer {
       title: title ?? this.title,
       description: description ?? this.description,
       location: location ?? this.location,
+      provinceId: provinceId ?? this.provinceId,
+      provinceName: provinceName ?? this.provinceName,
+      municipalityId: municipalityId ?? this.municipalityId,
+      municipalityName: municipalityName ?? this.municipalityName,
       companyId: companyId ?? this.companyId,
       companyUid: companyUid ?? this.companyUid,
       companyName: companyName ?? this.companyName,
@@ -134,4 +167,11 @@ int? _tryParseInt(dynamic value) {
     return value.toInt();
   }
   return null;
+}
+
+String? _readNullableString(dynamic value) {
+  if (value == null) return null;
+  final parsed = value.toString().trim();
+  if (parsed.isEmpty) return null;
+  return parsed;
 }

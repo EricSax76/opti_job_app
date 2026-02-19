@@ -3,7 +3,9 @@ import * as admin from "firebase-admin";
 
 const db = admin.firestore();
 
-export const onInterviewUpdate = functions.firestore
+export const onInterviewUpdate = functions
+  .region("europe-west1")
+  .firestore
   .document("interviews/{interviewId}")
   .onWrite(async (change, context) => {
     const newData = change.after.exists ? change.after.data() : null;

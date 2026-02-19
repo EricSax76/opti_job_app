@@ -12,7 +12,9 @@ import { UserProfile } from "../../types/models";
 
 const logger = createLogger({ function: "onUserCreate" });
 
-export const onUserCreate = functions.auth
+export const onUserCreate = functions
+  .region("europe-west1")
+  .auth
   .user()
   .onCreate(async (user: functions.auth.UserRecord) => {
     const { uid, email, displayName } = user;

@@ -12,7 +12,9 @@ import { Application, JobOffer } from "../../types/models";
 
 const logger = createLogger({ function: "onApplicationCreate" });
 
-export const onApplicationCreate = functions.firestore
+export const onApplicationCreate = functions
+  .region("europe-west1")
+  .firestore
   .document("applications/{applicationId}")
   .onCreate(async (snapshot, context) => {
     const { applicationId } = context.params;

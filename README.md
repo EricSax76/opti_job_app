@@ -50,7 +50,7 @@ Si estás en desarrollo y el puerto cambia, añade el origen correspondiente en 
 
 ## Semillas y emuladores
 
-Contamos con un script sencillo que rellena datos de ejemplo para las colecciones clave cuando trabajas con el emulador de Firestore:
+Contamos con un script sencillo que crea el catálogo geográfico (`catalog/provincias_es` y `catalog_municipios/{provinciaId}`) cuando trabajas con el emulador de Firestore:
 
 ```bash
 # En una terminal: lanza los emuladores con tu proyecto
@@ -63,6 +63,58 @@ dart run tool/firestore_seed.dart
 ```
 
 El script usa la API REST del emulador, por lo que no necesitas credenciales adicionales. Ajusta `FIREBASE_PROJECT_ID` si tu `firebase_options.dart` apunta a otro proyecto. Si quieres conservar el estado al reiniciar los emuladores, añade `--import ./firebase/emulator-cache --export-on-exit` al comando anterior y vuelve a ejecutar el seeder cada vez que limpies ese directorio.
+
+## Catálogo híbrido (INE + Hosting)
+
+Implementamos un flujo híbrido para minimizar lecturas por usuario:
+
+1. Cloud Function programada sincroniza catálogo desde una fuente INE-compatible (CSV/TSV HTTP).
+2. El catálogo se guarda en Firestore (`catalog/*`) como respaldo.
+3. Hosting expone JSON cacheado en CDN:
+   - `/geo/provincias_es.json`
+   - `/geo/municipios_XX.json`
+4. Flutter consume esos JSON con `LOCATION_CATALOG_BASE_URL` y hace fallback a Firestore si falla.
+
+### Configurar fuente y token de sync
+
+```bash
+firebase functions:config:set \
+  locations.source_url=\"https://<tu-fuente-csv-o-tsv-ine>\" \
+  locations.sync_token=\"<token-largo-aleatorio>\"
+```
+
+### Desplegar funciones + hosting
+
+```bash
+firebase deploy --only functions,hosting --project opti-job
+```
+
+### Build reproducible de Functions (TypeScript -> JavaScript)
+
+```bash
+cd functions
+npm install
+npm run build
+```
+
+Notas:
+- `functions/lib` se genera en build y permanece fuera de git (`functions/.gitignore`).
+- `firebase deploy` ya ejecuta `npm --prefix functions run build` en predeploy.
+
+### Ejecutar sync manual (opcional)
+
+```bash
+curl -X POST \
+  -H \"x-sync-token: <token-largo-aleatorio>\" \
+  \"https://europe-west1-opti-job.cloudfunctions.net/syncLocationCatalogManual\"
+```
+
+### Configurar Flutter para usar JSON cacheado
+
+```bash
+flutter run \
+  --dart-define=LOCATION_CATALOG_BASE_URL=https://opti-job.web.app
+```
 
 ### Migración de esquema de applications (legacy -> canónico)
 
@@ -84,12 +136,7 @@ npm run migrate:applications -- --apply --max-documents=5000
 El script usa `firebase-admin`, por lo que debes ejecutarlo con credenciales válidas (ADC o `GOOGLE_APPLICATION_CREDENTIALS`).
 Si no detecta el proyecto automáticamente, añade `--project-id=<tu-project-id>`.
 
-Se crean automáticamente cuentas de ejemplo en ambos emuladores (correo / contraseña):
-
-- `lucia@app.dev` / `Secret123!` (candidata)
-- `diego@app.dev` / `Secret123!` (candidato)
-- `talent@optijob.dev` / `Secret123!` (empresa)
-- `hr@nexthire.dev` / `Secret123!` (empresa)
+El seeder no crea usuarios ni documentos en `jobOffers`; las cuentas y ofertas se crean manualmente desde la app.
 
 Para que la app Flutter apunte al emulador durante el desarrollo:
 
@@ -98,6 +145,12 @@ flutter run \
   --dart-define=USE_FIREBASE_EMULATORS=true \
   --dart-define=FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 \
   --dart-define=FIRESTORE_EMULATOR_HOST=localhost:8080
+```
+
+Si también levantas Hosting emulator, puedes añadir:
+
+```bash
+--dart-define=LOCATION_CATALOG_BASE_URL=http://localhost:5000
 ```
 
 ## Reglas de seguridad

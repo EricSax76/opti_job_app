@@ -34,16 +34,29 @@ class JobOfferService {
 
   Future<JobOffersPage> fetchJobOffersPage({
     String? jobType,
+    String? provinceId,
+    String? municipalityId,
     int limit = _defaultPageSize,
     JobOffersPageCursor? startAfter,
   }) async {
     final normalizedJobType = jobType?.trim();
+    final normalizedProvinceId = _normalizeNullableString(provinceId);
+    final normalizedMunicipalityId = _normalizeNullableString(municipalityId);
     Query<Map<String, dynamic>> query = _collection.orderBy(
       'created_at',
       descending: true,
     );
     if (normalizedJobType != null && normalizedJobType.isNotEmpty) {
       query = query.where('job_type', isEqualTo: normalizedJobType);
+    }
+    if (normalizedProvinceId != null) {
+      query = query.where('province_id', isEqualTo: normalizedProvinceId);
+    }
+    if (normalizedMunicipalityId != null) {
+      query = query.where(
+        'municipality_id',
+        isEqualTo: normalizedMunicipalityId,
+      );
     }
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter._snapshot);
@@ -55,11 +68,15 @@ class JobOfferService {
 
   Future<List<JobOffer>> fetchJobOffers({
     String? jobType,
+    String? provinceId,
+    String? municipalityId,
     int limit = _defaultPageSize,
     JobOffersPageCursor? startAfter,
   }) async {
     final firstPage = await fetchJobOffersPage(
       jobType: jobType,
+      provinceId: provinceId,
+      municipalityId: municipalityId,
       limit: limit,
       startAfter: startAfter,
     );
@@ -72,6 +89,8 @@ class JobOfferService {
     while (cursor != null) {
       final page = await fetchJobOffersPage(
         jobType: jobType,
+        provinceId: provinceId,
+        municipalityId: municipalityId,
         limit: limit,
         startAfter: cursor,
       );
@@ -239,6 +258,10 @@ class JobOfferPayload {
     required this.title,
     required this.description,
     required this.location,
+    this.provinceId,
+    this.provinceName,
+    this.municipalityId,
+    this.municipalityName,
     required this.companyId,
     required this.companyUid,
     required this.companyName,
@@ -253,6 +276,10 @@ class JobOfferPayload {
   final String title;
   final String description;
   final String location;
+  final String? provinceId;
+  final String? provinceName;
+  final String? municipalityId;
+  final String? municipalityName;
   final int companyId;
   final String companyUid;
   final String companyName;
@@ -268,6 +295,10 @@ class JobOfferPayload {
       'title': title,
       'description': description,
       'location': location,
+      'province_id': _normalizeNullableString(provinceId),
+      'province_name': _normalizeNullableString(provinceName),
+      'municipality_id': _normalizeNullableString(municipalityId),
+      'municipality_name': _normalizeNullableString(municipalityName),
       'company_id': companyId,
       'company_uid': companyUid,
       'company_name': companyName,
@@ -279,4 +310,10 @@ class JobOfferPayload {
       'key_indicators': keyIndicators,
     };
   }
+}
+
+String? _normalizeNullableString(String? value) {
+  final normalized = value?.trim();
+  if (normalized == null || normalized.isEmpty) return null;
+  return normalized;
 }

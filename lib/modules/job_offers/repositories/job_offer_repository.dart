@@ -8,11 +8,15 @@ class JobOfferRepository {
 
   Future<JobOffersPage> fetchPage({
     String? jobType,
+    String? provinceId,
+    String? municipalityId,
     int limit = 20,
     JobOffersPageCursor? startAfter,
   }) {
     return _service.fetchJobOffersPage(
       jobType: jobType,
+      provinceId: provinceId,
+      municipalityId: municipalityId,
       limit: limit,
       startAfter: startAfter,
     );
@@ -20,11 +24,15 @@ class JobOfferRepository {
 
   Future<List<JobOffer>> fetchAll({
     String? jobType,
+    String? provinceId,
+    String? municipalityId,
     int limit = 20,
     JobOffersPageCursor? startAfter,
   }) {
     return _service.fetchJobOffers(
       jobType: jobType,
+      provinceId: provinceId,
+      municipalityId: municipalityId,
       limit: limit,
       startAfter: startAfter,
     );

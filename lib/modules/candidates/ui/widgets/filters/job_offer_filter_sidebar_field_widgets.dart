@@ -61,15 +61,17 @@ class JobOfferFilterDropdownField extends StatelessWidget {
     required this.onChanged,
     this.inputStyle = const JobOfferFilterInputStyle(),
     this.hintText = 'Seleccionar',
+    this.enabled = true,
   });
 
   final JobOfferFilterPalette palette;
   final Key fieldKey;
   final String? initialValue;
   final List<String> items;
-  final ValueChanged<String?> onChanged;
+  final ValueChanged<String?>? onChanged;
   final JobOfferFilterInputStyle inputStyle;
   final String hintText;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +99,7 @@ class JobOfferFilterDropdownField extends StatelessWidget {
             ),
           )
           .toList(growable: false),
-      onChanged: onChanged,
+      onChanged: enabled ? onChanged : null,
     );
   }
 }

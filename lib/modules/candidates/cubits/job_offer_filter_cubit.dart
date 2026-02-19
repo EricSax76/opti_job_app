@@ -15,7 +15,9 @@ class JobOfferFilterCubit extends Cubit<JobOfferFilterState> {
   }) : super(JobOfferFilterState.initial(initialFilters)) {
     _searchController = TextEditingController(text: initialFilters.searchQuery);
     _locationController = TextEditingController(text: initialFilters.location);
-    _companyController = TextEditingController(text: initialFilters.companyName);
+    _companyController = TextEditingController(
+      text: initialFilters.companyName,
+    );
   }
 
   final ValueChanged<JobOfferFilters> onFiltersChanged;
@@ -41,17 +43,19 @@ class JobOfferFilterCubit extends Cubit<JobOfferFilterState> {
 
   void syncExternalFilters(JobOfferFilters externalFilters) {
     if (externalFilters == state.filters) return;
-    
+
     _syncControllerText(_searchController, externalFilters.searchQuery);
     _syncControllerText(_locationController, externalFilters.location);
     _syncControllerText(_companyController, externalFilters.companyName);
-    
+
     _debounceTimer?.cancel();
-    emit(state.copyWith(
-      filters: externalFilters,
-      minSalary: JobOfferFilterSidebarTokens.minSalary,
-      maxSalary: JobOfferFilterSidebarTokens.maxSalary,
-    ));
+    emit(
+      state.copyWith(
+        filters: externalFilters,
+        minSalary: JobOfferFilterSidebarTokens.minSalary,
+        maxSalary: JobOfferFilterSidebarTokens.maxSalary,
+      ),
+    );
   }
 
   void clearAllFilters() {
@@ -59,7 +63,7 @@ class JobOfferFilterCubit extends Cubit<JobOfferFilterState> {
     _searchController.clear();
     _locationController.clear();
     _companyController.clear();
-    
+
     const clearedFilters = JobOfferFilters();
     emit(JobOfferFilterState.initial(clearedFilters));
     onFiltersChanged(clearedFilters);
@@ -90,6 +94,38 @@ class JobOfferFilterCubit extends Cubit<JobOfferFilterState> {
     );
   }
 
+  void updateProvince({
+    required String? provinceId,
+    required String? provinceName,
+  }) {
+    final currentProvinceId = state.filters.provinceId;
+    final provinceChanged = currentProvinceId != provinceId;
+    _updateFilters(
+      state.filters.copyWith(
+        provinceId: provinceId,
+        provinceName: provinceName,
+        clearProvinceId: provinceId == null,
+        clearProvinceName: provinceName == null,
+        clearMunicipalityId: provinceChanged,
+        clearMunicipalityName: provinceChanged,
+      ),
+    );
+  }
+
+  void updateMunicipality({
+    required String? municipalityId,
+    required String? municipalityName,
+  }) {
+    _updateFilters(
+      state.filters.copyWith(
+        municipalityId: municipalityId,
+        municipalityName: municipalityName,
+        clearMunicipalityId: municipalityId == null,
+        clearMunicipalityName: municipalityName == null,
+      ),
+    );
+  }
+
   void updateCompany(String value) {
     _updateFilters(
       state.filters.copyWith(
@@ -113,10 +149,7 @@ class JobOfferFilterCubit extends Cubit<JobOfferFilterState> {
   }
 
   void updateSalaryPreview(RangeValues values) {
-    emit(state.copyWith(
-      minSalary: values.start,
-      maxSalary: values.end,
-    ));
+    emit(state.copyWith(minSalary: values.start, maxSalary: values.end));
   }
 
   void commitSalaryRange(RangeValues values) {
@@ -127,7 +160,7 @@ class JobOfferFilterCubit extends Cubit<JobOfferFilterState> {
 
   void _updateFilters(JobOfferFilters newFilters, {bool debounce = false}) {
     emit(state.copyWith(filters: newFilters));
-    
+
     _debounceTimer?.cancel();
     if (debounce) {
       _debounceTimer = Timer(_debounceDuration, () {

@@ -11,7 +11,9 @@ import { createLogger } from "../../utils/logger";
 
 const logger = createLogger({ function: "onUserDelete" });
 
-export const onUserDelete = functions.auth
+export const onUserDelete = functions
+  .region("europe-west1")
+  .auth
   .user()
   .onDelete(async (user: functions.auth.UserRecord) => {
     const { uid, email } = user;

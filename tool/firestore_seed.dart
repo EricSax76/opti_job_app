@@ -8,23 +8,19 @@ Future<void> main(List<String> args) async {
       Platform.environment['FIREBASE_PROJECT_ID'] ?? 'infojobs-dev';
   final firestoreHost =
       Platform.environment['FIRESTORE_EMULATOR_HOST'] ?? 'localhost:8080';
-  final authHost =
-      Platform.environment['FIREBASE_AUTH_EMULATOR_HOST'] ?? 'localhost:9099';
 
   final firestoreUri = _buildBaseUri(firestoreHost, defaultPort: 8080);
-  final authUri = _buildBaseUri(authHost, defaultPort: 9099);
 
   stdout.writeln(
-    'Seeding Firebase emulators (project=$projectId, firestore=$firestoreUri, auth=$authUri)',
+    'Seeding Firestore emulator (project=$projectId, firestore=$firestoreUri)',
   );
 
   final seeder = FirestoreSeeder(
     firestoreBaseUri: firestoreUri,
-    authBaseUri: authUri,
     projectId: projectId,
   );
   await seeder.seed();
-  stdout.writeln('Firestore/Auth seed completed successfully.');
+  stdout.writeln('Firestore seed completed successfully.');
 }
 
 Uri _buildBaseUri(String host, {required int defaultPort}) {
@@ -37,195 +33,151 @@ Uri _buildBaseUri(String host, {required int defaultPort}) {
 }
 
 class FirestoreSeeder {
-  FirestoreSeeder({
-    required this.firestoreBaseUri,
-    required this.authBaseUri,
-    required this.projectId,
-  });
+  FirestoreSeeder({required this.firestoreBaseUri, required this.projectId});
 
   final Uri firestoreBaseUri;
-  final Uri authBaseUri;
   final String projectId;
 
-  final _candidateSeeds = [
-    _UserSeed(
-      id: 1001,
-      email: 'lucia@app.dev',
-      password: 'Secret123!',
-      name: 'Lucía Ramos',
-      headline: 'Data Analyst',
-      city: 'Barcelona',
-      collection: 'candidates',
-    ),
-    _UserSeed(
-      id: 1002,
-      email: 'diego@app.dev',
-      password: 'Secret123!',
-      name: 'Diego López',
-      headline: 'Mobile Engineer',
-      city: 'Madrid',
-      collection: 'candidates',
-    ),
-  ];
-
-  final _companySeeds = [
-    _UserSeed(
-      id: 2001,
-      email: 'talent@optijob.dev',
-      password: 'Secret123!',
-      name: 'OptiJob Labs',
-      headline: 'Scale-up en Barcelona',
-      city: 'Barcelona',
-      collection: 'companies',
-    ),
-    _UserSeed(
-      id: 2002,
-      email: 'hr@nexthire.dev',
-      password: 'Secret123!',
-      name: 'NextHire',
-      headline: 'Consultora HR Tech',
-      city: 'Madrid',
-      collection: 'companies',
-    ),
-  ];
-
   Future<void> seed() async {
-    final candidates = await _seedUsers(_candidateSeeds, role: 'candidate');
-    final companies = await _seedUsers(_companySeeds, role: 'company');
+    await _seedLocationCatalog();
 
-    await Future.wait([
-      _createOffer(
-        id: 3001,
-        title: 'Ingeniero Flutter Senior',
-        description:
-            'Lidera el desarrollo de aplicaciones móviles multiplataforma.',
-        location: 'Remoto · España',
-        jobType: 'Full remote',
-        salaryMin: '45k',
-        salaryMax: '55k',
-        education: 'Grado en informática o similar',
-        keyIndicators: 'Flutter, Firebase, BLoC',
-        ownerUid: companies.first.uid,
-      ),
-      _createOffer(
-        id: 3002,
-        title: 'Data Engineer',
-        description:
-            'Construye pipelines batch y streaming para alimentar modelos de IA.',
-        location: 'Madrid',
-        jobType: 'Híbrido',
-        salaryMin: '50k',
-        salaryMax: '65k',
-        education: 'Grado en ingeniería o matemáticas',
-        keyIndicators: 'BigQuery, Airflow, Python',
-        ownerUid: companies.last.uid,
-      ),
-      _createOffer(
-        id: 3003,
-        title: 'HR Tech Product Manager',
-        description:
-            'Define la estrategia del nuevo portal de talento impulsado por IA.',
-        location: 'Barcelona',
-        jobType: 'Presencial',
-        salaryMin: '40k',
-        salaryMax: '55k',
-        education: 'ADE o similares',
-        keyIndicators: 'Roadmapping, Stakeholder management',
-        ownerUid: companies.first.uid,
-      ),
-    ]);
-
-    stdout.writeln('\nUsuarios sembrados (correo / contraseña):');
-    for (final user in [...candidates, ...companies]) {
-      stdout.writeln(' - ${user.email} / ${user.password}');
-    }
-  }
-
-  Future<List<_SeededUser>> _seedUsers(
-    List<_UserSeed> seeds, {
-    required String role,
-  }) async {
-    final seededUsers = <_SeededUser>[];
-    for (final seed in seeds) {
-      final uid = await _createAuthUser(seed);
-      final doc = {
-        'id': seed.id,
-        'uid': uid,
-        'name': seed.name,
-        'email': seed.email,
-        'role': role,
-        'headline': seed.headline,
-        'city': seed.city,
-        'created_at': DateTime.now().toUtc(),
-      };
-      await _createDoc(collection: seed.collection, docId: uid, data: doc);
-      seededUsers.add(
-        _SeededUser(
-          uid: uid,
-          email: seed.email,
-          password: seed.password,
-          collection: seed.collection,
-        ),
-      );
-    }
-    return seededUsers;
-  }
-
-  Future<String> _createAuthUser(_UserSeed seed) async {
-    final uri = authBaseUri.replace(
-      path: '/identitytoolkit.googleapis.com/v1/accounts:signUp',
-      queryParameters: {'key': 'demo-key'},
+    stdout.writeln(
+      '\nCatálogo geográfico sembrado: catalog/provincias_es y catalog_municipios/{provinciaId}',
     );
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': seed.email,
-        'password': seed.password,
-        'displayName': seed.name,
-        'returnSecureToken': true,
-      }),
-    );
-
-    if (response.statusCode >= 300) {
-      stderr.writeln(
-        'Failed to create auth user ${seed.email}: ${response.statusCode} ${response.body}',
-      );
-      throw Exception('Auth seed failed');
-    }
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-    return decoded['localId'] as String;
   }
 
-  Future<void> _createOffer({
-    required int id,
-    required String title,
-    required String description,
-    required String location,
-    required String jobType,
-    required String salaryMin,
-    required String salaryMax,
-    required String education,
-    required String keyIndicators,
-    required String ownerUid,
-  }) async {
+  Future<void> _seedLocationCatalog() async {
     await _createDoc(
-      collection: 'jobOffers',
-      docId: 'job_$id',
+      collection: 'catalog',
+      docId: 'provincias_es',
       data: {
-        'id': id,
-        'title': title,
-        'description': description,
-        'location': location,
-        'job_type': jobType,
-        'salary_min': salaryMin,
-        'salary_max': salaryMax,
-        'education': education,
-        'key_indicators': keyIndicators,
-        'owner_uid': ownerUid,
-        'created_at': DateTime.now().toUtc(),
+        'updated_at': DateTime.now().toUtc(),
+        'items': [
+          {'id': '08', 'name': 'Barcelona', 'slug': 'barcelona'},
+          {'id': '28', 'name': 'Madrid', 'slug': 'madrid'},
+          {'id': '46', 'name': 'Valencia', 'slug': 'valencia'},
+        ],
       },
     );
+
+    await Future.wait([
+      _createDoc(
+        collection: 'catalog_municipios',
+        docId: '08',
+        data: {
+          'updated_at': DateTime.now().toUtc(),
+          'provincia_id': '08',
+          'provincia_name': 'Barcelona',
+          'items': [
+            {'id': '08019', 'name': 'Barcelona', 'norm': 'barcelona'},
+            {'id': '08015', 'name': 'Badalona', 'norm': 'badalona'},
+            {
+              'id': '08101',
+              'name': 'L Hospitalet de Llobregat',
+              'norm': 'l hospitalet de llobregat',
+            },
+            {'id': '08266', 'name': 'Sabadell', 'norm': 'sabadell'},
+            {'id': '08279', 'name': 'Terrassa', 'norm': 'terrassa'},
+            {'id': '08056', 'name': 'Castelldefels', 'norm': 'castelldefels'},
+            {'id': '08113', 'name': 'Manresa', 'norm': 'manresa'},
+            {'id': '08121', 'name': 'Mataró', 'norm': 'mataro'},
+            {
+              'id': '08169',
+              'name': 'El Prat de Llobregat',
+              'norm': 'el prat de llobregat',
+            },
+            {
+              'id': '08245',
+              'name': 'Santa Coloma de Gramenet',
+              'norm': 'santa coloma de gramenet',
+            },
+            {
+              'id': '08263',
+              'name': 'Sant Cugat del Vallès',
+              'norm': 'sant cugat del valles',
+            },
+            {'id': '08200', 'name': 'Granollers', 'norm': 'granollers'},
+            {
+              'id': '08904',
+              'name': 'Vilanova i la Geltrú',
+              'norm': 'vilanova i la geltru',
+            },
+          ],
+        },
+      ),
+      _createDoc(
+        collection: 'catalog_municipios',
+        docId: '28',
+        data: {
+          'updated_at': DateTime.now().toUtc(),
+          'provincia_id': '28',
+          'provincia_name': 'Madrid',
+          'items': [
+            {'id': '28079', 'name': 'Madrid', 'norm': 'madrid'},
+            {'id': '28005', 'name': 'Alcorcón', 'norm': 'alcorcon'},
+            {
+              'id': '28007',
+              'name': 'Alcalá de Henares',
+              'norm': 'alcala de henares',
+            },
+            {'id': '28013', 'name': 'Aranjuez', 'norm': 'aranjuez'},
+            {'id': '28045', 'name': 'Coslada', 'norm': 'coslada'},
+            {
+              'id': '28049',
+              'name': 'Collado Villalba',
+              'norm': 'collado villalba',
+            },
+            {'id': '28058', 'name': 'Fuenlabrada', 'norm': 'fuenlabrada'},
+            {'id': '28065', 'name': 'Getafe', 'norm': 'getafe'},
+            {'id': '28074', 'name': 'Leganés', 'norm': 'leganes'},
+            {'id': '28115', 'name': 'Majadahonda', 'norm': 'majadahonda'},
+            {'id': '28148', 'name': 'Móstoles', 'norm': 'mostoles'},
+            {'id': '28134', 'name': 'Parla', 'norm': 'parla'},
+            {
+              'id': '28161',
+              'name': 'Pozuelo de Alarcón',
+              'norm': 'pozuelo de alarcon',
+            },
+            {
+              'id': '28181',
+              'name': 'San Sebastián de los Reyes',
+              'norm': 'san sebastian de los reyes',
+            },
+            {
+              'id': '28130',
+              'name': 'Paracuellos de Jarama',
+              'norm': 'paracuellos de jarama',
+            },
+          ],
+        },
+      ),
+      _createDoc(
+        collection: 'catalog_municipios',
+        docId: '46',
+        data: {
+          'updated_at': DateTime.now().toUtc(),
+          'provincia_id': '46',
+          'provincia_name': 'Valencia',
+          'items': [
+            {'id': '46250', 'name': 'València', 'norm': 'valencia'},
+            {'id': '46013', 'name': 'Alzira', 'norm': 'alzira'},
+            {'id': '46070', 'name': 'Burjassot', 'norm': 'burjassot'},
+            {'id': '46094', 'name': 'Cullera', 'norm': 'cullera'},
+            {'id': '46131', 'name': 'Gandia', 'norm': 'gandia'},
+            {'id': '46102', 'name': 'Mislata', 'norm': 'mislata'},
+            {'id': '46184', 'name': 'Ontinyent', 'norm': 'ontinyent'},
+            {'id': '46190', 'name': 'Paterna', 'norm': 'paterna'},
+            {'id': '46202', 'name': 'Requena', 'norm': 'requena'},
+            {'id': '46214', 'name': 'Sagunt', 'norm': 'sagunt'},
+            {'id': '46220', 'name': 'Torrent', 'norm': 'torrent'},
+            {'id': '46223', 'name': 'Sueca', 'norm': 'sueca'},
+            {'id': '46244', 'name': 'Xàtiva', 'norm': 'xativa'},
+            {'id': '46145', 'name': 'Llíria', 'norm': 'lliria'},
+            {'id': '46147', 'name': 'Manises', 'norm': 'manises'},
+          ],
+        },
+      ),
+    ]);
   }
 
   Future<void> _createDoc({
@@ -281,38 +233,4 @@ class FirestoreSeeder {
     }
     return {'stringValue': value.toString()};
   }
-}
-
-class _UserSeed {
-  const _UserSeed({
-    required this.id,
-    required this.email,
-    required this.password,
-    required this.name,
-    required this.headline,
-    required this.city,
-    required this.collection,
-  });
-
-  final int id;
-  final String email;
-  final String password;
-  final String name;
-  final String headline;
-  final String city;
-  final String collection;
-}
-
-class _SeededUser {
-  const _SeededUser({
-    required this.uid,
-    required this.email,
-    required this.password,
-    required this.collection,
-  });
-
-  final String uid;
-  final String email;
-  final String password;
-  final String collection;
 }
