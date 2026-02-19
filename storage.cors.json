@@ -4,7 +4,9 @@
       "http://localhost:5000",
       "http://localhost:8080",
       "http://localhost:3000",
-      "https://tu-dominio.com"
+      "https://opti-job.web.app",
+      "https://opti-job.firebaseapp.com"
+
     ],
     "method": ["GET", "HEAD"],
     "responseHeader": ["Content-Type", "Authorization"],
