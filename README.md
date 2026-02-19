@@ -19,37 +19,20 @@ Firebase se inicializa automáticamente con las credenciales de `firebase_option
 
 ## IA (opcional)
 
-La app incluye un botón "Mejorar con IA" en el módulo de Curriculum que llama a un backend propio (no expongas API keys en Flutter).
+La app usa `firebase_ai` directamente desde Flutter (sin backend HTTP propio ni Cloud Run para estas funciones).
 
-- Configura el endpoint con `--dart-define=AI_BASE_URL=https://tu-backend.com`
-- Nota: en Android emulator, usa `http://10.0.2.2:<puerto>` en vez de `http://localhost:<puerto>` para apuntar a tu máquina.
-- La app envía `Authorization: Bearer <Firebase ID Token>` y un JSON `{ "cv": {...}, "locale": "es-ES" }` a `POST /ai/improve-cv-summary`
-- El backend debe responder `200` con `{ "summary": "..." }` (puede incluir `cached: true/false`)
+Parámetros útiles al ejecutar la app:
 
-También hay un botón "Match" en el detalle de oferta:
+- `--dart-define=FIREBASE_AI_BACKEND=vertex` (default) o `google`
+- `--dart-define=FIREBASE_AI_LOCATION=europe-southwest1`
+- `--dart-define=FIREBASE_AI_MODEL=gemini-2.0-flash`
 
-- La app envía `Authorization: Bearer <Firebase ID Token>` y un JSON `{ "cv": {...}, "offer": {...}, "locale": "es-ES" }` a `POST /ai/match-offer-candidate`
-- El backend debe responder `200` con `{ "score": 0-100, "summary": "...", "reasons": ["...", "..."] }` (puede incluir `cached: true/false`)
+Funciones de IA disponibles:
 
-Para empresas, hay un botón "Generar con IA" al crear una oferta:
-
-- La app envía `Authorization: Bearer <Firebase ID Token>` y un JSON `{ "criteria": {...}, "locale": "es-ES", "quality": "flash|pro" }` a `POST /ai/generate-job-offer`
-- El backend debe responder `200` con `{ "title": "...", "description": "...", "location": "...", "job_type": "...", "salary_min": "...", "salary_max": "...", "education": "...", "key_indicators": "..." }` (puede incluir `cached: true/false`)
-
-Notas para MVP:
-
-- La app recorta el payload antes de enviarlo (skills/resumen + últimos 3 ítems de experiencia/educación; descripciones truncadas).
-- El backend debería cachear el match por `(uid, offerId, cv.updated_at)` para no recalcular si el CV no cambió (TTL opcional).
-- Por defecto usa modelo barato (`quality: "flash"`); si quieres más calidad puedes enviar `quality: "pro"`.
-
-### Cloud Run
-
-En `cloud_run/ai_service` tienes un servicio Node listo para Cloud Run con:
-
-- Verificación de Firebase ID Token (Firebase Admin)
-- Gemini en Vertex AI (`flash` vs `pro`)
-- Caché en Firestore (`ai_cache_matches` y `ai_cache_cv_summary`) con `expiresAt` (TTL opcional)
-- Soporte CORS configurable para Flutter Web (`CORS_ORIGINS`)
+- Mejorar resumen de CV
+- Calcular match candidato/oferta
+- Generar borrador de oferta
+- Mejorar carta de presentación
 
 ## Configuración de Firebase
 
