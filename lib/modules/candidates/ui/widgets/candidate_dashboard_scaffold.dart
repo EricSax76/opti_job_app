@@ -22,6 +22,7 @@ class CandidateDashboardScaffold extends StatelessWidget {
     required this.interviewsCubit,
     required this.candidateUid,
     required this.onSelectIndex,
+    required this.onOpenSettings,
     required this.onOpenProfile,
     required this.onLogout,
   });
@@ -33,6 +34,7 @@ class CandidateDashboardScaffold extends StatelessWidget {
   final InterviewListCubit interviewsCubit;
   final String? candidateUid;
   final ValueChanged<int> onSelectIndex;
+  final VoidCallback onOpenSettings;
   final VoidCallback onOpenProfile;
   final VoidCallback onLogout;
 
@@ -56,6 +58,7 @@ class CandidateDashboardScaffold extends StatelessWidget {
         tabController: tabController,
         avatarUrl: viewModel.avatarUrl,
         accountDisplayName: candidateName,
+        onOpenSettings: onOpenSettings,
         onOpenProfile: onOpenProfile,
         onLogout: onLogout,
         showTabBar: false,

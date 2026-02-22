@@ -46,10 +46,13 @@ export interface JobOffer {
   title: string;
   description: string;
   location: string;
-  job_type: "full_time" | "part_time" | "contract" | "internship";
+  job_type: string;
   salary_min?: number;
   salary_max?: number;
   education?: string;
+  job_category?: string;
+  work_schedule?: string;
+  contract_type?: string;
   experience_years?: number;
   skills: string[];
   status: "active" | "closed" | "expired" | "draft";

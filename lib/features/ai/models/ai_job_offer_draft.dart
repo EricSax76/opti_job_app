@@ -7,6 +7,9 @@ class AiJobOfferDraft {
     this.salaryMin,
     this.salaryMax,
     this.education,
+    this.jobCategory,
+    this.workSchedule,
+    this.contractType,
     this.keyIndicators,
   });
 
@@ -17,6 +20,9 @@ class AiJobOfferDraft {
   final String? salaryMin;
   final String? salaryMax;
   final String? education;
+  final String? jobCategory;
+  final String? workSchedule;
+  final String? contractType;
   final String? keyIndicators;
 
   factory AiJobOfferDraft.fromJson(Map<String, dynamic> json) {
@@ -46,6 +52,9 @@ class AiJobOfferDraft {
       salaryMin: s(json['salary_min'] ?? json['salaryMin']),
       salaryMax: s(json['salary_max'] ?? json['salaryMax']),
       education: s(json['education']),
+      jobCategory: s(json['job_category'] ?? json['jobCategory']),
+      workSchedule: s(json['work_schedule'] ?? json['workSchedule']),
+      contractType: s(json['contract_type'] ?? json['contractType']),
       keyIndicators: s(json['key_indicators'] ?? json['keyIndicators']),
     );
   }

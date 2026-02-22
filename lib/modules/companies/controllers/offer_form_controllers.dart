@@ -8,6 +8,9 @@ class OfferFormControllers {
   final TextEditingController salaryMax = TextEditingController();
   final TextEditingController education = TextEditingController();
   final TextEditingController jobType = TextEditingController();
+  final TextEditingController jobCategory = TextEditingController();
+  final TextEditingController workSchedule = TextEditingController();
+  final TextEditingController contractType = TextEditingController();
   final TextEditingController keyIndicators = TextEditingController();
 
   void clear() {
@@ -18,6 +21,9 @@ class OfferFormControllers {
     salaryMax.clear();
     education.clear();
     jobType.clear();
+    jobCategory.clear();
+    workSchedule.clear();
+    contractType.clear();
     keyIndicators.clear();
   }
 
@@ -29,6 +35,9 @@ class OfferFormControllers {
     salaryMax.dispose();
     education.dispose();
     jobType.dispose();
+    jobCategory.dispose();
+    workSchedule.dispose();
+    contractType.dispose();
     keyIndicators.dispose();
   }
 }

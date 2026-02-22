@@ -11,6 +11,7 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_dashboard_cubit
 import 'package:opti_job_app/modules/candidates/logic/candidate_dashboard_screen_logic.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navigation.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_pages.dart';
+import 'package:opti_job_app/modules/candidates/ui/pages/candidate_settings_screen.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_scaffold.dart';
 import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
@@ -152,6 +153,13 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
               interviewsCubit: widget.interviewsCubit,
               candidateUid: candidateUid,
               onSelectIndex: _dashboardCubit.selectTab,
+              onOpenSettings: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const CandidateSettingsScreen(),
+                  ),
+                );
+              },
               onOpenProfile: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(

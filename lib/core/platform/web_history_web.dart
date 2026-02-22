@@ -4,9 +4,10 @@ void pushBrowserPathImpl(String path) {
   final normalizedPath = path.startsWith('/') ? path : '/$path';
   final isHashRouting = web.window.location.hash.startsWith('#/');
   if (isHashRouting) {
-    // Keep URL updates compatible with Flutter's default hash strategy.
-    web.window.history.pushState(null, '', '#$normalizedPath');
+    // replaceState instead of pushState: avoids creating browser history entries
+    // that GoRouter doesn't know about, which was causing navigation desync.
+    web.window.history.replaceState(null, '', '#$normalizedPath');
     return;
   }
-  web.window.history.pushState(null, '', normalizedPath);
+  web.window.history.replaceState(null, '', normalizedPath);
 }

@@ -1,14 +1,12 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/shell/core_shell.dart';
 import 'package:opti_job_app/core/shell/core_shell_breakpoints.dart';
-import 'package:opti_job_app/core/platform/web_history.dart';
 import 'package:opti_job_app/auth/ui/pages/unauthenticated_company_message.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_dashboard_cubit.dart';
-import 'package:opti_job_app/modules/companies/cubits/company_dashboard_state.dart';
 import 'package:opti_job_app/modules/companies/models/company_dashboard_navigation.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/company_account_avatar_menu.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_app_bar.dart';
@@ -49,6 +47,17 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
     widget.dashboardCubit.checkAndLoadCompanyOffers(companyUid);
   }
 
+  void _navigateToTab(BuildContext context, int index) {
+    final companyUid = widget.dashboardCubit.companyUid;
+    final path = companyDashboardPathForIndex(
+      uid: companyUid,
+      index: index,
+    );
+    if (path != null) {
+      context.go(path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<CompanyAuthCubit>().state;
@@ -58,15 +67,10 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         MediaQuery.sizeOf(context).width >= coreShellNavigationBreakpoint;
     final navItems = companyDashboardNavItems();
     final tabPages = companyDashboardTabPages();
-    final selectedIndex = companyDashboardClampIndex(dashboardState.selectedIndex);
+    final selectedIndex = companyDashboardClampIndex(
+      dashboardState.selectedIndex,
+    );
     final hasAuthenticatedCompany = authState.company != null;
-
-    if (selectedIndex != dashboardState.selectedIndex) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        widget.dashboardCubit.selectIndex(selectedIndex);
-      });
-    }
 
     return MultiBlocListener(
       listeners: [
@@ -77,14 +81,6 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
         BlocListener<CompanyAuthCubit, CompanyAuthState>(
           listener: (context, state) {
             widget.dashboardCubit.checkAndLoadCompanyOffers(state.company?.uid);
-          },
-        ),
-        BlocListener<CompanyDashboardCubit, CompanyDashboardState>(
-          listenWhen: (previous, current) =>
-              previous.redirectPath != current.redirectPath,
-          listener: (context, state) {
-            if (!kIsWeb || state.redirectPath == null) return;
-            pushBrowserPath(state.redirectPath!);
           },
         ),
       ],
@@ -102,7 +98,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
                 selectedIndex: selectedIndex,
                 onSelected: (index) {
                   Navigator.of(context).pop();
-                  widget.dashboardCubit.selectIndex(index);
+                  _navigateToTab(context, index);
                 },
               )
             : null,
@@ -110,7 +106,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
             ? CompanyDashboardSidebar(
                 items: navItems,
                 selectedIndex: selectedIndex,
-                onSelected: widget.dashboardCubit.selectIndex,
+                onSelected: (index) => _navigateToTab(context, index),
               )
             : null,
         sidebarAlignment: CoreShellSidebarAlignment.start,

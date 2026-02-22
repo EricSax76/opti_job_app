@@ -39,11 +39,13 @@ class _ContactRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
-        Icon(icon, size: 18, color: uiMuted),
+        Icon(icon, size: 18, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: uiSpacing12),
-        Text(label, style: const TextStyle(color: uiInk, fontSize: 15)),
+        Text(label, style: TextStyle(color: colorScheme.onSurface, fontSize: 15)),
       ],
     );
   }

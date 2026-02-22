@@ -112,8 +112,12 @@ class _OfferApplicantsContent extends StatelessWidget {
                     application: application,
                     onTap: application.candidateUid.trim().isEmpty
                         ? null
-                        : () => context.push(
-                            '/company/offers/${offer.id}/applicants/${application.candidateUid}/cv',
+                        : () => context.pushNamed(
+                            'company-applicant-cv',
+                            pathParameters: {
+                              'offerId': offer.id,
+                              'uid': application.candidateUid,
+                            },
                           ),
                     onStatusChanged: application.id == null
                         ? null

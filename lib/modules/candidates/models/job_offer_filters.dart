@@ -12,6 +12,10 @@ class JobOfferFilters extends Equatable {
     this.salaryMin,
     this.salaryMax,
     this.education,
+    this.jobCategory,
+    this.workSchedule,
+    this.contractType,
+    this.datePosted,
     this.companyName,
   });
 
@@ -25,6 +29,10 @@ class JobOfferFilters extends Equatable {
   final double? salaryMin;
   final double? salaryMax;
   final String? education;
+  final String? jobCategory;
+  final String? workSchedule;
+  final String? contractType;
+  final String? datePosted;
   final String? companyName;
 
   bool get hasActiveFilters =>
@@ -36,6 +44,10 @@ class JobOfferFilters extends Equatable {
       salaryMin != null ||
       salaryMax != null ||
       education != null ||
+      jobCategory != null ||
+      workSchedule != null ||
+      contractType != null ||
+      datePosted != null ||
       companyName != null;
 
   JobOfferFilters copyWith({
@@ -49,6 +61,10 @@ class JobOfferFilters extends Equatable {
     double? salaryMin,
     double? salaryMax,
     String? education,
+    String? jobCategory,
+    String? workSchedule,
+    String? contractType,
+    String? datePosted,
     String? companyName,
     bool clearSearchQuery = false,
     bool clearLocation = false,
@@ -60,6 +76,10 @@ class JobOfferFilters extends Equatable {
     bool clearSalaryMin = false,
     bool clearSalaryMax = false,
     bool clearEducation = false,
+    bool clearJobCategory = false,
+    bool clearWorkSchedule = false,
+    bool clearContractType = false,
+    bool clearDatePosted = false,
     bool clearCompanyName = false,
   }) {
     return JobOfferFilters(
@@ -79,6 +99,13 @@ class JobOfferFilters extends Equatable {
       salaryMin: clearSalaryMin ? null : (salaryMin ?? this.salaryMin),
       salaryMax: clearSalaryMax ? null : (salaryMax ?? this.salaryMax),
       education: clearEducation ? null : (education ?? this.education),
+      jobCategory:
+          clearJobCategory ? null : (jobCategory ?? this.jobCategory),
+      workSchedule:
+          clearWorkSchedule ? null : (workSchedule ?? this.workSchedule),
+      contractType:
+          clearContractType ? null : (contractType ?? this.contractType),
+      datePosted: clearDatePosted ? null : (datePosted ?? this.datePosted),
       companyName: clearCompanyName ? null : (companyName ?? this.companyName),
     );
   }
@@ -99,6 +126,10 @@ class JobOfferFilters extends Equatable {
     salaryMin,
     salaryMax,
     education,
+    jobCategory,
+    workSchedule,
+    contractType,
+    datePosted,
     companyName,
   ];
 }

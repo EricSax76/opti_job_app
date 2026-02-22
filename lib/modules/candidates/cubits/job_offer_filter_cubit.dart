@@ -148,6 +148,42 @@ class JobOfferFilterCubit extends Cubit<JobOfferFilterState> {
     );
   }
 
+  void updateJobCategory(String? value) {
+    _updateFilters(
+      state.filters.copyWith(
+        jobCategory: value,
+        clearJobCategory: value == null,
+      ),
+    );
+  }
+
+  void updateWorkSchedule(String? value) {
+    _updateFilters(
+      state.filters.copyWith(
+        workSchedule: value,
+        clearWorkSchedule: value == null,
+      ),
+    );
+  }
+
+  void updateContractType(String? value) {
+    _updateFilters(
+      state.filters.copyWith(
+        contractType: value,
+        clearContractType: value == null,
+      ),
+    );
+  }
+
+  void updateDatePosted(String? value) {
+    _updateFilters(
+      state.filters.copyWith(
+        datePosted: value,
+        clearDatePosted: value == null,
+      ),
+    );
+  }
+
   void updateSalaryPreview(RangeValues values) {
     emit(state.copyWith(minSalary: values.start, maxSalary: values.end));
   }

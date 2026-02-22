@@ -22,6 +22,15 @@ class JobOfferDetails extends StatelessWidget {
     final education = offer.education?.trim().isNotEmpty == true
         ? offer.education!.trim()
         : 'No especificada';
+    final jobCategory = offer.jobCategory?.trim().isNotEmpty == true
+        ? offer.jobCategory!.trim()
+        : null;
+    final workSchedule = offer.workSchedule?.trim().isNotEmpty == true
+        ? offer.workSchedule!.trim()
+        : null;
+    final contractType = offer.contractType?.trim().isNotEmpty == true
+        ? offer.contractType!.trim()
+        : null;
     final keyIndicators = offer.keyIndicators?.trim().isNotEmpty == true
         ? offer.keyIndicators!.trim()
         : null;
@@ -47,6 +56,12 @@ class JobOfferDetails extends StatelessWidget {
                   value: offer.jobType ?? 'No especificada',
                 ),
                 _DetailRow(label: 'Educación', value: education),
+                if (jobCategory != null)
+                  _DetailRow(label: 'Categoría', value: jobCategory),
+                if (workSchedule != null)
+                  _DetailRow(label: 'Jornada', value: workSchedule),
+                if (contractType != null)
+                  _DetailRow(label: 'Contrato', value: contractType),
                 if (keyIndicators != null)
                   _DetailRow(label: 'Indicadores clave', value: keyIndicators),
               ],

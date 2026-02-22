@@ -16,6 +16,9 @@ class JobOffer {
     this.salaryMin,
     this.salaryMax,
     this.education,
+    this.jobCategory,
+    this.workSchedule,
+    this.contractType,
     this.keyIndicators,
     this.createdAt,
   });
@@ -36,6 +39,9 @@ class JobOffer {
   final String? salaryMin;
   final String? salaryMax;
   final String? education;
+  final String? jobCategory;
+  final String? workSchedule;
+  final String? contractType;
   final String? keyIndicators;
   final DateTime? createdAt;
 
@@ -73,6 +79,12 @@ class JobOffer {
       salaryMin: json['salary_min'] as String? ?? json['salaryMin'] as String?,
       salaryMax: json['salary_max'] as String? ?? json['salaryMax'] as String?,
       education: json['education'] as String?,
+      jobCategory:
+          json['job_category'] as String? ?? json['jobCategory'] as String?,
+      workSchedule:
+          json['work_schedule'] as String? ?? json['workSchedule'] as String?,
+      contractType:
+          json['contract_type'] as String? ?? json['contractType'] as String?,
       keyIndicators:
           json['key_indicators'] as String? ?? json['keyIndicators'] as String?,
       createdAt: _parseDate(json['created_at'] ?? json['createdAt']),
@@ -97,6 +109,9 @@ class JobOffer {
       'salary_min': salaryMin,
       'salary_max': salaryMax,
       'education': education,
+      'job_category': jobCategory,
+      'work_schedule': workSchedule,
+      'contract_type': contractType,
       'key_indicators': keyIndicators,
       'created_at': createdAt?.toIso8601String(),
     };
@@ -119,6 +134,9 @@ class JobOffer {
     String? salaryMin,
     String? salaryMax,
     String? education,
+    String? jobCategory,
+    String? workSchedule,
+    String? contractType,
     String? keyIndicators,
     DateTime? createdAt,
   }) {
@@ -139,6 +157,9 @@ class JobOffer {
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
       education: education ?? this.education,
+      jobCategory: jobCategory ?? this.jobCategory,
+      workSchedule: workSchedule ?? this.workSchedule,
+      contractType: contractType ?? this.contractType,
       keyIndicators: keyIndicators ?? this.keyIndicators,
       createdAt: createdAt ?? this.createdAt,
     );

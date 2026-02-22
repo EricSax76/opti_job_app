@@ -15,11 +15,12 @@ class CompanyDashboardState extends Equatable {
     String? loadedCompanyUid,
     int? selectedIndex,
     String? redirectPath,
+    bool clearRedirectPath = false,
   }) {
     return CompanyDashboardState(
       loadedCompanyUid: loadedCompanyUid ?? this.loadedCompanyUid,
       selectedIndex: selectedIndex ?? this.selectedIndex,
-      redirectPath: redirectPath,
+      redirectPath: clearRedirectPath ? null : (redirectPath ?? this.redirectPath),
     );
   }
 

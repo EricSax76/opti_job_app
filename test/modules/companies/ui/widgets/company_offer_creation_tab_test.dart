@@ -36,6 +36,14 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), 'API development');
     await tester.enterText(find.byType(TextFormField).at(2), 'Madrid');
 
+    // Select required dropdown values.
+    await _selectDropdown(tester, 'Modalidad', 'Presencial');
+    await _selectDropdown(tester, 'Categoría del puesto',
+        'Informática y telecomunicaciones');
+    await _selectDropdown(tester, 'Estudios mínimos', 'Grado');
+    await _selectDropdown(tester, 'Jornada laboral', 'Completa');
+    await _selectDropdown(tester, 'Tipo de contrato', 'Indefinido');
+
     final publishButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Publicar oferta'),
     );
@@ -49,6 +57,11 @@ void main() {
     expect(payload.location, 'Madrid');
     expect(payload.companyUid, 'company-1');
     expect(payload.companyName, 'Acme Corp');
+    expect(payload.jobType, 'Presencial');
+    expect(payload.jobCategory, 'Informática y telecomunicaciones');
+    expect(payload.education, 'Grado');
+    expect(payload.workSchedule, 'Completa');
+    expect(payload.contractType, 'Indefinido');
   });
 
   testWidgets('does not submit when required fields contain only spaces', (
@@ -93,6 +106,34 @@ void main() {
     expect(find.text('Data platform'), findsNothing);
     expect(find.text('Barcelona'), findsNothing);
   });
+}
+
+/// Selects a value from a [DropdownButtonFormField] by tapping on the dropdown
+/// whose label matches [label] and then tapping on the menu item [value].
+Future<void> _selectDropdown(
+  WidgetTester tester,
+  String label,
+  String value,
+) async {
+  // Find the dropdown by its label text.
+  final dropdownFinder = find.byWidgetPredicate(
+    (widget) =>
+        widget is DropdownButtonFormField<String> &&
+        widget.decoration.labelText == label,
+  );
+
+  // Scroll into view before tapping (some fields are below the viewport).
+  await tester.ensureVisible(dropdownFinder);
+  await tester.pumpAndSettle();
+  await tester.tap(dropdownFinder);
+  await tester.pumpAndSettle();
+
+  // Tap the matching menu item — .last handles overlay duplicates.
+  final itemFinder = find.text(value).last;
+  await tester.ensureVisible(itemFinder);
+  await tester.pumpAndSettle();
+  await tester.tap(itemFinder);
+  await tester.pumpAndSettle();
 }
 
 Widget _wrap({TestJobOfferFormCubit? formCubit}) {

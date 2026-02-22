@@ -4,7 +4,6 @@ import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/applicants/logic/company_candidates_logic.dart';
-import 'package:opti_job_app/modules/applications/models/application_status.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 class CandidateCard extends StatelessWidget {
@@ -110,51 +109,30 @@ class CandidateCard extends StatelessWidget {
     );
   }
 
-  void _openCvPicker(BuildContext context, CandidateGroup candidate) {
-    if (candidate.entries.length == 1) {
-      final entry = candidate.entries.first;
-      context.push(
-        '/company/offers/${entry.offerId}/applicants/${candidate.candidateUid}/cv',
-      );
-      return;
-    }
+  void _openCvPicker(
+    BuildContext context,
+    CandidateGroup candidate,
+  ) {
+    if (candidate.entries.isEmpty) return;
 
-    showModalBottomSheet<void>(
+    // By user request, we skip the intermediate offer selection step in the "Candidates" tab.
+    // We just pick the first offer context to open the CV directly.
+    final entry = candidate.entries.first;
+    _openApplicantCv(
       context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            children: [
-              ListTile(
-                title: Text(
-                  candidate.displayName,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                subtitle: const Text('Selecciona una oferta para ver el CV'),
-              ),
-              const SizedBox(height: 6),
-              for (final entry in candidate.entries)
-                Card(
-                  child: ListTile(
-                    title: Text(entry.offerTitle),
-                    subtitle: Text(
-                      'Estado: ${ApplicationStatus.fromString(entry.status).label}',
-                    ),
-                    trailing: const Icon(Icons.open_in_new),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                      context.push(
-                        '/company/offers/${entry.offerId}/applicants/${candidate.candidateUid}/cv',
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
+      offerId: entry.offerId,
+      candidateUid: candidate.candidateUid,
+    );
+  }
+
+  void _openApplicantCv({
+    required BuildContext context,
+    required String offerId,
+    required String candidateUid,
+  }) {
+    context.pushNamed(
+      'company-applicant-cv',
+      pathParameters: {'offerId': offerId, 'uid': candidateUid},
     );
   }
 }

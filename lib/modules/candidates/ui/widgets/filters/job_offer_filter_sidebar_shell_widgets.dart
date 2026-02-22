@@ -59,12 +59,14 @@ class JobOfferFilterSection extends StatelessWidget {
               color: palette.ink,
             ),
             const SizedBox(width: uiSpacing8 - 2),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: JobOfferFilterSidebarTokens.sectionTitleFontSize,
-                fontWeight: FontWeight.w600,
-                color: palette.ink,
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: JobOfferFilterSidebarTokens.sectionTitleFontSize,
+                  fontWeight: FontWeight.w600,
+                  color: palette.ink,
+                ),
               ),
             ),
           ],

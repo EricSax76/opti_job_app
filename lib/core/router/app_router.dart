@@ -753,7 +753,9 @@ class AppRouter {
       if (!authState.isAuthenticated) return '/';
       if (authState.needsOnboarding) return '/onboarding';
       if (authState.isCandidate) {
-        if (candidateUid.isNotEmpty) return '/candidate/$candidateUid/dashboard';
+        if (candidateUid.isNotEmpty) {
+          return '/candidate/$candidateUid/dashboard';
+        }
         return '/CandidateDashboard';
       }
       return _companyDashboardHomePath(companyUid);

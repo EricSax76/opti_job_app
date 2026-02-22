@@ -37,23 +37,25 @@ class _CurriculumItemBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           item.title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: uiInk,
+            color: colorScheme.onSurface,
           ),
         ),
         if (item.hasSubtitle) ...[
           const SizedBox(height: uiSpacing4),
           Text(
             item.subtitle!,
-            style: const TextStyle(
-              color: uiMuted,
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -63,14 +65,15 @@ class _CurriculumItemBlock extends StatelessWidget {
           const SizedBox(height: uiSpacing4),
           Text(
             item.period!,
-            style: const TextStyle(color: uiMuted, fontSize: 13),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
           ),
         ],
         if (item.hasDescription) ...[
           const SizedBox(height: uiSpacing8),
           Text(
             item.description!,
-            style: const TextStyle(color: uiInk, height: 1.4, fontSize: 14),
+            style: TextStyle(
+                color: colorScheme.onSurface, height: 1.4, fontSize: 14),
           ),
         ],
       ],

@@ -13,8 +13,8 @@ class CurriculumReadOnlySectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: uiSpacing8),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
-          color: uiMuted,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w700,
           fontSize: 12,
           letterSpacing: 1,

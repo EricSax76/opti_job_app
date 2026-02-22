@@ -269,6 +269,9 @@ class JobOfferPayload {
     this.salaryMin,
     this.salaryMax,
     this.education,
+    this.jobCategory,
+    this.workSchedule,
+    this.contractType,
     this.jobType,
     this.keyIndicators,
   });
@@ -287,6 +290,9 @@ class JobOfferPayload {
   final String? salaryMin;
   final String? salaryMax;
   final String? education;
+  final String? jobCategory;
+  final String? workSchedule;
+  final String? contractType;
   final String? jobType;
   final String? keyIndicators;
 
@@ -306,6 +312,9 @@ class JobOfferPayload {
       'salary_min': salaryMin,
       'salary_max': salaryMax,
       'education': education,
+      'job_category': jobCategory,
+      'work_schedule': workSchedule,
+      'contract_type': contractType,
       'job_type': jobType,
       'key_indicators': keyIndicators,
     };

@@ -16,6 +16,12 @@ class JobOfferCompactor {
         'job_type': truncate(offer.jobType!.trim(), 60),
       if (offer.education != null)
         'education': truncate(offer.education!.trim(), 120),
+      if (offer.jobCategory != null)
+        'job_category': truncate(offer.jobCategory!.trim(), 80),
+      if (offer.workSchedule != null)
+        'work_schedule': truncate(offer.workSchedule!.trim(), 60),
+      if (offer.contractType != null)
+        'contract_type': truncate(offer.contractType!.trim(), 60),
       if (offer.keyIndicators != null)
         'key_indicators': truncate(offer.keyIndicators!.trim(), 600),
       if (offer.salaryMin != null) 'salary_min': offer.salaryMin,

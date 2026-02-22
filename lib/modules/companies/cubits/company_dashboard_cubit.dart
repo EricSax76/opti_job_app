@@ -24,22 +24,4 @@ class CompanyDashboardCubit extends Cubit<CompanyDashboardState> {
       companyJobOffersCubit.start(currentCompanyUid);
     }
   }
-
-  void selectIndex(int index) {
-    final normalizedIndex = companyDashboardClampIndex(index);
-    if (normalizedIndex == state.selectedIndex) return;
-
-    final path = companyDashboardPathForIndex(
-      uid: companyUid,
-      index: normalizedIndex,
-    );
-
-    emit(
-      state.copyWith(
-        selectedIndex: normalizedIndex,
-        redirectPath: path,
-      ),
-    );
-    emit(state.copyWith(selectedIndex: normalizedIndex, redirectPath: null));
-  }
 }

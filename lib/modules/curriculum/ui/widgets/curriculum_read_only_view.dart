@@ -21,8 +21,8 @@ class CurriculumReadOnlyView extends StatelessWidget {
             const CurriculumReadOnlySectionTitle(text: 'Titular'),
             CurriculumReadOnlyTextCard(
               text: viewModel.headline,
-              style: const TextStyle(
-                color: uiInk,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 16,
                 height: 1.4,
                 fontWeight: FontWeight.bold,
@@ -34,7 +34,11 @@ class CurriculumReadOnlyView extends StatelessWidget {
             const CurriculumReadOnlySectionTitle(text: 'Resumen Profesional'),
             CurriculumReadOnlyTextCard(
               text: viewModel.summary,
-              style: const TextStyle(color: uiInk, fontSize: 15, height: 1.6),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 15,
+                height: 1.6,
+              ),
             ),
             const SizedBox(height: uiSpacing24),
           ],

@@ -40,6 +40,9 @@ class CompanyOfferCreationLogic {
     final salaryMin = formControllers.salaryMin.text.trim();
     final salaryMax = formControllers.salaryMax.text.trim();
     final education = formControllers.education.text.trim();
+    final jobCategory = formControllers.jobCategory.text.trim();
+    final workSchedule = formControllers.workSchedule.text.trim();
+    final contractType = formControllers.contractType.text.trim();
     final keyIndicators = formControllers.keyIndicators.text.trim();
 
     return JobOfferPayload(
@@ -54,6 +57,9 @@ class CompanyOfferCreationLogic {
       salaryMin: salaryMin.isEmpty ? null : salaryMin,
       salaryMax: salaryMax.isEmpty ? null : salaryMax,
       education: education.isEmpty ? null : education,
+      jobCategory: jobCategory.isEmpty ? null : jobCategory,
+      workSchedule: workSchedule.isEmpty ? null : workSchedule,
+      contractType: contractType.isEmpty ? null : contractType,
       keyIndicators: keyIndicators.isEmpty ? null : keyIndicators,
     );
   }

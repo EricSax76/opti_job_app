@@ -377,6 +377,10 @@ class JobOffersCubit extends Cubit<JobOffersState> {
     final companyNameFilter = _normalizedFilter(filters.companyName);
     final jobTypeFilter = _normalizedFilter(filters.jobType);
     final educationFilter = _normalizedFilter(filters.education);
+    final jobCategoryFilter = _normalizedFilter(filters.jobCategory);
+    final workScheduleFilter = _normalizedFilter(filters.workSchedule);
+    final contractTypeFilter = _normalizedFilter(filters.contractType);
+    final datePostedCutoff = _datePostedCutoff(filters.datePosted);
 
     return offers
         .where((offer) {
@@ -436,6 +440,28 @@ class JobOffersCubit extends Cubit<JobOffersState> {
           if (educationFilter != null &&
               !_matchesFlexibleValue(offer.education, educationFilter)) {
             return false;
+          }
+
+          if (jobCategoryFilter != null &&
+              !_matchesFlexibleValue(offer.jobCategory, jobCategoryFilter)) {
+            return false;
+          }
+
+          if (workScheduleFilter != null &&
+              !_matchesFlexibleValue(offer.workSchedule, workScheduleFilter)) {
+            return false;
+          }
+
+          if (contractTypeFilter != null &&
+              !_matchesFlexibleValue(offer.contractType, contractTypeFilter)) {
+            return false;
+          }
+
+          if (datePostedCutoff != null) {
+            final createdAt = offer.createdAt;
+            if (createdAt == null || createdAt.isBefore(datePostedCutoff)) {
+              return false;
+            }
           }
 
           if (companyNameFilter != null &&
@@ -533,5 +559,20 @@ class JobOffersCubit extends Cubit<JobOffersState> {
             _normalizeGeoId(next.provinceId) ||
         _normalizeGeoId(previous.municipalityId) !=
             _normalizeGeoId(next.municipalityId);
+  }
+
+  DateTime? _datePostedCutoff(String? datePosted) {
+    if (datePosted == null) return null;
+    final now = DateTime.now();
+    switch (datePosted) {
+      case 'Últimas 24 horas':
+        return now.subtract(const Duration(hours: 24));
+      case 'Últimos 7 días':
+        return now.subtract(const Duration(days: 7));
+      case 'Últimos 15 días':
+        return now.subtract(const Duration(days: 15));
+      default:
+        return null; // 'Cualquier fecha'
+    }
   }
 }

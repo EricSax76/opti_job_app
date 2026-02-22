@@ -10,35 +10,30 @@ class CurriculumReadOnlyAttachmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return AppCard(
-      padding: const EdgeInsets.all(uiSpacing16),
-      backgroundColor: uiAccentSoft,
+      padding: const EdgeInsets.symmetric(horizontal: uiSpacing16, vertical: uiSpacing12),
+      backgroundColor: isDark 
+          ? colorScheme.onSurface.withValues(alpha: 0.05) 
+          : colorScheme.primary.withValues(alpha: 0.05),
       borderColor: Colors.transparent,
       child: Row(
         children: [
-          const Icon(Icons.description_outlined, color: uiAccent, size: 24),
+          Icon(Icons.description_outlined, color: colorScheme.primary, size: 20),
           const SizedBox(width: uiSpacing12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  fileName,
-                  style: const TextStyle(
-                    color: uiInk,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: uiSpacing4),
-                Text(
-                  'Archivo importado',
-                  style: TextStyle(
-                    color: uiMuted.withValues(alpha: 0.8),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            child: Text(
+              fileName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

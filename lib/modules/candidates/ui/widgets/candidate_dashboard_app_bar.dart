@@ -12,6 +12,7 @@ class CandidateDashboardAppBar extends StatelessWidget
     required this.tabController,
     required this.avatarUrl,
     required this.accountDisplayName,
+    required this.onOpenSettings,
     required this.onOpenProfile,
     required this.onLogout,
     required this.showTabBar,
@@ -20,6 +21,7 @@ class CandidateDashboardAppBar extends StatelessWidget
   final TabController tabController;
   final String? avatarUrl;
   final String? accountDisplayName;
+  final VoidCallback onOpenSettings;
   final VoidCallback onOpenProfile;
   final VoidCallback onLogout;
   final bool showTabBar;
@@ -49,6 +51,9 @@ class CandidateDashboardAppBar extends StatelessWidget
       onSelected: (action) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           switch (action) {
+            case _CandidateAccountAction.settings:
+              onOpenSettings();
+              break;
             case _CandidateAccountAction.profile:
               onOpenProfile();
               break;
@@ -59,6 +64,10 @@ class CandidateDashboardAppBar extends StatelessWidget
         });
       },
       itemBuilder: (context) => const [
+        PopupMenuItem(
+          value: _CandidateAccountAction.settings,
+          child: Text('Ajustes'),
+        ),
         PopupMenuItem(
           value: _CandidateAccountAction.profile,
           child: Text('Mi perfil'),
@@ -241,4 +250,4 @@ class CandidateDashboardAppBar extends StatelessWidget
   }
 }
 
-enum _CandidateAccountAction { profile, logout }
+enum _CandidateAccountAction { settings, profile, logout }

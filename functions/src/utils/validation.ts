@@ -118,14 +118,24 @@ export function validateJobOffer(offer: any): void {
     "title",
     "description",
     "location",
-    "job_type",
   ]);
 
-  const validJobTypes = ["full_time", "part_time", "contract", "internship"];
-  if (!validJobTypes.includes(offer.job_type)) {
-    throw new ValidationError(
-      `Invalid job_type. Must be one of: ${validJobTypes.join(", ")}`
-    );
+  if (offer.job_type) {
+    const validJobTypes = [
+      "Presencial",
+      "Híbrido",
+      "Solo teletrabajo",
+      // Legacy values kept for backward compatibility
+      "full_time",
+      "part_time",
+      "contract",
+      "internship",
+    ];
+    if (!validJobTypes.includes(offer.job_type)) {
+      throw new ValidationError(
+        `Invalid job_type. Must be one of: ${validJobTypes.join(", ")}`
+      );
+    }
   }
 
   if (offer.salary_min && offer.salary_max &&

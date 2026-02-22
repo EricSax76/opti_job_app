@@ -25,11 +25,12 @@ class CandidateDashboardState extends Equatable {
     int? selectedIndex,
     int? tabIndex,
     String? redirectPath,
+    bool clearRedirectPath = false,
   }) {
     return CandidateDashboardState(
       selectedIndex: selectedIndex ?? this.selectedIndex,
       tabIndex: tabIndex ?? this.tabIndex,
-      redirectPath: redirectPath,
+      redirectPath: clearRedirectPath ? null : (redirectPath ?? this.redirectPath),
     );
   }
 

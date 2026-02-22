@@ -39,11 +39,10 @@ class CandidateDashboardCubit extends Cubit<CandidateDashboardState> {
       tabIndex: candidateDashboardClampTabIndex(safeIndex),
       redirectPath: path,
     ));
-    
-    // Clear redirect path after emission to avoid double redirects
-    // or handle it in the listener strictly.
-    // A strict listener that checks state.redirectPath != null is better.
-    // But setting it back to null is safer.
-    emit(state.copyWith(redirectPath: null));
+
+    // Clear redirect path asynchronously to ensure UI listeners catch the emission.
+    Future.microtask(() {
+      if (!isClosed) emit(state.copyWith(clearRedirectPath: true));
+    });
   }
 }

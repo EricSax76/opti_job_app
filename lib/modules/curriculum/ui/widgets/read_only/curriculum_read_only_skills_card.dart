@@ -16,14 +16,7 @@ class CurriculumReadOnlySkillsCard extends StatelessWidget {
       child: Wrap(
         spacing: uiSpacing8,
         runSpacing: uiSpacing8,
-        children: [
-          for (final skill in skills)
-            InfoPill(
-              label: skill,
-              backgroundColor: uiAccentSoft,
-              textColor: uiInk,
-            ),
-        ],
+        children: [for (final skill in skills) InfoPill(label: skill)],
       ),
     );
   }
