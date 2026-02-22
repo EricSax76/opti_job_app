@@ -21,22 +21,25 @@ class CurriculumAttachmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = CurriculumAttachmentLogic.buildCardViewModel(attachment);
+    final colorScheme = Theme.of(context).colorScheme;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
 
     return AppCard(
       padding: const EdgeInsets.all(uiSpacing12),
       borderRadius: uiTileRadius,
-      backgroundColor: uiWhite,
+      backgroundColor: colorScheme.surface,
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(uiSpacing12),
             decoration: BoxDecoration(
-              color: uiAccentSoft,
+              color: colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(uiTileRadius),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.description_outlined,
-              color: uiAccent,
+              color: colorScheme.primary,
               size: 24,
             ),
           ),
@@ -49,16 +52,16 @@ class CurriculumAttachmentCard extends StatelessWidget {
                   viewModel.fileName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: uiInk,
+                    color: ink,
                     fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: uiSpacing4),
                 Text(
                   viewModel.metadataLabel,
-                  style: const TextStyle(color: uiMuted, fontSize: 12),
+                  style: TextStyle(color: muted, fontSize: 12),
                 ),
               ],
             ),
@@ -67,19 +70,19 @@ class CurriculumAttachmentCard extends StatelessWidget {
             IconButton(
               tooltip: 'Abrir',
               onPressed: isBusy ? null : onOpen,
-              icon: const Icon(
+              icon: Icon(
                 Icons.open_in_new_rounded,
                 size: 20,
-                color: uiMuted,
+                color: muted,
               ),
             ),
           IconButton(
             tooltip: 'Eliminar',
             onPressed: isBusy ? null : onDelete,
-            icon: const Icon(
+            icon: Icon(
               Icons.delete_outline_rounded,
               size: 20,
-              color: uiError,
+              color: colorScheme.error,
             ),
           ),
         ],

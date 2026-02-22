@@ -22,6 +22,7 @@ class _CandidateLoginFormState extends State<CandidateLoginForm> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  var _obscurePassword = true;
 
   @override
   void dispose() {
@@ -59,11 +60,20 @@ class _CandidateLoginFormState extends State<CandidateLoginForm> {
             const SizedBox(height: uiSpacing16),
             TextFormField(
               controller: _passwordController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Contraseña',
-                prefixIcon: Icon(Icons.lock_outline),
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
               ),
-              obscureText: true,
+              obscureText: _obscurePassword,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'La contraseña es obligatoria';

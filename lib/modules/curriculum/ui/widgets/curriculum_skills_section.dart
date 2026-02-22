@@ -73,9 +73,9 @@ class _CurriculumSkillsSectionState extends State<CurriculumSkillsSection> {
                   onDeleted: () => formCubit.removeSkill(skill),
                   deleteIcon: const Icon(Icons.close, size: 14),
                   padding: const EdgeInsets.all(uiSpacing4),
-                  backgroundColor: uiAccentSoft,
-                  labelStyle: const TextStyle(
-                    color: uiInk,
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  labelStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

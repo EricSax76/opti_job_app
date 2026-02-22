@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/core/platform/web_history.dart';
 import 'package:opti_job_app/core/config/feature_flags.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 
@@ -152,7 +151,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
               dashboardPages: _dashboardPages,
               interviewsCubit: widget.interviewsCubit,
               candidateUid: candidateUid,
-              onSelectIndex: _dashboardCubit.selectTab,
+              onSelectIndex: (index) => _navigateToSection(context, index),
               onOpenSettings: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -185,8 +184,15 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       _isProgrammaticTabChange = false;
     }
 
-    if (kIsWeb && state.redirectPath != null) {
-      pushBrowserPath(state.redirectPath!);
+  }
+
+  void _navigateToSection(BuildContext context, int index) {
+    final path = candidateDashboardPathForIndex(
+      uid: widget.uid,
+      index: index,
+    );
+    if (path != null) {
+      context.go(path);
     }
   }
 

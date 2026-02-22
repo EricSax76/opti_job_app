@@ -25,6 +25,9 @@ class CurriculumItemsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = CurriculumItemsSectionLogic.buildViewModel(items);
+    final colorScheme = Theme.of(context).colorScheme;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,15 +40,15 @@ class CurriculumItemsSection extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: uiInk,
+                    color: ink,
                   ),
                 ),
                 Text(
                   viewModel.statusLabel,
-                  style: const TextStyle(fontSize: 12, color: uiMuted),
+                  style: TextStyle(fontSize: 12, color: muted),
                 ),
               ],
             ),
@@ -54,7 +57,7 @@ class CurriculumItemsSection extends StatelessWidget {
               icon: const Icon(Icons.add, size: 20),
               label: const Text('Agregar'),
               style: TextButton.styleFrom(
-                backgroundColor: uiAccentSoft,
+                backgroundColor: colorScheme.primaryContainer,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(uiPillRadius),
                 ),
@@ -66,20 +69,20 @@ class CurriculumItemsSection extends StatelessWidget {
         if (viewModel.isEmpty)
           AppCard(
             padding: const EdgeInsets.all(uiSpacing24),
-            borderColor: uiBorder,
+            borderColor: colorScheme.outline,
             child: Center(
               child: Column(
                 children: [
                   Icon(
                     Icons.add_circle_outline,
-                    color: uiMuted.withValues(alpha: 0.5),
+                    color: muted.withValues(alpha: 0.5),
                     size: 32,
                   ),
                   const SizedBox(height: uiSpacing8),
                   Text(
                     emptyHint,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: uiMuted, fontSize: 13),
+                    style: TextStyle(color: muted, fontSize: 13),
                   ),
                 ],
               ),
@@ -101,23 +104,23 @@ class CurriculumItemsSection extends StatelessWidget {
                       ),
                       title: Text(
                         entry.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: uiInk,
+                          color: ink,
                         ),
                       ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: uiSpacing4),
                         child: Text(
                           entry.subtitle,
-                          style: const TextStyle(fontSize: 13, color: uiMuted),
+                          style: TextStyle(fontSize: 13, color: muted),
                         ),
                       ),
                       trailing: PopupMenuButton<String>(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.more_vert_rounded,
                           size: 20,
-                          color: uiMuted,
+                          color: muted,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(uiTileRadius),
@@ -130,33 +133,33 @@ class CurriculumItemsSection extends StatelessWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.edit_outlined,
                                   size: 20,
-                                  color: uiInk,
+                                  color: ink,
                                 ),
-                                SizedBox(width: uiSpacing12),
-                                Text('Editar'),
+                                const SizedBox(width: uiSpacing12),
+                                const Text('Editar'),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'remove',
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.delete_outline,
                                   size: 20,
-                                  color: uiError,
+                                  color: colorScheme.error,
                                 ),
-                                SizedBox(width: uiSpacing12),
+                                const SizedBox(width: uiSpacing12),
                                 Text(
                                   'Eliminar',
-                                  style: TextStyle(color: uiError),
+                                  style: TextStyle(color: colorScheme.error),
                                 ),
                               ],
                             ),

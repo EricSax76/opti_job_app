@@ -38,12 +38,12 @@ class _CurriculumPersonalInfoFormState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Perfil Profesional',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: uiInk,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: uiSpacing16),
