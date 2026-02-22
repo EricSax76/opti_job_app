@@ -16,9 +16,14 @@ class CompanyDashboardAppBar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
+    final mobileActionsRightInset = showMenuButton ? 20.0 : 0.0;
     final actions = showAccountActions
         ? <Widget>[
-            if (accountMenu != null) accountMenu!,
+            if (accountMenu != null)
+              Padding(
+                padding: EdgeInsets.only(right: mobileActionsRightInset),
+                child: accountMenu!,
+              ),
           ]
         : null;
 
