@@ -156,6 +156,45 @@ class ProfileService {
     return CandidateMapper.fromFirestore(data);
   }
 
+  Future<Candidate> saveCandidateOnboardingProfile({
+    required String uid,
+    required CandidateOnboardingProfile onboardingProfile,
+  }) async {
+    final docRef = _firestore.collection('candidates').doc(uid);
+    final snapshot = await docRef.get();
+    if (!snapshot.exists) {
+      throw StateError('Perfil de candidato no encontrado.');
+    }
+
+    await docRef.set({
+      'onboarding_profile': onboardingProfile.toJson(),
+      'target_role': onboardingProfile.targetRole,
+      'preferred_location': onboardingProfile.preferredLocation,
+      'preferred_modality': onboardingProfile.preferredModality,
+      'preferred_seniority': onboardingProfile.preferredSeniority,
+      'updated_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    final updatedSnapshot = await docRef.get();
+    final data = updatedSnapshot.data();
+    if (data == null) {
+      throw StateError('No se pudo guardar el onboarding del candidato.');
+    }
+
+    final rawUid = data['uid'] as String?;
+    final candidateUid = rawUid == null || rawUid.trim().isEmpty
+        ? uid
+        : rawUid.trim();
+    final candidateData = rawUid == null || rawUid.trim().isEmpty
+        ? {...data, 'uid': uid}
+        : data;
+    final enriched = await _withCoverLetterData(
+      candidateUid: candidateUid,
+      candidateData: candidateData,
+    );
+    return CandidateMapper.fromFirestore(enriched);
+  }
+
   Future<Company> updateCompanyProfile({
     required String uid,
     required String name,

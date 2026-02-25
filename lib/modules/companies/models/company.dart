@@ -7,6 +7,7 @@ class Company {
     required this.email,
     required this.uid,
     this.role = 'company',
+    this.onboardingCompleted = false,
     this.token,
     this.avatarUrl,
   });
@@ -16,6 +17,7 @@ class Company {
   final String email;
   final String uid;
   final String role;
+  final bool onboardingCompleted;
   final String? token;
   final String? avatarUrl;
 
@@ -26,6 +28,7 @@ class Company {
       email: json['email'] as String? ?? '',
       uid: json['uid'] as String? ?? '',
       role: json['role'] as String? ?? 'company',
+      onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
       token: json['token'] as String?,
       avatarUrl: json['avatar_url'] as String?,
     );
@@ -38,6 +41,7 @@ class Company {
       'email': email,
       'uid': uid,
       'role': role,
+      'onboarding_completed': onboardingCompleted,
       'token': token,
       'avatar_url': avatarUrl,
     };

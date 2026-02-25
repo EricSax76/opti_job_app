@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
@@ -22,12 +23,9 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   Future<void> start() async {
     if (_authSubscription != null) return;
-    _authSubscription = _candidateAuthCubit.stream.listen(
-      _onAuthStateChanged,
-    );
+    _authSubscription = _candidateAuthCubit.stream.listen(_onAuthStateChanged);
     await _onAuthStateChanged(_candidateAuthCubit.state);
   }
-
 
   Future<void> _onAuthStateChanged(CandidateAuthState authState) async {
     if (!authState.isAuthenticated) {
@@ -62,11 +60,11 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   void retry() => unawaited(refresh());
 
-
   Future<void> updateCandidateProfile({
     required String name,
     required String lastName,
     Uint8List? avatarBytes,
+    CandidateOnboardingProfile? onboardingProfile,
   }) async {
     final candidate = state.candidate ?? _candidateAuthCubit.state.candidate;
     if (candidate == null) {
@@ -79,14 +77,40 @@ class ProfileCubit extends Cubit<ProfileState> {
       return;
     }
 
+    final hasBasicChanges =
+        candidate.name.trim() != name ||
+        candidate.lastName.trim() != lastName ||
+        avatarBytes != null;
+    final hasOnboardingChanges = onboardingProfile != null;
+
+    if (!hasBasicChanges && !hasOnboardingChanges) {
+      emit(
+        state.copyWith(
+          status: ProfileStatus.loaded,
+          candidate: candidate,
+          clearError: true,
+        ),
+      );
+      return;
+    }
+
     emit(state.copyWith(status: ProfileStatus.saving, clearError: true));
     try {
-      final updatedCandidate = await _repository.updateCandidateProfile(
-        uid: candidate.uid,
-        name: name,
-        lastName: lastName,
-        avatarBytes: avatarBytes,
-      );
+      var updatedCandidate = candidate;
+      if (hasBasicChanges) {
+        updatedCandidate = await _repository.updateCandidateProfile(
+          uid: candidate.uid,
+          name: name,
+          lastName: lastName,
+          avatarBytes: avatarBytes,
+        );
+      }
+      if (onboardingProfile != null) {
+        updatedCandidate = await _repository.saveCandidateOnboardingProfile(
+          uid: candidate.uid,
+          onboardingProfile: onboardingProfile,
+        );
+      }
       emit(
         state.copyWith(
           status: ProfileStatus.loaded,

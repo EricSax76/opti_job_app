@@ -74,6 +74,7 @@ class AuthService {
       'email': email.toLowerCase().trim(),
       'role': 'candidate',
       'uid': user.uid,
+      'onboarding_completed': false,
     };
 
     await _candidatesCollection.doc(user.uid).set({
@@ -134,6 +135,7 @@ class AuthService {
       'email': email.toLowerCase().trim(),
       'role': 'company',
       'uid': user.uid,
+      'onboarding_completed': false,
     };
 
     await _companiesCollection.doc(user.uid).set({
@@ -147,6 +149,20 @@ class AuthService {
 
   Future<void> logout() {
     return _auth.signOut();
+  }
+
+  Future<void> completeCandidateOnboarding(String uid) async {
+    await _candidatesCollection.doc(uid).set({
+      'onboarding_completed': true,
+      'onboarding_completed_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> completeCompanyOnboarding(String uid) async {
+    await _companiesCollection.doc(uid).set({
+      'onboarding_completed': true,
+      'onboarding_completed_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<Candidate?> restoreCandidateSession() async {

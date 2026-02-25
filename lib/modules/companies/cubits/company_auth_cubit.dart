@@ -1,6 +1,5 @@
 import 'dart:async';
 
-
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/auth/cubits/auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
@@ -48,6 +47,7 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         state.copyWith(
           status: AuthStatus.authenticated,
           company: company,
+          needsOnboarding: _needsOnboarding(company),
           clearError: true,
         ),
       );
@@ -73,7 +73,13 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         email: email,
         password: password,
       );
-      emit(state.copyWith(status: AuthStatus.authenticated, company: company));
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          company: company,
+          needsOnboarding: _needsOnboarding(company),
+        ),
+      );
     } catch (error) {
       final authException = _repository.mapException(error);
       emit(
@@ -102,7 +108,7 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
         state.copyWith(
           status: AuthStatus.authenticated,
           company: company,
-          needsOnboarding: true,
+          needsOnboarding: _needsOnboarding(company),
         ),
       );
     } catch (error) {
@@ -118,8 +124,11 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
   }
 
   void completeOnboarding() {
-    if (state.needsOnboarding) {
-      emit(state.copyWith(needsOnboarding: false));
+    if (!state.needsOnboarding) return;
+    emit(state.copyWith(needsOnboarding: false));
+    final uid = state.company?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      unawaited(_repository.completeCompanyOnboarding(uid));
     }
   }
 
@@ -148,6 +157,10 @@ class CompanyAuthCubit extends AuthCubit<CompanyAuthState> {
   void updateCompany(Company company) {
     if (!state.isAuthenticated) return;
     emit(state.copyWith(company: company));
+  }
+
+  bool _needsOnboarding(Company company) {
+    return !company.onboardingCompleted;
   }
 
   @override

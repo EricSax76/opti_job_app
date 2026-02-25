@@ -52,6 +52,14 @@ class AuthRepository {
     return _service.logout();
   }
 
+  Future<void> completeCandidateOnboarding(String uid) {
+    return _service.completeCandidateOnboarding(uid);
+  }
+
+  Future<void> completeCompanyOnboarding(String uid) {
+    return _service.completeCompanyOnboarding(uid);
+  }
+
   Future<Candidate?> restoreCandidateSession() {
     return _service.restoreCandidateSession();
   }

@@ -14,10 +14,7 @@ class CurriculumAttachmentLogic {
 
     return CurriculumAttachmentCardViewModel(
       fileName: attachment.fileName,
-      metadataLabel: [
-        sizeLabel,
-        if (updatedLabel != null) updatedLabel,
-      ].join(' · '),
+      metadataLabel: [sizeLabel, ?updatedLabel].join(' · '),
     );
   }
 

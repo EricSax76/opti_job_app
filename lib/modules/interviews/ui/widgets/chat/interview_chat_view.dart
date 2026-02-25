@@ -34,7 +34,7 @@ class InterviewChatView extends StatelessWidget {
                   message: 'No se pudo abrir el contenido del chat.',
                 ),
           ),
-          if (inputArea != null) inputArea!,
+          ?inputArea,
         ],
       ),
     );

@@ -9,6 +9,8 @@ import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.da
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
+import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 class _MockJobOfferRepository extends Mock implements JobOfferRepository {}
 
@@ -17,6 +19,8 @@ class _MockApplicationService extends Mock implements ApplicationService {}
 class _MockCurriculumRepository extends Mock implements CurriculumRepository {}
 
 class _MockAiRepository extends Mock implements AiRepository {}
+
+class _MockProfileRepository extends Mock implements ProfileRepository {}
 
 void main() {
   setUpAll(() {
@@ -45,6 +49,7 @@ void main() {
   late _MockApplicationService applicationService;
   late _MockCurriculumRepository curriculumRepository;
   late _MockAiRepository aiRepository;
+  late _MockProfileRepository profileRepository;
   late JobOfferDetailCubit cubit;
 
   setUp(() {
@@ -52,11 +57,13 @@ void main() {
     applicationService = _MockApplicationService();
     curriculumRepository = _MockCurriculumRepository();
     aiRepository = _MockAiRepository();
+    profileRepository = _MockProfileRepository();
     cubit = JobOfferDetailCubit(
       repository,
       applicationService,
       curriculumRepository: curriculumRepository,
       aiRepository: aiRepository,
+      profileRepository: profileRepository,
     );
   });
 
@@ -100,6 +107,18 @@ void main() {
       () => curriculumRepository.fetchCurriculum('candidate-1'),
     ).thenAnswer((_) async => curriculum);
     when(
+      () => profileRepository.fetchCandidateProfile('candidate-1'),
+    ).thenAnswer(
+      (_) async => const Candidate(
+        id: 1,
+        name: 'Test',
+        lastName: 'Candidate',
+        email: 'test@example.com',
+        uid: 'candidate-1',
+        role: 'candidate',
+      ),
+    );
+    when(
       () => aiRepository.matchOfferCandidate(
         curriculum: any(named: 'curriculum'),
         offer: any(named: 'offer'),
@@ -116,8 +135,11 @@ void main() {
     expect((outcome as JobOfferMatchSuccess).result, match);
     verify(() => curriculumRepository.fetchCurriculum('candidate-1')).called(1);
     verify(
+      () => profileRepository.fetchCandidateProfile('candidate-1'),
+    ).called(1);
+    verify(
       () => aiRepository.matchOfferCandidate(
-        curriculum: curriculum,
+        curriculum: any(named: 'curriculum'),
         offer: offer,
         locale: 'es-ES',
       ),

@@ -1,10 +1,10 @@
 import 'dart:async';
 
-
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/auth/cubits/auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
   final AuthRepository _repository;
@@ -47,6 +47,7 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
         state.copyWith(
           status: AuthStatus.authenticated,
           candidate: candidate,
+          needsOnboarding: _needsOnboarding(candidate),
           clearError: true,
         ),
       );
@@ -73,7 +74,11 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
         password: password,
       );
       emit(
-        state.copyWith(status: AuthStatus.authenticated, candidate: candidate),
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          candidate: candidate,
+          needsOnboarding: _needsOnboarding(candidate),
+        ),
       );
     } catch (error) {
       final authException = _repository.mapException(error);
@@ -103,7 +108,7 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
         state.copyWith(
           status: AuthStatus.authenticated,
           candidate: candidate,
-          needsOnboarding: true,
+          needsOnboarding: _needsOnboarding(candidate),
         ),
       );
     } catch (error) {
@@ -119,9 +124,16 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
   }
 
   void completeOnboarding() {
-    if (state.needsOnboarding) {
-      emit(state.copyWith(needsOnboarding: false));
+    if (!state.needsOnboarding) return;
+    emit(state.copyWith(needsOnboarding: false));
+    final uid = state.candidate?.uid;
+    if (uid != null && uid.isNotEmpty) {
+      unawaited(_repository.completeCandidateOnboarding(uid));
     }
+  }
+
+  bool _needsOnboarding(Candidate candidate) {
+    return !candidate.onboardingCompleted;
   }
 
   void clearError() {

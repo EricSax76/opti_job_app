@@ -147,6 +147,21 @@ class ProfileRepository {
     return _candidateCache[normalizedUid]!;
   }
 
+  Future<Candidate> saveCandidateOnboardingProfile({
+    required String uid,
+    required CandidateOnboardingProfile onboardingProfile,
+  }) async {
+    final updated = await _service.saveCandidateOnboardingProfile(
+      uid: uid,
+      onboardingProfile: onboardingProfile,
+    );
+    final normalizedUid = updated.uid.trim().isEmpty ? uid.trim() : updated.uid;
+    final resolved = updated.copyWith(uid: normalizedUid);
+    _candidateCache[uid.trim()] = resolved;
+    _candidateCache[normalizedUid] = resolved;
+    return _candidateCache[normalizedUid]!;
+  }
+
   Future<Company> updateCompanyProfile({
     required String uid,
     required String name,

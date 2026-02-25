@@ -20,7 +20,7 @@ class CompanyProfileAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     final actions = showActions
         ? <Widget>[
-            if (accountMenu != null) accountMenu!,
+            ?accountMenu,
             if (showLogoutAction && onLogout != null)
               IconButton(
                 tooltip: 'Cerrar sesión',

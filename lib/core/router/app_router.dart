@@ -125,6 +125,7 @@ class AppRouter {
               context.read<ApplicationService>(),
               curriculumRepository: context.read<CurriculumRepository>(),
               aiRepository: context.read<AiRepository>(),
+              profileRepository: context.read<ProfileRepository>(),
             )..start(id, candidateUid: candidateUid);
 
             return BlocProvider(

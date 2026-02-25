@@ -10,6 +10,7 @@ import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
 enum JobOfferDetailStatus { initial, loading, success, failure, applying }
 
@@ -64,14 +65,17 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
     this._applicationService, {
     required CurriculumRepository curriculumRepository,
     required AiRepository aiRepository,
+    required ProfileRepository profileRepository,
   }) : _curriculumRepository = curriculumRepository,
        _aiRepository = aiRepository,
+       _profileRepository = profileRepository,
        super(const JobOfferDetailState());
 
   final JobOfferRepository _repository;
   final ApplicationService _applicationService;
   final CurriculumRepository _curriculumRepository;
   final AiRepository _aiRepository;
+  final ProfileRepository _profileRepository;
 
   String? _offerId;
   String? _candidateUid;
@@ -141,6 +145,7 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
     return JobOfferMatchLogic.computeMatch(
       curriculumRepository: _curriculumRepository,
       aiRepository: _aiRepository,
+      profileRepository: _profileRepository,
       candidateUid: normalizedUid,
       offer: offer,
     );
