@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/logic/onboarding_motion.dart';
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/models/onboarding_card_palette.dart';
+import 'package:opti_job_app/features/onboarding/logic/onboarding_motion.dart';
+import 'package:opti_job_app/features/onboarding/models/onboarding_card_palette.dart';
 import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/widgets/onboarding_primary_button.dart';
 
 class OnboardingSurfaceCard extends StatelessWidget {

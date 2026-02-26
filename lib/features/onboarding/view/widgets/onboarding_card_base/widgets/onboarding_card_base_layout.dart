@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/logic/onboarding_layout_logic.dart';
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/logic/onboarding_motion.dart';
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/models/onboarding_card_palette.dart';
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/models/onboarding_step_info.dart';
+import 'package:opti_job_app/features/onboarding/logic/onboarding_layout_logic.dart';
+import 'package:opti_job_app/features/onboarding/logic/onboarding_motion.dart';
+import 'package:opti_job_app/features/onboarding/models/onboarding_card_palette.dart';
+import 'package:opti_job_app/features/onboarding/models/onboarding_step_info.dart';
 import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/widgets/onboarding_background_orbs.dart';
 import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/widgets/onboarding_header_medallion.dart';
 import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/widgets/onboarding_step_progress.dart';

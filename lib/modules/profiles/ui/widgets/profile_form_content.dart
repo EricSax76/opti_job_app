@@ -5,7 +5,7 @@ import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_work_style_step.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
-import 'package:opti_job_app/modules/candidates/models/candidate_onboarding_preferences.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_onboarding_profile_basics_fields.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_form_state.dart';
 import 'package:opti_job_app/modules/profiles/logic/profile_form_logic.dart';
 import 'package:opti_job_app/modules/profiles/ui/widgets/profile_avatar.dart';
@@ -208,36 +208,27 @@ class _OnboardingProfileEditor extends StatelessWidget {
             ),
           ),
           const SizedBox(height: uiSpacing16),
-          TextFormField(
-            controller: targetRoleController,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Rol objetivo',
-              hintText: 'Ej: Flutter Developer',
+          CandidateOnboardingProfileBasicsFields(
+            targetRoleField: TextFormField(
+              controller: targetRoleController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Rol objetivo',
+                hintText: 'Ej: Flutter Developer',
+              ),
             ),
-          ),
-          const SizedBox(height: uiSpacing12),
-          TextFormField(
-            controller: preferredLocationController,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'Ubicación preferida',
-              hintText: 'Ej: Madrid o remoto',
+            preferredLocationField: TextFormField(
+              controller: preferredLocationController,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: 'Ubicación preferida',
+                hintText: 'Ej: Madrid o remoto',
+              ),
             ),
-          ),
-          const SizedBox(height: uiSpacing16),
-          _SelectionChipSection(
-            title: 'Modalidad',
-            options: CandidateOnboardingPreferences.modalityOptions,
-            selectedValue: onboardingDraft.preferredModality,
-            onSelected: onPreferredModalityChanged,
-          ),
-          const SizedBox(height: uiSpacing16),
-          _SelectionChipSection(
-            title: 'Nivel de experiencia',
-            options: CandidateOnboardingPreferences.seniorityOptions,
-            selectedValue: onboardingDraft.preferredSeniority,
-            onSelected: onPreferredSeniorityChanged,
+            preferredModality: onboardingDraft.preferredModality,
+            preferredSeniority: onboardingDraft.preferredSeniority,
+            onPreferredModalityChanged: onPreferredModalityChanged,
+            onPreferredSeniorityChanged: onPreferredSeniorityChanged,
           ),
           const SizedBox(height: uiSpacing8),
           SwitchListTile.adaptive(
@@ -264,50 +255,6 @@ class _OnboardingProfileEditor extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _SelectionChipSection extends StatelessWidget {
-  const _SelectionChipSection({
-    required this.title,
-    required this.options,
-    required this.selectedValue,
-    required this.onSelected,
-  });
-
-  final String title;
-  final List<String> options;
-  final String selectedValue;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: uiSpacing8),
-        Wrap(
-          spacing: uiSpacing8,
-          runSpacing: uiSpacing8,
-          children: options
-              .map(
-                (option) => ChoiceChip(
-                  label: Text(option),
-                  selected: selectedValue == option,
-                  onSelected: (_) => onSelected(option),
-                ),
-              )
-              .toList(growable: false),
-        ),
-      ],
     );
   }
 }

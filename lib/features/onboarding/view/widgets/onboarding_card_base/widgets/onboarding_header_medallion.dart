@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/models/onboarding_card_palette.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/features/onboarding/models/onboarding_card_palette.dart';
 
 class OnboardingHeaderMedallion extends StatelessWidget {
   const OnboardingHeaderMedallion({
@@ -32,7 +33,7 @@ class OnboardingHeaderMedallion extends StatelessWidget {
                 alpha: palette.isDark ? 0.26 : 0.08,
               ),
               offset: const Offset(0, 10),
-              blurRadius: 24,
+              blurRadius: uiSpacing24,
               spreadRadius: -10,
             ),
           ],

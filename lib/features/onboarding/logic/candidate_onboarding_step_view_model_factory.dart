@@ -6,6 +6,7 @@ import 'package:opti_job_app/features/onboarding/models/candidate_onboarding_ste
 import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_intro_step.dart';
 import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_profile_basics_step.dart';
 import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_work_style_step.dart';
+import 'package:opti_job_app/l10n/app_localizations.dart';
 
 class CandidateOnboardingStepViewModelFactory {
   const CandidateOnboardingStepViewModelFactory();
@@ -14,69 +15,63 @@ class CandidateOnboardingStepViewModelFactory {
     required CandidateOnboardingState state,
     required CandidateOnboardingCubit cubit,
     required String candidateName,
+    required AppLocalizations l10n,
   }) {
     final previousAction = state.canGoBack ? cubit.previousStep : null;
-    final backLabel = state.canGoBack ? 'Atrás' : null;
+    final backLabel = state.canGoBack ? l10n.onboardingCandidateBackCta : null;
 
     return switch (state.currentStep) {
       CandidateOnboardingStep.introWelcome => _buildIntroStep(
-        title: 'Bienvenido, $candidateName',
-        message:
-            'Te mostramos la app en menos de 2 minutos y dejamos tu perfil listo para empezar con buen matching.',
+        title: l10n.onboardingCandidateWelcomeTitle(candidateName),
+        message: l10n.onboardingCandidateWelcomeMessage,
         icon: Icons.auto_awesome_rounded,
-        headline: 'Una búsqueda de empleo guiada por datos',
-        description:
-            'Tu panel se adapta a tus objetivos para priorizar vacantes relevantes desde el primer día.',
-        highlights: const [
-          'Ofertas priorizadas según tu perfil y actividad.',
-          'Recomendaciones con señales reales de compatibilidad.',
-          'Proceso corto, sin formularios largos al inicio.',
+        headline: l10n.onboardingCandidateWelcomeHeadline,
+        description: l10n.onboardingCandidateWelcomeDescription,
+        highlights: [
+          l10n.onboardingCandidateWelcomeHighlightPrioritizedOffers,
+          l10n.onboardingCandidateWelcomeHighlightCompatibilitySignals,
+          l10n.onboardingCandidateWelcomeHighlightShortProcess,
         ],
-        primaryLabel: 'Siguiente',
+        primaryLabel: l10n.onboardingCandidateNextCta,
         onPrimaryPressed: cubit.nextStep,
         backLabel: backLabel,
         onBackPressed: previousAction,
       ),
       CandidateOnboardingStep.introSmartMatches => _buildIntroStep(
-        title: 'Matches más relevantes',
-        message:
-            'Cuanto mejor entendemos tus prioridades laborales, mejores serán las recomendaciones que recibes.',
+        title: l10n.onboardingCandidateSmartMatchesTitle,
+        message: l10n.onboardingCandidateSmartMatchesMessage,
         icon: Icons.insights_rounded,
-        headline: 'Menos ruido, más oportunidades útiles',
-        description:
-            'OptiJob combina filtros, contexto de mercado y señales de experiencia para ordenar ofertas.',
-        highlights: const [
-          'Ajuste por modalidad, ubicación y nivel de experiencia.',
-          'Ofertas similares agrupadas para decidir más rápido.',
-          'Menos tiempo filtrando, más tiempo aplicando.',
+        headline: l10n.onboardingCandidateSmartMatchesHeadline,
+        description: l10n.onboardingCandidateSmartMatchesDescription,
+        highlights: [
+          l10n.onboardingCandidateSmartMatchesHighlightFilters,
+          l10n.onboardingCandidateSmartMatchesHighlightGroupedOffers,
+          l10n.onboardingCandidateSmartMatchesHighlightLessFiltering,
         ],
-        primaryLabel: 'Siguiente',
+        primaryLabel: l10n.onboardingCandidateNextCta,
         onPrimaryPressed: cubit.nextStep,
         backLabel: backLabel,
         onBackPressed: previousAction,
       ),
       CandidateOnboardingStep.introControl => _buildIntroStep(
-        title: 'Tú controlas tu ritmo',
-        message:
-            'Solo pedimos datos esenciales ahora. El resto lo puedes completar después desde tu perfil.',
+        title: l10n.onboardingCandidateControlTitle,
+        message: l10n.onboardingCandidateControlMessage,
         icon: Icons.verified_user_outlined,
-        headline: 'Onboarding no invasivo',
-        description:
-            'Empezamos con lo mínimo útil para activar tu cuenta con calidad de matching.',
-        highlights: const [
-          'Preguntas de estilo de trabajo opcionales.',
-          'Puedes saltar secciones y volver más tarde.',
-          'Tus preferencias te ayudan a encontrar mejor encaje cultural.',
+        headline: l10n.onboardingCandidateControlHeadline,
+        description: l10n.onboardingCandidateControlDescription,
+        highlights: [
+          l10n.onboardingCandidateControlHighlightOptionalQuestions,
+          l10n.onboardingCandidateControlHighlightSkipAndReturn,
+          l10n.onboardingCandidateControlHighlightCulturalFit,
         ],
-        primaryLabel: 'Continuar',
+        primaryLabel: l10n.onboardingCandidateContinueCta,
         onPrimaryPressed: cubit.nextStep,
         backLabel: backLabel,
         onBackPressed: previousAction,
       ),
       CandidateOnboardingStep.workStyle => _buildBaseStep(
-        title: 'Estilo de trabajo (opcional)',
-        message:
-            'Estas preguntas son breves y no invasivas. Nos ayudan a recomendar equipos y dinámicas compatibles.',
+        title: l10n.onboardingCandidateWorkStyleTitle,
+        message: l10n.onboardingCandidateWorkStyleMessage,
         body: CandidateOnboardingWorkStyleStep(
           startOfDayPreference: state.startOfDayPreference,
           feedbackPreference: state.feedbackPreference,
@@ -87,30 +82,32 @@ class CandidateOnboardingStepViewModelFactory {
           onStructureChanged: cubit.updateStructurePreference,
           onTaskPaceChanged: cubit.updateTaskPacePreference,
         ),
-        primaryLabel: 'Continuar',
+        primaryLabel: l10n.onboardingCandidateContinueCta,
         primaryIcon: Icons.arrow_forward_rounded,
         onPrimaryPressed: cubit.nextStep,
-        secondaryLabel: 'Saltar por ahora',
+        secondaryLabel: l10n.onboardingCandidateSkipForNowCta,
         onSecondaryPressed: cubit.skipCurrentStep,
         backLabel: backLabel,
         onBackPressed: previousAction,
       ),
       CandidateOnboardingStep.profileBasics => _buildBaseStep(
-        title: 'Datos mínimos para arrancar',
-        message:
-            'Con esta información configuramos tus primeras sugerencias. Luego podrás afinar todo desde ajustes.',
+        title: l10n.onboardingCandidateProfileBasicsTitle,
+        message: l10n.onboardingCandidateProfileBasicsMessage,
         body: CandidateOnboardingProfileBasicsStep(
           targetRole: state.targetRole,
           preferredLocation: state.preferredLocation,
           preferredModality: state.preferredModality,
           preferredSeniority: state.preferredSeniority,
-          validationMessage: state.validationMessage,
+          validationMessage: _resolveValidationMessage(
+            validationMessage: state.validationMessage,
+            l10n: l10n,
+          ),
           onTargetRoleChanged: cubit.updateTargetRole,
           onPreferredLocationChanged: cubit.updatePreferredLocation,
           onPreferredModalityChanged: cubit.updatePreferredModality,
           onPreferredSeniorityChanged: cubit.updatePreferredSeniority,
         ),
-        primaryLabel: 'Finalizar onboarding',
+        primaryLabel: l10n.onboardingCandidateFinishCta,
         primaryIcon: Icons.check_circle_outline_rounded,
         onPrimaryPressed: cubit.completeOnboarding,
         primaryEnabled: state.hasMinimumProfileData,
@@ -118,6 +115,18 @@ class CandidateOnboardingStepViewModelFactory {
         onBackPressed: previousAction,
       ),
     };
+  }
+
+  String? _resolveValidationMessage({
+    required String? validationMessage,
+    required AppLocalizations l10n,
+  }) {
+    if (validationMessage == null) return null;
+    if (validationMessage ==
+        CandidateOnboardingCubit.minimumProfileDataValidationKey) {
+      return l10n.onboardingCandidateValidationMinimumProfileData;
+    }
+    return validationMessage;
   }
 
   CandidateOnboardingStepViewModel _buildIntroStep({

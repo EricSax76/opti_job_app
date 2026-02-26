@@ -143,6 +143,141 @@
     "@onboardingDefaultCompanyName": {
         "description": "Nombre por defecto para empresas en onboarding."
     },
+    "onboardingCandidateStepProgressLabel": "Paso {current} de {total}",
+    "@onboardingCandidateStepProgressLabel": {
+        "description": "Etiqueta de progreso de pasos en onboarding de candidato.",
+        "placeholders": {
+            "current": {},
+            "total": {}
+        }
+    },
+    "onboardingCandidateBackCta": "Atrás",
+    "@onboardingCandidateBackCta": {
+        "description": "CTA para volver al paso anterior en onboarding de candidato."
+    },
+    "onboardingCandidateNextCta": "Siguiente",
+    "@onboardingCandidateNextCta": {
+        "description": "CTA para avanzar en pasos introductorios de onboarding de candidato."
+    },
+    "onboardingCandidateContinueCta": "Continuar",
+    "@onboardingCandidateContinueCta": {
+        "description": "CTA para continuar en onboarding de candidato."
+    },
+    "onboardingCandidateSkipForNowCta": "Saltar por ahora",
+    "@onboardingCandidateSkipForNowCta": {
+        "description": "CTA para omitir temporalmente una sección opcional de onboarding de candidato."
+    },
+    "onboardingCandidateFinishCta": "Finalizar onboarding",
+    "@onboardingCandidateFinishCta": {
+        "description": "CTA para finalizar onboarding de candidato."
+    },
+    "onboardingCandidateWelcomeTitle": "Bienvenido, {name}",
+    "@onboardingCandidateWelcomeTitle": {
+        "description": "Título del primer paso de onboarding de candidato.",
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "onboardingCandidateWelcomeMessage": "Te mostramos la app en menos de 2 minutos y dejamos tu perfil listo para empezar con buen matching.",
+    "@onboardingCandidateWelcomeMessage": {
+        "description": "Mensaje del primer paso de onboarding de candidato."
+    },
+    "onboardingCandidateWelcomeHeadline": "Una búsqueda de empleo guiada por datos",
+    "@onboardingCandidateWelcomeHeadline": {
+        "description": "Titular del primer paso de onboarding de candidato."
+    },
+    "onboardingCandidateWelcomeDescription": "Tu panel se adapta a tus objetivos para priorizar vacantes relevantes desde el primer día.",
+    "@onboardingCandidateWelcomeDescription": {
+        "description": "Descripción del primer paso de onboarding de candidato."
+    },
+    "onboardingCandidateWelcomeHighlightPrioritizedOffers": "Ofertas priorizadas según tu perfil y actividad.",
+    "@onboardingCandidateWelcomeHighlightPrioritizedOffers": {
+        "description": "Primer highlight del paso de bienvenida en onboarding de candidato."
+    },
+    "onboardingCandidateWelcomeHighlightCompatibilitySignals": "Recomendaciones con señales reales de compatibilidad.",
+    "@onboardingCandidateWelcomeHighlightCompatibilitySignals": {
+        "description": "Segundo highlight del paso de bienvenida en onboarding de candidato."
+    },
+    "onboardingCandidateWelcomeHighlightShortProcess": "Proceso corto, sin formularios largos al inicio.",
+    "@onboardingCandidateWelcomeHighlightShortProcess": {
+        "description": "Tercer highlight del paso de bienvenida en onboarding de candidato."
+    },
+    "onboardingCandidateSmartMatchesTitle": "Matches más relevantes",
+    "@onboardingCandidateSmartMatchesTitle": {
+        "description": "Título del paso de matches en onboarding de candidato."
+    },
+    "onboardingCandidateSmartMatchesMessage": "Cuanto mejor entendemos tus prioridades laborales, mejores serán las recomendaciones que recibes.",
+    "@onboardingCandidateSmartMatchesMessage": {
+        "description": "Mensaje del paso de matches en onboarding de candidato."
+    },
+    "onboardingCandidateSmartMatchesHeadline": "Menos ruido, más oportunidades útiles",
+    "@onboardingCandidateSmartMatchesHeadline": {
+        "description": "Titular del paso de matches en onboarding de candidato."
+    },
+    "onboardingCandidateSmartMatchesDescription": "OptiJob combina filtros, contexto de mercado y señales de experiencia para ordenar ofertas.",
+    "@onboardingCandidateSmartMatchesDescription": {
+        "description": "Descripción del paso de matches en onboarding de candidato."
+    },
+    "onboardingCandidateSmartMatchesHighlightFilters": "Ajuste por modalidad, ubicación y nivel de experiencia.",
+    "@onboardingCandidateSmartMatchesHighlightFilters": {
+        "description": "Primer highlight del paso de matches en onboarding de candidato."
+    },
+    "onboardingCandidateSmartMatchesHighlightGroupedOffers": "Ofertas similares agrupadas para decidir más rápido.",
+    "@onboardingCandidateSmartMatchesHighlightGroupedOffers": {
+        "description": "Segundo highlight del paso de matches en onboarding de candidato."
+    },
+    "onboardingCandidateSmartMatchesHighlightLessFiltering": "Menos tiempo filtrando, más tiempo aplicando.",
+    "@onboardingCandidateSmartMatchesHighlightLessFiltering": {
+        "description": "Tercer highlight del paso de matches en onboarding de candidato."
+    },
+    "onboardingCandidateControlTitle": "Tú controlas tu ritmo",
+    "@onboardingCandidateControlTitle": {
+        "description": "Título del paso de control en onboarding de candidato."
+    },
+    "onboardingCandidateControlMessage": "Solo pedimos datos esenciales ahora. El resto lo puedes completar después desde tu perfil.",
+    "@onboardingCandidateControlMessage": {
+        "description": "Mensaje del paso de control en onboarding de candidato."
+    },
+    "onboardingCandidateControlHeadline": "Onboarding no invasivo",
+    "@onboardingCandidateControlHeadline": {
+        "description": "Titular del paso de control en onboarding de candidato."
+    },
+    "onboardingCandidateControlDescription": "Empezamos con lo mínimo útil para activar tu cuenta con calidad de matching.",
+    "@onboardingCandidateControlDescription": {
+        "description": "Descripción del paso de control en onboarding de candidato."
+    },
+    "onboardingCandidateControlHighlightOptionalQuestions": "Preguntas de estilo de trabajo opcionales.",
+    "@onboardingCandidateControlHighlightOptionalQuestions": {
+        "description": "Primer highlight del paso de control en onboarding de candidato."
+    },
+    "onboardingCandidateControlHighlightSkipAndReturn": "Puedes saltar secciones y volver más tarde.",
+    "@onboardingCandidateControlHighlightSkipAndReturn": {
+        "description": "Segundo highlight del paso de control en onboarding de candidato."
+    },
+    "onboardingCandidateControlHighlightCulturalFit": "Tus preferencias te ayudan a encontrar mejor encaje cultural.",
+    "@onboardingCandidateControlHighlightCulturalFit": {
+        "description": "Tercer highlight del paso de control en onboarding de candidato."
+    },
+    "onboardingCandidateWorkStyleTitle": "Estilo de trabajo (opcional)",
+    "@onboardingCandidateWorkStyleTitle": {
+        "description": "Título del paso opcional de estilo de trabajo en onboarding de candidato."
+    },
+    "onboardingCandidateWorkStyleMessage": "Estas preguntas son breves y no invasivas. Nos ayudan a recomendar equipos y dinámicas compatibles.",
+    "@onboardingCandidateWorkStyleMessage": {
+        "description": "Mensaje del paso opcional de estilo de trabajo en onboarding de candidato."
+    },
+    "onboardingCandidateProfileBasicsTitle": "Datos mínimos para arrancar",
+    "@onboardingCandidateProfileBasicsTitle": {
+        "description": "Título del paso de datos básicos en onboarding de candidato."
+    },
+    "onboardingCandidateProfileBasicsMessage": "Con esta información configuramos tus primeras sugerencias. Luego podrás afinar todo desde ajustes.",
+    "@onboardingCandidateProfileBasicsMessage": {
+        "description": "Mensaje del paso de datos básicos en onboarding de candidato."
+    },
+    "onboardingCandidateValidationMinimumProfileData": "Completa rol objetivo, modalidad, ubicación y seniority para finalizar.",
+    "@onboardingCandidateValidationMinimumProfileData": {
+        "description": "Mensaje de validación cuando faltan datos mínimos para finalizar onboarding de candidato."
+    },
     "navCandidate": "Candidato",
     "@navCandidate": {
         "description": "Etiqueta de navegación para candidatos."

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/models/onboarding_card_palette.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/features/onboarding/models/onboarding_card_palette.dart';
 
 class OnboardingBackgroundOrbs extends StatelessWidget {
   const OnboardingBackgroundOrbs({super.key, required this.palette});
@@ -13,12 +14,12 @@ class OnboardingBackgroundOrbs extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            top: -120,
-            right: -80,
+            top: -(uiSpacing24 * 5),
+            right: -(uiSpacing16 * 5),
             child: _Orb(size: 280, color: palette.topOrbColor),
           ),
           Positioned(
-            top: 240,
+            top: uiSpacing24 * 10,
             left: -95,
             child: _Orb(size: 220, color: palette.sideOrbColor),
           ),

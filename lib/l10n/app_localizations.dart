@@ -304,6 +304,198 @@ abstract class AppLocalizations {
   /// **'Empresa'**
   String get onboardingDefaultCompanyName;
 
+  /// Etiqueta de progreso de pasos en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Paso {current} de {total}'**
+  String onboardingCandidateStepProgressLabel(Object current, Object total);
+
+  /// CTA para volver al paso anterior en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Atrás'**
+  String get onboardingCandidateBackCta;
+
+  /// CTA para avanzar en pasos introductorios de onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiente'**
+  String get onboardingCandidateNextCta;
+
+  /// CTA para continuar en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get onboardingCandidateContinueCta;
+
+  /// CTA para omitir temporalmente una sección opcional de onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Saltar por ahora'**
+  String get onboardingCandidateSkipForNowCta;
+
+  /// CTA para finalizar onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Finalizar onboarding'**
+  String get onboardingCandidateFinishCta;
+
+  /// Título del primer paso de onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Bienvenido, {name}'**
+  String onboardingCandidateWelcomeTitle(Object name);
+
+  /// Mensaje del primer paso de onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Te mostramos la app en menos de 2 minutos y dejamos tu perfil listo para empezar con buen matching.'**
+  String get onboardingCandidateWelcomeMessage;
+
+  /// Titular del primer paso de onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Una búsqueda de empleo guiada por datos'**
+  String get onboardingCandidateWelcomeHeadline;
+
+  /// Descripción del primer paso de onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu panel se adapta a tus objetivos para priorizar vacantes relevantes desde el primer día.'**
+  String get onboardingCandidateWelcomeDescription;
+
+  /// Primer highlight del paso de bienvenida en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Ofertas priorizadas según tu perfil y actividad.'**
+  String get onboardingCandidateWelcomeHighlightPrioritizedOffers;
+
+  /// Segundo highlight del paso de bienvenida en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Recomendaciones con señales reales de compatibilidad.'**
+  String get onboardingCandidateWelcomeHighlightCompatibilitySignals;
+
+  /// Tercer highlight del paso de bienvenida en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Proceso corto, sin formularios largos al inicio.'**
+  String get onboardingCandidateWelcomeHighlightShortProcess;
+
+  /// Título del paso de matches en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Matches más relevantes'**
+  String get onboardingCandidateSmartMatchesTitle;
+
+  /// Mensaje del paso de matches en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuanto mejor entendemos tus prioridades laborales, mejores serán las recomendaciones que recibes.'**
+  String get onboardingCandidateSmartMatchesMessage;
+
+  /// Titular del paso de matches en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Menos ruido, más oportunidades útiles'**
+  String get onboardingCandidateSmartMatchesHeadline;
+
+  /// Descripción del paso de matches en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'OptiJob combina filtros, contexto de mercado y señales de experiencia para ordenar ofertas.'**
+  String get onboardingCandidateSmartMatchesDescription;
+
+  /// Primer highlight del paso de matches en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajuste por modalidad, ubicación y nivel de experiencia.'**
+  String get onboardingCandidateSmartMatchesHighlightFilters;
+
+  /// Segundo highlight del paso de matches en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Ofertas similares agrupadas para decidir más rápido.'**
+  String get onboardingCandidateSmartMatchesHighlightGroupedOffers;
+
+  /// Tercer highlight del paso de matches en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Menos tiempo filtrando, más tiempo aplicando.'**
+  String get onboardingCandidateSmartMatchesHighlightLessFiltering;
+
+  /// Título del paso de control en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Tú controlas tu ritmo'**
+  String get onboardingCandidateControlTitle;
+
+  /// Mensaje del paso de control en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo pedimos datos esenciales ahora. El resto lo puedes completar después desde tu perfil.'**
+  String get onboardingCandidateControlMessage;
+
+  /// Titular del paso de control en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Onboarding no invasivo'**
+  String get onboardingCandidateControlHeadline;
+
+  /// Descripción del paso de control en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezamos con lo mínimo útil para activar tu cuenta con calidad de matching.'**
+  String get onboardingCandidateControlDescription;
+
+  /// Primer highlight del paso de control en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Preguntas de estilo de trabajo opcionales.'**
+  String get onboardingCandidateControlHighlightOptionalQuestions;
+
+  /// Segundo highlight del paso de control en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Puedes saltar secciones y volver más tarde.'**
+  String get onboardingCandidateControlHighlightSkipAndReturn;
+
+  /// Tercer highlight del paso de control en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus preferencias te ayudan a encontrar mejor encaje cultural.'**
+  String get onboardingCandidateControlHighlightCulturalFit;
+
+  /// Título del paso opcional de estilo de trabajo en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Estilo de trabajo (opcional)'**
+  String get onboardingCandidateWorkStyleTitle;
+
+  /// Mensaje del paso opcional de estilo de trabajo en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Estas preguntas son breves y no invasivas. Nos ayudan a recomendar equipos y dinámicas compatibles.'**
+  String get onboardingCandidateWorkStyleMessage;
+
+  /// Título del paso de datos básicos en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos mínimos para arrancar'**
+  String get onboardingCandidateProfileBasicsTitle;
+
+  /// Mensaje del paso de datos básicos en onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Con esta información configuramos tus primeras sugerencias. Luego podrás afinar todo desde ajustes.'**
+  String get onboardingCandidateProfileBasicsMessage;
+
+  /// Mensaje de validación cuando faltan datos mínimos para finalizar onboarding de candidato.
+  ///
+  /// In es, this message translates to:
+  /// **'Completa rol objetivo, modalidad, ubicación y seniority para finalizar.'**
+  String get onboardingCandidateValidationMinimumProfileData;
+
   /// Etiqueta de navegación para candidatos.
   ///
   /// In es, this message translates to:

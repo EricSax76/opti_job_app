@@ -5,6 +5,9 @@ import 'package:opti_job_app/features/onboarding/models/candidate_onboarding_ste
 class CandidateOnboardingCubit extends Cubit<CandidateOnboardingState> {
   CandidateOnboardingCubit() : super(const CandidateOnboardingState());
 
+  static const String minimumProfileDataValidationKey =
+      'onboarding_candidate_validation_minimum_profile_data';
+
   void nextStep() {
     _runIfActive(() {
       if (state.currentStep == CandidateOnboardingStep.profileBasics) {
@@ -26,24 +29,50 @@ class CandidateOnboardingCubit extends Cubit<CandidateOnboardingState> {
   void skipCurrentStep() {
     _runIfActive(() {
       if (!state.canSkipCurrentStep) return;
-      _moveToStep(state.currentStep.next, markWorkStyleAsSkipped: true);
+      final nextStep = state.currentStep.next;
+      if (nextStep == null) return;
+      emit(
+        state.copyWith(
+          currentStep: nextStep,
+          workStyleSkipped: true,
+          startOfDayPreference: '',
+          feedbackPreference: '',
+          structurePreference: '',
+          taskPacePreference: '',
+          clearValidation: true,
+        ),
+      );
     });
   }
 
   void updateStartOfDayPreference(String value) {
-    _updateField((current) => current.copyWith(startOfDayPreference: value));
+    _updateField(
+      (current) => current.copyWith(
+        startOfDayPreference: value,
+        workStyleSkipped: false,
+      ),
+    );
   }
 
   void updateFeedbackPreference(String value) {
-    _updateField((current) => current.copyWith(feedbackPreference: value));
+    _updateField(
+      (current) =>
+          current.copyWith(feedbackPreference: value, workStyleSkipped: false),
+    );
   }
 
   void updateStructurePreference(String value) {
-    _updateField((current) => current.copyWith(structurePreference: value));
+    _updateField(
+      (current) =>
+          current.copyWith(structurePreference: value, workStyleSkipped: false),
+    );
   }
 
   void updateTaskPacePreference(String value) {
-    _updateField((current) => current.copyWith(taskPacePreference: value));
+    _updateField(
+      (current) =>
+          current.copyWith(taskPacePreference: value, workStyleSkipped: false),
+    );
   }
 
   void updateTargetRole(String value) {
@@ -66,10 +95,7 @@ class CandidateOnboardingCubit extends Cubit<CandidateOnboardingState> {
     _runIfActive(() {
       if (!state.hasMinimumProfileData) {
         emit(
-          state.copyWith(
-            validationMessage:
-                'Completa rol objetivo, modalidad, ubicación y seniority para finalizar.',
-          ),
+          state.copyWith(validationMessage: minimumProfileDataValidationKey),
         );
         return;
       }
@@ -90,18 +116,9 @@ class CandidateOnboardingCubit extends Cubit<CandidateOnboardingState> {
     action();
   }
 
-  void _moveToStep(
-    CandidateOnboardingStep? targetStep, {
-    bool markWorkStyleAsSkipped = false,
-  }) {
+  void _moveToStep(CandidateOnboardingStep? targetStep) {
     if (targetStep == null) return;
-    emit(
-      state.copyWith(
-        currentStep: targetStep,
-        workStyleSkipped: markWorkStyleAsSkipped ? true : null,
-        clearValidation: true,
-      ),
-    );
+    emit(state.copyWith(currentStep: targetStep, clearValidation: true));
   }
 
   void _updateField(

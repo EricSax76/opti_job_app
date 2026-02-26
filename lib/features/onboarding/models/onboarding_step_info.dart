@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+
 class OnboardingStepInfo {
   const OnboardingStepInfo({
     required this.currentStep,
@@ -11,7 +13,8 @@ class OnboardingStepInfo {
 
   static OnboardingStepInfo? resolve({int? stepIndex, int? totalSteps}) {
     if (stepIndex == null || totalSteps == null) return null;
-    if (totalSteps < 2 || stepIndex < 1) return null;
+    final minimumTrackableSteps = uiSpacing8 ~/ uiSpacing4;
+    if (totalSteps < minimumTrackableSteps || stepIndex < 1) return null;
 
     final boundedStep = math.min(stepIndex, totalSteps);
     return OnboardingStepInfo(currentStep: boundedStep, totalSteps: totalSteps);

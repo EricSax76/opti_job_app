@@ -53,6 +53,39 @@ void main() {
       expect(cubit.state.workStyleSkipped, isTrue);
     });
 
+    test('skipCurrentStep clears any captured work style preferences', () {
+      _goToWorkStyle(cubit);
+
+      cubit
+        ..updateStartOfDayPreference('Foco individual')
+        ..updateFeedbackPreference('Feedback continuo')
+        ..updateStructurePreference('Autonomía amplia')
+        ..updateTaskPacePreference('Tareas variadas y cambios');
+
+      cubit.skipCurrentStep();
+
+      expect(cubit.state.currentStep, CandidateOnboardingStep.profileBasics);
+      expect(cubit.state.workStyleSkipped, isTrue);
+      expect(cubit.state.startOfDayPreference, isEmpty);
+      expect(cubit.state.feedbackPreference, isEmpty);
+      expect(cubit.state.structurePreference, isEmpty);
+      expect(cubit.state.taskPacePreference, isEmpty);
+    });
+
+    test('answering work style after skip clears skipped flag', () {
+      _goToWorkStyle(cubit);
+      cubit.skipCurrentStep();
+      expect(cubit.state.workStyleSkipped, isTrue);
+
+      cubit.previousStep();
+      expect(cubit.state.currentStep, CandidateOnboardingStep.workStyle);
+
+      cubit.updateStartOfDayPreference('Foco individual');
+
+      expect(cubit.state.workStyleSkipped, isFalse);
+      expect(cubit.state.startOfDayPreference, 'Foco individual');
+    });
+
     test('cannot complete profile step without minimum fields', () {
       _goToProfileBasics(cubit);
       expect(cubit.state.currentStep, CandidateOnboardingStep.profileBasics);
@@ -98,6 +131,13 @@ void main() {
 void _goToProfileBasics(CandidateOnboardingCubit cubit) {
   cubit
     ..nextStep()
+    ..nextStep()
+    ..nextStep()
+    ..nextStep();
+}
+
+void _goToWorkStyle(CandidateOnboardingCubit cubit) {
+  cubit
     ..nextStep()
     ..nextStep()
     ..nextStep();

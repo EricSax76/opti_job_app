@@ -129,6 +129,128 @@ class AppLocalizationsEs extends AppLocalizations {
   String get onboardingDefaultCompanyName => 'Empresa';
 
   @override
+  String onboardingCandidateStepProgressLabel(Object current, Object total) {
+    return 'Paso $current de $total';
+  }
+
+  @override
+  String get onboardingCandidateBackCta => 'Atrás';
+
+  @override
+  String get onboardingCandidateNextCta => 'Siguiente';
+
+  @override
+  String get onboardingCandidateContinueCta => 'Continuar';
+
+  @override
+  String get onboardingCandidateSkipForNowCta => 'Saltar por ahora';
+
+  @override
+  String get onboardingCandidateFinishCta => 'Finalizar onboarding';
+
+  @override
+  String onboardingCandidateWelcomeTitle(Object name) {
+    return 'Bienvenido, $name';
+  }
+
+  @override
+  String get onboardingCandidateWelcomeMessage =>
+      'Te mostramos la app en menos de 2 minutos y dejamos tu perfil listo para empezar con buen matching.';
+
+  @override
+  String get onboardingCandidateWelcomeHeadline =>
+      'Una búsqueda de empleo guiada por datos';
+
+  @override
+  String get onboardingCandidateWelcomeDescription =>
+      'Tu panel se adapta a tus objetivos para priorizar vacantes relevantes desde el primer día.';
+
+  @override
+  String get onboardingCandidateWelcomeHighlightPrioritizedOffers =>
+      'Ofertas priorizadas según tu perfil y actividad.';
+
+  @override
+  String get onboardingCandidateWelcomeHighlightCompatibilitySignals =>
+      'Recomendaciones con señales reales de compatibilidad.';
+
+  @override
+  String get onboardingCandidateWelcomeHighlightShortProcess =>
+      'Proceso corto, sin formularios largos al inicio.';
+
+  @override
+  String get onboardingCandidateSmartMatchesTitle => 'Matches más relevantes';
+
+  @override
+  String get onboardingCandidateSmartMatchesMessage =>
+      'Cuanto mejor entendemos tus prioridades laborales, mejores serán las recomendaciones que recibes.';
+
+  @override
+  String get onboardingCandidateSmartMatchesHeadline =>
+      'Menos ruido, más oportunidades útiles';
+
+  @override
+  String get onboardingCandidateSmartMatchesDescription =>
+      'OptiJob combina filtros, contexto de mercado y señales de experiencia para ordenar ofertas.';
+
+  @override
+  String get onboardingCandidateSmartMatchesHighlightFilters =>
+      'Ajuste por modalidad, ubicación y nivel de experiencia.';
+
+  @override
+  String get onboardingCandidateSmartMatchesHighlightGroupedOffers =>
+      'Ofertas similares agrupadas para decidir más rápido.';
+
+  @override
+  String get onboardingCandidateSmartMatchesHighlightLessFiltering =>
+      'Menos tiempo filtrando, más tiempo aplicando.';
+
+  @override
+  String get onboardingCandidateControlTitle => 'Tú controlas tu ritmo';
+
+  @override
+  String get onboardingCandidateControlMessage =>
+      'Solo pedimos datos esenciales ahora. El resto lo puedes completar después desde tu perfil.';
+
+  @override
+  String get onboardingCandidateControlHeadline => 'Onboarding no invasivo';
+
+  @override
+  String get onboardingCandidateControlDescription =>
+      'Empezamos con lo mínimo útil para activar tu cuenta con calidad de matching.';
+
+  @override
+  String get onboardingCandidateControlHighlightOptionalQuestions =>
+      'Preguntas de estilo de trabajo opcionales.';
+
+  @override
+  String get onboardingCandidateControlHighlightSkipAndReturn =>
+      'Puedes saltar secciones y volver más tarde.';
+
+  @override
+  String get onboardingCandidateControlHighlightCulturalFit =>
+      'Tus preferencias te ayudan a encontrar mejor encaje cultural.';
+
+  @override
+  String get onboardingCandidateWorkStyleTitle =>
+      'Estilo de trabajo (opcional)';
+
+  @override
+  String get onboardingCandidateWorkStyleMessage =>
+      'Estas preguntas son breves y no invasivas. Nos ayudan a recomendar equipos y dinámicas compatibles.';
+
+  @override
+  String get onboardingCandidateProfileBasicsTitle =>
+      'Datos mínimos para arrancar';
+
+  @override
+  String get onboardingCandidateProfileBasicsMessage =>
+      'Con esta información configuramos tus primeras sugerencias. Luego podrás afinar todo desde ajustes.';
+
+  @override
+  String get onboardingCandidateValidationMinimumProfileData =>
+      'Completa rol objetivo, modalidad, ubicación y seniority para finalizar.';
+
+  @override
   String get navCandidate => 'Candidato';
 
   @override

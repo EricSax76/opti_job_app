@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/job_offer_filter_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/models/job_offer_filter_options.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_field_decorators.dart';
@@ -21,6 +22,7 @@ class JobOfferFilterJobSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    assert(uiBreakpointMobile > 0);
     final filters = state.filters;
 
     return Column(
