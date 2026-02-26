@@ -112,11 +112,12 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
     );
   }
 
-  Future<void> analyzeCvFile(Uint8List bytes, String fileName) async {
+  Future<bool> analyzeCvFile(Uint8List bytes, String fileName) async {
     emit(state.copyWith(isAnalyzing: true, clearNotice: true));
 
     try {
       final result = await _analysisService.analyzeCvFile(bytes, fileName);
+      final hasExtractedData = result.hasExtractedData;
 
       if (result.summary.isNotEmpty) summaryController.text = result.summary;
       if (result.phone.isNotEmpty) phoneController.text = result.phone;
@@ -131,10 +132,15 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
       emit(
         state.copyWith(
           isAnalyzing: false,
-          notice: CurriculumFormNotice.success,
-          noticeMessage: 'Datos extraídos correctamente.',
+          notice: hasExtractedData
+              ? CurriculumFormNotice.success
+              : CurriculumFormNotice.error,
+          noticeMessage: hasExtractedData
+              ? 'Datos extraídos correctamente.'
+              : 'No se detectaron datos del CV para completar automáticamente.',
         ),
       );
+      return hasExtractedData;
     } catch (e) {
       emit(
         state.copyWith(
@@ -143,6 +149,7 @@ class CurriculumFormCubit extends Cubit<CurriculumFormState> {
           noticeMessage: e.toString(),
         ),
       );
+      return false;
     }
   }
 

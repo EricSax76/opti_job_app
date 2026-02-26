@@ -170,7 +170,9 @@ class CoreShellAppBar extends StatelessWidget implements PreferredSizeWidget {
         return baseStyle?.copyWith(
           fontWeight: FontWeight.w800,
           letterSpacing: 1.6,
-          color: colorScheme.primary,
+          color: theme.brightness == Brightness.dark
+              ? colorScheme.onSurface
+              : colorScheme.primary,
         );
       case CoreShellVariant.immersive:
         return baseStyle?.copyWith(

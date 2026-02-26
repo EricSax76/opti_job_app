@@ -71,9 +71,11 @@ class OnboardingCardBaseLayout extends StatelessWidget {
         final horizontalPadding = constraints.maxWidth < uiBreakpointMobile
             ? uiSpacing20
             : uiSpacing24;
-        final topGap = OnboardingLayoutLogic.resolveTopGap(
-          availableHeight: availableHeight,
-        );
+        final topGap = showHeaderMedallion
+            ? OnboardingLayoutLogic.resolveTopGap(
+                availableHeight: availableHeight,
+              )
+            : 0.0;
 
         Widget? medallion;
         if (showHeaderMedallion) {

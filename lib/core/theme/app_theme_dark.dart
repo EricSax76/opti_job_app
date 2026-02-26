@@ -5,19 +5,24 @@ ThemeData buildDarkTheme() {
   final base = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: uiAccent,
-      brightness: Brightness.dark,
-    ).copyWith(
-      surface: uiDarkSurface,
-      surfaceContainerHighest: uiDarkSurfaceLight,
-      onSurface: uiDarkInk,
-      onSurfaceVariant: uiDarkMuted,
-      primary: uiAccent,
-      secondary: uiAccent,
-      error: uiError,
-      outline: uiDarkBorder,
-    ),
+    colorScheme:
+        ColorScheme.fromSeed(
+          seedColor: uiDarkPrimary,
+          brightness: Brightness.dark,
+        ).copyWith(
+          surface: uiDarkSurface,
+          surfaceContainerHighest: uiDarkSurfaceLight,
+          onSurface: uiDarkInk,
+          onSurfaceVariant: uiDarkMuted,
+          primary: uiDarkPrimary,
+          secondary: uiDarkPrimary,
+          primaryContainer: uiDarkPrimaryContainer,
+          onPrimaryContainer: uiDarkOnPrimaryContainer,
+          secondaryContainer: uiDarkSecondaryContainer,
+          onSecondaryContainer: uiDarkOnSecondaryContainer,
+          error: uiError,
+          outline: uiDarkBorder,
+        ),
   );
 
   return base.copyWith(
@@ -37,7 +42,7 @@ ThemeData buildDarkTheme() {
         vertical: uiSpacing16,
       ),
       labelStyle: const TextStyle(color: uiDarkMuted, fontSize: 15),
-      floatingLabelStyle: const TextStyle(color: uiAccent, fontSize: 14),
+      floatingLabelStyle: const TextStyle(color: uiDarkPrimary, fontSize: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(uiFieldRadius),
         borderSide: const BorderSide(color: uiDarkBorder),
@@ -48,7 +53,7 @@ ThemeData buildDarkTheme() {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(uiFieldRadius),
-        borderSide: const BorderSide(color: uiAccent, width: 2),
+        borderSide: const BorderSide(color: uiDarkPrimary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(uiFieldRadius),
@@ -61,7 +66,7 @@ ThemeData buildDarkTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: uiAccent,
+        backgroundColor: uiDarkPrimary,
         foregroundColor: Colors.white,
         minimumSize: const Size(64, 52),
         shape: RoundedRectangleBorder(
@@ -71,10 +76,7 @@ ThemeData buildDarkTheme() {
           horizontal: uiSpacing24,
           vertical: uiSpacing16,
         ),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -89,22 +91,16 @@ ThemeData buildDarkTheme() {
           horizontal: uiSpacing24,
           vertical: uiSpacing16,
         ),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: uiAccent,
+        foregroundColor: uiDarkPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(uiFieldRadius),
         ),
-        textStyle: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
     ),
     textTheme: base.textTheme.copyWith(

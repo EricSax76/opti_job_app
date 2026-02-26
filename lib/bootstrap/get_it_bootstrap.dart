@@ -172,9 +172,14 @@ FirebaseAI _createFirebaseAI(FirebaseAuth auth) {
     'FIREBASE_AI_BACKEND',
     defaultValue: 'vertex',
   ); // 'vertex' | 'google'
+  const useAppCheck = bool.fromEnvironment(
+    'USE_FIREBASE_APP_CHECK',
+    defaultValue: false,
+  );
+  final appCheck = useAppCheck ? FirebaseAppCheck.instance : null;
 
   if (backend == 'google') {
-    return FirebaseAI.googleAI(auth: auth, appCheck: FirebaseAppCheck.instance);
+    return FirebaseAI.googleAI(auth: auth, appCheck: appCheck);
   }
 
   const location = String.fromEnvironment(
@@ -184,6 +189,6 @@ FirebaseAI _createFirebaseAI(FirebaseAuth auth) {
   return FirebaseAI.vertexAI(
     auth: auth,
     location: location,
-    appCheck: FirebaseAppCheck.instance,
+    appCheck: appCheck,
   );
 }

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
@@ -195,6 +196,13 @@ class AuthService {
 
   AuthException mapFirebaseException(Object e) {
     if (e is FirebaseAuthException) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AuthService] FirebaseAuthException code=${e.code} '
+          'message=${e.message}',
+        );
+      }
+
       switch (e.code) {
         case 'invalid-email':
           return InvalidEmailException();
@@ -202,19 +210,88 @@ class AuthService {
           return UserNotFoundException();
         case 'wrong-password':
           return WrongPasswordException();
+        case 'invalid-credential':
+        case 'invalid-login-credentials':
+          return AuthException('Correo o contraseña incorrectos.');
+        case 'user-disabled':
+          return AuthException('Tu cuenta está deshabilitada.');
+        case 'operation-not-allowed':
+          return AuthException(
+            'El login por correo/contraseña no está habilitado en Firebase.',
+          );
+        case 'invalid-api-key':
+        case 'app-not-authorized':
+          return AuthException(
+            'La configuración de Firebase de esta app no es válida para este entorno.',
+          );
+        case 'firebase-app-check-token-is-invalid':
+        case 'app-check-token-is-invalid':
+          return AuthException(
+            'App Check está rechazando el token web. '
+            'Revisa la clave reCAPTCHA y los dominios autorizados.',
+          );
         case 'too-many-requests':
           return TooManyRequestsException();
         case 'network-request-failed':
           return NetworkException();
         default:
-          return AuthException(e.message ?? 'Error de autenticación');
+          return AuthException(
+            _normalizeFirebaseAuthMessage(e.message) ??
+                'No se pudo iniciar sesión. Intenta nuevamente.',
+          );
       }
     }
     if (e is FirebaseException) {
+      if (kDebugMode) {
+        debugPrint(
+          '[AuthService] FirebaseException plugin=${e.plugin} code=${e.code} '
+          'message=${e.message}',
+        );
+      }
+
+      final code = e.code.toLowerCase();
+      final message = (e.message ?? '').toLowerCase();
+      final isAppCheckIssue =
+          e.plugin == 'firebase_app_check' ||
+          code.contains('appcheck') ||
+          code.contains('app-check') ||
+          message.contains('appcheck') ||
+          message.contains('app check');
+
+      if (isAppCheckIssue) {
+        return AuthException(
+          'App Check está fallando en este entorno. '
+          'En desarrollo usa USE_FIREBASE_APP_CHECK=false '
+          'o corrige la clave/sitio de App Check.',
+        );
+      }
+
       if (e.code == 'permission-denied') {
         return PermissionDeniedException();
       }
+      return AuthException(
+        e.message?.trim().isNotEmpty == true
+            ? e.message!.trim()
+            : 'No se pudo completar la autenticación.',
+      );
     }
-    return AuthException(e.toString());
+    final text = e.toString().trim();
+    return AuthException(
+      text.isEmpty || text == 'Error'
+          ? 'No se pudo iniciar sesión. Revisa la configuración e inténtalo de nuevo.'
+          : text,
+    );
+  }
+
+  String? _normalizeFirebaseAuthMessage(String? raw) {
+    final trimmed = raw?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    final lower = trimmed.toLowerCase();
+    if (lower.contains('invalid_login_credentials') ||
+        lower.contains('invalid login credentials')) {
+      return 'Correo o contraseña incorrectos.';
+    }
+    if (lower == 'error') return null;
+    return trimmed;
   }
 }

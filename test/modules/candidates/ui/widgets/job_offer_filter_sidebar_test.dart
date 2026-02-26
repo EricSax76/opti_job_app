@@ -69,17 +69,65 @@ void main() {
     expect(emittedFilters, isNotEmpty);
     expect(emittedFilters.last, const JobOfferFilters());
   });
+
+  testWidgets(
+    'triggers background callback when tapping non-interactive sidebar area',
+    (tester) async {
+      var backgroundTapCount = 0;
+
+      await tester.pumpWidget(
+        _buildSidebar(
+          filters: const JobOfferFilters(),
+          onFiltersChanged: (_) {},
+          onBackgroundTap: () => backgroundTapCount++,
+        ),
+      );
+
+      await tester.tap(find.text('Filtros'));
+      await tester.pump();
+
+      expect(backgroundTapCount, 1);
+    },
+  );
+
+  testWidgets(
+    'does not trigger background callback when tapping a filter field',
+    (tester) async {
+      var backgroundTapCount = 0;
+
+      await tester.pumpWidget(
+        _buildSidebar(
+          filters: const JobOfferFilters(),
+          onFiltersChanged: (_) {},
+          onBackgroundTap: () => backgroundTapCount++,
+        ),
+      );
+
+      await tester.tap(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is TextField &&
+              widget.decoration?.hintText == 'Buscar ofertas...',
+        ),
+      );
+      await tester.pump();
+
+      expect(backgroundTapCount, 0);
+    },
+  );
 }
 
 Widget _buildSidebar({
   required JobOfferFilters filters,
   required ValueChanged<JobOfferFilters> onFiltersChanged,
+  VoidCallback? onBackgroundTap,
 }) {
   return MaterialApp(
     home: Scaffold(
       body: JobOfferFilterSidebar(
         currentFilters: filters,
         onFiltersChanged: onFiltersChanged,
+        onBackgroundTap: onBackgroundTap,
       ),
     ),
   );

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
@@ -77,6 +78,12 @@ class _DashboardViewState extends State<DashboardView> {
     required ColorScheme colorScheme,
     required String candidateName,
   }) {
+    final isDark = theme.brightness == Brightness.dark;
+    final headerTitleColor = isDark
+        ? uiDarkOnPrimaryContainer
+        : uiLightOnPrimaryContainer;
+    final headerSubtitleColor = headerTitleColor.withValues(alpha: 0.82);
+
     _applyOnboardingFiltersIfNeeded(
       context: context,
       candidate: context.read<ProfileCubit>().state.candidate,
@@ -95,6 +102,7 @@ class _DashboardViewState extends State<DashboardView> {
         JobOfferFilterSidebarTokens.sidebarWidth +
             _minMainWidthForPinnedFilters;
     final showPinnedFilters = canPinFilters && _showFilters;
+    final canDismissPinnedFiltersFromSidebar = kIsWeb && showPinnedFilters;
     final reservedFilterWidth = showPinnedFilters
         ? JobOfferFilterSidebarTokens.sidebarWidth
         : 0.0;
@@ -106,7 +114,7 @@ class _DashboardViewState extends State<DashboardView> {
             .toDouble();
     final showOffersGrid = usableOffersWidth >= _minOffersWidthForGrid;
 
-    return Row(
+    final content = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (showPinnedFilters)
@@ -116,6 +124,9 @@ class _DashboardViewState extends State<DashboardView> {
               return JobOfferFilterSidebar(
                 currentFilters: filters,
                 onFiltersChanged: context.read<JobOffersCubit>().applyFilters,
+                onBackgroundTap: canDismissPinnedFiltersFromSidebar
+                    ? _closePinnedFilters
+                    : null,
               );
             },
           ),
@@ -155,22 +166,33 @@ class _DashboardViewState extends State<DashboardView> {
                             ),
                             decoration: BoxDecoration(
                               color: useCompactHeader
-                                  ? colorScheme.primaryContainer.withValues(
-                                      alpha: 0.55,
-                                    )
+                                  ? (isDark
+                                        ? uiDarkHeaderGradientStart.withValues(
+                                            alpha: 0.75,
+                                          )
+                                        : uiLightHeaderGradientStart.withValues(
+                                            alpha: 0.85,
+                                          ))
                                   : null,
                               gradient: useCompactHeader
                                   ? null
-                                  : LinearGradient(
-                                      colors: [
-                                        colorScheme.primaryContainer,
-                                        colorScheme.primaryContainer.withValues(
-                                          alpha: 0.5,
-                                        ),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
+                                  : (isDark
+                                        ? const LinearGradient(
+                                            colors: [
+                                              uiDarkHeaderGradientStart,
+                                              uiDarkHeaderGradientEnd,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )
+                                        : const LinearGradient(
+                                            colors: [
+                                              uiLightHeaderGradientStart,
+                                              uiLightHeaderGradientEnd,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )),
                               borderRadius: BorderRadius.circular(
                                 useCompactHeader ? 14 : uiCardRadius,
                               ),
@@ -186,8 +208,7 @@ class _DashboardViewState extends State<DashboardView> {
                                               : theme.textTheme.headlineSmall)
                                           ?.copyWith(
                                             fontWeight: FontWeight.bold,
-                                            color:
-                                                colorScheme.onPrimaryContainer,
+                                            color: headerTitleColor,
                                           ),
                                 ),
                                 const SizedBox(height: 8),
@@ -202,9 +223,7 @@ class _DashboardViewState extends State<DashboardView> {
                                               ? theme.textTheme.bodyMedium
                                               : theme.textTheme.bodyLarge)
                                           ?.copyWith(
-                                            color: colorScheme
-                                                .onPrimaryContainer
-                                                .withValues(alpha: 0.8),
+                                            color: headerSubtitleColor,
                                           ),
                                 ),
                               ],
@@ -298,6 +317,25 @@ class _DashboardViewState extends State<DashboardView> {
         ),
       ],
     );
+
+    if (!kIsWeb) return content;
+
+    return Focus(
+      autofocus: canDismissPinnedFiltersFromSidebar,
+      onKeyEvent: (_, event) {
+        if (!canDismissPinnedFiltersFromSidebar) {
+          return KeyEventResult.ignored;
+        }
+        final isEscape =
+            event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape;
+        if (!isEscape) return KeyEventResult.ignored;
+
+        _closePinnedFilters();
+        return KeyEventResult.handled;
+      },
+      child: content,
+    );
   }
 
   void _applyOnboardingFiltersIfNeeded({
@@ -344,6 +382,11 @@ class _DashboardViewState extends State<DashboardView> {
       }
     }
     return false;
+  }
+
+  void _closePinnedFilters() {
+    if (!_showFilters) return;
+    setState(() => _showFilters = false);
   }
 
   Future<void> _handleFiltersToggle({

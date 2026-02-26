@@ -52,9 +52,13 @@ class CandidateOfferCardPalette {
             ? [uiDarkCardGradientStart, uiDarkCardGradientEnd]
             : [Colors.white, const Color(0xFFF8F9FA)],
       ),
-      tagBackgroundColor: uiAccent.withValues(alpha: isDark ? 0.2 : 0.1),
-      tagBorderColor: uiAccent.withValues(alpha: isDark ? 0.35 : 0.2),
-      tagTextColor: isDark ? uiAccent.withValues(alpha: 0.95) : uiAccent,
+      tagBackgroundColor: isDark
+          ? uiDarkPrimary.withValues(alpha: 0.12)
+          : uiLightPrimary.withValues(alpha: 0.08),
+      tagBorderColor: isDark
+          ? uiDarkPrimary.withValues(alpha: 0.22)
+          : uiLightPrimary.withValues(alpha: 0.18),
+      tagTextColor: isDark ? uiDarkTagText : uiLightTagText,
     );
   }
 }

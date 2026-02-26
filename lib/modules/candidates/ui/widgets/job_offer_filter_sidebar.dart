@@ -19,10 +19,12 @@ class JobOfferFilterSidebar extends StatelessWidget {
     super.key,
     required this.currentFilters,
     required this.onFiltersChanged,
+    this.onBackgroundTap,
   });
 
   final JobOfferFilters currentFilters;
   final ValueChanged<JobOfferFilters> onFiltersChanged;
+  final VoidCallback? onBackgroundTap;
 
   @override
   Widget build(BuildContext context) {
@@ -31,15 +33,22 @@ class JobOfferFilterSidebar extends StatelessWidget {
         initialFilters: currentFilters,
         onFiltersChanged: onFiltersChanged,
       ),
-      child: _JobOfferFilterSidebarContent(currentFilters: currentFilters),
+      child: _JobOfferFilterSidebarContent(
+        currentFilters: currentFilters,
+        onBackgroundTap: onBackgroundTap,
+      ),
     );
   }
 }
 
 class _JobOfferFilterSidebarContent extends StatelessWidget {
-  const _JobOfferFilterSidebarContent({required this.currentFilters});
+  const _JobOfferFilterSidebarContent({
+    required this.currentFilters,
+    this.onBackgroundTap,
+  });
 
   final JobOfferFilters currentFilters;
+  final VoidCallback? onBackgroundTap;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +64,7 @@ class _JobOfferFilterSidebarContent extends StatelessWidget {
         palette: palette,
         isDark: theme.brightness == Brightness.dark,
         currentFilters: currentFilters,
+        onBackgroundTap: onBackgroundTap,
       ),
     );
   }
@@ -65,11 +75,13 @@ class _SidebarBody extends StatefulWidget {
     required this.palette,
     required this.isDark,
     required this.currentFilters,
+    this.onBackgroundTap,
   });
 
   final JobOfferFilterPalette palette;
   final bool isDark;
   final JobOfferFilters currentFilters;
+  final VoidCallback? onBackgroundTap;
 
   @override
   State<_SidebarBody> createState() => _SidebarBodyState();
@@ -126,67 +138,72 @@ class _SidebarBodyState extends State<_SidebarBody> {
             final cubit = context.read<JobOfferFilterCubit>();
             final filters = state.filters;
 
-            return Container(
-              width: JobOfferFilterSidebarTokens.sidebarWidth,
-              decoration: BoxDecoration(
-                color: widget.palette.surface.withValues(
-                  alpha: widget.isDark ? 1.0 : 0.8,
-                ),
-                border: Border(
-                  right: BorderSide(
-                    color: widget.palette.border,
-                    width: uiSpacing4 / 4,
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onBackgroundTap,
+              child: Container(
+                width: JobOfferFilterSidebarTokens.sidebarWidth,
+                decoration: BoxDecoration(
+                  color: widget.palette.surface.withValues(
+                    alpha: widget.isDark ? 1.0 : 0.8,
+                  ),
+                  border: Border(
+                    right: BorderSide(
+                      color: widget.palette.border,
+                      width: uiSpacing4 / 4,
+                    ),
                   ),
                 ),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(
-                  JobOfferFilterSidebarTokens.panelPadding,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    JobOfferFilterSidebarHeader(palette: widget.palette),
-                    const SizedBox(
-                      height: JobOfferFilterSidebarTokens.panelPadding,
-                    ),
-                    JobOfferFilterTextField(
-                      palette: widget.palette,
-                      hintText: 'Buscar ofertas...',
-                      controller: cubit.searchController,
-                      prefixIcon: Icons.search,
-                      textFontSize: JobOfferFilterSidebarTokens.searchFontSize,
-                      inputStyle: const JobOfferFilterInputStyle(
-                        hintFontSize:
-                            JobOfferFilterSidebarTokens.searchFontSize,
-                        borderRadius:
-                            JobOfferFilterSidebarTokens.searchFieldBorderRadius,
-                        contentPadding: JobOfferFilterSidebarTokens
-                            .searchFieldContentPadding,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(
+                    JobOfferFilterSidebarTokens.panelPadding,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      JobOfferFilterSidebarHeader(palette: widget.palette),
+                      const SizedBox(
+                        height: JobOfferFilterSidebarTokens.panelPadding,
                       ),
-                      onClear: cubit.clearSearchQuery,
-                      onChanged: cubit.updateSearchQuery,
-                    ),
-                    const SizedBox(
-                      height: JobOfferFilterSidebarTokens
-                          .searchToNextSectionSpacing,
-                    ),
-                    JobOfferFilterLocationSections(
-                      palette: widget.palette,
-                      filters: filters,
-                      cubit: cubit,
-                      catalogState: catalogState,
-                      locationCatalogController: _locationCatalogController,
-                    ),
-                    const SizedBox(
-                      height: JobOfferFilterSidebarTokens.sectionSpacing,
-                    ),
-                    JobOfferFilterJobSections(
-                      palette: widget.palette,
-                      state: state,
-                      cubit: cubit,
-                    ),
-                  ],
+                      JobOfferFilterTextField(
+                        palette: widget.palette,
+                        hintText: 'Buscar ofertas...',
+                        controller: cubit.searchController,
+                        prefixIcon: Icons.search,
+                        textFontSize:
+                            JobOfferFilterSidebarTokens.searchFontSize,
+                        inputStyle: const JobOfferFilterInputStyle(
+                          hintFontSize:
+                              JobOfferFilterSidebarTokens.searchFontSize,
+                          borderRadius: JobOfferFilterSidebarTokens
+                              .searchFieldBorderRadius,
+                          contentPadding: JobOfferFilterSidebarTokens
+                              .searchFieldContentPadding,
+                        ),
+                        onClear: cubit.clearSearchQuery,
+                        onChanged: cubit.updateSearchQuery,
+                      ),
+                      const SizedBox(
+                        height: JobOfferFilterSidebarTokens
+                            .searchToNextSectionSpacing,
+                      ),
+                      JobOfferFilterLocationSections(
+                        palette: widget.palette,
+                        filters: filters,
+                        cubit: cubit,
+                        catalogState: catalogState,
+                        locationCatalogController: _locationCatalogController,
+                      ),
+                      const SizedBox(
+                        height: JobOfferFilterSidebarTokens.sectionSpacing,
+                      ),
+                      JobOfferFilterJobSections(
+                        palette: widget.palette,
+                        state: state,
+                        cubit: cubit,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

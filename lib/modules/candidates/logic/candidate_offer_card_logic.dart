@@ -11,11 +11,12 @@ class CandidateOfferCardLogic {
     required bool isDark,
     required bool isHovered,
   }) {
+    final hoverAccent = isDark ? uiDarkPrimary : uiLightPrimary;
     final blurRadius = isHovered ? 8.0 : 2.0;
     final offsetY = isHovered ? 4.0 : 1.0;
     return CandidateOfferCardDecoration(
       borderColor: isHovered
-          ? uiAccent.withValues(alpha: isDark ? 0.5 : 0.3)
+          ? hoverAccent.withValues(alpha: isDark ? 0.45 : 0.3)
           : palette.borderColor,
       borderWidth: 1,
       boxShadow: isDark
@@ -42,7 +43,7 @@ class CandidateOfferCardLogic {
         CandidateOfferMetricData(
           icon: Icons.payments_outlined,
           label: salary!.trim(),
-          color: isDark ? const Color(0xFF10B981) : const Color(0xFF059669),
+          color: isDark ? uiDarkMetricSalary : uiLightMetricSalary,
         ),
       );
     }
@@ -51,7 +52,7 @@ class CandidateOfferCardLogic {
         CandidateOfferMetricData(
           icon: Icons.location_on_outlined,
           label: location!.trim(),
-          color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
+          color: isDark ? uiDarkMetricLocation : uiLightMetricLocation,
         ),
       );
     }
@@ -60,11 +61,23 @@ class CandidateOfferCardLogic {
         CandidateOfferMetricData(
           icon: Icons.work_outline,
           label: modality!.trim(),
-          color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+          color: isDark ? uiDarkMetricModality : uiLightMetricModality,
         ),
       );
     }
     return metrics;
+  }
+
+  static LinearGradient resolveHoverOverlayGradient({required bool isDark}) {
+    final accent = isDark ? uiDarkPrimary : uiLightPrimary;
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        accent.withValues(alpha: isDark ? 0.16 : 0.09),
+        accent.withValues(alpha: isDark ? 0.04 : 0.02),
+      ],
+    );
   }
 
   static bool _hasText(String? value) =>

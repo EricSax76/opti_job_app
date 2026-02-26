@@ -11,7 +11,7 @@ class AppInputTheme {
       vertical: uiSpacing16,
     ),
     labelStyle: const TextStyle(color: uiMuted, fontSize: 15),
-    floatingLabelStyle: const TextStyle(color: uiAccent, fontSize: 14),
+    floatingLabelStyle: const TextStyle(color: uiLightPrimary, fontSize: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(uiFieldRadius),
       borderSide: const BorderSide(color: uiBorder),
@@ -22,7 +22,7 @@ class AppInputTheme {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(uiFieldRadius),
-      borderSide: const BorderSide(color: uiAccent, width: 2),
+      borderSide: const BorderSide(color: uiLightPrimary, width: 2),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(uiFieldRadius),
@@ -35,10 +35,14 @@ class AppInputTheme {
   );
 
   // For specific success state handled manually in widgets
-  static InputDecoration successDecoration({required String labelText, Widget? suffixIcon}) {
+  static InputDecoration successDecoration({
+    required String labelText,
+    Widget? suffixIcon,
+  }) {
     return InputDecoration(
       labelText: labelText,
-      suffixIcon: suffixIcon ?? const Icon(Icons.check_circle, color: uiSuccess),
+      suffixIcon:
+          suffixIcon ?? const Icon(Icons.check_circle, color: uiSuccess),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(uiFieldRadius),
         borderSide: const BorderSide(color: uiSuccess),

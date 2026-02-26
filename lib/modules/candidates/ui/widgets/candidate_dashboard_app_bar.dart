@@ -204,7 +204,9 @@ class CandidateDashboardAppBar extends StatelessWidget
         style: theme.textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w800,
           letterSpacing: 1.6,
-          color: colorScheme.primary,
+          color: theme.brightness == Brightness.dark
+              ? colorScheme.onSurface
+              : colorScheme.primary,
         ),
       ),
       centerTitle: true,

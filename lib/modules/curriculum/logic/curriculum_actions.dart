@@ -75,8 +75,7 @@ class CurriculumLogic {
         withData: true,
       );
       if (result == null || result.files.isEmpty) {
-        // User canceled, treating as success with no action
-        return const ActionSuccess();
+        return const ActionSuccess('');
       }
 
       final file = result.files.single;
@@ -88,13 +87,9 @@ class CurriculumLogic {
         return const ActionFailure('Selecciona un PDF o DOCX válido.');
       }
 
+      var extractedData = false;
       if (extension == 'docx') {
-        await formCubit.analyzeCvFile(bytes, file.name);
-      } else {
-        // Not really an error, just info, but we return logic result.
-        // We'll treat this as part of success flow for logic, caller handles info?
-        // Actually, let's just proceed. The original logic showed a snackbar.
-        // We will just return clear success and let the file be uploaded.
+        extractedData = await formCubit.analyzeCvFile(bytes, file.name);
       }
 
       final updatedCurriculum = await repository.uploadAttachment(
@@ -108,10 +103,11 @@ class CurriculumLogic {
 
       // Persist extracted form data after import so the parsed content is not
       // left only in local UI state.
-      if (extension == 'docx') {
+      if (extension == 'docx' && extractedData) {
         await curriculumCubit.save(
           _buildCurriculumFromForm(
             formCubit: formCubit,
+            baseCurriculum: updatedCurriculum,
             attachment: updatedCurriculum.attachment,
             updatedAt: updatedCurriculum.updatedAt,
           ),
@@ -121,7 +117,9 @@ class CurriculumLogic {
       return ActionSuccess(
         extension != 'docx'
             ? 'Archivo importado. (Info: solo .docx soporta extracción automática)'
-            : 'Archivo importado y analizado.',
+            : extractedData
+            ? 'Archivo importado y datos extraídos.'
+            : 'Archivo importado. No se pudieron extraer datos automáticamente.',
       );
     } catch (_) {
       return const ActionFailure('No se pudo importar el archivo.');
@@ -186,20 +184,40 @@ class CurriculumLogic {
 
   static Curriculum _buildCurriculumFromForm({
     required CurriculumFormCubit formCubit,
+    required Curriculum baseCurriculum,
     CurriculumAttachment? attachment,
     DateTime? updatedAt,
   }) {
     final state = formCubit.state;
+    final headline = formCubit.headlineController.text.trim();
+    final summary = formCubit.summaryController.text.trim();
+    final phone = formCubit.phoneController.text.trim();
+    final location = formCubit.locationController.text.trim();
+
     return Curriculum(
-      headline: formCubit.headlineController.text.trim(),
-      summary: formCubit.summaryController.text.trim(),
-      phone: formCubit.phoneController.text.trim(),
-      location: formCubit.locationController.text.trim(),
-      skills: state.skills,
-      experiences: state.experiences,
-      education: state.education,
-      attachment: attachment,
-      updatedAt: updatedAt,
+      headline: headline.isNotEmpty ? headline : baseCurriculum.headline,
+      summary: summary.isNotEmpty ? summary : baseCurriculum.summary,
+      phone: phone.isNotEmpty ? phone : baseCurriculum.phone,
+      location: location.isNotEmpty ? location : baseCurriculum.location,
+      skills: state.skills.isNotEmpty ? state.skills : baseCurriculum.skills,
+      experiences: _hasMeaningfulItems(state.experiences)
+          ? state.experiences
+          : baseCurriculum.experiences,
+      education: _hasMeaningfulItems(state.education)
+          ? state.education
+          : baseCurriculum.education,
+      attachment: attachment ?? baseCurriculum.attachment,
+      updatedAt: updatedAt ?? baseCurriculum.updatedAt,
+    );
+  }
+
+  static bool _hasMeaningfulItems(List<CurriculumItem> items) {
+    return items.any(
+      (item) =>
+          item.title.trim().isNotEmpty ||
+          item.subtitle.trim().isNotEmpty ||
+          item.period.trim().isNotEmpty ||
+          item.description.trim().isNotEmpty,
     );
   }
 }

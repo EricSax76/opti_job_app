@@ -7,7 +7,8 @@ import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 class CvAnalysisService {
   final FirebaseAiClient _aiClient;
 
-  CvAnalysisService({required FirebaseAiClient aiClient}) : _aiClient = aiClient;
+  CvAnalysisService({required FirebaseAiClient aiClient})
+    : _aiClient = aiClient;
 
   Future<CvAnalysisResult> analyzeCvFile(
     Uint8List bytes,
@@ -39,40 +40,69 @@ class CvAnalysisService {
   }
 
   CvAnalysisResult _mapJsonToResult(Map<String, dynamic> json) {
-    final personal = json['personal'] as Map<String, dynamic>? ?? {};
+    final personal = _asStringMap(json['personal']);
 
-    final skills = List<String>.from(json['skills'] ?? []);
-
-    final experiences = (json['experience'] as List? ?? [])
-        .map(
-          (e) => CurriculumItem(
-            title: e['role'] ?? '',
-            subtitle: e['company'] ?? '',
-            period: e['date_range'] ?? '',
-            description: e['description'] ?? '',
-          ),
-        )
+    final skills = (json['skills'] as List? ?? const [])
+        .whereType<String>()
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toSet()
         .toList();
 
-    final education = (json['education'] as List? ?? [])
+    final experiences = (json['experience'] as List? ?? const [])
+        .whereType<Map>()
         .map(
           (e) => CurriculumItem(
-            title: e['degree'] ?? '',
-            subtitle: e['school'] ?? '',
-            period: e['date_range'] ?? '',
+            title: _asTrimmedString(e['role']),
+            subtitle: _asTrimmedString(e['company']),
+            period: _asTrimmedString(e['date_range']),
+            description: _asTrimmedString(e['description']),
+          ),
+        )
+        .where(_hasMeaningfulItemData)
+        .toList();
+
+    final education = (json['education'] as List? ?? const [])
+        .whereType<Map>()
+        .map(
+          (e) => CurriculumItem(
+            title: _asTrimmedString(e['degree']),
+            subtitle: _asTrimmedString(e['school']),
+            period: _asTrimmedString(e['date_range']),
             description: '',
           ),
         )
+        .where(_hasMeaningfulItemData)
         .toList();
 
     return CvAnalysisResult(
-      summary: personal['summary'] ?? '',
-      phone: personal['phone'] ?? '',
-      location: personal['location'] ?? '',
+      summary: _asTrimmedString(personal['summary']),
+      phone: _asTrimmedString(personal['phone']),
+      location: _asTrimmedString(personal['location']),
       skills: skills,
       experiences: experiences,
       education: education,
     );
+  }
+
+  Map<String, dynamic> _asStringMap(Object? value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map((key, val) => MapEntry(key.toString(), val));
+    }
+    return const <String, dynamic>{};
+  }
+
+  String _asTrimmedString(Object? value) {
+    if (value == null) return '';
+    return value.toString().trim();
+  }
+
+  static bool _hasMeaningfulItemData(CurriculumItem item) {
+    return item.title.trim().isNotEmpty ||
+        item.subtitle.trim().isNotEmpty ||
+        item.period.trim().isNotEmpty ||
+        item.description.trim().isNotEmpty;
   }
 }
 
@@ -96,4 +126,13 @@ class CvAnalysisResult {
     required this.experiences,
     required this.education,
   });
+
+  bool get hasExtractedData {
+    return summary.trim().isNotEmpty ||
+        phone.trim().isNotEmpty ||
+        location.trim().isNotEmpty ||
+        skills.isNotEmpty ||
+        experiences.isNotEmpty ||
+        education.isNotEmpty;
+  }
 }

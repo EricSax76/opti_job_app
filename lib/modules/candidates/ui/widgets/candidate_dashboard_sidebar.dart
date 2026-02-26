@@ -68,8 +68,7 @@ class _CandidateDashboardSidebarState extends State<CandidateDashboardSidebar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    return AnimatedContainer(
+    final sidebar = AnimatedContainer(
       duration: const Duration(milliseconds: 90),
       curve: _isCollapsed ? Curves.easeInCubic : Curves.easeOutSine,
       width: _isCollapsed
@@ -163,6 +162,27 @@ class _CandidateDashboardSidebarState extends State<CandidateDashboardSidebar> {
             ],
           );
         },
+      ),
+    );
+
+    if (!_isCollapsed) return sidebar;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Stack(
+        children: [
+          sidebar,
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _toggleCollapse,
+                splashColor: colorScheme.primary.withValues(alpha: 0.08),
+                hoverColor: colorScheme.primary.withValues(alpha: 0.04),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

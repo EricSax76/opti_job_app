@@ -84,7 +84,15 @@ class CurriculumAttachmentActionsController {
     }
 
     if (result is! ActionSuccess<String>) return;
-    _showSnackBar(context, result.data ?? successFallbackMessage);
+    final message = result.data?.trim();
+    if (message != null && message.isNotEmpty) {
+      _showSnackBar(context, message);
+      return;
+    }
+
+    if (result.data == null) {
+      _showSnackBar(context, successFallbackMessage);
+    }
   }
 
   static void _showSnackBar(BuildContext context, String message) {

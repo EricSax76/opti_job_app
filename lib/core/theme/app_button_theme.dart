@@ -2,25 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 
 class AppButtonTheme {
-  static final FilledButtonThemeData filledButtonTheme =
-      FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: uiInk,
-          foregroundColor: uiWhite,
-          minimumSize: const Size(64, 52),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(uiFieldRadius),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: uiSpacing24,
-            vertical: uiSpacing16,
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
+  static final FilledButtonThemeData filledButtonTheme = FilledButtonThemeData(
+    style: FilledButton.styleFrom(
+      backgroundColor: uiInk,
+      foregroundColor: uiWhite,
+      minimumSize: const Size(64, 52),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(uiFieldRadius),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: uiSpacing24,
+        vertical: uiSpacing16,
+      ),
+      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    ),
+  );
 
   static final OutlinedButtonThemeData outlinedButtonTheme =
       OutlinedButtonThemeData(
@@ -35,23 +31,17 @@ class AppButtonTheme {
             horizontal: uiSpacing24,
             vertical: uiSpacing16,
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       );
 
   static final TextButtonThemeData textButtonTheme = TextButtonThemeData(
     style: TextButton.styleFrom(
-      foregroundColor: uiAccent,
+      foregroundColor: uiLightPrimary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(uiFieldRadius),
       ),
-      textStyle: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-      ),
+      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
     ),
   );
 
@@ -62,7 +52,7 @@ class AppButtonTheme {
   );
 
   static final ButtonStyle secondaryFilled = FilledButton.styleFrom(
-    backgroundColor: uiAccent,
+    backgroundColor: uiLightPrimary,
     foregroundColor: uiWhite,
   );
 

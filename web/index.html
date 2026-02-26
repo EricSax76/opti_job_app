@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
   -->
   <base href="$FLUTTER_BASE_HREF">
 
@@ -22,6 +24,18 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    // Enables Firebase App Check debug token flow on local web development.
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      console.info(
+        "[AppCheck] FIREBASE_APPCHECK_DEBUG_TOKEN enabled for localhost."
+      );
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

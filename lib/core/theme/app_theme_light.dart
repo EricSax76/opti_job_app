@@ -6,13 +6,17 @@ import 'package:opti_job_app/core/theme/ui_tokens.dart';
 ThemeData buildLightTheme() {
   final base = ThemeData(
     useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(seedColor: uiAccent).copyWith(
+    colorScheme: ColorScheme.fromSeed(seedColor: uiLightPrimary).copyWith(
       surface: uiWhite,
       surfaceContainerHighest: uiBackground,
       onSurface: uiInk,
       onSurfaceVariant: uiMuted,
       primary: uiInk,
-      secondary: uiAccent,
+      secondary: uiLightPrimary,
+      primaryContainer: uiLightPrimaryContainer,
+      onPrimaryContainer: uiLightOnPrimaryContainer,
+      secondaryContainer: uiLightSecondaryContainer,
+      onSecondaryContainer: uiLightOnSecondaryContainer,
       error: uiError,
       outline: uiBorder,
     ),

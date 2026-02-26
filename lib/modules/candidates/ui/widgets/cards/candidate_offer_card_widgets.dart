@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate_offer_card_models.dart';
 
@@ -63,11 +62,12 @@ class CandidateOfferMetricPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InfoPill(
       icon: metric.icon,
       label: metric.label,
-      backgroundColor: metric.color.withValues(alpha: 0.1),
-      borderColor: metric.color.withValues(alpha: 0.25),
+      backgroundColor: metric.color.withValues(alpha: isDark ? 0.08 : 0.1),
+      borderColor: metric.color.withValues(alpha: isDark ? 0.2 : 0.25),
       textColor: metric.color,
       iconColor: metric.color,
     );
@@ -103,19 +103,20 @@ class CandidateOfferActionIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
           actionLabel,
-          style: const TextStyle(
-            color: uiAccent,
+          style: TextStyle(
+            color: accent,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(width: 4),
-        const Icon(Icons.arrow_forward, color: uiAccent, size: 16),
+        Icon(Icons.arrow_forward, color: accent, size: 16),
       ],
     );
   }

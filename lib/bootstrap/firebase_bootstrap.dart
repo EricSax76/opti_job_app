@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,27 +29,39 @@ Future<void> maybeActivateFirebaseAppCheck() async {
 
   final webProvider = kIsWeb
       ? (() {
-    const siteKey = String.fromEnvironment(
-      'FIREBASE_APP_CHECK_WEB_SITE_KEY',
-      defaultValue: '',
-    );
-    if (siteKey.trim().isEmpty) {
-      throw StateError(
-        'Missing FIREBASE_APP_CHECK_WEB_SITE_KEY. '
-        'Set it with --dart-define=FIREBASE_APP_CHECK_WEB_SITE_KEY=... '
-        'or disable App Check with --dart-define=USE_FIREBASE_APP_CHECK=false.',
-      );
-    }
+          const siteKey = String.fromEnvironment(
+            'FIREBASE_APP_CHECK_WEB_SITE_KEY',
+            defaultValue: '',
+          );
+          if (siteKey.trim().isEmpty) {
+            throw StateError(
+              'Missing FIREBASE_APP_CHECK_WEB_SITE_KEY. '
+              'Set it with --dart-define=FIREBASE_APP_CHECK_WEB_SITE_KEY=... '
+              'or disable App Check with --dart-define=USE_FIREBASE_APP_CHECK=false.',
+            );
+          }
 
-    const provider = String.fromEnvironment(
-      'FIREBASE_APP_CHECK_WEB_PROVIDER',
-      defaultValue: 'recaptcha_v3',
-    ); // 'recaptcha_v3' | 'recaptcha_enterprise'
+          const provider = String.fromEnvironment(
+            'FIREBASE_APP_CHECK_WEB_PROVIDER',
+            defaultValue: 'recaptcha_v3',
+          ); // 'recaptcha_v3' | 'recaptcha_enterprise'
 
-    return provider == 'recaptcha_enterprise'
-        ? ReCaptchaEnterpriseProvider(siteKey)
-        : ReCaptchaV3Provider(siteKey);
-  })()
+          if (kDebugMode) {
+            final maskedSiteKey = siteKey.length <= 8
+                ? siteKey
+                : '${siteKey.substring(0, 4)}...'
+                      '${siteKey.substring(siteKey.length - 4)}';
+            debugPrint(
+              '[AppCheck] Web config: '
+              'provider=$provider host=${Uri.base.host} '
+              'siteKey=$maskedSiteKey len=${siteKey.length}',
+            );
+          }
+
+          return provider == 'recaptcha_enterprise'
+              ? ReCaptchaEnterpriseProvider(siteKey)
+              : ReCaptchaV3Provider(siteKey);
+        })()
       : null;
 
   await FirebaseAppCheck.instance.activate(
@@ -59,6 +73,42 @@ Future<void> maybeActivateFirebaseAppCheck() async {
         ? const AppleDebugProvider()
         : const AppleAppAttestProvider(),
   );
+
+  if (kDebugMode && kIsWeb) {
+    final appCheck = FirebaseAppCheck.instance;
+
+    appCheck.onTokenChange.listen(
+      (token) => debugPrint(
+        '[AppCheck] Web token changed: '
+        '${(token == null || token.isEmpty) ? "null/empty" : token}',
+      ),
+      onError: (error) =>
+          debugPrint('[AppCheck] Web token stream error: $error'),
+    );
+
+    unawaited(() async {
+      for (var attempt = 1; attempt <= 3; attempt++) {
+        final forceRefresh = attempt == 1;
+        try {
+          final token = await appCheck.getToken(forceRefresh);
+          debugPrint(
+            '[AppCheck] Web token attempt #$attempt '
+            '(forceRefresh=$forceRefresh): '
+            '${(token == null || token.isEmpty) ? "null/empty" : token}',
+          );
+          if (token != null && token.isNotEmpty) {
+            return;
+          }
+        } catch (error) {
+          debugPrint('[AppCheck] Web token attempt #$attempt failed: $error');
+        }
+
+        await Future<void>.delayed(const Duration(seconds: 2));
+      }
+
+      debugPrint('[AppCheck] Web token unavailable after retries.');
+    }());
+  }
 
   if (kDebugMode &&
       !kIsWeb &&
