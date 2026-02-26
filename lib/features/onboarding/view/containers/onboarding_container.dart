@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:opti_job_app/home/cubits/candidate_onboarding_cubit.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_state.dart';
-import 'package:opti_job_app/home/widgets/candidate_onboarding_flow.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_cubit.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_state.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_flow.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart'
@@ -15,7 +15,7 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart'
     show CompanyAuthCubit;
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
-import 'package:opti_job_app/home/widgets/onboarding_card.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card.dart';
 
 class OnboardingContainer extends StatelessWidget {
   const OnboardingContainer({super.key});

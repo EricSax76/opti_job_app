@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_cubit.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_state.dart';
-import 'package:opti_job_app/home/models/candidate_onboarding_step.dart';
-import 'package:opti_job_app/home/models/candidate_onboarding_step_view_model.dart';
-import 'package:opti_job_app/home/widgets/candidate_onboarding_steps/candidate_onboarding_intro_step.dart';
-import 'package:opti_job_app/home/widgets/candidate_onboarding_steps/candidate_onboarding_profile_basics_step.dart';
-import 'package:opti_job_app/home/widgets/candidate_onboarding_steps/candidate_onboarding_work_style_step.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_cubit.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_state.dart';
+import 'package:opti_job_app/features/onboarding/models/candidate_onboarding_step.dart';
+import 'package:opti_job_app/features/onboarding/models/candidate_onboarding_step_view_model.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_intro_step.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_profile_basics_step.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_work_style_step.dart';
 
 class CandidateOnboardingStepViewModelFactory {
   const CandidateOnboardingStepViewModelFactory();

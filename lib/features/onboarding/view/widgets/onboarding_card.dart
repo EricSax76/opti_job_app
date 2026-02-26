@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:opti_job_app/home/widgets/onboarding_card_base.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base.dart';
 
 class OnboardingCard extends StatelessWidget {
   const OnboardingCard({

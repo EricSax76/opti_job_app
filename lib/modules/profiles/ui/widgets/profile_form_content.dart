@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
-import 'package:opti_job_app/home/widgets/candidate_onboarding_steps/candidate_onboarding_work_style_step.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/candidate_onboarding_steps/candidate_onboarding_work_style_step.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate_onboarding_preferences.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_form_state.dart';

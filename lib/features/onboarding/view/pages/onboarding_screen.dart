@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/shell/core_shell.dart';
-import 'package:opti_job_app/home/containers/onboarding_container.dart';
+import 'package:opti_job_app/features/onboarding/view/containers/onboarding_container.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});

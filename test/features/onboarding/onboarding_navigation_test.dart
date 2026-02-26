@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_cubit.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_state.dart';
-import 'package:opti_job_app/home/models/candidate_onboarding_step.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_cubit.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_state.dart';
+import 'package:opti_job_app/features/onboarding/models/candidate_onboarding_step.dart';
 
 void main() {
   group('CandidateOnboardingCubit', () {

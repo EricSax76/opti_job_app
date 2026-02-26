@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:opti_job_app/home/models/candidate_onboarding_step.dart';
+import 'package:opti_job_app/features/onboarding/models/candidate_onboarding_step.dart';
 
 enum CandidateOnboardingSubmissionStatus { idle, completed }
 

@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_state.dart';
-import 'package:opti_job_app/home/models/candidate_onboarding_step.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_state.dart';
+import 'package:opti_job_app/features/onboarding/models/candidate_onboarding_step.dart';
 
 class CandidateOnboardingCubit extends Cubit<CandidateOnboardingState> {
   CandidateOnboardingCubit() : super(const CandidateOnboardingState());

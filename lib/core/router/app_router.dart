@@ -10,7 +10,7 @@ import 'package:opti_job_app/auth/ui/pages/candidate_login_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/candidate_register_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/company_login_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/company_register_screen.dart';
-import 'package:opti_job_app/home/pages/onboarding_screen.dart';
+import 'package:opti_job_app/features/onboarding/view/pages/onboarding_screen.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';

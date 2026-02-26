@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_cubit.dart';
-import 'package:opti_job_app/home/cubits/candidate_onboarding_state.dart';
-import 'package:opti_job_app/home/logic/candidate_onboarding_step_view_model_factory.dart';
-import 'package:opti_job_app/home/widgets/onboarding_card_base.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_cubit.dart';
+import 'package:opti_job_app/features/onboarding/cubits/candidate_onboarding_state.dart';
+import 'package:opti_job_app/features/onboarding/logic/candidate_onboarding_step_view_model_factory.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base.dart';
 
 class CandidateOnboardingFlow extends StatelessWidget {
   const CandidateOnboardingFlow({

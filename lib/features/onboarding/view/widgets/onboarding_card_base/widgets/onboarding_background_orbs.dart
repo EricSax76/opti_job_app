@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:opti_job_app/home/widgets/onboarding_card_base/models/onboarding_card_palette.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/models/onboarding_card_palette.dart';
 
 class OnboardingBackgroundOrbs extends StatelessWidget {
   const OnboardingBackgroundOrbs({super.key, required this.palette});
