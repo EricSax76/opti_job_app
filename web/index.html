@@ -22,20 +22,22 @@
 
   <title>infojobs_flutter_app</title>
   <link rel="manifest" href="manifest.json">
-</head>
-<body>
+
   <script>
-    // Enables Firebase App Check debug token flow on local web development.
+    // Enables Firebase App Check debug token for local development.
+    // Flutter/FlutterFire handles Firebase initialization via Dart (firebase_options.dart).
+    // This must run before flutter_bootstrap.js loads the app.
     if (
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1"
     ) {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-      console.info(
-        "[AppCheck] FIREBASE_APPCHECK_DEBUG_TOKEN enabled for localhost."
-      );
+      console.warn("[AppCheck] FIREBASE_APPCHECK_DEBUG_TOKEN set to: " + self.FIREBASE_APPCHECK_DEBUG_TOKEN + " — debug token will appear below after Firebase initializes.");
     }
   </script>
+
+</head>
+<body>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

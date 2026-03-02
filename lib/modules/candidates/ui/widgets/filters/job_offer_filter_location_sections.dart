@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/job_offer_filter_cubit.dart';
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
-import 'package:opti_job_app/modules/candidates/ui/controllers/job_offer_location_catalog_controller.dart';
+import 'package:opti_job_app/modules/candidates/cubits/job_offer_location_catalog_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_field_decorators.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_field_widgets.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_models.dart';
@@ -18,22 +18,22 @@ class JobOfferFilterLocationSections extends StatelessWidget {
     required this.filters,
     required this.cubit,
     required this.catalogState,
-    required this.locationCatalogController,
+    required this.locationCatalogCubit,
   });
 
   final JobOfferFilterPalette palette;
   final JobOfferFilters filters;
   final JobOfferFilterCubit cubit;
   final JobOfferLocationCatalogState catalogState;
-  final JobOfferLocationCatalogController locationCatalogController;
+  final JobOfferLocationCatalogCubit locationCatalogCubit;
 
   @override
   Widget build(BuildContext context) {
-    final provinceName = locationCatalogController.selectedProvinceName(
+    final provinceName = locationCatalogCubit.selectedProvinceName(
       provinceId: filters.provinceId,
       fallbackProvinceName: filters.provinceName,
     );
-    final municipalityName = locationCatalogController.selectedMunicipalityName(
+    final municipalityName = locationCatalogCubit.selectedMunicipalityName(
       municipalityId: filters.municipalityId,
       fallbackMunicipalityName: filters.municipalityName,
     );
@@ -82,7 +82,7 @@ class JobOfferFilterLocationSections extends StatelessWidget {
             inputStyle: const JobOfferFilterInputStyle(),
             enabled: !catalogState.isLoadingCatalog && provinceItems.isNotEmpty,
             onChanged: (selectedName) {
-              final selected = locationCatalogController.findProvinceByName(
+              final selected = locationCatalogCubit.findProvinceByName(
                 selectedName,
               );
               cubit.updateProvince(
@@ -90,7 +90,7 @@ class JobOfferFilterLocationSections extends StatelessWidget {
                 provinceName: selected?.name,
               );
               unawaited(
-                locationCatalogController.loadMunicipalitiesForProvince(
+                locationCatalogCubit.loadMunicipalitiesForProvince(
                   selected?.id,
                 ),
               );
@@ -117,7 +117,7 @@ class JobOfferFilterLocationSections extends StatelessWidget {
             inputStyle: const JobOfferFilterInputStyle(),
             enabled: municipalityEnabled,
             onChanged: (selectedName) {
-              final selected = locationCatalogController.findMunicipalityByName(
+              final selected = locationCatalogCubit.findMunicipalityByName(
                 selectedName,
               );
               cubit.updateMunicipality(

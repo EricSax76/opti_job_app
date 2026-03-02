@@ -1,22 +1,27 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/logic/candidate_onboarding_filter_logic.dart';
+import 'package:opti_job_app/modules/candidates/logic/dashboard_layout_logic.dart';
+import 'package:opti_job_app/modules/candidates/logic/dashboard_scroll_logic.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
-import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navigation.dart';
+
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_sidebar.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_filter_toggle_row.dart';
+
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_welcome_header.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_offers_section.dart';
-import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_tokens.dart';
+
 import 'package:opti_job_app/modules/candidates/ui/widgets/job_offer_filter_sidebar.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_state.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
+import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_reminder_panel.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -26,10 +31,6 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  static const double _dashboardHorizontalPadding = 24;
-  static const double _minMainWidthForPinnedFilters = 560;
-  static const double _minOffersWidthForGrid = 620;
-
   bool _showFilters = true;
   bool _isMobileFiltersOpen = false;
   bool _isMobileHeaderVisible = true;
@@ -37,6 +38,18 @@ class _DashboardViewState extends State<DashboardView> {
   CandidateReminderWindow _mobileReminderWindow =
       CandidateReminderWindow.selectedDay;
   bool _didApplyOnboardingFilters = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _applyOnboardingFiltersIfNeeded(
+        context: context,
+        candidate: context.read<ProfileCubit>().state.candidate,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,40 +92,22 @@ class _DashboardViewState extends State<DashboardView> {
     required String candidateName,
   }) {
     final isDark = theme.brightness == Brightness.dark;
-    final headerTitleColor = isDark
-        ? uiDarkOnPrimaryContainer
-        : uiLightOnPrimaryContainer;
-    final headerSubtitleColor = headerTitleColor.withValues(alpha: 0.82);
-
-    _applyOnboardingFiltersIfNeeded(
-      context: context,
-      candidate: context.read<ProfileCubit>().state.candidate,
-    );
+    final _ = isDark ? uiDarkOnPrimaryContainer : uiLightOnPrimaryContainer;
 
     final viewportWidth = MediaQuery.sizeOf(context).width;
-    final hasDesktopNavigation =
-        viewportWidth >= candidateDashboardSidebarBreakpoint;
-    final useCompactHeader = !hasDesktopNavigation;
-    final shouldAutoHideHeader = kIsWeb || useCompactHeader;
-    final reservedNavigationWidth = hasDesktopNavigation
-        ? CandidateDashboardSidebar.expandedWidth
-        : 0.0;
-    final canPinFilters =
-        viewportWidth - reservedNavigationWidth >=
-        JobOfferFilterSidebarTokens.sidebarWidth +
-            _minMainWidthForPinnedFilters;
-    final showPinnedFilters = canPinFilters && _showFilters;
-    final canDismissPinnedFiltersFromSidebar = kIsWeb && showPinnedFilters;
-    final reservedFilterWidth = showPinnedFilters
-        ? JobOfferFilterSidebarTokens.sidebarWidth
-        : 0.0;
-    final mainPanelWidth =
-        viewportWidth - reservedNavigationWidth - reservedFilterWidth;
-    final usableOffersWidth =
-        (mainPanelWidth - (_dashboardHorizontalPadding * 2))
-            .clamp(0.0, double.infinity)
-            .toDouble();
-    final showOffersGrid = usableOffersWidth >= _minOffersWidthForGrid;
+    final layout = DashboardLayoutLogic.compute(
+      viewportWidth: viewportWidth,
+      showFilters: _showFilters,
+    );
+
+    final hasDesktopNavigation = layout.hasDesktopNavigation;
+    final useCompactHeader = layout.useCompactHeader;
+    final shouldAutoHideHeader = layout.shouldAutoHideHeader;
+    final canPinFilters = layout.canPinFilters;
+    final showPinnedFilters = layout.showPinnedFilters;
+    final canDismissPinnedFiltersFromSidebar =
+        layout.canDismissPinnedFiltersFromSidebar;
+    final showOffersGrid = layout.showOffersGrid;
 
     final content = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,136 +128,26 @@ class _DashboardViewState extends State<DashboardView> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: _dashboardHorizontalPadding,
+              horizontal: DashboardLayoutLogic.dashboardHorizontalPadding,
               vertical: 16,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    return SizeTransition(
-                      sizeFactor: animation,
-                      axisAlignment: -1,
-                      child: FadeTransition(opacity: animation, child: child),
-                    );
-                  },
-                  child: (!shouldAutoHideHeader || _isMobileHeaderVisible)
-                      ? Padding(
-                          key: const ValueKey(
-                            'dashboard_welcome_header_visible',
-                          ),
-                          padding: EdgeInsets.only(
-                            bottom: useCompactHeader ? 12 : 24,
-                          ),
-                          child: Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: useCompactHeader ? 14 : 24,
-                              vertical: useCompactHeader ? 12 : 24,
-                            ),
-                            decoration: BoxDecoration(
-                              color: useCompactHeader
-                                  ? (isDark
-                                        ? uiDarkHeaderGradientStart.withValues(
-                                            alpha: 0.75,
-                                          )
-                                        : uiLightHeaderGradientStart.withValues(
-                                            alpha: 0.85,
-                                          ))
-                                  : null,
-                              gradient: useCompactHeader
-                                  ? null
-                                  : (isDark
-                                        ? const LinearGradient(
-                                            colors: [
-                                              uiDarkHeaderGradientStart,
-                                              uiDarkHeaderGradientEnd,
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          )
-                                        : const LinearGradient(
-                                            colors: [
-                                              uiLightHeaderGradientStart,
-                                              uiLightHeaderGradientEnd,
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          )),
-                              borderRadius: BorderRadius.circular(
-                                useCompactHeader ? 14 : uiCardRadius,
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Hola, $candidateName',
-                                  style:
-                                      (useCompactHeader
-                                              ? theme.textTheme.titleMedium
-                                              : theme.textTheme.headlineSmall)
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: headerTitleColor,
-                                          ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Aquí tienes las mejores ofertas seleccionadas para ti.',
-                                  maxLines: useCompactHeader ? 2 : null,
-                                  overflow: useCompactHeader
-                                      ? TextOverflow.ellipsis
-                                      : TextOverflow.visible,
-                                  style:
-                                      (useCompactHeader
-                                              ? theme.textTheme.bodyMedium
-                                              : theme.textTheme.bodyLarge)
-                                          ?.copyWith(
-                                            color: headerSubtitleColor,
-                                          ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : const SizedBox(
-                          key: ValueKey('dashboard_welcome_header_hidden'),
-                        ),
+                CandidateDashboardWelcomeHeader(
+                  candidateName: candidateName,
+                  useCompactHeader: useCompactHeader,
+                  shouldAutoHideHeader: shouldAutoHideHeader,
+                  isVisible: _isMobileHeaderVisible,
                 ),
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _handleFiltersToggle(
-                        context: context,
-                        canPinFilters: canPinFilters,
-                      ),
-                      icon: Icon(
-                        canPinFilters
-                            ? (_showFilters
-                                  ? Icons.filter_list_off
-                                  : Icons.filter_list)
-                            : (_isMobileFiltersOpen
-                                  ? Icons.filter_list_off
-                                  : Icons.filter_list),
-                      ),
-                      label: Text(
-                        canPinFilters
-                            ? (_showFilters ? 'Ocultar filtros' : 'Filtros')
-                            : (_isMobileFiltersOpen
-                                  ? 'Cerrar filtros'
-                                  : 'Filtros'),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: colorScheme.secondary,
-                      ),
-                    ),
-                    const Spacer(),
-                  ],
+                CandidateDashboardFilterToggleRow(
+                  canPinFilters: canPinFilters,
+                  showFilters: _showFilters,
+                  isMobileFiltersOpen: _isMobileFiltersOpen,
+                  onToggle: () => _handleFiltersToggle(
+                    context: context,
+                    canPinFilters: canPinFilters,
+                  ),
                 ),
                 SizedBox(height: useCompactHeader ? 12 : 16),
                 Expanded(
@@ -362,24 +247,13 @@ class _DashboardViewState extends State<DashboardView> {
     required ScrollNotification notification,
     required bool enableHeaderAutoHide,
   }) {
-    if (!enableHeaderAutoHide) return false;
-    if (notification.metrics.axis != Axis.vertical) return false;
-
-    if (notification.metrics.pixels <= 8) {
-      if (!_isMobileHeaderVisible) {
-        setState(() => _isMobileHeaderVisible = true);
-      }
-      return false;
-    }
-
-    if (notification is UserScrollNotification) {
-      if (notification.direction == ScrollDirection.reverse &&
-          _isMobileHeaderVisible) {
-        setState(() => _isMobileHeaderVisible = false);
-      } else if (notification.direction == ScrollDirection.forward &&
-          !_isMobileHeaderVisible) {
-        setState(() => _isMobileHeaderVisible = true);
-      }
+    final nextVisibility = DashboardScrollLogic.handleOffersScrollNotification(
+      notification: notification,
+      enableHeaderAutoHide: enableHeaderAutoHide,
+      isMobileHeaderVisible: _isMobileHeaderVisible,
+    );
+    if (nextVisibility != null) {
+      setState(() => _isMobileHeaderVisible = nextVisibility);
     }
     return false;
   }

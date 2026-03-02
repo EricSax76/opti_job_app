@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 
-class JobOfferLocationCatalogController extends ChangeNotifier {
-  JobOfferLocationCatalogController({
+class JobOfferLocationCatalogCubit extends Cubit<JobOfferLocationCatalogState> {
+  JobOfferLocationCatalogCubit({
     FirebaseFirestore? firestore,
     http.Client? httpClient,
     String? catalogBaseUrl,
@@ -14,7 +14,8 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
        _ownsHttpClient = httpClient == null,
        _catalogBaseUrl = _normalizeBaseUrl(
          catalogBaseUrl ?? _catalogBaseUrlFromEnvironment,
-       );
+       ),
+       super(const JobOfferLocationCatalogState());
 
   static const String _catalogBaseUrlFromEnvironment = String.fromEnvironment(
     'LOCATION_CATALOG_BASE_URL',
@@ -26,30 +27,27 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
   final bool _ownsHttpClient;
   final String? _catalogBaseUrl;
 
-  JobOfferLocationCatalogState _state = const JobOfferLocationCatalogState();
-  JobOfferLocationCatalogState get state => _state;
-
   int _catalogRequestSequence = 0;
   int _municipalityRequestSequence = 0;
   bool _isDisposed = false;
 
   Future<void> initialize({String? initialProvinceId}) async {
     final requestId = ++_catalogRequestSequence;
-    _emit(_state.copyWith(isLoadingCatalog: true, clearCatalogError: true));
+    emit(state.copyWith(isLoadingCatalog: true, clearCatalogError: true));
 
     final httpCatalog = await _tryLoadCatalogFromHttp(
       requestId: requestId,
       initialProvinceId: initialProvinceId,
     );
     if (httpCatalog != null) {
-      _emit(httpCatalog);
+      emit(httpCatalog);
       return;
     }
 
     final firestore = _firestore;
     if (firestore == null) {
-      _emit(
-        _state.copyWith(
+      emit(
+        state.copyWith(
           isLoadingCatalog: false,
           isLoadingMunicipalities: false,
           clearCatalogError: true,
@@ -69,8 +67,8 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
       );
       if (_isDisposed || requestId != _catalogRequestSequence) return;
 
-      _emit(
-        _state.copyWith(
+      emit(
+        state.copyWith(
           provinces: provinces,
           municipalities: municipalities,
           loadedMunicipalityProvinceId: _normalizeId(initialProvinceId),
@@ -81,8 +79,8 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
       );
     } catch (_) {
       if (_isDisposed || requestId != _catalogRequestSequence) return;
-      _emit(
-        _state.copyWith(
+      emit(
+        state.copyWith(
           isLoadingCatalog: false,
           isLoadingMunicipalities: false,
           catalogError: 'No se pudo cargar el catálogo de ubicaciones.',
@@ -94,8 +92,8 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
   Future<void> loadMunicipalitiesForProvince(String? provinceId) async {
     final normalizedProvinceId = _normalizeId(provinceId);
     if (normalizedProvinceId == null) {
-      _emit(
-        _state.copyWith(
+      emit(
+        state.copyWith(
           municipalities: const [],
           clearLoadedMunicipalityProvinceId: true,
           isLoadingMunicipalities: false,
@@ -105,14 +103,14 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
       return;
     }
 
-    if (normalizedProvinceId == _state.loadedMunicipalityProvinceId &&
-        _state.municipalities.isNotEmpty) {
+    if (normalizedProvinceId == state.loadedMunicipalityProvinceId &&
+        state.municipalities.isNotEmpty) {
       return;
     }
 
     final requestId = ++_municipalityRequestSequence;
-    _emit(
-      _state.copyWith(isLoadingMunicipalities: true, clearCatalogError: true),
+    emit(
+      state.copyWith(isLoadingMunicipalities: true, clearCatalogError: true),
     );
 
     final httpMunicipalities = await _tryLoadMunicipalitiesFromHttp(
@@ -120,8 +118,8 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
       provinceId: normalizedProvinceId,
     );
     if (httpMunicipalities != null) {
-      _emit(
-        _state.copyWith(
+      emit(
+        state.copyWith(
           municipalities: httpMunicipalities,
           loadedMunicipalityProvinceId: normalizedProvinceId,
           isLoadingMunicipalities: false,
@@ -137,8 +135,8 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
       );
       if (_isDisposed || requestId != _municipalityRequestSequence) return;
 
-      _emit(
-        _state.copyWith(
+      emit(
+        state.copyWith(
           municipalities: municipalities,
           loadedMunicipalityProvinceId: normalizedProvinceId,
           isLoadingMunicipalities: false,
@@ -147,8 +145,8 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
       );
     } catch (_) {
       if (_isDisposed || requestId != _municipalityRequestSequence) return;
-      _emit(
-        _state.copyWith(
+      emit(
+        state.copyWith(
           municipalities: const [],
           loadedMunicipalityProvinceId: normalizedProvinceId,
           isLoadingMunicipalities: false,
@@ -159,23 +157,23 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
   }
 
   JobOfferLocationCatalogItem? findProvinceByName(String? name) {
-    return _findByName(_state.provinces, name);
+    return _findByName(state.provinces, name);
   }
 
   JobOfferLocationCatalogItem? findMunicipalityByName(String? name) {
-    return _findByName(_state.municipalities, name);
+    return _findByName(state.municipalities, name);
   }
 
   String? selectedProvinceName({
     required String? provinceId,
     required String? fallbackProvinceName,
   }) {
-    final byId = _findById(_state.provinces, provinceId)?.name;
+    final byId = _findById(state.provinces, provinceId)?.name;
     if (byId != null) return byId;
     if (fallbackProvinceName == null || fallbackProvinceName.trim().isEmpty) {
       return null;
     }
-    final byName = _findByName(_state.provinces, fallbackProvinceName);
+    final byName = _findByName(state.provinces, fallbackProvinceName);
     return byName?.name;
   }
 
@@ -183,13 +181,13 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
     required String? municipalityId,
     required String? fallbackMunicipalityName,
   }) {
-    final byId = _findById(_state.municipalities, municipalityId)?.name;
+    final byId = _findById(state.municipalities, municipalityId)?.name;
     if (byId != null) return byId;
     if (fallbackMunicipalityName == null ||
         fallbackMunicipalityName.trim().isEmpty) {
       return null;
     }
-    final byName = _findByName(_state.municipalities, fallbackMunicipalityName);
+    final byName = _findByName(state.municipalities, fallbackMunicipalityName);
     return byName?.name;
   }
 
@@ -226,7 +224,7 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
       if (_isDisposed || requestId != _catalogRequestSequence) {
         return null;
       }
-      return _state.copyWith(
+      return state.copyWith(
         provinces: provinces,
         municipalities: municipalities,
         loadedMunicipalityProvinceId: _normalizeId(initialProvinceId),
@@ -365,19 +363,13 @@ class JobOfferLocationCatalogController extends ChangeNotifier {
     return normalized;
   }
 
-  void _emit(JobOfferLocationCatalogState nextState) {
-    if (_isDisposed) return;
-    _state = nextState;
-    notifyListeners();
-  }
-
   @override
-  void dispose() {
+  Future<void> close() {
     _isDisposed = true;
     if (_ownsHttpClient) {
       _httpClient.close();
     }
-    super.dispose();
+    return super.close();
   }
 }
 

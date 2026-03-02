@@ -1,7 +1,7 @@
 import 'package:opti_job_app/core/utils/firestore_utils.dart';
 import 'package:equatable/equatable.dart';
 
-class Candidate {
+class Candidate extends Equatable {
   const Candidate({
     required this.id,
     required this.name,
@@ -17,6 +17,9 @@ class Candidate {
     this.videoCurriculum,
   });
 
+  // Note: Using int for ID, but if Firestore auto-generated alphanumeric IDs
+  // are expected in the future, this should be refactored to String.
+  // Currently, FirestoreUtils.parseIntId handles string-numbers, but defaults to 0 for alphanumerics.
   final int id;
   final String name;
   final String lastName;
@@ -30,10 +33,30 @@ class Candidate {
   final CandidateCoverLetter? coverLetter;
   final CandidateVideoCurriculum? videoCurriculum;
 
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+        lastName,
+        email,
+        uid,
+        role,
+        onboardingCompleted,
+        onboardingProfile,
+        avatarUrl,
+        token,
+        coverLetter,
+        videoCurriculum,
+      ];
+
+  @override
+  bool get stringify => true;
+
   factory Candidate.fromJson(Map<String, dynamic> json) {
     final rawCoverLetter = json['cover_letter'];
     final rawVideoCurriculum = json['video_curriculum'];
     final rawOnboardingProfile = json['onboarding_profile'];
+    
     return Candidate(
       id: FirestoreUtils.parseIntId(json['id']),
       name: json['name'] as String? ?? '',
@@ -67,8 +90,8 @@ class Candidate {
       'onboarding_completed': onboardingCompleted,
       if (onboardingProfile != null)
         'onboarding_profile': onboardingProfile!.toJson(),
-      'avatar_url': avatarUrl,
-      'token': token,
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (token != null) 'token': token,
       if (coverLetter != null) 'cover_letter': coverLetter!.toJson(),
       if (videoCurriculum != null)
         'video_curriculum': videoCurriculum!.toJson(),
@@ -88,6 +111,11 @@ class Candidate {
     String? token,
     CandidateCoverLetter? coverLetter,
     CandidateVideoCurriculum? videoCurriculum,
+    bool clearOnboardingProfile = false,
+    bool clearAvatarUrl = false,
+    bool clearToken = false,
+    bool clearCoverLetter = false,
+    bool clearVideoCurriculum = false,
   }) {
     return Candidate(
       id: id ?? this.id,
@@ -97,11 +125,15 @@ class Candidate {
       uid: uid ?? this.uid,
       role: role ?? this.role,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
-      onboardingProfile: onboardingProfile ?? this.onboardingProfile,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
-      token: token ?? this.token,
-      coverLetter: coverLetter ?? this.coverLetter,
-      videoCurriculum: videoCurriculum ?? this.videoCurriculum,
+      onboardingProfile: clearOnboardingProfile
+          ? null
+          : (onboardingProfile ?? this.onboardingProfile),
+      avatarUrl: clearAvatarUrl ? null : (avatarUrl ?? this.avatarUrl),
+      token: clearToken ? null : (token ?? this.token),
+      coverLetter: clearCoverLetter ? null : (coverLetter ?? this.coverLetter),
+      videoCurriculum: clearVideoCurriculum
+          ? null
+          : (videoCurriculum ?? this.videoCurriculum),
     );
   }
 
@@ -135,16 +167,19 @@ class CandidateOnboardingProfile extends Equatable {
 
   @override
   List<Object?> get props => [
-    targetRole,
-    preferredLocation,
-    preferredModality,
-    preferredSeniority,
-    workStyleSkipped,
-    startOfDayPreference,
-    feedbackPreference,
-    structurePreference,
-    taskPacePreference,
-  ];
+        targetRole,
+        preferredLocation,
+        preferredModality,
+        preferredSeniority,
+        workStyleSkipped,
+        startOfDayPreference,
+        feedbackPreference,
+        structurePreference,
+        taskPacePreference,
+      ];
+
+  @override
+  bool get stringify => true;
 
   factory CandidateOnboardingProfile.fromJson(Map<String, dynamic> json) {
     return CandidateOnboardingProfile(
@@ -167,10 +202,14 @@ class CandidateOnboardingProfile extends Equatable {
       'preferred_modality': preferredModality,
       'preferred_seniority': preferredSeniority,
       'work_style_skipped': workStyleSkipped,
-      'start_of_day_preference': startOfDayPreference,
-      'feedback_preference': feedbackPreference,
-      'structure_preference': structurePreference,
-      'task_pace_preference': taskPacePreference,
+      if (startOfDayPreference != null)
+        'start_of_day_preference': startOfDayPreference,
+      if (feedbackPreference != null)
+        'feedback_preference': feedbackPreference,
+      if (structurePreference != null)
+        'structure_preference': structurePreference,
+      if (taskPacePreference != null)
+        'task_pace_preference': taskPacePreference,
     };
   }
 
@@ -211,11 +250,17 @@ class CandidateOnboardingProfile extends Equatable {
   }
 }
 
-class CandidateCoverLetter {
+class CandidateCoverLetter extends Equatable {
   const CandidateCoverLetter({required this.text, this.updatedAt});
 
   final String text;
   final DateTime? updatedAt;
+
+  @override
+  List<Object?> get props => [text, updatedAt];
+
+  @override
+  bool get stringify => true;
 
   factory CandidateCoverLetter.fromJson(Map<String, dynamic> json) {
     return CandidateCoverLetter(
@@ -230,9 +275,20 @@ class CandidateCoverLetter {
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
   }
+
+  CandidateCoverLetter copyWith({
+    String? text,
+    DateTime? updatedAt,
+    bool clearUpdatedAt = false,
+  }) {
+    return CandidateCoverLetter(
+      text: text ?? this.text,
+      updatedAt: clearUpdatedAt ? null : (updatedAt ?? this.updatedAt),
+    );
+  }
 }
 
-class CandidateVideoCurriculum {
+class CandidateVideoCurriculum extends Equatable {
   const CandidateVideoCurriculum({
     required this.storagePath,
     required this.contentType,
@@ -244,6 +300,12 @@ class CandidateVideoCurriculum {
   final String contentType;
   final int sizeBytes;
   final DateTime? updatedAt;
+
+  @override
+  List<Object?> get props => [storagePath, contentType, sizeBytes, updatedAt];
+
+  @override
+  bool get stringify => true;
 
   factory CandidateVideoCurriculum.fromJson(Map<String, dynamic> json) {
     return CandidateVideoCurriculum(
@@ -261,6 +323,21 @@ class CandidateVideoCurriculum {
       'size_bytes': sizeBytes,
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
+  }
+
+  CandidateVideoCurriculum copyWith({
+    String? storagePath,
+    String? contentType,
+    int? sizeBytes,
+    DateTime? updatedAt,
+    bool clearUpdatedAt = false,
+  }) {
+    return CandidateVideoCurriculum(
+      storagePath: storagePath ?? this.storagePath,
+      contentType: contentType ?? this.contentType,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      updatedAt: clearUpdatedAt ? null : (updatedAt ?? this.updatedAt),
+    );
   }
 }
 

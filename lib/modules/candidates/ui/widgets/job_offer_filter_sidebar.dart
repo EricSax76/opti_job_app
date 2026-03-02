@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/job_offer_filter_cubit.dart';
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
-import 'package:opti_job_app/modules/candidates/ui/controllers/job_offer_location_catalog_controller.dart';
+import 'package:opti_job_app/modules/candidates/cubits/job_offer_location_catalog_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_field_decorators.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_job_sections.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_location_sections.dart';
@@ -28,11 +26,19 @@ class JobOfferFilterSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => JobOfferFilterCubit(
-        initialFilters: currentFilters,
-        onFiltersChanged: onFiltersChanged,
-      ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => JobOfferFilterCubit(
+            initialFilters: currentFilters,
+            onFiltersChanged: onFiltersChanged,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => JobOfferLocationCatalogCubit()
+            ..initialize(initialProvinceId: currentFilters.provinceId),
+        ),
+      ],
       child: _JobOfferFilterSidebarContent(
         currentFilters: currentFilters,
         onBackgroundTap: onBackgroundTap,
@@ -55,11 +61,24 @@ class _JobOfferFilterSidebarContent extends StatelessWidget {
     final theme = Theme.of(context);
     final palette = JobOfferFilterPalette.fromTheme(theme);
 
-    return BlocListener<JobOfferFilterCubit, JobOfferFilterState>(
-      listenWhen: (previous, current) => previous.filters != current.filters,
-      listener: (context, state) {
-        if (state.filters == currentFilters) return;
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<JobOfferFilterCubit, JobOfferFilterState>(
+          listenWhen: (previous, current) => previous.filters != current.filters,
+          listener: (context, state) {
+            if (state.filters == currentFilters) return;
+          },
+        ),
+        BlocListener<JobOfferFilterCubit, JobOfferFilterState>(
+          listenWhen: (previous, current) =>
+              previous.filters.provinceId != current.filters.provinceId,
+          listener: (context, state) {
+            context.read<JobOfferLocationCatalogCubit>().loadMunicipalitiesForProvince(
+              state.filters.provinceId,
+            );
+          },
+        ),
+      ],
       child: _SidebarBody(
         palette: palette,
         isDark: theme.brightness == Brightness.dark,
@@ -88,25 +107,6 @@ class _SidebarBody extends StatefulWidget {
 }
 
 class _SidebarBodyState extends State<_SidebarBody> {
-  late final JobOfferLocationCatalogController _locationCatalogController;
-
-  @override
-  void initState() {
-    super.initState();
-    _locationCatalogController = JobOfferLocationCatalogController();
-    unawaited(
-      _locationCatalogController.initialize(
-        initialProvinceId: widget.currentFilters.provinceId,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _locationCatalogController.dispose();
-    super.dispose();
-  }
-
   @override
   void didUpdateWidget(covariant _SidebarBody oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -115,27 +115,16 @@ class _SidebarBodyState extends State<_SidebarBody> {
         widget.currentFilters,
       );
     }
-
-    if (widget.currentFilters.provinceId !=
-        oldWidget.currentFilters.provinceId) {
-      unawaited(
-        _locationCatalogController.loadMunicipalitiesForProvince(
-          widget.currentFilters.provinceId,
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _locationCatalogController,
-      builder: (context, _) {
-        final catalogState = _locationCatalogController.state;
-
+    return BlocBuilder<JobOfferLocationCatalogCubit, JobOfferLocationCatalogState>(
+      builder: (context, catalogState) {
         return BlocBuilder<JobOfferFilterCubit, JobOfferFilterState>(
           builder: (context, state) {
             final cubit = context.read<JobOfferFilterCubit>();
+            final locationCatalogCubit = context.read<JobOfferLocationCatalogCubit>();
             final filters = state.filters;
 
             return GestureDetector(
@@ -192,7 +181,7 @@ class _SidebarBodyState extends State<_SidebarBody> {
                         filters: filters,
                         cubit: cubit,
                         catalogState: catalogState,
-                        locationCatalogController: _locationCatalogController,
+                        locationCatalogCubit: locationCatalogCubit,
                       ),
                       const SizedBox(
                         height: JobOfferFilterSidebarTokens.sectionSpacing,

@@ -13,6 +13,7 @@
             "name": "Flutter (Chrome) - con IA",
             "request": "launch",
             "type": "dart",
+            "deviceId": "chrome",
             "args": [
                 "--web-hostname=127.0.0.1",
                 "--web-port=5500",

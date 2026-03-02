@@ -3,13 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
-import 'package:opti_job_app/core/widgets/info_pill.dart';
-
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/offer_applicants_section.dart';
 import 'package:opti_job_app/modules/job_offers/logic/offer_card_logic.dart';
+
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/ui/controllers/offer_card_controller.dart';
+import 'package:opti_job_app/core/widgets/info_pill.dart';
 
 class OfferCard extends StatelessWidget {
   const OfferCard({super.key, required this.offer});
