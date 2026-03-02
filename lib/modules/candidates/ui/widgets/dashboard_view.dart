@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_reminders_visibility_cubit.dart';
 import 'package:opti_job_app/modules/candidates/logic/candidate_onboarding_filter_logic.dart';
 import 'package:opti_job_app/modules/candidates/logic/dashboard_layout_logic.dart';
 import 'package:opti_job_app/modules/candidates/logic/dashboard_scroll_logic.dart';
@@ -13,6 +14,7 @@ import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_filter_toggle_row.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_welcome_header.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/dashboard_offers_section.dart';
@@ -177,20 +179,39 @@ class _DashboardViewState extends State<DashboardView> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            CandidateReminderPanel(
-                              isExpanded: _isMobileRemindersExpanded,
-                              onToggle: () {
-                                setState(() {
-                                  _isMobileRemindersExpanded =
-                                      !_isMobileRemindersExpanded;
-                                });
-                              },
-                              window: _mobileReminderWindow,
-                              onWindowChanged: (window) {
-                                setState(() {
-                                  _mobileReminderWindow = window;
-                                });
+                            BlocBuilder<CandidateRemindersVisibilityCubit, bool>(
+                              builder: (context, remindersVisible) {
+                                if (!remindersVisible) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 16),
+                                  child: Dismissible(
+                                    key: const ValueKey('mobile_reminder_panel'),
+                                    direction: DismissDirection.startToEnd,
+                                    onDismissed: (_) {
+                                      context.read<CandidateRemindersVisibilityCubit>().hideReminders();
+                                    },
+                                    background: Container(
+                                      color: Colors.transparent,
+                                    ),
+                                    child: CandidateReminderPanel(
+                                      isExpanded: _isMobileRemindersExpanded,
+                                      onToggle: () {
+                                        setState(() {
+                                          _isMobileRemindersExpanded =
+                                              !_isMobileRemindersExpanded;
+                                        });
+                                      },
+                                      window: _mobileReminderWindow,
+                                      onWindowChanged: (window) {
+                                        setState(() {
+                                          _mobileReminderWindow = window;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           ],
@@ -282,16 +303,54 @@ class _DashboardViewState extends State<DashboardView> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (sheetContext) {
         return FractionallySizedBox(
           heightFactor: 0.9,
           child: BlocSelector<JobOffersCubit, JobOffersState, JobOfferFilters>(
             selector: (state) => state.activeFilters,
             builder: (context, filters) {
-              return JobOfferFilterSidebar(
-                currentFilters: filters,
-                onFiltersChanged: context.read<JobOffersCubit>().applyFilters,
-              );
+              return Container(
+                clipBehavior: Clip.antiAlias,
+                margin: const EdgeInsets.only(top: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 24,
+                      offset: const Offset(0, -8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12, bottom: 8),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: JobOfferFilterSidebar(
+                        currentFilters: filters,
+                        onFiltersChanged: context.read<JobOffersCubit>().applyFilters,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+              .slideY(begin: 0.1, duration: 600.ms, curve: Curves.easeOutQuart)
+              .scaleXY(begin: 0.1, end: 1.0, duration: 600.ms, curve: Curves.easeOutQuart);
             },
           ),
         );

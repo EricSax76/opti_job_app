@@ -36,6 +36,7 @@ const candidateDashboardNavItems = <CandidateDashboardNavItem>[
     tabLabel: 'Para ti',
     tabIcon: Icons.dashboard,
     showInTabs: true,
+    showInDrawer: true,
   ),
   CandidateDashboardNavItem(
     index: 1,
@@ -45,6 +46,7 @@ const candidateDashboardNavItems = <CandidateDashboardNavItem>[
     tabLabel: 'Mis Ofertas',
     tabIcon: Icons.work_history,
     showInTabs: true,
+    showInDrawer: true,
   ),
   CandidateDashboardNavItem(
     index: 2,
@@ -54,6 +56,7 @@ const candidateDashboardNavItems = <CandidateDashboardNavItem>[
     tabLabel: 'Entrevistas',
     tabIcon: Icons.event_available_outlined,
     showInTabs: true,
+    showInDrawer: true,
   ),
   CandidateDashboardNavItem(
     index: 3,

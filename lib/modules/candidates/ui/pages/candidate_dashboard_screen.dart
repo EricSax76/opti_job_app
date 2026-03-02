@@ -15,6 +15,7 @@ import 'package:opti_job_app/modules/candidates/ui/widgets/candidate_dashboard_s
 import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_reminders_visibility_cubit.dart';
 
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/profiles/ui/pages/profile_screen.dart';
@@ -48,6 +49,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final CandidateDashboardCubit _dashboardCubit;
+  late final CandidateRemindersVisibilityCubit _remindersVisibilityCubit;
   late final List<Widget?> _dashboardPages;
   bool _isProgrammaticTabChange = false;
 
@@ -58,6 +60,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       initialIndex: widget.initialIndex,
       candidateUid: widget.uid,
     );
+    _remindersVisibilityCubit = CandidateRemindersVisibilityCubit();
 
     // Initialize TabController based on Cubit's initial state
     _tabController = TabController(
@@ -83,6 +86,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     _tabController.removeListener(_onTabControllerChanged);
     _tabController.dispose();
     _dashboardCubit.close();
+    _remindersVisibilityCubit.close();
     // _applicationsCubit.close(); // Managed by parent provider
     // _interviewsCubit.close(); // Managed by parent provider
     super.dispose();
@@ -123,6 +127,7 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _dashboardCubit),
+        BlocProvider.value(value: _remindersVisibilityCubit),
         BlocProvider.value(value: widget.applicationsCubit),
         BlocProvider.value(value: widget.interviewsCubit),
         BlocProvider.value(value: widget.calendarCubit),

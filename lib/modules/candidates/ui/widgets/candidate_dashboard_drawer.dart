@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/core/theme/theme_state.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_reminders_visibility_cubit.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate_dashboard_navigation.dart';
 
 class CandidateDashboardDrawer extends StatelessWidget {
@@ -54,6 +55,19 @@ class CandidateDashboardDrawer extends StatelessWidget {
                 trailing: Switch.adaptive(
                   value: isDark,
                   onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
+                ),
+              );
+            },
+          ),
+          BlocBuilder<CandidateRemindersVisibilityCubit, bool>(
+            builder: (context, remindersVisible) {
+              return ListTile(
+                leading: const Icon(Icons.notifications_active_outlined),
+                title: const Text('Recordatorios'),
+                subtitle: Text(remindersVisible ? 'Visibles' : 'Ocultos'),
+                trailing: Switch.adaptive(
+                  value: remindersVisible,
+                  onChanged: (_) => context.read<CandidateRemindersVisibilityCubit>().toggleReminders(),
                 ),
               );
             },
