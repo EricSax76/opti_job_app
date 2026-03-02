@@ -144,7 +144,11 @@ class ProfileService {
         SettableMetadata(contentType: 'image/jpeg'),
       );
       final avatarUrl = await avatarRef.getDownloadURL();
-      updateData['avatar_url'] = avatarUrl;
+      // append cache buster to force NetworkImage to reload the image
+      final bustUrl = avatarUrl.contains('?')
+          ? '$avatarUrl&_v=${DateTime.now().millisecondsSinceEpoch}'
+          : '$avatarUrl?_v=${DateTime.now().millisecondsSinceEpoch}';
+      updateData['avatar_url'] = bustUrl;
     }
 
     await docRef.update(updateData);
@@ -223,7 +227,10 @@ class ProfileService {
         avatarBytes,
         SettableMetadata(contentType: 'image/jpeg'),
       );
-      newAvatarUrl = await avatarRef.getDownloadURL();
+      final rawAvatarUrl = await avatarRef.getDownloadURL();
+      newAvatarUrl = rawAvatarUrl.contains('?')
+          ? '$rawAvatarUrl&_v=${DateTime.now().millisecondsSinceEpoch}'
+          : '$rawAvatarUrl?_v=${DateTime.now().millisecondsSinceEpoch}';
       updateData['avatar_url'] = newAvatarUrl;
     }
 

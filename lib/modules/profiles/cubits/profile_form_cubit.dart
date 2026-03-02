@@ -155,6 +155,15 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
     );
   }
 
+  void notifyValidationFailed() {
+    emit(
+      state.copyWith(
+        notice: ProfileFormNotice.error,
+        noticeMessage: 'Revisa los campos obligatorios antes de guardar.',
+      ),
+    );
+  }
+
   void clearNotice() {
     if (state.notice != null) {
       emit(state.copyWith(clearNotice: true));
@@ -164,7 +173,11 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
   Future<void> pickAvatar() async {
     try {
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery);
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        imageQuality: 80,
+      );
       if (image == null) return;
       final bytes = await image.readAsBytes();
       final onboardingDraft = _syncDraftWithTextControllers(
@@ -266,6 +279,7 @@ class ProfileFormCubit extends Cubit<ProfileFormState> {
       onboardingProfile: onboardingProfile,
       onboardingDraft: onboardingDraft,
       avatarBytes: avatarBytes,
+      clearAvatarBytes: justSaved,
       hasChanges: hasChanges,
       errorMessage: viewStatus == ProfileFormViewStatus.error
           ? profileState.errorMessage

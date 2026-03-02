@@ -11,7 +11,10 @@ class ProfileFormController {
     required ProfileFormCubit formCubit,
     required ProfileFormState state,
   }) {
-    if (formKey.currentState?.validate() != true) return;
+    if (formKey.currentState?.validate() != true) {
+      formCubit.notifyValidationFailed();
+      return;
+    }
     if (!ProfileFormLogic.canSubmit(state)) return;
     formCubit.submit();
   }

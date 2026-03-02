@@ -8,7 +8,7 @@
       "https://opti-job.firebaseapp.com"
 
     ],
-    "method": ["GET", "HEAD"],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
     "responseHeader": ["Content-Type", "Authorization"],
     "maxAgeSeconds": 3600
   }

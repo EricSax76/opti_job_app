@@ -80,6 +80,7 @@ class ProfileFormState extends Equatable {
     CandidateOnboardingProfile? onboardingDraft,
     bool clearNotice = false,
     bool clearError = false,
+    bool clearAvatarBytes = false,
   }) {
     return ProfileFormState(
       viewStatus: viewStatus ?? this.viewStatus,
@@ -87,7 +88,7 @@ class ProfileFormState extends Equatable {
       isSaving: isSaving ?? this.isSaving,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       email: email ?? this.email,
-      avatarBytes: avatarBytes ?? this.avatarBytes,
+      avatarBytes: clearAvatarBytes ? null : (avatarBytes ?? this.avatarBytes),
       hasChanges: hasChanges ?? this.hasChanges,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
       canSubmit: canSubmit ?? this.canSubmit,
