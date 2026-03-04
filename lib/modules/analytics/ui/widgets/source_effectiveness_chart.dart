@@ -14,8 +14,15 @@ class SourceEffectivenessChart extends StatelessWidget {
     final ratioStyle = textTheme.labelSmall?.copyWith(
       fontWeight: FontWeight.bold,
     );
-    // Expected format: { sourceName: { applications: 100, hires: 10 } }
-    final sources = data.entries.toList();
+    final detailStyle = textTheme.labelSmall;
+    final sources = data.entries.toList()
+      ..sort((a, b) {
+        final aMetrics = Map<String, dynamic>.from(a.value as Map);
+        final bMetrics = Map<String, dynamic>.from(b.value as Map);
+        final aHires = (aMetrics['hires'] as num?)?.toInt() ?? 0;
+        final bHires = (bMetrics['hires'] as num?)?.toInt() ?? 0;
+        return bHires.compareTo(aHires);
+      });
 
     return AppCard(
       padding: const EdgeInsets.all(uiSpacing16),
@@ -29,34 +36,62 @@ class SourceEffectivenessChart extends StatelessWidget {
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: uiSpacing16),
+          if (sources.isEmpty)
+            Text(
+              'Sin datos de fuentes para este periodo.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ...sources.map((entry) {
-            final metrics = entry.value as Map<String, dynamic>;
+            final metrics = Map<String, dynamic>.from(entry.value as Map);
             final hires = (metrics['hires'] as num?)?.toInt() ?? 0;
             final apps = (metrics['applications'] as num?)?.toInt() ?? 0;
+            final spend = (metrics['spendEur'] as num?)?.toDouble() ?? 0;
+            final roi = (metrics['roi'] as num?)?.toDouble() ?? 0;
+            final costPerHire =
+                (metrics['costPerHireEur'] as num?)?.toDouble() ?? 0;
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: uiSpacing8),
-              child: Row(
+              padding: const EdgeInsets.only(bottom: uiSpacing12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(entry.key, style: sourceLabelStyle),
+                  Row(
+                    children: [
+                      Expanded(child: Text(entry.key, style: sourceLabelStyle)),
+                      Text('$hires/$apps', style: ratioStyle),
+                    ],
                   ),
-                  Expanded(
-                    flex: 5,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: LinearProgressIndicator(
-                        value: apps > 0 ? hires / apps : 0,
-                        minHeight: uiSpacing8,
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                      ),
+                  const SizedBox(height: uiSpacing4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: apps > 0 ? hires / apps : 0,
+                      minHeight: uiSpacing8,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                     ),
                   ),
-                  const SizedBox(width: uiSpacing8),
-                  Text('$hires/$apps', style: ratioStyle),
+                  const SizedBox(height: uiSpacing4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Inversión: €${spend.toStringAsFixed(2)}',
+                          style: detailStyle,
+                        ),
+                      ),
+                      Text(
+                        'CPH €${costPerHire.toStringAsFixed(2)}',
+                        style: detailStyle,
+                      ),
+                      const SizedBox(width: uiSpacing8),
+                      Text(
+                        'ROI ${(roi * 100).toStringAsFixed(1)}%',
+                        style: detailStyle,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             );

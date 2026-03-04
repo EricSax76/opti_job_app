@@ -186,6 +186,25 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 unit: '%',
               ),
             ),
+            KpiSummaryCard(
+              metric: KpiMetric(
+                label: 'Inversión Canales',
+                value:
+                    (metrics['totalMultipostingSpendEur'] as num?)
+                        ?.toDouble() ??
+                    0.0,
+                unit: '€',
+              ),
+            ),
+            KpiSummaryCard(
+              metric: KpiMetric(
+                label: 'ROI Canales',
+                value:
+                    ((metrics['overallChannelRoi'] as num?)?.toDouble() ?? 0) *
+                    100,
+                unit: '%',
+              ),
+            ),
           ],
         );
       },

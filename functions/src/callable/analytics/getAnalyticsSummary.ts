@@ -59,6 +59,9 @@ export const getAnalyticsSummary = functions.https.onCall(async (data, context) 
         averageTimeToFill: 0,
         pipelineConversionRates: {},
         sourceEffectiveness: {},
+        totalMultipostingSpendEur: 0,
+        totalAttributedHireValueEur: 0,
+        overallChannelRoi: 0,
         recruiterMetrics: {}
       }
     };

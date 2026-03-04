@@ -127,4 +127,16 @@ class AiService {
   }) async {
     return _skillsMatchingService.extractSkillsFromText(cvText);
   }
+
+  Future<SemanticSkillsMatch> evaluateSemanticSkills({
+    required List<Skill> candidateSkills,
+    required List<JobOfferSkill> requiredSkills,
+    required List<Skill> preferredSkills,
+  }) {
+    return _skillsMatchingService.calculateSemanticMatch(
+      candidateSkills: candidateSkills,
+      requiredSkills: requiredSkills,
+      preferredSkills: preferredSkills,
+    );
+  }
 }

@@ -20,6 +20,32 @@ class AiMatchResult {
   final String? modelVersion;
   final DateTime? generatedAt;
 
+  AiMatchResult copyWith({
+    int? score,
+    List<String>? reasons,
+    List<String>? recommendations,
+    String? explanation,
+    SkillsOverlap? skillsOverlap,
+    String? summary,
+    String? modelVersion,
+    DateTime? generatedAt,
+    bool clearSummary = false,
+    bool clearSkillsOverlap = false,
+  }) {
+    return AiMatchResult(
+      score: score ?? this.score,
+      reasons: reasons ?? this.reasons,
+      recommendations: recommendations ?? this.recommendations,
+      explanation: explanation ?? this.explanation,
+      skillsOverlap: clearSkillsOverlap
+          ? null
+          : skillsOverlap ?? this.skillsOverlap,
+      summary: clearSummary ? null : summary ?? this.summary,
+      modelVersion: modelVersion ?? this.modelVersion,
+      generatedAt: generatedAt ?? this.generatedAt,
+    );
+  }
+
   factory AiMatchResult.fromJson(Map<String, dynamic> json) {
     final rawScore = json['score'];
     final score = _parseScore(rawScore);
@@ -35,19 +61,21 @@ class AiMatchResult {
             .where((value) => value.isNotEmpty)
             .toList();
     final summary = (json['summary'] as String?)?.trim();
-    
+
     return AiMatchResult(
       score: score,
       reasons: reasons,
       recommendations: recommendations,
       explanation: json['explanation'] as String? ?? '',
-      skillsOverlap: json['skillsOverlap'] != null 
-          ? SkillsOverlap.fromJson(json['skillsOverlap'] as Map<String, dynamic>) 
+      skillsOverlap: json['skillsOverlap'] != null
+          ? SkillsOverlap.fromJson(
+              json['skillsOverlap'] as Map<String, dynamic>,
+            )
           : null,
       summary: (summary?.isEmpty ?? true) ? null : summary,
       modelVersion: json['modelVersion'] as String?,
-      generatedAt: json['generatedAt'] != null 
-          ? DateTime.tryParse(json['generatedAt'] as String) 
+      generatedAt: json['generatedAt'] != null
+          ? DateTime.tryParse(json['generatedAt'] as String)
           : null,
     );
   }
@@ -95,17 +123,19 @@ class SkillsOverlap {
 
   factory SkillsOverlap.fromJson(Map<String, dynamic> json) {
     return SkillsOverlap(
-      matched: (json['matched'] as List<dynamic>? ?? const []).whereType<String>().toList(),
-      missing: (json['missing'] as List<dynamic>? ?? const []).whereType<String>().toList(),
-      adjacent: (json['adjacent'] as List<dynamic>? ?? const []).whereType<String>().toList(),
+      matched: (json['matched'] as List<dynamic>? ?? const [])
+          .whereType<String>()
+          .toList(),
+      missing: (json['missing'] as List<dynamic>? ?? const [])
+          .whereType<String>()
+          .toList(),
+      adjacent: (json['adjacent'] as List<dynamic>? ?? const [])
+          .whereType<String>()
+          .toList(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'matched': matched,
-      'missing': missing,
-      'adjacent': adjacent,
-    };
+    return {'matched': matched, 'missing': missing, 'adjacent': adjacent};
   }
 }

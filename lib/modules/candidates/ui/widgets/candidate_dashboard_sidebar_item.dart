@@ -42,37 +42,52 @@ class CandidateDashboardSidebarItem extends StatelessWidget {
     if (isCollapsed) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: IconButton(
-          onPressed: onTap,
-          icon: icon,
-          style: IconButton.styleFrom(
-            backgroundColor: isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.5)
-                : null,
+        child: Semantics(
+          button: true,
+          selected: isSelected,
+          label: item.label,
+          child: IconButton(
+            onPressed: onTap,
+            icon: icon,
+            style: IconButton.styleFrom(
+              backgroundColor: isSelected
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.5)
+                  : null,
+            ),
+            tooltip: item.label,
           ),
-          tooltip: item.label,
         ),
       );
     }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        leading: icon,
-        title: Text(
-          item.label,
-          style: textTheme.bodyLarge?.copyWith(
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: item.label,
+        child: ListTile(
+          leading: icon,
+          title: Text(
+            item.label,
+            style: textTheme.bodyLarge?.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(uiFieldRadius),
+          ),
+          selected: isSelected,
+          selectedTileColor: colorScheme.primaryContainer.withValues(
+            alpha: 0.3,
+          ),
+          onTap: onTap,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(uiFieldRadius),
-        ),
-        selected: isSelected,
-        selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
     );
   }

@@ -38,73 +38,89 @@ class _CompanyDashboardSidebarState extends State<CompanyDashboardSidebar> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 90),
-      curve: Curves.easeOutCubic,
-      width: _isCollapsed
-          ? CompanyDashboardSidebar.collapsedWidth
-          : CompanyDashboardSidebar.expandedWidth,
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border(
-          right: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+    return Semantics(
+      container: true,
+      label: 'Menú lateral de empresa',
+      expanded: !_isCollapsed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOutCubic,
+        width: _isCollapsed
+            ? CompanyDashboardSidebar.collapsedWidth
+            : CompanyDashboardSidebar.expandedWidth,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(
+            right: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
           ),
+          boxShadow: uiShadowSm,
         ),
-        boxShadow: uiShadowSm,
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-              children: [
-                for (final item in widget.items)
-                  _CompanySidebarItem(
-                    item: item,
-                    isSelected: item.index == widget.selectedIndex,
-                    isCollapsed: _isCollapsed,
-                    onTap: () => widget.onSelected(item.index),
-                  ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                if (_isCollapsed)
-                  IconButton(
-                    onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-                    icon: BlocBuilder<ThemeCubit, ThemeState>(
-                      builder: (context, state) {
-                        final isDark = state.themeMode == ThemeMode.dark;
-                        return Icon(
-                          isDark ? Icons.light_mode : Icons.dark_mode,
-                        );
-                      },
+        clipBehavior: Clip.hardEdge,
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                children: [
+                  for (final item in widget.items)
+                    _CompanySidebarItem(
+                      item: item,
+                      isSelected: item.index == widget.selectedIndex,
+                      isCollapsed: _isCollapsed,
+                      onTap: () => widget.onSelected(item.index),
                     ),
-                    tooltip: 'Cambiar tema',
-                  )
-                else
-                  const _CompanyThemeToggle(),
-                const SizedBox(height: 8),
-                IconButton(
-                  onPressed: _toggleCollapse,
-                  icon: Icon(
-                    _isCollapsed
-                        ? Icons.keyboard_double_arrow_right
-                        : Icons.keyboard_double_arrow_left,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  tooltip: _isCollapsed ? 'Expandir' : 'Colapsar',
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  if (_isCollapsed)
+                    Semantics(
+                      button: true,
+                      label: 'Cambiar tema',
+                      child: IconButton(
+                        onPressed: () =>
+                            context.read<ThemeCubit>().toggleTheme(),
+                        icon: BlocBuilder<ThemeCubit, ThemeState>(
+                          builder: (context, state) {
+                            final isDark = state.themeMode == ThemeMode.dark;
+                            return Icon(
+                              isDark ? Icons.light_mode : Icons.dark_mode,
+                            );
+                          },
+                        ),
+                        tooltip: 'Cambiar tema',
+                      ),
+                    )
+                  else
+                    const _CompanyThemeToggle(),
+                  const SizedBox(height: 8),
+                  Semantics(
+                    button: true,
+                    label: _isCollapsed
+                        ? 'Expandir menú lateral'
+                        : 'Colapsar menú lateral',
+                    child: IconButton(
+                      onPressed: _toggleCollapse,
+                      icon: Icon(
+                        _isCollapsed
+                            ? Icons.keyboard_double_arrow_right
+                            : Icons.keyboard_double_arrow_left,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      tooltip: _isCollapsed ? 'Expandir' : 'Colapsar',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -137,37 +153,52 @@ class _CompanySidebarItem extends StatelessWidget {
     if (isCollapsed) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: IconButton(
-          onPressed: onTap,
-          icon: icon,
-          style: IconButton.styleFrom(
-            backgroundColor: isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.45)
-                : null,
+        child: Semantics(
+          button: true,
+          selected: isSelected,
+          label: item.label,
+          child: IconButton(
+            onPressed: onTap,
+            icon: icon,
+            style: IconButton.styleFrom(
+              backgroundColor: isSelected
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.45)
+                  : null,
+            ),
+            tooltip: item.label,
           ),
-          tooltip: item.label,
         ),
       );
     }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        onTap: onTap,
-        leading: icon,
-        title: Text(
-          item.label,
-          style: textTheme.bodyLarge?.copyWith(
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: item.label,
+        child: ListTile(
+          onTap: onTap,
+          leading: icon,
+          title: Text(
+            item.label,
+            style: textTheme.bodyLarge?.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(uiFieldRadius),
+          ),
+          selected: isSelected,
+          selectedTileColor: colorScheme.primaryContainer.withValues(
+            alpha: 0.3,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
           ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(uiFieldRadius),
-        ),
-        selected: isSelected,
-        selectedTileColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
     );
   }
@@ -181,21 +212,26 @@ class _CompanyThemeToggle extends StatelessWidget {
     return BlocBuilder<ThemeCubit, ThemeState>(
       builder: (context, state) {
         final isDark = state.themeMode == ThemeMode.dark;
-        return InkWell(
-          onTap: () => context.read<ThemeCubit>().toggleTheme(),
-          borderRadius: BorderRadius.circular(uiFieldRadius),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Icon(isDark ? Icons.dark_mode : Icons.light_mode, size: 20),
-                const SizedBox(width: 10),
-                const Expanded(child: Text('Tema oscuro')),
-                Switch.adaptive(
-                  value: isDark,
-                  onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
-                ),
-              ],
+        return Semantics(
+          button: true,
+          toggled: isDark,
+          label: 'Tema oscuro',
+          child: InkWell(
+            onTap: () => context.read<ThemeCubit>().toggleTheme(),
+            borderRadius: BorderRadius.circular(uiFieldRadius),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(isDark ? Icons.dark_mode : Icons.light_mode, size: 20),
+                  const SizedBox(width: 10),
+                  const Expanded(child: Text('Tema oscuro')),
+                  Switch.adaptive(
+                    value: isDark,
+                    onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
+                  ),
+                ],
+              ),
             ),
           ),
         );

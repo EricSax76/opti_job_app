@@ -170,16 +170,13 @@ class OfferCard extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Justificación enviada. La oferta se ha desbloqueado.',
-          ),
+          content: Text('Justificación enviada. La oferta se ha desbloqueado.'),
         ),
       );
       context.read<CompanyJobOffersCubit>().refresh();
     } on FirebaseFunctionsException catch (error) {
       if (!context.mounted) return;
-      final message =
-          error.message?.trim().isNotEmpty == true
+      final message = error.message?.trim().isNotEmpty == true
           ? error.message!
           : 'No se pudo enviar la justificación.';
       ScaffoldMessenger.of(
@@ -188,33 +185,65 @@ class OfferCard extends StatelessWidget {
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo enviar la justificación.'),
-        ),
+        const SnackBar(content: Text('No se pudo enviar la justificación.')),
       );
     }
   }
 
   Future<void> _publishToExternalChannels(BuildContext context) async {
+    final selectedChannels = await showDialog<List<_MultipostingChannelOption>>(
+      context: context,
+      builder: (_) => _MultipostingChannelDialog(
+        initialSelection: offer.multipostingEnabledChannels,
+      ),
+    );
+
+    if (selectedChannels == null ||
+        selectedChannels.isEmpty ||
+        !context.mounted) {
+      return;
+    }
+
     try {
       final callable = FirebaseFunctions.instanceFor(
         region: 'europe-west1',
       ).httpsCallable('publishOfferMultiposting');
-      await callable.call({'jobOfferId': offer.id});
+      final response = await callable.call({
+        'jobOfferId': offer.id,
+        'channels': selectedChannels
+            .map(
+              (channel) => {
+                'channel': channel.id,
+                'costEur': channel.estimatedCostEur,
+              },
+            )
+            .toList(growable: false),
+      });
+
+      final responseData = response.data as Map<Object?, Object?>?;
+      final publishedChannels =
+          (responseData?['channels'] as List<Object?>?)?.length ??
+          selectedChannels.length;
+      final totalCost =
+          (responseData?['totalEstimatedCostEur'] as num?)?.toDouble() ??
+          selectedChannels.fold<double>(
+            0,
+            (total, channel) => total + channel.estimatedCostEur,
+          );
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Oferta publicada en canales externos (LinkedIn, Indeed y Universidades).',
+            'Oferta publicada en $publishedChannels canal(es). '
+            'Coste estimado: €${totalCost.toStringAsFixed(2)}.',
           ),
         ),
       );
       context.read<CompanyJobOffersCubit>().refresh();
     } on FirebaseFunctionsException catch (error) {
       if (!context.mounted) return;
-      final message =
-          error.message?.trim().isNotEmpty == true
+      final message = error.message?.trim().isNotEmpty == true
           ? error.message!
           : 'No se pudo publicar en canales externos.';
       ScaffoldMessenger.of(
@@ -228,6 +257,157 @@ class OfferCard extends StatelessWidget {
         ),
       );
     }
+  }
+}
+
+class _MultipostingChannelOption {
+  const _MultipostingChannelOption({
+    required this.id,
+    required this.label,
+    required this.estimatedCostEur,
+  });
+
+  final String id;
+  final String label;
+  final double estimatedCostEur;
+}
+
+const _availableMultipostingChannels = <_MultipostingChannelOption>[
+  _MultipostingChannelOption(
+    id: 'linkedin',
+    label: 'LinkedIn',
+    estimatedCostEur: 249,
+  ),
+  _MultipostingChannelOption(
+    id: 'indeed',
+    label: 'Indeed',
+    estimatedCostEur: 199,
+  ),
+  _MultipostingChannelOption(
+    id: 'university_portal',
+    label: 'Portal universitario',
+    estimatedCostEur: 89,
+  ),
+  _MultipostingChannelOption(
+    id: 'infojobs',
+    label: 'InfoJobs',
+    estimatedCostEur: 149,
+  ),
+  _MultipostingChannelOption(
+    id: 'glassdoor',
+    label: 'Glassdoor',
+    estimatedCostEur: 129,
+  ),
+  _MultipostingChannelOption(
+    id: 'github_jobs',
+    label: 'GitHub Jobs',
+    estimatedCostEur: 179,
+  ),
+];
+
+class _MultipostingChannelDialog extends StatefulWidget {
+  const _MultipostingChannelDialog({required this.initialSelection});
+
+  final List<String> initialSelection;
+
+  @override
+  State<_MultipostingChannelDialog> createState() =>
+      _MultipostingChannelDialogState();
+}
+
+class _MultipostingChannelDialogState
+    extends State<_MultipostingChannelDialog> {
+  late final Set<String> _selectedChannels;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialSelection
+        .map((value) => value.trim().toLowerCase())
+        .where((value) => value.isNotEmpty)
+        .toSet();
+    _selectedChannels = initial.isNotEmpty
+        ? initial
+        : {'linkedin', 'indeed', 'university_portal'};
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final estimatedTotal = _availableMultipostingChannels
+        .where((channel) => _selectedChannels.contains(channel.id))
+        .fold<double>(0, (total, channel) => total + channel.estimatedCostEur);
+
+    return AlertDialog(
+      title: const Text('Seleccionar canales de multiposting'),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Elige canales y revisa coste estimado por publicación.',
+            ),
+            const SizedBox(height: uiSpacing12),
+            SizedBox(
+              height: 280,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: _availableMultipostingChannels
+                      .map((channel) {
+                        final selected = _selectedChannels.contains(channel.id);
+                        return CheckboxListTile(
+                          value: selected,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(channel.label),
+                          subtitle: Text(
+                            'Coste estimado: €${channel.estimatedCostEur.toStringAsFixed(2)}',
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              if (value == true) {
+                                _selectedChannels.add(channel.id);
+                              } else {
+                                _selectedChannels.remove(channel.id);
+                              }
+                            });
+                          },
+                        );
+                      })
+                      .toList(growable: false),
+                ),
+              ),
+            ),
+            const SizedBox(height: uiSpacing8),
+            Text(
+              'Total estimado: €${estimatedTotal.toStringAsFixed(2)}',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: _selectedChannels.isEmpty
+              ? null
+              : () {
+                  final selected = _availableMultipostingChannels
+                      .where(
+                        (channel) => _selectedChannels.contains(channel.id),
+                      )
+                      .toList(growable: false);
+                  Navigator.of(context).pop(selected);
+                },
+          child: const Text('Publicar'),
+        ),
+      ],
+    );
   }
 }
 

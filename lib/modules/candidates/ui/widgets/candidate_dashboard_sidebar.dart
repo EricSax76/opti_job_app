@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/theme_cubit.dart';
@@ -68,100 +69,117 @@ class _CandidateDashboardSidebarState extends State<CandidateDashboardSidebar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final sidebar = AnimatedContainer(
-      duration: const Duration(milliseconds: 90),
-      curve: _isCollapsed ? Curves.easeInCubic : Curves.easeOutSine,
-      width: _isCollapsed
-          ? CandidateDashboardSidebar.collapsedWidth
-          : CandidateDashboardSidebar.expandedWidth,
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border(
-          left: widget.alignToRight
-              ? BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                )
-              : BorderSide.none,
-          right: widget.alignToRight
-              ? BorderSide.none
-              : BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
+    final sidebar = Semantics(
+      container: true,
+      label: 'Menú lateral de navegación de candidato',
+      expanded: !_isCollapsed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 90),
+        curve: _isCollapsed ? Curves.easeInCubic : Curves.easeOutSine,
+        width: _isCollapsed
+            ? CandidateDashboardSidebar.collapsedWidth
+            : CandidateDashboardSidebar.expandedWidth,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(
+            left: widget.alignToRight
+                ? BorderSide(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  )
+                : BorderSide.none,
+            right: widget.alignToRight
+                ? BorderSide.none
+                : BorderSide(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  ),
+          ),
+          boxShadow: uiShadowSm,
         ),
-        boxShadow: uiShadowSm,
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final useCompactVisuals = _isCollapsed || constraints.maxWidth < 180;
-          return Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-                  children: [
-                    for (final item in candidateDashboardSidebarItems)
-                      if (item.label != 'Entrevistas' ||
-                          FeatureFlags.interviews)
-                        CandidateDashboardSidebarItem(
-                          item: item,
-                          isSelected: item.index == widget.selectedIndex,
-                          isCollapsed: useCompactVisuals,
-                          onTap: () => widget.onSelected(item.index),
-                          colorScheme: colorScheme,
-                        ),
-                    if (!useCompactVisuals) ...[
-                      const SizedBox(height: 12),
-                      CandidateReminderPanel(
-                        isExpanded: _isCalendarExpanded,
-                        onToggle: _toggleCalendarSection,
-                        window: _calendarWindow,
-                        onWindowChanged: (window) {
-                          setState(() {
-                            _calendarWindow = window;
-                          });
-                        },
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    if (!useCompactVisuals)
-                      const CandidateDashboardThemeToggle()
-                    else
-                      IconButton(
-                        onPressed: () =>
-                            context.read<ThemeCubit>().toggleTheme(),
-                        icon: BlocBuilder<ThemeCubit, ThemeState>(
-                          builder: (context, state) {
-                            final isDark = state.themeMode == ThemeMode.dark;
-                            return Icon(
-                              isDark ? Icons.light_mode : Icons.dark_mode,
-                            );
+        clipBehavior: Clip.hardEdge,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final useCompactVisuals =
+                _isCollapsed || constraints.maxWidth < 180;
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                    children: [
+                      for (final item in candidateDashboardSidebarItems)
+                        if (item.label != 'Entrevistas' ||
+                            FeatureFlags.interviews)
+                          CandidateDashboardSidebarItem(
+                            item: item,
+                            isSelected: item.index == widget.selectedIndex,
+                            isCollapsed: useCompactVisuals,
+                            onTap: () => widget.onSelected(item.index),
+                            colorScheme: colorScheme,
+                          ),
+                      if (!useCompactVisuals) ...[
+                        const SizedBox(height: 12),
+                        CandidateReminderPanel(
+                          isExpanded: _isCalendarExpanded,
+                          onToggle: _toggleCalendarSection,
+                          window: _calendarWindow,
+                          onWindowChanged: (window) {
+                            setState(() {
+                              _calendarWindow = window;
+                            });
                           },
                         ),
-                        tooltip: 'Cambiar tema',
-                      ),
-                    const SizedBox(height: 8),
-                    IconButton(
-                      onPressed: _toggleCollapse,
-                      icon: Icon(
-                        _toggleIcon(),
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      tooltip: _isCollapsed ? 'Expandir' : 'Colapsar',
-                    ),
-                  ],
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      if (!useCompactVisuals)
+                        const CandidateDashboardThemeToggle()
+                      else
+                        Semantics(
+                          button: true,
+                          label: 'Cambiar tema',
+                          child: IconButton(
+                            onPressed: () =>
+                                context.read<ThemeCubit>().toggleTheme(),
+                            icon: BlocBuilder<ThemeCubit, ThemeState>(
+                              builder: (context, state) {
+                                final isDark =
+                                    state.themeMode == ThemeMode.dark;
+                                return Icon(
+                                  isDark ? Icons.light_mode : Icons.dark_mode,
+                                );
+                              },
+                            ),
+                            tooltip: 'Cambiar tema',
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Semantics(
+                        button: true,
+                        label: _isCollapsed
+                            ? 'Expandir menú lateral'
+                            : 'Colapsar menú lateral',
+                        child: IconButton(
+                          onPressed: _toggleCollapse,
+                          icon: Icon(
+                            _toggleIcon(),
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          tooltip: _isCollapsed ? 'Expandir' : 'Colapsar',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
 
@@ -173,12 +191,32 @@ class _CandidateDashboardSidebarState extends State<CandidateDashboardSidebar> {
         children: [
           sidebar,
           Positioned.fill(
-            child: Material(
-              color: colorScheme.surface.withValues(alpha: 0),
-              child: InkWell(
-                onTap: _toggleCollapse,
-                splashColor: colorScheme.primary.withValues(alpha: 0.08),
-                hoverColor: colorScheme.primary.withValues(alpha: 0.04),
+            child: Semantics(
+              button: true,
+              label: 'Expandir menú lateral',
+              hint: 'Pulsa Enter o Espacio para expandir',
+              child: FocusableActionDetector(
+                mouseCursor: SystemMouseCursors.click,
+                shortcuts: const <ShortcutActivator, Intent>{
+                  SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                  SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+                },
+                actions: <Type, Action<Intent>>{
+                  ActivateIntent: CallbackAction<ActivateIntent>(
+                    onInvoke: (_) {
+                      _toggleCollapse();
+                      return null;
+                    },
+                  ),
+                },
+                child: Material(
+                  color: colorScheme.surface.withValues(alpha: 0),
+                  child: InkWell(
+                    onTap: _toggleCollapse,
+                    splashColor: colorScheme.primary.withValues(alpha: 0.08),
+                    hoverColor: colorScheme.primary.withValues(alpha: 0.04),
+                  ),
+                ),
               ),
             ),
           ),

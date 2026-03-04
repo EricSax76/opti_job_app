@@ -15,35 +15,46 @@ class CandidateDashboardThemeToggle extends StatelessWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth < 140) {
-              return IconButton(
-                onPressed: () => context.read<ThemeCubit>().toggleTheme(),
-                icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-                tooltip: 'Cambiar tema',
+              return Semantics(
+                button: true,
+                toggled: isDark,
+                label: 'Tema oscuro',
+                child: IconButton(
+                  onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+                  icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+                  tooltip: 'Cambiar tema',
+                ),
               );
             }
             final showLabel = constraints.maxWidth >= 210;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  Icon(isDark ? Icons.dark_mode : Icons.light_mode),
-                  if (showLabel) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Tema oscuro',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium,
+            return Semantics(
+              button: true,
+              toggled: isDark,
+              label: 'Tema oscuro',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    Icon(isDark ? Icons.dark_mode : Icons.light_mode),
+                    if (showLabel) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tema oscuro',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ),
+                    ] else
+                      const Spacer(),
+                    Switch.adaptive(
+                      value: isDark,
+                      onChanged: (_) =>
+                          context.read<ThemeCubit>().toggleTheme(),
                     ),
-                  ] else
-                    const Spacer(),
-                  Switch.adaptive(
-                    value: isDark,
-                    onChanged: (_) => context.read<ThemeCubit>().toggleTheme(),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },

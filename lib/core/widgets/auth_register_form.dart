@@ -38,6 +38,10 @@ class _AuthRegisterFormState extends State<AuthRegisterForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _nameFocusNode = FocusNode(debugLabel: 'register_name');
+  final _emailFocusNode = FocusNode(debugLabel: 'register_email');
+  final _passwordFocusNode = FocusNode(debugLabel: 'register_password');
+  final _confirmPasswordFocusNode = FocusNode(debugLabel: 'register_confirm');
   var _obscurePassword = true;
   var _obscureConfirm = true;
 
@@ -47,6 +51,10 @@ class _AuthRegisterFormState extends State<AuthRegisterForm> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _nameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
@@ -56,109 +64,171 @@ class _AuthRegisterFormState extends State<AuthRegisterForm> {
       tagline: widget.tagline,
       title: widget.title,
       subtitle: widget.subtitle,
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: widget.nameLabel,
-                prefixIcon: Icon(widget.nameIcon),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'El nombre es obligatorio';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: uiSpacing16),
-            TextFormField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Correo electrónico',
-                prefixIcon: Icon(widget.emailIcon),
-              ),
-              keyboardType: TextInputType.emailAddress,
-              validator: widget.emailValidator ??
-                  (value) {
+      child: FocusTraversalGroup(
+        child: AutofillGroup(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  focusNode: _nameFocusNode,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.name],
+                  decoration: InputDecoration(
+                    labelText: widget.nameLabel,
+                    prefixIcon: Icon(widget.nameIcon),
+                  ),
+                  validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'El correo es obligatorio';
+                      return 'El nombre es obligatorio';
                     }
                     return null;
                   },
-            ),
-            const SizedBox(height: uiSpacing16),
-            TextFormField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(context).requestFocus(_emailFocusNode);
+                  },
                 ),
-              ),
-              obscureText: _obscurePassword,
-              validator: (value) {
-                if (value == null || value.length < 6) {
-                  return 'La contraseña debe tener al menos 6 caracteres';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: uiSpacing16),
-            TextFormField(
-              controller: _confirmPasswordController,
-              decoration: InputDecoration(
-                labelText: 'Repetir contraseña',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirm
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
+                const SizedBox(height: uiSpacing16),
+                TextFormField(
+                  controller: _emailController,
+                  focusNode: _emailFocusNode,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                  decoration: InputDecoration(
+                    labelText: 'Correo electrónico',
+                    hintText: 'nombre@empresa.com',
+                    prefixIcon: Icon(widget.emailIcon),
                   ),
-                  onPressed: () =>
-                      setState(() => _obscureConfirm = !_obscureConfirm),
+                  keyboardType: TextInputType.emailAddress,
+                  validator:
+                      widget.emailValidator ??
+                      (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'El correo es obligatorio';
+                        }
+                        return null;
+                      },
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(context).requestFocus(_passwordFocusNode);
+                  },
                 ),
-              ),
-              obscureText: _obscureConfirm,
-              validator: (value) {
-                if (value != _passwordController.text) {
-                  return 'Las contraseñas no coinciden';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: uiSpacing24),
-            FilledButton(
-              onPressed: widget.isLoading ? null : _submit,
-              child: widget.isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(uiWhite),
+                const SizedBox(height: uiSpacing16),
+                TextFormField(
+                  controller: _passwordController,
+                  focusNode: _passwordFocusNode,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newPassword],
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: Semantics(
+                      button: true,
+                      label: _obscurePassword
+                          ? 'Mostrar contraseña'
+                          : 'Ocultar contraseña',
+                      child: IconButton(
+                        tooltip: _obscurePassword
+                            ? 'Mostrar contraseña'
+                            : 'Ocultar contraseña',
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
-                    )
-                  : const Text('Crear cuenta'),
+                    ),
+                  ),
+                  obscureText: _obscurePassword,
+                  validator: (value) {
+                    if (value == null || value.length < 6) {
+                      return 'La contraseña debe tener al menos 6 caracteres';
+                    }
+                    return null;
+                  },
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(
+                      context,
+                    ).requestFocus(_confirmPasswordFocusNode);
+                  },
+                ),
+                const SizedBox(height: uiSpacing16),
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  focusNode: _confirmPasswordFocusNode,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.newPassword],
+                  decoration: InputDecoration(
+                    labelText: 'Repetir contraseña',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: Semantics(
+                      button: true,
+                      label: _obscureConfirm
+                          ? 'Mostrar confirmación de contraseña'
+                          : 'Ocultar confirmación de contraseña',
+                      child: IconButton(
+                        tooltip: _obscureConfirm
+                            ? 'Mostrar confirmación de contraseña'
+                            : 'Ocultar confirmación de contraseña',
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscureConfirm = !_obscureConfirm),
+                      ),
+                    ),
+                  ),
+                  obscureText: _obscureConfirm,
+                  validator: (value) {
+                    if (value != _passwordController.text) {
+                      return 'Las contraseñas no coinciden';
+                    }
+                    return null;
+                  },
+                  onFieldSubmitted: (_) => _submit(),
+                ),
+                const SizedBox(height: uiSpacing24),
+                Semantics(
+                  button: true,
+                  enabled: !widget.isLoading,
+                  label: widget.isLoading
+                      ? 'Creando cuenta'
+                      : 'Crear cuenta con correo y contraseña',
+                  child: FilledButton(
+                    onPressed: widget.isLoading ? null : _submit,
+                    child: widget.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                uiWhite,
+                              ),
+                            ),
+                          )
+                        : const Text('Crear cuenta'),
+                  ),
+                ),
+                const SizedBox(height: uiSpacing12),
+                Semantics(
+                  button: true,
+                  label: 'Ir a inicio de sesión',
+                  child: TextButton(
+                    onPressed: widget.onLogin,
+                    child: const Text('¿Ya tienes cuenta? Inicia sesión'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: uiSpacing12),
-            TextButton(
-              onPressed: widget.onLogin,
-              child: const Text('¿Ya tienes cuenta? Inicia sesión'),
-            ),
-          ],
+          ),
         ),
       ),
     );

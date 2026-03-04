@@ -1,8 +1,47 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
-const SUPPORTED_CHANNELS = ["linkedin", "indeed", "university_portal"] as const;
-type SupportedChannel = typeof SUPPORTED_CHANNELS[number];
+const CHANNEL_CATALOG = {
+  linkedin: { label: "LinkedIn", defaultCostEur: 249 },
+  indeed: { label: "Indeed", defaultCostEur: 199 },
+  university_portal: { label: "Portal universitario", defaultCostEur: 89 },
+  infojobs: { label: "InfoJobs", defaultCostEur: 149 },
+  glassdoor: { label: "Glassdoor", defaultCostEur: 129 },
+  github_jobs: { label: "GitHub Jobs", defaultCostEur: 179 },
+} as const;
+
+const DEFAULT_CHANNELS: readonly SupportedChannel[] = [
+  "linkedin",
+  "indeed",
+  "university_portal",
+];
+
+type SupportedChannel = keyof typeof CHANNEL_CATALOG;
+
+interface NormalizedChannelRequest {
+  channel: SupportedChannel;
+  costOverrideEur: number | null;
+}
+
+interface CompanyChannelSettings {
+  enabledChannels: SupportedChannel[];
+  costOverridesEur: Partial<Record<SupportedChannel, number>>;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function asNonNegativeNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) return value;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return parsed;
+}
 
 function normalizeChannel(value: unknown): SupportedChannel | null {
   const raw = String(value ?? "").trim().toLowerCase();
@@ -11,17 +50,40 @@ function normalizeChannel(value: unknown): SupportedChannel | null {
   if (raw === "university_portal" || raw === "university" || raw === "universities") {
     return "university_portal";
   }
+  if (raw === "infojobs") return "infojobs";
+  if (raw === "glassdoor") return "glassdoor";
+  if (raw === "github_jobs" || raw === "github-jobs" || raw === "github") {
+    return "github_jobs";
+  }
   return null;
 }
 
-function normalizeChannels(raw: unknown): SupportedChannel[] {
-  if (!Array.isArray(raw) || raw.length === 0) {
-    return [...SUPPORTED_CHANNELS];
+function normalizeChannelRequest(value: unknown): NormalizedChannelRequest | null {
+  if (typeof value === "string") {
+    const channel = normalizeChannel(value);
+    return channel ? { channel, costOverrideEur: null } : null;
   }
-  const normalized = raw
-    .map(normalizeChannel)
-    .filter((value): value is SupportedChannel => value !== null);
-  return normalized.length > 0 ? Array.from(new Set(normalized)) : [...SUPPORTED_CHANNELS];
+  const row = asRecord(value);
+  if (row == null) return null;
+
+  const channel = normalizeChannel(row.channel ?? row.id ?? row.name);
+  if (channel == null) return null;
+
+  const costOverrideEur = asNonNegativeNumber(
+    row.costEur ?? row.cost ?? row.estimatedCost,
+  );
+  return { channel, costOverrideEur };
+}
+
+function normalizeRequestedChannels(raw: unknown): NormalizedChannelRequest[] {
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  const deduped = new Map<SupportedChannel, NormalizedChannelRequest>();
+  for (const item of raw) {
+    const normalized = normalizeChannelRequest(item);
+    if (normalized == null) continue;
+    deduped.set(normalized.channel, normalized);
+  }
+  return [...deduped.values()];
 }
 
 function pickNonEmptyString(...values: unknown[]): string {
@@ -59,10 +121,84 @@ async function assertCanManageOffer(
 }
 
 function buildTrackingUrl(offerId: string, channel: SupportedChannel): string {
-  const base =
-    process.env.PUBLIC_JOB_BASE_URL?.trim() ||
-    "https://optimizzate-eb14a.web.app";
-  return `${base}/job-offer/${offerId}?source=${channel}`;
+  const base = process.env.PUBLIC_JOB_BASE_URL?.trim() || "https://optimizzate-eb14a.web.app";
+  return `${base}/job-offer/${offerId}?source=${channel}&utm_source=${channel}&utm_medium=multiposting`;
+}
+
+function defaultCompanyChannelSettings(): CompanyChannelSettings {
+  return {
+    enabledChannels: [...DEFAULT_CHANNELS],
+    costOverridesEur: {},
+  };
+}
+
+async function getCompanyChannelSettings(
+  db: FirebaseFirestore.Firestore,
+  companyId: string,
+): Promise<CompanyChannelSettings> {
+  const companyDoc = await db.collection("companies").doc(companyId).get();
+  if (!companyDoc.exists) return defaultCompanyChannelSettings();
+
+  const company = companyDoc.data() as Record<string, unknown>;
+  const rawSettings =
+    asRecord(company.multipostingChannelSettings) ??
+    asRecord(company.multiposting_channel_settings);
+  if (rawSettings == null) return defaultCompanyChannelSettings();
+
+  const enabledByCompany = Array.isArray(rawSettings.enabledChannels)
+    ? rawSettings.enabledChannels
+        .map(normalizeChannel)
+        .filter((value): value is SupportedChannel => value != null)
+    : [];
+
+  const channelMap = asRecord(rawSettings.channels);
+  const costOverridesEur: Partial<Record<SupportedChannel, number>> = {};
+  const enabledFromMap: SupportedChannel[] = [];
+  if (channelMap != null) {
+    for (const [rawKey, rawValue] of Object.entries(channelMap)) {
+      const channel = normalizeChannel(rawKey);
+      if (channel == null) continue;
+      const row = asRecord(rawValue) ?? {};
+      const enabled = row.enabled !== false;
+      if (enabled) enabledFromMap.push(channel);
+      const override = asNonNegativeNumber(row.costEur ?? row.cost);
+      if (override != null) {
+        costOverridesEur[channel] = override;
+      }
+    }
+  }
+
+  const enabledChannels = Array.from(
+    new Set(
+      [...enabledByCompany, ...enabledFromMap].filter((value) => value != null),
+    ),
+  );
+  return {
+    enabledChannels: enabledChannels.length > 0 ? enabledChannels : [...DEFAULT_CHANNELS],
+    costOverridesEur,
+  };
+}
+
+function resolveChannelsToPublish(
+  requested: NormalizedChannelRequest[],
+  companySettings: CompanyChannelSettings,
+): NormalizedChannelRequest[] {
+  if (requested.length > 0) return requested;
+  return companySettings.enabledChannels.map((channel) => ({
+    channel,
+    costOverrideEur: null,
+  }));
+}
+
+function resolveChannelCostEur(
+  channel: SupportedChannel,
+  requestOverrideEur: number | null,
+  companySettings: CompanyChannelSettings,
+): number {
+  if (requestOverrideEur != null) return requestOverrideEur;
+  const companyOverride = companySettings.costOverridesEur[channel];
+  if (companyOverride != null) return companyOverride;
+  return CHANNEL_CATALOG[channel].defaultCostEur;
 }
 
 export const publishOfferMultiposting = onCall(async (request) => {
@@ -75,7 +211,6 @@ export const publishOfferMultiposting = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "jobOfferId es obligatorio.");
   }
 
-  const channels = normalizeChannels(request.data?.channels);
   const db = getFirestore();
   const actorUid = request.auth.uid;
   const offerRef = db.collection("jobOffers").doc(offerId);
@@ -85,11 +220,7 @@ export const publishOfferMultiposting = onCall(async (request) => {
   }
 
   const offer = offerDoc.data() as Record<string, unknown>;
-  const companyId = pickNonEmptyString(
-    offer.company_uid,
-    offer.companyUid,
-    offer.owner_uid,
-  );
+  const companyId = pickNonEmptyString(offer.company_uid, offer.companyUid, offer.owner_uid);
   if (!companyId) {
     throw new HttpsError(
       "failed-precondition",
@@ -99,14 +230,31 @@ export const publishOfferMultiposting = onCall(async (request) => {
 
   await assertCanManageOffer(db, actorUid, companyId);
 
+  const companySettings = await getCompanyChannelSettings(db, companyId);
+  const requestedChannels = normalizeRequestedChannels(request.data?.channels);
+  const channels = resolveChannelsToPublish(requestedChannels, companySettings);
+  if (channels.length === 0) {
+    throw new HttpsError("failed-precondition", "No hay canales habilitados para multiposting.");
+  }
+
   const now = FieldValue.serverTimestamp();
-  const publications = channels.map((channel) => {
+  const publishBatchId = Date.now().toString(36);
+  const publications = channels.map((selection) => {
+    const channel = selection.channel;
+    const channelMeta = CHANNEL_CATALOG[channel];
+    const costEur = resolveChannelCostEur(
+      channel,
+      selection.costOverrideEur,
+      companySettings,
+    );
     const trackingUrl = buildTrackingUrl(offerId, channel);
     return {
       channel,
+      channelLabel: channelMeta.label,
       trackingUrl,
-      publicationId: `${offerId}_${channel}`,
-      externalPostId: `mvp_${channel}_${offerId}`,
+      publicationId: `${offerId}_${channel}_${publishBatchId}`,
+      externalPostId: `mvp_${channel}_${offerId}_${publishBatchId}`,
+      costEur,
     };
   });
 
@@ -120,9 +268,16 @@ export const publishOfferMultiposting = onCall(async (request) => {
         offerId,
         companyId,
         channel: publication.channel,
+        channelLabel: publication.channelLabel,
         status: "published",
         trackingUrl: publication.trackingUrl,
         externalPostId: publication.externalPostId,
+        attributionKey: publication.channel,
+        cost: {
+          amount: publication.costEur,
+          currency: "EUR",
+          model: "flat_posting",
+        },
         publishedBy: actorUid,
         publishedAt: now,
         updatedAt: now,
@@ -132,15 +287,22 @@ export const publishOfferMultiposting = onCall(async (request) => {
   }
 
   const offerUpdates: Record<string, unknown> = {
-    multiposting_enabled_channels: channels,
+    multiposting_enabled_channels: publications.map((row) => row.channel),
     multiposting_updated_at: now,
     updated_at: now,
   };
   for (const publication of publications) {
     offerUpdates[`multiposting.channels.${publication.channel}`] = {
       status: "published",
+      channelLabel: publication.channelLabel,
       trackingUrl: publication.trackingUrl,
       externalPostId: publication.externalPostId,
+      attributionKey: publication.channel,
+      cost: {
+        amount: publication.costEur,
+        currency: "EUR",
+        model: "flat_posting",
+      },
       publishedBy: actorUid,
       publishedAt: now,
     };
@@ -149,14 +311,21 @@ export const publishOfferMultiposting = onCall(async (request) => {
 
   await batch.commit();
 
+  const totalEstimatedCostEur = publications.reduce(
+    (acc, publication) => acc + publication.costEur,
+    0,
+  );
   return {
     ok: true,
     offerId,
     companyId,
     channels: publications.map((row) => ({
       channel: row.channel,
+      channelLabel: row.channelLabel,
       trackingUrl: row.trackingUrl,
       status: "published",
+      estimatedCostEur: row.costEur,
     })),
+    totalEstimatedCostEur: Number(totalEstimatedCostEur.toFixed(2)),
   };
 });
