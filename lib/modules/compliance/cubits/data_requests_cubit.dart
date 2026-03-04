@@ -22,19 +22,33 @@ class DataRequestsCubit extends Cubit<DataRequestsState> {
         emit(state.copyWith(
           status: DataRequestsStatus.success,
           requests: requests,
+          clearError: true,
         ));
       },
-      onError: (_) {
-        emit(state.copyWith(status: DataRequestsStatus.failure));
+      onError: (error) {
+        emit(
+          state.copyWith(
+            status: DataRequestsStatus.failure,
+            errorMessage: error.toString(),
+          ),
+        );
       },
     );
   }
 
-  Future<void> submitRequest(DataRequest request) async {
+  Future<bool> submitRequest(DataRequest request) async {
     try {
       await _repository.submitRequest(request);
+      emit(state.copyWith(status: DataRequestsStatus.success, clearError: true));
+      return true;
     } catch (e) {
-      // Handle error
+      emit(
+        state.copyWith(
+          status: DataRequestsStatus.failure,
+          errorMessage: e.toString(),
+        ),
+      );
+      return false;
     }
   }
 

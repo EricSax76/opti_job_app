@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum DataRequestType {
   access,
@@ -7,7 +8,8 @@ enum DataRequestType {
   limitation,
   portability,
   opposition,
-  aiExplanation;
+  aiExplanation,
+  salaryComparison;
 
   static DataRequestType fromString(String value) {
     return DataRequestType.values.firstWhere(
@@ -38,6 +40,9 @@ class DataRequest extends Equatable {
     required this.type,
     this.status = DataRequestStatus.pending,
     required this.description,
+    this.companyId,
+    this.applicationId,
+    this.metadata = const {},
     this.response,
     this.processedBy,
     this.createdAt,
@@ -50,6 +55,9 @@ class DataRequest extends Equatable {
   final DataRequestType type;
   final DataRequestStatus status;
   final String description;
+  final String? companyId;
+  final String? applicationId;
+  final Map<String, dynamic> metadata;
   final String? response;
   final String? processedBy;
   final DateTime? createdAt;
@@ -63,6 +71,9 @@ class DataRequest extends Equatable {
     type,
     status,
     description,
+    companyId,
+    applicationId,
+    metadata,
     response,
     processedBy,
     createdAt,
@@ -79,6 +90,9 @@ class DataRequest extends Equatable {
         json['status'] as String? ?? 'pending',
       ),
       description: json['description'] as String? ?? '',
+      companyId: json['companyId'] as String?,
+      applicationId: json['applicationId'] as String?,
+      metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
       response: json['response'] as String?,
       processedBy: json['processedBy'] as String?,
       createdAt: _parseDate(json['createdAt']),
@@ -93,6 +107,9 @@ class DataRequest extends Equatable {
       'type': type.name,
       'status': status.name,
       'description': description,
+      if (companyId != null) 'companyId': companyId,
+      if (applicationId != null) 'applicationId': applicationId,
+      if (metadata.isNotEmpty) 'metadata': metadata,
       'response': response,
       'processedBy': processedBy,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
@@ -104,6 +121,7 @@ class DataRequest extends Equatable {
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
     if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
     if (value is String) return DateTime.tryParse(value);
     return null;
   }

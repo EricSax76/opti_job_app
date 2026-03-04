@@ -63,15 +63,16 @@ async function deleteStorageObjectIfExists(path: string): Promise<void> {
 }
 
 async function queryOldDocsByTimestampFields(
-  collectionRef: FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData>,
+  queryBase: FirebaseFirestore.Query<FirebaseFirestore.DocumentData>,
   timestampFields: string[],
   threshold: admin.firestore.Timestamp,
+  sourceLabel: string,
 ): Promise<FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>[]> {
   const byId = new Map<string, FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>>();
 
   for (const field of timestampFields) {
     try {
-      const snapshot = await collectionRef
+      const snapshot = await queryBase
         .where(field, '<', threshold)
         .limit(MAX_DOCS_PER_QUERY)
         .get();
@@ -79,7 +80,7 @@ async function queryOldDocsByTimestampFields(
         byId.set(doc.id, doc);
       }
     } catch (error) {
-      console.warn(`Skipping compliance query for ${collectionRef.path}.${field}`, error);
+      console.warn(`Skipping compliance query for ${sourceLabel}.${field}`, error);
     }
   }
 
@@ -118,6 +119,7 @@ async function purgeExpiredApplications(
     db.collection('applications'),
     ['updated_at', 'updatedAt', 'submitted_at', 'submittedAt'],
     threshold,
+    'applications',
   );
 
   if (oldDocs.length === 0) return 0;
@@ -154,9 +156,10 @@ async function purgeExpiredCurriculums(
 ): Promise<number> {
   const db = admin.firestore();
   const oldDocs = await queryOldDocsByTimestampFields(
-    db.collection('curriculum'),
+    db.collectionGroup('curriculum'),
     ['updated_at', 'updatedAt'],
     threshold,
+    'collectionGroup(curriculum)',
   );
 
   if (oldDocs.length === 0) return 0;
@@ -164,6 +167,15 @@ async function purgeExpiredCurriculums(
   const refsToDelete: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>[] = [];
 
   for (const doc of oldDocs) {
+    // El CV principal vive en candidates/{uid}/curriculum/main
+    const pathSegments = doc.ref.path.split('/');
+    if (
+      pathSegments.length < 4 ||
+      pathSegments[0] !== 'candidates' ||
+      pathSegments[2] !== 'curriculum'
+    ) {
+      continue;
+    }
     const data = doc.data();
     const storagePath = extractStoragePath(
       data.attachment?.storage_path ?? data.attachment?.storagePath,
@@ -186,6 +198,7 @@ async function purgeExpiredCandidateVideos(
     db.collection('candidates'),
     ['video_curriculum.updated_at', 'video_curriculum.updatedAt'],
     threshold,
+    'candidates',
   );
 
   if (oldDocs.length === 0) return 0;
@@ -297,6 +310,7 @@ async function flagConsentsForRenewal(
  * - Marcado de consentimientos próximos a expirar para renovación.
  */
 export const blockExpiredData = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+  const db = admin.firestore();
   const now = admin.firestore.Timestamp.now();
   const threeYearThreshold = admin.firestore.Timestamp.fromMillis(
     now.toMillis() - THREE_YEARS_MS,
@@ -312,6 +326,34 @@ export const blockExpiredData = functions.pubsub.schedule('every 24 hours').onRu
       purgeExpiredCandidateVideos(videoThreshold),
       flagConsentsForRenewal(now),
     ]);
+
+  const reportDate = now.toDate().toISOString().slice(0, 10);
+  await db.collection('complianceDailyReports').doc(reportDate).set(
+    {
+      reportDate,
+      generatedAt: now,
+      applicationsPurged: purgedApplications,
+      curriculumsPurged: purgedCurriculums,
+      candidateVideosPurged: purgedVideos,
+      consentsFlaggedForRenewal: flaggedConsents,
+      retention: {
+        applicationsPurged: purgedApplications,
+        curriculumsPurged: purgedCurriculums,
+        candidateVideosPurged: purgedVideos,
+      },
+      consent: {
+        consentsFlaggedForRenewal: flaggedConsents,
+      },
+      thresholds: {
+        applicationsAndCurriculumDays: Math.trunc(THREE_YEARS_MS / (24 * 60 * 60 * 1000)),
+        videosDays: Math.trunc(THIRTY_DAYS_MS / (24 * 60 * 60 * 1000)),
+        consentRenewalWindowDays: CONSENT_RENEWAL_WINDOW_DAYS,
+      },
+      source: 'scheduled_blockExpiredData',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
 
   console.log(
     [

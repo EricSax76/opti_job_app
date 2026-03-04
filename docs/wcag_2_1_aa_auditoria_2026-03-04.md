@@ -1,47 +1,48 @@
-# Auditoría WCAG 2.1 AA (Módulo Companies y flujos críticos)
+# Auditoría WCAG 2.1 AA (Companies + Candidate Flows)
 
 Fecha: 2026-03-04  
-Alcance: formularios de autenticación, navegación lateral candidato/empresa, controles de tema y colapso.
+Alcance: autenticación, sidebar de empresa y portal de privacidad del candidato.
 
 ## Resultado ejecutivo
 
 - Estado: **Remediación aplicada + regresión automatizable activa**.
-- Riesgo residual: medio-bajo (pendiente una validación manual final con lector de pantalla real en dispositivos físicos).
-- Evidencia de regresión automática: `test/accessibility/wcag_regression_test.dart`.
+- Evidencia automática: `test/accessibility/wcag_regression_test.dart`.
+- Riesgo residual: bajo-medio hasta cierre de verificación manual en dispositivos físicos.
 
 ## Hallazgos y remediación
 
-1. Navegación y controles colapsados con semántica insuficiente  
-Estado previo: botones y áreas de expansión sin semántica completa en sidebars.  
-Acción: se añadieron etiquetas semánticas, estado `selected` y `expanded`, y activación por teclado en el overlay colapsado del sidebar de candidato.
+1. Semántica incompleta en navegación lateral
+Estado previo: cobertura de navegación lateral sin regresión automatizada suficiente.  
+Acción: verificación automatizada de semántica en sidebar de empresa y mantenimiento de labels en controles críticos.
 
-2. Operabilidad por teclado en formularios de acceso  
-Estado previo: flujo utilizable, pero sin cobertura automática de regresión.  
-Acción: se consolidó `AutofillGroup`, se reforzaron etiquetas semánticas de acciones primarias y se añadió test de tabulación.
+2. Operabilidad por teclado en formularios
+Estado previo: uso correcto pero sin guardrail automático.  
+Acción: prueba de foco/tabulación en registro y chequeo de tamaño objetivo/contraste en login.
 
-3. Etiquetas de acción en botones de autenticación y tema  
-Estado previo: elementos accionables con señal visual pero sin cobertura de accesibilidad formal.  
-Acción: se añadieron `Semantics` explícitas para login/registro, cambio de tema y colapsado/expandido en menús.
+3. Cobertura de accesibilidad en portal de privacidad del candidato
+Estado previo: sin test dedicado para acciones ARSULIPO.  
+Acción: test de presencia de acciones clave (incluida exportación) y guideline de tap targets.
 
-## Checklist WCAG 2.1 AA (operativo)
+## Checklist WCAG 2.1 AA
 
-- [x] 1.3.1 Info and Relationships: jerarquía de navegación y campos con etiqueta accesible.
-- [x] 1.4.3 Contrast (Minimum): cobertura por guideline automatizada en formulario login.
-- [x] 2.1.1 Keyboard: interacción por teclado en formularios y control de expansión en sidebar colapsado.
-- [x] 2.4.3 Focus Order: verificación de avance por tabulación en registro.
-- [x] 2.4.6 Headings and Labels: labels explícitas en acciones críticas.
-- [x] 4.1.2 Name, Role, Value: roles semánticos `button`, `selected`, `expanded`, `toggled`.
+- [x] 1.3.1 Info and Relationships
+- [x] 1.4.3 Contrast (Minimum)
+- [x] 2.1.1 Keyboard
+- [x] 2.4.3 Focus Order
+- [x] 2.4.6 Headings and Labels
+- [x] 2.5.5 Target Size (AA)
+- [x] 4.1.2 Name, Role, Value
 
 ## Regresión automatizable
 
-Archivo de pruebas:
+Archivo:
 - `test/accessibility/wcag_regression_test.dart`
 
-Cobertura actual:
-- Guidelines de `labeledTapTarget`, `androidTapTarget`, `textContrast` en login.
-- Navegación por teclado en formulario de registro.
-- Presencia semántica y acción de expandir en sidebar candidato.
-- Semántica estructural del sidebar de empresa.
+Cobertura:
+- Login: `labeledTapTarget`, `androidTapTarget`, `textContrast`.
+- Register: navegación por teclado y orden de foco.
+- Sidebar empresa: semántica de navegación.
+- Portal privacidad candidato: acciones ARSULIPO accesibles y exportación.
 
 Comando:
 
@@ -49,8 +50,18 @@ Comando:
 flutter test test/accessibility/wcag_regression_test.dart
 ```
 
-## Validación manual recomendada (pendiente)
+## Validación manual documentada (VoiceOver/TalkBack)
 
-1. VoiceOver (iOS) y TalkBack (Android) en flujos de login y sidebars.  
-2. Navegación completa sin ratón en escritorio (tab/shift+tab/enter/space).  
-3. Revisión de contraste en temas claro/oscuro con contenido real de producción.
+Checklist operativo para cierre final en QA:
+
+1. VoiceOver iOS: recorrer login, sidebar candidato y portal privacidad completo.
+2. TalkBack Android: verificar anuncios de rol/estado en acciones ARSULIPO y chips.
+3. Desktop teclado: flujo completo sin ratón (`Tab`, `Shift+Tab`, `Enter`, `Space`).
+4. Contraste: validación visual en tema claro/oscuro con contenido real.
+
+Registro de ejecución manual:
+
+- Fecha objetivo: 2026-03-05
+- Responsable: QA Accesibilidad
+- Evidencia esperada: vídeo corto por flujo + checklist firmado
+- Estado actual: pendiente ejecución en dispositivo físico

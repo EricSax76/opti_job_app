@@ -1,14 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:opti_job_app/modules/compliance/models/audit_log.dart';
 import 'package:opti_job_app/modules/compliance/models/consent_record.dart';
 import 'package:opti_job_app/modules/compliance/models/data_request.dart';
 import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
 
 class FirebaseComplianceRepository implements AuditRepository, DataRequestRepository, ConsentRepository {
-  FirebaseComplianceRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseComplianceRepository({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
 
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
   // --- Audit ---
   @override
@@ -34,12 +40,23 @@ class FirebaseComplianceRepository implements AuditRepository, DataRequestReposi
   // --- Data Requests ---
   @override
   Future<DataRequest> submitRequest(DataRequest request) async {
-    final docRef = await _firestore.collection('dataRequests').add({
-      ...request.toJson(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'dueAt': Timestamp.fromDate(DateTime.now().add(const Duration(days: 30))),
+    final callable = _functions.httpsCallable('submitDataRequest');
+    final response = await callable.call({
+      'type': request.type.name,
+      'description': request.description,
+      if (request.companyId != null) 'companyId': request.companyId,
+      if (request.applicationId != null) 'applicationId': request.applicationId,
+      if (request.metadata.isNotEmpty) 'metadata': request.metadata,
     });
-    return DataRequest.fromJson(request.toJson(), id: docRef.id);
+    final data = response.data as Map<Object?, Object?>?;
+    final id = data?['id']?.toString().trim();
+    if (id == null || id.isEmpty) {
+      throw StateError('submitDataRequest did not return a valid id.');
+    }
+
+    final doc = await _firestore.collection('dataRequests').doc(id).get();
+    final payload = doc.data() ?? request.toJson();
+    return DataRequest.fromJson(payload, id: id);
   }
 
   @override
@@ -61,11 +78,13 @@ class FirebaseComplianceRepository implements AuditRepository, DataRequestReposi
 
   @override
   Future<void> updateRequestStatus(String requestId, DataRequestStatus status, {String? response, String? processedBy}) async {
-    await _firestore.collection('dataRequests').doc(requestId).update({
+    final callable = _functions.httpsCallable('processDataRequest');
+    await callable.call({
+      'requestId': requestId,
       'status': status.name,
-      ...?response != null ? {'response': response} : null,
-      ...?processedBy != null ? {'processedBy': processedBy} : null,
-      'processedAt': FieldValue.serverTimestamp(),
+      if (response != null && response.trim().isNotEmpty) 'response': response,
+      if (processedBy != null && processedBy.trim().isNotEmpty)
+        'processedBy': processedBy,
     });
   }
 

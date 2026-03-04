@@ -8,6 +8,10 @@ import 'package:opti_job_app/core/widgets/auth_login_form.dart';
 import 'package:opti_job_app/core/widgets/auth_register_form.dart';
 import 'package:opti_job_app/modules/companies/models/company_dashboard_navigation.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_sidebar.dart';
+import 'package:opti_job_app/modules/compliance/cubits/data_requests_cubit.dart';
+import 'package:opti_job_app/modules/compliance/models/data_request.dart';
+import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
+import 'package:opti_job_app/modules/compliance/ui/pages/candidate_privacy_portal_screen.dart';
 
 void main() {
   group('WCAG regression', () {
@@ -92,5 +96,51 @@ void main() {
       expect(find.bySemanticsLabel('Home'), findsWidgets);
       expect(find.bySemanticsLabel('Publicar oferta'), findsWidgets);
     });
+
+    testWidgets(
+      'Candidate privacy portal mantiene acciones ARSULIPO accesibles',
+      (tester) async {
+        final cubit = DataRequestsCubit(
+          repository: _FakeDataRequestRepository(),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: BlocProvider.value(
+              value: cubit,
+              child: const CandidatePrivacyPortalScreen(
+                candidateUid: 'candidate_wcag',
+                enableDecisionContextSection: false,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tus derechos ARSULIPO'), findsOneWidget);
+        expect(find.byTooltip('Exportar mis datos'), findsOneWidget);
+        await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      },
+    );
   });
+}
+
+class _FakeDataRequestRepository implements DataRequestRepository {
+  @override
+  Stream<List<DataRequest>> getAllRequests() => Stream.value(const []);
+
+  @override
+  Stream<List<DataRequest>> getRequests(String candidateUid) =>
+      Stream.value(const []);
+
+  @override
+  Future<DataRequest> submitRequest(DataRequest request) async => request;
+
+  @override
+  Future<void> updateRequestStatus(
+    String requestId,
+    DataRequestStatus status, {
+    String? response,
+    String? processedBy,
+  }) async {}
 }

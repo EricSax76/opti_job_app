@@ -39,6 +39,7 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
     const candidateUid = context.auth.uid;
     const { jobOfferId, coverLetter, curriculumId, sourceChannel } = data;
     const normalizedSource = String(sourceChannel ?? "").trim().toLowerCase() || "platform";
+    const normalizedCurriculumId = String(curriculumId ?? "main").trim() || "main";
 
     funcLogger.info("Application submission started", {
       candidateUid,
@@ -49,8 +50,8 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
       const db = admin.firestore();
 
       // Validate input
-      if (!jobOfferId || !curriculumId) {
-        throw new ValidationError("jobOfferId and curriculumId are required");
+      if (!jobOfferId) {
+        throw new ValidationError("jobOfferId is required");
       }
 
       // Check if job offer exists and is active
@@ -74,19 +75,28 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
         }
       }
 
-      // Check if curriculum exists and belongs to user
-      const curriculumDoc = await db
+      // Check if curriculum exists and belongs to user at canonical path:
+      // candidates/{uid}/curriculum/{id}. Fallback to "main".
+      let resolvedCurriculumId = normalizedCurriculumId;
+      let curriculumDoc = await db
+        .collection("candidates")
+        .doc(candidateUid)
         .collection("curriculum")
-        .doc(curriculumId)
+        .doc(resolvedCurriculumId)
         .get();
+
+      if (!curriculumDoc.exists && resolvedCurriculumId !== "main") {
+        resolvedCurriculumId = "main";
+        curriculumDoc = await db
+          .collection("candidates")
+          .doc(candidateUid)
+          .collection("curriculum")
+          .doc(resolvedCurriculumId)
+          .get();
+      }
 
       if (!curriculumDoc.exists) {
         throw new ValidationError("Curriculum not found");
-      }
-
-      const curriculum = curriculumDoc.data();
-      if (curriculum?.uid !== candidateUid) {
-        throw new ValidationError("Curriculum does not belong to user");
       }
 
       // Check for existing applications to this job
@@ -149,8 +159,8 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
         candidateName: candidate.name,
         candidate_email: candidate.email,
         candidateEmail: candidate.email,
-        curriculum_id: curriculumId,
-        curriculumId,
+        curriculum_id: resolvedCurriculumId,
+        curriculumId: resolvedCurriculumId,
         source_channel: normalizedSource,
         sourceChannel: normalizedSource,
         source: normalizedSource,
@@ -181,6 +191,67 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
       // Create application document
       const applicationRef = await db.collection("applications").add(application);
       const applicationId = applicationRef.id;
+
+      const legalInfoClause =
+        "Tus datos se tratarán para gestionar la candidatura y evaluar tu encaje con la vacante. " +
+        "Base jurídica: ejecución de medidas precontractuales y, en su caso, consentimiento. " +
+        "Puedes ejercer ARSULIPO y solicitar explicación humana de decisiones de IA desde el portal de privacidad.";
+      const legalAckSubject = "Hemos recibido tu candidatura";
+      const legalAckBody = [
+        `Solicitud: ${requestId}`,
+        `Oferta: ${jobOffer?.title ?? jobOfferId}`,
+        "Acuse de recibo legal de candidatura:",
+        legalInfoClause,
+      ].join("\n");
+
+      await Promise.all([
+        db.collection("notifications").add({
+          type: "application_received_legal_ack",
+          channel: "in_app",
+          audience: "candidate",
+          userUid: candidateUid,
+          companyUid: companyUid ?? null,
+          applicationId,
+          jobOfferId,
+          title: legalAckSubject,
+          message: legalAckBody,
+          legalInfoClause,
+          read: false,
+          createdAt: now,
+          updatedAt: now,
+        }),
+        db.collection("emailQueue").add({
+          to: candidate.email,
+          template: "application_received_legal_ack",
+          subject: legalAckSubject,
+          text: legalAckBody,
+          candidateUid,
+          companyUid: companyUid ?? null,
+          applicationId,
+          jobOfferId,
+          legalInfoClause,
+          status: "queued",
+          createdAt: now,
+          updatedAt: now,
+        }),
+        db.collection("auditLogs").add({
+          action: "application_legal_ack_sent",
+          actorUid: "system",
+          actorRole: "system",
+          targetType: "application",
+          targetId: applicationId,
+          companyId: companyUid ?? null,
+          metadata: {
+            requestId,
+            candidateUid,
+            jobOfferId,
+            notificationChannel: "in_app",
+            emailQueued: true,
+            legalInfoClauseVersion: "2026-03",
+          },
+          timestamp: now,
+        }),
+      ]);
 
       funcLogger.info("Application created successfully", {
         applicationId,

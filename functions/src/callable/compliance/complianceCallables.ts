@@ -1,83 +1,403 @@
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import * as functions from "firebase-functions/v1";
+import * as admin from "firebase-admin";
+
+const REQUEST_TYPES = [
+  "access",
+  "rectification",
+  "deletion",
+  "limitation",
+  "portability",
+  "opposition",
+  "aiExplanation",
+  "salaryComparison",
+] as const;
+const REQUEST_TYPES_SET = new Set<string>(REQUEST_TYPES);
+
+const PROCESS_STATUSES = [
+  "pending",
+  "processing",
+  "completed",
+  "denied",
+] as const;
+const PROCESS_STATUSES_SET = new Set<string>(PROCESS_STATUSES);
+
+const FINALIST_STATUSES = new Set([
+  "offered",
+  "hired",
+  "interviewing",
+  "finalist",
+]);
+
+const MANAGER_ROLES = new Set(["admin", "recruiter", "hiring_manager"]);
+
+function asTrimmedString(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, unknown>;
+}
+
+function normalizeRequestType(value: unknown): string {
+  const raw = asTrimmedString(value);
+  if (!raw) return "";
+  const compact = raw.replace(/[_-\s]/g, "").toLowerCase();
+  if (compact === "aiexplanation") return "aiExplanation";
+  if (compact === "salarycomparison") return "salaryComparison";
+  if (compact === "access") return "access";
+  if (compact === "rectification") return "rectification";
+  if (compact === "deletion") return "deletion";
+  if (compact === "limitation") return "limitation";
+  if (compact === "portability") return "portability";
+  if (compact === "opposition") return "opposition";
+  return raw;
+}
+
+function normalizeProcessStatus(value: unknown): string {
+  const raw = asTrimmedString(value).toLowerCase();
+  if (raw === "process" || raw === "in_progress") return "processing";
+  if (raw === "done") return "completed";
+  return raw;
+}
+
+function normalizeCandidateStatus(value: unknown): string {
+  return asTrimmedString(value).toLowerCase();
+}
+
+async function logAuditEntry({
+  action,
+  actorUid,
+  actorRole,
+  targetType,
+  targetId,
+  companyId,
+  metadata = {},
+}: {
+  action: string;
+  actorUid: string;
+  actorRole: string;
+  targetType: string;
+  targetId: string;
+  companyId?: string | null;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  await admin.firestore().collection("auditLogs").add({
+    action,
+    actorUid,
+    actorRole,
+    targetType,
+    targetId,
+    companyId: companyId ?? null,
+    metadata,
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+async function resolveCompanyAccess({
+  actorUid,
+  companyId,
+}: {
+  actorUid: string;
+  companyId: string;
+}): Promise<"company" | "recruiter"> {
+  const db = admin.firestore();
+  if (actorUid === companyId) return "company";
+
+  const recruiterDoc = await db.collection("recruiters").doc(actorUid).get();
+  if (!recruiterDoc.exists) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Solo la empresa propietaria o reclutadores autorizados pueden procesar esta solicitud.",
+    );
+  }
+  const recruiter = asRecord(recruiterDoc.data());
+  const recruiterCompanyId = asTrimmedString(recruiter.companyId);
+  const recruiterStatus = asTrimmedString(recruiter.status);
+  const recruiterRole = asTrimmedString(recruiter.role);
+  if (
+    recruiterCompanyId !== companyId ||
+    recruiterStatus !== "active" ||
+    !MANAGER_ROLES.has(recruiterRole)
+  ) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Tu rol no puede gestionar solicitudes ARSULIPO/AI Act para esta empresa.",
+    );
+  }
+  return "recruiter";
+}
 
 /**
- * Submit a request to exercise ARSULIPO rights (GDPR).
+ * Submit a request to exercise ARSULIPO rights (GDPR) and AI Act rights.
  */
-export const submitDataRequest = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated.');
-  }
+export const submitDataRequest = functions
+  .region("europe-west1")
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "User must be authenticated.");
+    }
 
-  const { type, description } = data;
-  if (!type || !description) {
-    throw new functions.https.HttpsError('invalid-argument', 'type and description are required.');
-  }
+    const type = normalizeRequestType(data?.type);
+    const description = asTrimmedString(data?.description);
+    const requestMetadata = asRecord(data?.metadata);
+    const inputCompanyId = asTrimmedString(data?.companyId);
+    const inputApplicationId = asTrimmedString(data?.applicationId);
 
-  const now = admin.firestore.Timestamp.now();
-  const dueAt = admin.firestore.Timestamp.fromMillis(now.toMillis() + (30 * 24 * 60 * 60 * 1000));
+    if (!type || !REQUEST_TYPES_SET.has(type)) {
+      throw new functions.https.HttpsError("invalid-argument", "Tipo de solicitud inválido.");
+    }
+    if (!description) {
+      throw new functions.https.HttpsError("invalid-argument", "description is required.");
+    }
 
-  const request = {
-    candidateUid: context.auth.uid,
-    type,
-    status: 'pending',
-    description,
-    createdAt: now,
-    dueAt,
-  };
+    const db = admin.firestore();
+    const candidateUid = context.auth.uid;
+    let companyId = inputCompanyId;
+    let applicationId = inputApplicationId;
 
-  const docRef = await admin.firestore().collection('dataRequests').add(request);
-  return { id: docRef.id };
-});
+    const requiresApplicationContext =
+      type === "aiExplanation" || type === "salaryComparison";
 
-/**
- * Process an ARSULIPO request by an admin or recruiter with high privilege.
- */
-export const processDataRequest = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated.');
-  }
+    if (requiresApplicationContext) {
+      if (!applicationId) {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "applicationId es obligatorio para solicitudes de IA o comparativa salarial.",
+        );
+      }
+      const appDoc = await db.collection("applications").doc(applicationId).get();
+      if (!appDoc.exists) {
+        throw new functions.https.HttpsError("not-found", "La candidatura indicada no existe.");
+      }
+      const app = asRecord(appDoc.data());
+      const appCandidateUid =
+        asTrimmedString(app.candidate_uid) ||
+        asTrimmedString(app.candidateId) ||
+        asTrimmedString(app.candidate_id);
+      if (appCandidateUid !== candidateUid) {
+        throw new functions.https.HttpsError(
+          "permission-denied",
+          "Solo puedes solicitar derechos sobre tus propias candidaturas.",
+        );
+      }
 
-  const { requestId, status, response } = data;
-  if (!requestId || !status) {
-    throw new functions.https.HttpsError('invalid-argument', 'requestId and status are required.');
-  }
+      companyId =
+        companyId ||
+        asTrimmedString(app.company_uid) ||
+        asTrimmedString(app.companyUid) ||
+        asTrimmedString(app.owner_uid);
 
-  await admin.firestore().collection('dataRequests').doc(requestId).update({
-    status,
-    response: response || null,
-    processedBy: context.auth.uid,
-    processedAt: admin.firestore.FieldValue.serverTimestamp(),
+      if (!companyId) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "No se pudo resolver la empresa responsable de la candidatura.",
+        );
+      }
+
+      if (type === "salaryComparison") {
+        const status = normalizeCandidateStatus(app.status);
+        if (!FINALIST_STATUSES.has(status)) {
+          throw new functions.https.HttpsError(
+            "failed-precondition",
+            "La comparativa salarial solo está disponible para candidaturas finalistas.",
+          );
+        }
+      }
+    }
+
+    const now = admin.firestore.Timestamp.now();
+    const dueAt = admin.firestore.Timestamp.fromMillis(
+      now.toMillis() + (30 * 24 * 60 * 60 * 1000),
+    );
+
+    const request = {
+      candidateUid,
+      companyId: companyId || null,
+      applicationId: applicationId || null,
+      type,
+      status: "pending",
+      description,
+      metadata: requestMetadata,
+      createdAt: now,
+      dueAt,
+      slaDays: 30,
+    };
+
+    const docRef = await db.collection("dataRequests").add(request);
+
+    await logAuditEntry({
+      action: "data_request_submitted",
+      actorUid: candidateUid,
+      actorRole: "candidate",
+      targetType: "data_request",
+      targetId: docRef.id,
+      companyId: companyId || null,
+      metadata: {
+        type,
+        applicationId: applicationId || null,
+      },
+    });
+
+    return {
+      id: docRef.id,
+      status: "pending",
+      dueAt: dueAt.toDate().toISOString(),
+    };
   });
 
-  return { success: true };
-});
+/**
+ * Process an ARSULIPO/AI Act request by a company or authorized recruiter.
+ */
+export const processDataRequest = functions
+  .region("europe-west1")
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "User must be authenticated.");
+    }
+
+    const requestId = asTrimmedString(data?.requestId);
+    const status = normalizeProcessStatus(data?.status);
+    const response = asTrimmedString(data?.response);
+
+    if (!requestId || !status) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "requestId and status are required.",
+      );
+    }
+    if (!PROCESS_STATUSES_SET.has(status)) {
+      throw new functions.https.HttpsError("invalid-argument", "Estado de solicitud inválido.");
+    }
+
+    const db = admin.firestore();
+    const requestRef = db.collection("dataRequests").doc(requestId);
+    const requestDoc = await requestRef.get();
+    if (!requestDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Solicitud no encontrada.");
+    }
+
+    const request = asRecord(requestDoc.data());
+    const companyId = asTrimmedString(request.companyId);
+    if (!companyId) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "La solicitud no tiene empresa responsable asociada.",
+      );
+    }
+
+    const actorUid = context.auth.uid;
+    const actorScope = await resolveCompanyAccess({ actorUid, companyId });
+
+    if (
+      asTrimmedString(request.type) === "salaryComparison" &&
+      status === "completed" &&
+      !response
+    ) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Debes incluir respuesta con los datos comparativos para cerrar la solicitud.",
+      );
+    }
+
+    await requestRef.update({
+      status,
+      response: response || null,
+      processedBy: actorUid,
+      processorRole: actorScope,
+      processedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await logAuditEntry({
+      action: "data_request_processed",
+      actorUid,
+      actorRole: actorScope === "company" ? "company" : "recruiter",
+      targetType: "data_request",
+      targetId: requestId,
+      companyId,
+      metadata: {
+        status,
+        responseIncluded: response.length > 0,
+      },
+    });
+
+    return { success: true };
+  });
 
 /**
- * Export all candidate data for portability (JSON).
+ * Export all candidate data for portability (JSON), including recruiter notes.
  */
-export const exportCandidateData = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated.');
-  }
+export const exportCandidateData = functions
+  .region("europe-west1")
+  .https.onCall(async (_data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "User must be authenticated.");
+    }
 
-  const candidateUid = context.auth.uid;
-  const db = admin.firestore();
+    const candidateUid = context.auth.uid;
+    const db = admin.firestore();
 
-  const [curriculum, apps, consents] = await Promise.all([
-    db.collection('candidates').doc(candidateUid).collection('curriculum').get(),
-    db.collection('applications').where('candidateId', '==', candidateUid).get(),
-    db.collection('consentRecords').where('candidateUid', '==', candidateUid).get(),
-  ]);
+    const [curriculum, appsByCamel, appsBySnake, consents, notes, requests] =
+      await Promise.all([
+        db.collection("candidates").doc(candidateUid).collection("curriculum").get(),
+        db.collection("applications").where("candidateId", "==", candidateUid).get(),
+        db.collection("applications").where("candidate_uid", "==", candidateUid).get(),
+        db.collection("consentRecords").where("candidateUid", "==", candidateUid).get(),
+        db.collection("candidateNotes").where("candidateUid", "==", candidateUid).get(),
+        db.collection("dataRequests").where("candidateUid", "==", candidateUid).get(),
+      ]);
 
-  const exportPackage = {
-    candidateUid,
-    exportedAt: new Date().toISOString(),
-    curriculum: curriculum.docs.map(d => d.data()),
-    applications: apps.docs.map(d => d.data()),
-    consents: consents.docs.map(d => d.data()),
-    legal_basis: 'RGPD Art. 20 (Portability Rights)',
-  };
+    const dedupedApplications = new Map<string, Record<string, unknown>>();
+    for (const appDoc of [...appsByCamel.docs, ...appsBySnake.docs]) {
+      dedupedApplications.set(appDoc.id, appDoc.data() as Record<string, unknown>);
+    }
 
-  return exportPackage;
-});
+    const exportPackage = {
+      candidateUid,
+      exportedAt: new Date().toISOString(),
+      curriculum: curriculum.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Record<string, unknown>),
+      })),
+      applications: [...dedupedApplications.values()],
+      consents: consents.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Record<string, unknown>),
+      })),
+      candidateNotes: notes.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Record<string, unknown>),
+      })),
+      dataRequests: requests.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Record<string, unknown>),
+      })),
+      metadata: {
+        applicationsCount: dedupedApplications.size,
+        curriculumDocsCount: curriculum.size,
+        consentRecordsCount: consents.size,
+        candidateNotesCount: notes.size,
+        dataRequestsCount: requests.size,
+      },
+      legal_basis: "RGPD Art. 20 (Portability Rights)",
+    };
+
+    await logAuditEntry({
+      action: "candidate_data_exported",
+      actorUid: candidateUid,
+      actorRole: "candidate",
+      targetType: "candidate",
+      targetId: candidateUid,
+      metadata: {
+        applications: dedupedApplications.size,
+        notes: notes.size,
+        requests: requests.size,
+      },
+    });
+
+    return exportPackage;
+  });

@@ -35,10 +35,10 @@ class ApplicationService {
       throw Exception('Application already exists');
     }
 
-    final applicationId = await _applicationRepository.createApplication(
+    final applicationId = await _createApplicationWithServerAck(
       jobOffer: jobOffer,
       candidate: candidate,
-      candidateProfileId: candidateProfileId ?? candidate.id,
+      candidateProfileId: candidateProfileId,
       knockoutResponses: knockoutResponses,
       sourceChannel: sourceChannel,
     );
@@ -51,6 +51,51 @@ class ApplicationService {
     }
 
     return applicationId;
+  }
+
+  Future<String> _createApplicationWithServerAck({
+    required JobOffer jobOffer,
+    required Candidate candidate,
+    int? candidateProfileId,
+    Map<String, dynamic>? knockoutResponses,
+    required String sourceChannel,
+  }) async {
+    final payload = <String, dynamic>{
+      'jobOfferId': jobOffer.id,
+      'curriculumId': 'main',
+      'sourceChannel': sourceChannel,
+    };
+
+    try {
+      final result = await _functions
+          .httpsCallable('submitApplication')
+          .call(payload);
+      final data = result.data;
+      if (data is Map) {
+        final applicationId = data['applicationId']?.toString().trim();
+        if (applicationId != null && applicationId.isNotEmpty) {
+          return applicationId;
+        }
+      }
+      throw Exception('submitApplication returned an invalid payload.');
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      final fallbackResult = await _fallbackFunctions
+          .httpsCallable('submitApplication')
+          .call(payload);
+      final data = fallbackResult.data;
+      if (data is Map) {
+        final applicationId = data['applicationId']?.toString().trim();
+        if (applicationId != null && applicationId.isNotEmpty) {
+          return applicationId;
+        }
+      }
+      throw Exception(
+        'submitApplication fallback returned an invalid payload.',
+      );
+    }
   }
 
   Future<List<CandidateApplicationEntry>> getApplicationEntriesForCandidate(

@@ -215,7 +215,7 @@ export interface EmailData {
 export interface SubmitApplicationRequest {
   jobOfferId: string;
   coverLetter?: string;
-  curriculumId: string;
+  curriculumId?: string;
   additionalDocuments?: string[];
   sourceChannel?: string;
 }
