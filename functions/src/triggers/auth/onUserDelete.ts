@@ -28,6 +28,8 @@ export const onUserDelete = functions
       // Delete candidate or company profile
       const candidateRef = db.collection("candidates").doc(uid);
       const companyRef = db.collection("companies").doc(uid);
+      // Delete recruiter profile (Fase 0 RBAC)
+      const recruiterRef = db.collection("recruiters").doc(uid);
 
       const [candidateDoc, companyDoc] = await Promise.all([
         candidateRef.get(),
@@ -42,6 +44,17 @@ export const onUserDelete = functions
       if (companyDoc.exists) {
         batch.delete(companyRef);
         logger.info("Company profile marked for deletion", { uid });
+      }
+
+      // Limpieza del reclutador (Fase 0 RBAC)
+      // Marcamos status=disabled en lugar de borrar (preservar auditoría RGPD)
+      const recruiterDoc = await recruiterRef.get();
+      if (recruiterDoc.exists) {
+        batch.update(recruiterRef, {
+          status: "disabled",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        logger.info("Recruiter marked as disabled on user delete", { uid });
       }
 
       // Delete user stats

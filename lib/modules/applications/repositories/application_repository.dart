@@ -49,6 +49,10 @@ class ApplicationRepository {
     return query.docs.isNotEmpty;
   }
 
+  Future<List<Application>> getApplicationsForJobOffer(String jobOfferId) async {
+    return getApplicationsForOffer(jobOfferId: jobOfferId, companyUid: '');
+  }
+
   Future<List<Application>> getApplicationsForOffer({
     required String jobOfferId,
     required String companyUid,

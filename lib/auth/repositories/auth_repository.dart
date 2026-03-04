@@ -1,5 +1,6 @@
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
 import 'package:opti_job_app/auth/models/auth_service.dart';
 import 'package:opti_job_app/auth/models/auth_exceptions.dart';
 
@@ -66,6 +67,17 @@ class AuthRepository {
 
   Future<Company?> restoreCompanySession() {
     return _service.restoreCompanySession();
+  }
+
+  Future<Recruiter> loginRecruiter({
+    required String email,
+    required String password,
+  }) {
+    return _service.loginRecruiter(email: email, password: password);
+  }
+
+  Future<Recruiter?> restoreRecruiterSession() {
+    return _service.restoreRecruiterSession();
   }
 
   AuthException mapException(Object e) => _service.mapFirebaseException(e);

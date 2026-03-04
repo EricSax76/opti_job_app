@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
+import 'package:opti_job_app/modules/ats/models/knockout_question.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
@@ -29,6 +30,9 @@ class _CompanyOfferCreationView extends StatefulWidget {
 class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
   final _formKey = GlobalKey<FormState>();
   final _formControllers = OfferFormControllers();
+  
+  String? _selectedPipelineId;
+  List<KnockoutQuestion> _knockoutQuestions = [];
 
   @override
   void dispose() {
@@ -68,10 +72,14 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
         formKey: _formKey,
         formControllers: _formControllers,
         isGeneratingOffer: viewModel.isGeneratingOffer,
+        onPipelineSelected: (id) => setState(() => _selectedPipelineId = id),
+        onKnockoutQuestionsChanged: (q) => setState(() => _knockoutQuestions = q),
         onSubmit: () => CompanyOfferCreationController.submit(
           context: context,
           formKey: _formKey,
           formControllers: _formControllers,
+          pipelineId: _selectedPipelineId,
+          knockoutQuestions: _knockoutQuestions.map((q) => q.toFirestore()).toList(),
         ),
         onGenerateWithAi: () => CompanyOfferCreationController.generateWithAi(
           context: context,

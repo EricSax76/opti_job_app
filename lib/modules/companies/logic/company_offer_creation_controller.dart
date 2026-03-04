@@ -27,6 +27,9 @@ class CompanyOfferCreationController {
     required BuildContext context,
     required GlobalKey<FormState> formKey,
     required OfferFormControllers formControllers,
+    String? pipelineId,
+    List<dynamic>? pipelineStages,
+    List<dynamic>? knockoutQuestions,
   }) {
     final company = context.read<CompanyAuthCubit>().state.company;
     final payload = CompanyOfferCreationLogic.buildSubmitPayload(
@@ -45,7 +48,12 @@ class CompanyOfferCreationController {
       return;
     }
 
-    context.read<JobOfferFormCubit>().submit(payload);
+    context.read<JobOfferFormCubit>().submit(
+      payload,
+      pipelineId: pipelineId,
+      pipelineStages: pipelineStages,
+      knockoutQuestions: knockoutQuestions,
+    );
   }
 
   static Future<void> generateWithAi({

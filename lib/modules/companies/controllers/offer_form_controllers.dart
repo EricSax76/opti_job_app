@@ -6,6 +6,8 @@ class OfferFormControllers {
   final TextEditingController location = TextEditingController();
   final TextEditingController salaryMin = TextEditingController();
   final TextEditingController salaryMax = TextEditingController();
+  final TextEditingController salaryCurrency = TextEditingController();
+  final TextEditingController salaryPeriod = TextEditingController();
   final TextEditingController education = TextEditingController();
   final TextEditingController jobType = TextEditingController();
   final TextEditingController jobCategory = TextEditingController();
@@ -19,6 +21,8 @@ class OfferFormControllers {
     location.clear();
     salaryMin.clear();
     salaryMax.clear();
+    salaryCurrency.clear();
+    salaryPeriod.clear();
     education.clear();
     jobType.clear();
     jobCategory.clear();
@@ -33,6 +37,8 @@ class OfferFormControllers {
     location.dispose();
     salaryMin.dispose();
     salaryMax.dispose();
+    salaryCurrency.dispose();
+    salaryPeriod.dispose();
     education.dispose();
     jobType.dispose();
     jobCategory.dispose();

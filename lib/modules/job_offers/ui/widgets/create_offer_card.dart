@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/modules/ats/models/knockout_question.dart';
+import 'package:opti_job_app/modules/ats/ui/widgets/knockout_questions_form.dart';
+import 'package:opti_job_app/modules/ats/ui/widgets/pipeline_template_selector.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/offer_form_fields.dart';
@@ -15,6 +18,8 @@ class CreateOfferCard extends StatelessWidget {
     required this.onSubmit,
     required this.onGenerateWithAi,
     required this.isGenerating,
+    required this.onPipelineSelected,
+    required this.onKnockoutQuestionsChanged,
   });
 
   final GlobalKey<FormState> formKey;
@@ -22,6 +27,8 @@ class CreateOfferCard extends StatelessWidget {
   final VoidCallback onSubmit;
   final VoidCallback onGenerateWithAi;
   final bool isGenerating;
+  final ValueChanged<String?> onPipelineSelected;
+  final ValueChanged<List<KnockoutQuestion>> onKnockoutQuestionsChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +92,28 @@ class CreateOfferCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             OfferFormFields(controllers: controllers),
-            const SizedBox(height: 20),
+            
+            const Divider(height: uiSpacing32),
+            
+            // Integración ATS Module
+            Text(
+              'Ajustes del Applicant Tracking System (ATS)',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: ink,
+              ),
+            ),
+            const SizedBox(height: uiSpacing16),
+            PipelineTemplateSelector(onPipelineSelected: onPipelineSelected),
+            const SizedBox(height: uiSpacing24),
+            KnockoutQuestionsForm(
+              initialQuestions: const [],
+              onQuestionsChanged: onKnockoutQuestionsChanged,
+            ),
+            
+            const SizedBox(height: 32),
+            
             BlocBuilder<JobOfferFormCubit, JobOfferFormState>(
               builder: (context, state) {
                 final isSubmitting =

@@ -18,6 +18,29 @@ export { onUserDelete } from "./triggers/auth/onUserDelete";
 export { onApplicationCreate } from "./triggers/firestore/onApplicationCreate";
 export { onJobOfferCreate } from "./triggers/firestore/onJobOfferCreate";
 export { onInterviewUpdate } from "./triggers/firestore/onInterviewUpdate";
+export { onRecruiterCreate } from "./triggers/firestore/onRecruiterCreate";
+export { onApplicationStageChange } from "./triggers/firestore/onApplicationStageChange";
+export { onEvaluationCreate } from "./triggers/firestore/evaluations/onEvaluationCreate";
+export { onApprovalUpdate } from "./triggers/firestore/approvals/onApprovalUpdate";
+
+// AI & Skills
+export * from './scheduled/seedSkillsTaxonomy';
+export * from './callable/ai/matchCandidateWithSkills';
+export * from './callable/ai/overrideAiDecision';
+
+// Talent Pool
+export * from './callable/talent/addToPool';
+export * from './callable/talent/requestConsent';
+export * from './scheduled/expireTalentPoolConsent';
+
+// Compliance
+export * from './callable/compliance/complianceCallables';
+export * from './scheduled/complianceJobs';
+
+// Analytics
+export * from './scheduled/computeMonthlyAnalytics';
+export * from './triggers/firestore/onApplicationStatusChange';
+export * from './callable/analytics/getAnalyticsSummary';
 
 // Callable Functions
 export { submitApplication } from "./callable/applications/submitApplication";
@@ -30,6 +53,20 @@ export { respondInterviewSlot } from "./callable/interviews/respondInterviewSlot
 export { markInterviewSeen } from "./callable/interviews/markInterviewSeen";
 export { cancelInterview } from "./callable/interviews/cancelInterview";
 export { completeInterview } from "./callable/interviews/completeInterview";
+
+// ats
+export { moveApplicationStage } from "./callable/ats/moveApplicationStage";
+export { evaluateKnockoutQuestions } from "./callable/ats/evaluateKnockoutQuestions";
+
+// recruiters
+export { createInvitation } from "./callable/recruiters/createInvitation";
+export { acceptInvitation } from "./callable/recruiters/acceptInvitation";
+export { updateRecruiterRole } from "./callable/recruiters/updateRecruiterRole";
+export { removeRecruiter } from "./callable/recruiters/removeRecruiter";
+
+// evaluations
+export { submitEvaluation } from "./callable/evaluations/submitEvaluation";
+export { requestApproval } from "./callable/evaluations/requestApproval";
 
 // Location catalog sync + public JSON endpoints
 export {

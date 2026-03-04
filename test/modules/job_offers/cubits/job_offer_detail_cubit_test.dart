@@ -100,6 +100,7 @@ void main() {
       score: 78,
       reasons: ['Experiencia en Flutter'],
       recommendations: ['Resaltar impacto en proyectos'],
+      explanation: 'Coincidencia alta entre experiencia y requisitos.',
       summary: 'Buen encaje general.',
     );
 

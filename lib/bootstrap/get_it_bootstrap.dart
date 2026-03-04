@@ -30,6 +30,12 @@ import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
+import 'package:opti_job_app/modules/recruiters/repositories/firebase_recruiter_repository.dart';
+import 'package:opti_job_app/modules/recruiters/repositories/recruiter_repository.dart';
+import 'package:opti_job_app/modules/recruiters/services/invitation_service.dart';
+import 'package:opti_job_app/modules/recruiters/services/rbac_service.dart';
+import 'package:opti_job_app/modules/ats/repositories/firebase_pipeline_repository.dart';
+import 'package:opti_job_app/modules/ats/repositories/pipeline_repository.dart';
 
 void setupGetIt({
   FirebaseFirestore? firestore,
@@ -164,6 +170,20 @@ void setupGetIt({
       functions: functionsInstance,
       fallbackFunctions: fallbackFunctionsInstance,
     ),
+  );
+
+  // Recruiters (Fase 0 RBAC)
+  getIt.registerLazySingleton<RecruiterRepository>(
+    () => FirebaseRecruiterRepository(firestore: getIt<FirebaseFirestore>()),
+  );
+  getIt.registerLazySingleton(
+    () => InvitationService(firestore: getIt<FirebaseFirestore>()),
+  );
+  getIt.registerLazySingleton(() => const RbacService());
+
+  // ATS (Fase 2 Pipeline)
+  getIt.registerLazySingleton<PipelineRepository>(
+    () => FirebasePipelineRepository(firestore: getIt<FirebaseFirestore>()),
   );
 }
 

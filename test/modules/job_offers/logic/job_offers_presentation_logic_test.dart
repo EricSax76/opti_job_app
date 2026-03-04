@@ -167,6 +167,7 @@ void main() {
               score: 72,
               reasons: ['Experiencia relevante'],
               recommendations: ['Destacar logro medible'],
+              explanation: 'La persona cumple con la mayor parte del perfil.',
             ),
           ),
         );

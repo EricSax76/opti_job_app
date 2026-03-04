@@ -39,6 +39,8 @@ class CompanyOfferCreationLogic {
     final jobType = formControllers.jobType.text.trim();
     final salaryMin = formControllers.salaryMin.text.trim();
     final salaryMax = formControllers.salaryMax.text.trim();
+    final salaryCurrency = formControllers.salaryCurrency.text.trim();
+    final salaryPeriod = formControllers.salaryPeriod.text.trim();
     final education = formControllers.education.text.trim();
     final jobCategory = formControllers.jobCategory.text.trim();
     final workSchedule = formControllers.workSchedule.text.trim();
@@ -54,8 +56,10 @@ class CompanyOfferCreationLogic {
       companyName: company.name,
       companyAvatarUrl: company.avatarUrl,
       jobType: jobType.isEmpty ? null : jobType,
-      salaryMin: salaryMin.isEmpty ? null : salaryMin,
-      salaryMax: salaryMax.isEmpty ? null : salaryMax,
+      salaryMin: salaryMin,
+      salaryMax: salaryMax,
+      salaryCurrency: salaryCurrency,
+      salaryPeriod: salaryPeriod,
       education: education.isEmpty ? null : education,
       jobCategory: jobCategory.isEmpty ? null : jobCategory,
       workSchedule: workSchedule.isEmpty ? null : workSchedule,

@@ -16,6 +16,24 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/companies/$(request.auth.uid));
     }
 
+    // ─── Fase 0 RBAC helpers ──────────────────────────────────────────
+
+    function isRecruiter() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/recruiters/$(request.auth.uid));
+    }
+
+    function recruiterBelongsToCompany(companyId) {
+      return isRecruiter() &&
+        get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId;
+    }
+
+    function recruiterHasRole(companyId, roles) {
+      return recruiterBelongsToCompany(companyId) &&
+        get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.role in roles &&
+        get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.status == 'active';
+    }
+
     match /candidates/{candidateId} {
       allow create: if isSignedIn()
         && request.auth.uid == candidateId
@@ -45,7 +63,9 @@ service cloud.firestore {
 
     match /companies/{companyId} {
       allow create: if isSignedIn() && request.auth.uid == companyId;
-      allow read, update, delete: if isCompany() && request.auth.uid == companyId;
+      allow read: if (isCompany() && request.auth.uid == companyId)
+                    || recruiterBelongsToCompany(companyId);
+      allow update, delete: if isCompany() && request.auth.uid == companyId;
     }
 
     match /catalog/{docId} {
@@ -58,9 +78,17 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /pipelines/{pipelineId} {
+      allow read: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && resource.data.companyId == request.auth.uid ||
+                     isRecruiter() && recruiterBelongsToCompany(resource.data.companyId);
+      allow write: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && request.resource.data.companyId == request.auth.uid ||
+                      isRecruiter() && recruiterBelongsToCompany(request.resource.data.companyId) && recruiterHasRole('admin', 'recruiter');
+    }
+
     match /jobOffers/{offerId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isCompany();
+      allow create, update, delete: if isCompany()
+        || recruiterHasRole(resource.data.get('companyUid', resource.data.get('company_uid', '')), ['admin', 'recruiter']);
     }
 
     function isOfferOwner(offerId) {
@@ -118,6 +146,101 @@ service cloud.firestore {
         allow create: if isSignedIn()
             && request.auth.uid in get(/databases/$(database)/documents/interviews/$(interviewId)).data.participants
             && request.resource.data.senderUid == request.auth.uid;
+      }
+    }
+
+    // ─── Fase 0 RBAC: Recruiters & Invitations ─────────────────────────────────
+
+    match /recruiters/{uid} {
+      // Puede leer su propio doc o cualquier reclutador activo de la misma empresa
+      allow read: if (isSignedIn() && request.auth.uid == uid)
+                    || isRecruiter();
+      // Las escrituras son gestionadas exclusivamente por Cloud Functions
+      allow write: if false;
+    }
+
+    match /invitations/{code} {
+      // Los reclutadores pueden leer invitaciones (para mostrar código generado)
+      allow read: if isRecruiter();
+      // Las escrituras son gestionadas exclusivamente por Cloud Functions
+      allow write: if false;
+    }
+
+    match /scorecardTemplates/{templateId} {
+      allow read: if isCompany() || isRecruiter();
+      allow write: if isCompany() || recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter']);
+    }
+
+    match /evaluations/{evaluationId} {
+      allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
+      allow create: if isCompany() || isRecruiter();
+      allow update: if (isCompany() && request.auth.uid == resource.data.companyId) || 
+                      (isRecruiter() && request.auth.uid == resource.data.evaluatorUid);
+    }
+
+    match /approvals/{approvalId} {
+      allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
+      allow create: if isCompany() || recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter']);
+      allow update: if isCompany() || isRecruiter();
+    }
+
+    // ─── Fase 4: Skills ───────────────────────────────────────────────
+
+    match /skillsTaxonomy/{skillId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ─── Fase 5: CRM Talent Pool ──────────────────────────────────────
+
+    match /talentPools/{poolId} {
+      allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
+      allow create: if isCompany() || isRecruiter();
+      allow update, delete: if (isCompany() && request.auth.uid == poolId) || 
+                              recruiterHasRole(resource.data.companyId, ['admin', 'recruiter']);
+
+      match /members/{candidateUid} {
+        allow read: if isCompany() || recruiterBelongsToCompany(get(/databases/$(database)/documents/talentPools/$(poolId)).data.companyId);
+        // Writing is mostly via Cloud Functions, but allow company/recruiter for tags
+        allow write: if isCompany() || recruiterBelongsToCompany(get(/databases/$(database)/documents/talentPools/$(poolId)).data.companyId);
+      }
+    }
+
+    match /candidateNotes/{noteId} {
+      allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
+      allow create: if isCompany() || isRecruiter();
+      allow update, delete: if (isCompany() && request.auth.uid == resource.data.companyId) || 
+                              (isRecruiter() && request.auth.uid == resource.data.recruiterUid);
+    }
+
+    // ─── Fase 6: Compliance ───────────────────────────────────────────
+
+    match /auditLogs/{logId} {
+      // Solo lectura para admins o la propia empresa auditada (según lógica de negocio)
+      allow read: if isCompany() && resource.data.companyId == request.auth.uid;
+      allow write: if false; // Solo por Cloud Functions o internamente
+    }
+
+    match /dataRequests/{requestId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.candidateUid || isCompany());
+      allow create: if isCandidate() && request.auth.uid == request.resource.data.candidateUid;
+      allow update: if isCompany(); // Solo resolutor
+    }
+
+    match /consentRecords/{recordId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.candidateUid || isCompany());
+      allow write: if isCandidate() && request.auth.uid == request.resource.data.candidateUid;
+    }
+
+    // ─── Fase 7: Analytics ────────────────────────────────────────────
+
+    match /analytics/{companyId} {
+      allow read: if isCompany() && companyId == request.auth.uid;
+      // Las escrituras las hace el sistema (Cloud Functions)
+      allow write: if false;
+
+      match /monthly/{period} {
+        allow read: if isCompany() && companyId == request.auth.uid;
       }
     }
   }

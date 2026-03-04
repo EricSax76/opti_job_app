@@ -12,6 +12,8 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_cubit.dart';
+import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_cubit.dart';
+import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_state.dart';
 
 class AppScope extends StatelessWidget {
   const AppScope({super.key, required this.dependencies});
@@ -37,6 +39,11 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.videoCurriculumRepository),
         RepositoryProvider.value(value: dependencies.interviewRepository),
         RepositoryProvider.value(value: dependencies.firebaseAuth),
+        // Fase 0 RBAC
+        RepositoryProvider.value(value: dependencies.recruiterRepository),
+        RepositoryProvider.value(value: dependencies.invitationService),
+        RepositoryProvider.value(value: dependencies.rbacService),
+        RepositoryProvider.value(value: dependencies.pipelineRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -49,6 +56,12 @@ class AppScope extends StatelessWidget {
           BlocProvider<CompanyAuthCubit>(
             create: (_) =>
                 CompanyAuthCubit(dependencies.authRepository)..restoreSession(),
+          ),
+          // Fase 0 RBAC
+          BlocProvider<RecruiterAuthCubit>(
+            create: (_) =>
+                RecruiterAuthCubit(dependencies.authRepository)
+                  ..restoreSession(),
           ),
           BlocProvider<JobOffersCubit>(
             create: (_) => JobOffersCubit(
@@ -89,6 +102,15 @@ class AppScope extends StatelessWidget {
                 }
               },
             ),
+            BlocListener<RecruiterAuthCubit, RecruiterAuthState>(
+              listenWhen: (previous, current) =>
+                  previous.isAuthenticated != current.isAuthenticated,
+              listener: (context, state) {
+                if (state.isAuthenticated) {
+                  context.read<JobOffersCubit>().refresh();
+                }
+              },
+            ),
           ],
           child: const _AppRouterHost(),
         ),
@@ -116,6 +138,7 @@ class _AppRouterHostState extends State<_AppRouterHost> {
     final refreshStream = GoRouterCombinedRefreshStream(
       context.read<CandidateAuthCubit>(),
       context.read<CompanyAuthCubit>(),
+      context.read<RecruiterAuthCubit>(),
     );
     _routerRefreshStream = refreshStream;
     _appRouter = AppRouter(routerRefreshStream: refreshStream);

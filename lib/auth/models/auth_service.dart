@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
 import 'package:opti_job_app/auth/models/auth_exceptions.dart';
 
 class AuthService {
@@ -24,6 +25,8 @@ class AuthService {
       _firestore.collection('candidates');
   CollectionReference<Map<String, dynamic>> get _companiesCollection =>
       _firestore.collection('companies');
+  CollectionReference<Map<String, dynamic>> get _recruitersCollection =>
+      _firestore.collection('recruiters');
 
   Future<Candidate> loginCandidate({
     required String email,
@@ -150,6 +153,46 @@ class AuthService {
 
   Future<void> logout() {
     return _auth.signOut();
+  }
+
+  // ─── Recruiter auth ──────────────────────────────────────────────────────
+
+  /// Inicia sesión como reclutador y devuelve el modelo [Recruiter].
+  ///
+  /// Lanza [StateError] si el UID no tiene documento en `recruiters/`
+  /// (el usuario existe en Auth pero no es un reclutador registrado).
+  Future<Recruiter> loginRecruiter({
+    required String email,
+    required String password,
+  }) async {
+    final credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'No se encontró el usuario solicitado.',
+      );
+    }
+    final doc = await _recruitersCollection.doc(user.uid).get();
+    if (!doc.exists) {
+      await _auth.signOut();
+      throw StateError('No existe un perfil de reclutador asociado.');
+    }
+    return Recruiter.fromFirestore({...doc.data()!, 'uid': user.uid});
+  }
+
+  /// Restaura la sesión de un reclutador si hay un usuario activo en Auth.
+  Future<Recruiter?> restoreRecruiterSession() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final doc = await _recruitersCollection.doc(user.uid).get();
+    if (!doc.exists || doc.data() == null) return null;
+
+    return Recruiter.fromFirestore({...doc.data()!, 'uid': user.uid});
   }
 
   Future<void> completeCandidateOnboarding(String uid) async {

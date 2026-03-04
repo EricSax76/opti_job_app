@@ -15,6 +15,10 @@ import 'package:opti_job_app/modules/interviews/repositories/interview_repositor
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
+import 'package:opti_job_app/modules/recruiters/repositories/recruiter_repository.dart';
+import 'package:opti_job_app/modules/recruiters/services/invitation_service.dart';
+import 'package:opti_job_app/modules/recruiters/services/rbac_service.dart';
+import 'package:opti_job_app/modules/ats/repositories/pipeline_repository.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -35,6 +39,10 @@ class AppDependencies {
     required this.videoCurriculumRepository,
     required this.interviewRepository,
     required this.firebaseAuth,
+    required this.recruiterRepository,
+    required this.invitationService,
+    required this.rbacService,
+    required this.pipelineRepository,
   });
 
   factory AppDependencies.create() {
@@ -60,6 +68,10 @@ class AppDependencies {
       videoCurriculumRepository: getIt<VideoCurriculumRepository>(),
       interviewRepository: getIt<InterviewRepository>(),
       firebaseAuth: getIt<FirebaseAuth>(),
+      recruiterRepository: getIt<RecruiterRepository>(),
+      invitationService: getIt<InvitationService>(),
+      rbacService: getIt<RbacService>(),
+      pipelineRepository: getIt<PipelineRepository>(),
     );
   }
 
@@ -78,4 +90,10 @@ class AppDependencies {
   final VideoCurriculumRepository videoCurriculumRepository;
   final InterviewRepository interviewRepository;
   final FirebaseAuth firebaseAuth;
+
+  // Fase 0 RBAC
+  final RecruiterRepository recruiterRepository;
+  final InvitationService invitationService;
+  final RbacService rbacService;
+  final PipelineRepository pipelineRepository;
 }

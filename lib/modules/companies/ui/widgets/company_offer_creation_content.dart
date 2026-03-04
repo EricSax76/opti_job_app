@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/ats/models/knockout_question.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/companies/ui/widgets/dashboard/company_dashboard_header.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/create_offer_card.dart';
@@ -13,6 +14,8 @@ class CompanyOfferCreationContent extends StatelessWidget {
     required this.isGeneratingOffer,
     required this.onSubmit,
     required this.onGenerateWithAi,
+    required this.onPipelineSelected,
+    required this.onKnockoutQuestionsChanged,
   });
 
   final String? companyName;
@@ -21,6 +24,8 @@ class CompanyOfferCreationContent extends StatelessWidget {
   final bool isGeneratingOffer;
   final VoidCallback onSubmit;
   final VoidCallback onGenerateWithAi;
+  final ValueChanged<String?> onPipelineSelected;
+  final ValueChanged<List<KnockoutQuestion>> onKnockoutQuestionsChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +46,8 @@ class CompanyOfferCreationContent extends StatelessWidget {
           onSubmit: onSubmit,
           onGenerateWithAi: onGenerateWithAi,
           isGenerating: isGeneratingOffer,
+          onPipelineSelected: onPipelineSelected,
+          onKnockoutQuestionsChanged: onKnockoutQuestionsChanged,
         ),
       ],
     );

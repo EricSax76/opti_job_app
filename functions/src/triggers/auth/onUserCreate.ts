@@ -82,6 +82,33 @@ export const onUserCreate = functions
         logger.info("Company profile bootstrapped", { uid });
       }
 
+      // ─── Backward compat: auto-crear reclutador admin para empresas que ya existían ───
+      // Si existe companies/{uid} y NO existe recruiters/{uid}, lo creamos como admin.
+      // Esto garantiza que las empresas registradas antes de Fase 0 sigan funcionando.
+      if (role === "company") {
+        const recruiterRef = db.collection("recruiters").doc(uid);
+        const recruiterDoc = await recruiterRef.get();
+        if (!recruiterDoc.exists) {
+          const companyData = companyDoc.exists
+            ? companyDoc.data()
+            : { name: displayName || email?.split("@")[0] || "Empresa", email: email || "" };
+          await recruiterRef.set(
+            {
+              uid,
+              companyId: uid, // El companyId es el UID del admin fundador
+              email: companyData?.email || email || "",
+              name: companyData?.name || displayName || email?.split("@")[0] || "Empresa",
+              role: "admin",
+              status: "active",
+              createdAt: now,
+              updatedAt: now,
+            },
+            { merge: true }
+          );
+          logger.info("Admin recruiter auto-created for existing company", { uid });
+        }
+      }
+
       // Initialize user stats
       const stats = {
         uid,

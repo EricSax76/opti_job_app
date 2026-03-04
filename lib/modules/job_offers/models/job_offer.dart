@@ -1,3 +1,5 @@
+import 'package:opti_job_app/modules/skills/models/skill.dart';
+
 class JobOffer {
   const JobOffer({
     required this.id,
@@ -15,11 +17,19 @@ class JobOffer {
     this.jobType,
     this.salaryMin,
     this.salaryMax,
+    this.salaryCurrency,
+    this.salaryPeriod,
     this.education,
     this.jobCategory,
     this.workSchedule,
     this.contractType,
     this.keyIndicators,
+    this.pipelineId,
+    this.pipelineStages,
+    this.knockoutQuestions,
+    this.languageCheckResult,
+    this.requiredSkills = const [],
+    this.preferredSkills = const [],
     this.createdAt,
   });
 
@@ -38,11 +48,19 @@ class JobOffer {
   final String? jobType;
   final String? salaryMin;
   final String? salaryMax;
+  final String? salaryCurrency;
+  final String? salaryPeriod;
   final String? education;
   final String? jobCategory;
   final String? workSchedule;
   final String? contractType;
   final String? keyIndicators;
+  final String? pipelineId;
+  final List<dynamic>? pipelineStages;
+  final List<dynamic>? knockoutQuestions;
+  final Map<String, dynamic>? languageCheckResult;
+  final List<JobOfferSkill> requiredSkills;
+  final List<Skill> preferredSkills;
   final DateTime? createdAt;
 
   factory JobOffer.fromJson(Map<String, dynamic> json) {
@@ -78,15 +96,27 @@ class JobOffer {
       jobType: json['job_type'] as String? ?? json['jobType'] as String?,
       salaryMin: json['salary_min'] as String? ?? json['salaryMin'] as String?,
       salaryMax: json['salary_max'] as String? ?? json['salaryMax'] as String?,
+      salaryCurrency: json['salary_currency'] as String? ?? json['salaryCurrency'] as String?,
+      salaryPeriod: json['salary_period'] as String? ?? json['salaryPeriod'] as String?,
       education: json['education'] as String?,
       jobCategory:
           json['job_category'] as String? ?? json['jobCategory'] as String?,
       workSchedule:
           json['work_schedule'] as String? ?? json['workSchedule'] as String?,
-      contractType:
-          json['contract_type'] as String? ?? json['contractType'] as String?,
-      keyIndicators:
-          json['key_indicators'] as String? ?? json['keyIndicators'] as String?,
+      contractType: json['contract_type'] as String?,
+      keyIndicators: json['key_indicators'] as String?,
+      pipelineId: json['pipelineId'] as String?,
+      pipelineStages: json['pipelineStages'] as List<dynamic>?,
+      knockoutQuestions: json['knockoutQuestions'] as List<dynamic>?,
+      languageCheckResult: json['languageCheckResult'] as Map<String, dynamic>?,
+      requiredSkills: (json['requiredSkills'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(JobOfferSkill.fromJson)
+          .toList(),
+      preferredSkills: (json['preferredSkills'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(Skill.fromJson)
+          .toList(),
       createdAt: _parseDate(json['created_at'] ?? json['createdAt']),
     );
   }
@@ -108,12 +138,21 @@ class JobOffer {
       'job_type': jobType,
       'salary_min': salaryMin,
       'salary_max': salaryMax,
+      'salary_currency': salaryCurrency,
+      'salary_period': salaryPeriod,
       'education': education,
       'job_category': jobCategory,
       'work_schedule': workSchedule,
-      'contract_type': contractType,
-      'key_indicators': keyIndicators,
-      'created_at': createdAt?.toIso8601String(),
+      if (contractType != null) 'contract_type': contractType,
+      if (keyIndicators != null) 'key_indicators': keyIndicators,
+      if (pipelineId != null) 'pipelineId': pipelineId,
+      if (pipelineStages != null) 'pipelineStages': pipelineStages,
+      if (knockoutQuestions != null) 'knockoutQuestions': knockoutQuestions,
+      if (languageCheckResult != null)
+        'languageCheckResult': languageCheckResult,
+      'requiredSkills': requiredSkills.map((s) => s.toJson()).toList(),
+      'preferredSkills': preferredSkills.map((s) => s.toJson()).toList(),
+      if (createdAt != null) 'created_at': createdAt?.toIso8601String(),
     };
   }
 
@@ -133,11 +172,19 @@ class JobOffer {
     String? jobType,
     String? salaryMin,
     String? salaryMax,
+    String? salaryCurrency,
+    String? salaryPeriod,
     String? education,
     String? jobCategory,
     String? workSchedule,
     String? contractType,
     String? keyIndicators,
+    String? pipelineId,
+    List<dynamic>? pipelineStages,
+    List<dynamic>? knockoutQuestions,
+    Map<String, dynamic>? languageCheckResult,
+    List<JobOfferSkill>? requiredSkills,
+    List<Skill>? preferredSkills,
     DateTime? createdAt,
   }) {
     return JobOffer(
@@ -156,11 +203,19 @@ class JobOffer {
       jobType: jobType ?? this.jobType,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
+      salaryCurrency: salaryCurrency ?? this.salaryCurrency,
+      salaryPeriod: salaryPeriod ?? this.salaryPeriod,
       education: education ?? this.education,
       jobCategory: jobCategory ?? this.jobCategory,
       workSchedule: workSchedule ?? this.workSchedule,
       contractType: contractType ?? this.contractType,
       keyIndicators: keyIndicators ?? this.keyIndicators,
+      pipelineId: pipelineId ?? this.pipelineId,
+      pipelineStages: pipelineStages ?? this.pipelineStages,
+      knockoutQuestions: knockoutQuestions ?? this.knockoutQuestions,
+      languageCheckResult: languageCheckResult ?? this.languageCheckResult,
+      requiredSkills: requiredSkills ?? this.requiredSkills,
+      preferredSkills: preferredSkills ?? this.preferredSkills,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -195,4 +250,32 @@ String? _readNullableString(dynamic value) {
   final parsed = value.toString().trim();
   if (parsed.isEmpty) return null;
   return parsed;
+}
+
+class JobOfferSkill {
+  const JobOfferSkill({
+    required this.skillId,
+    required this.name,
+    required this.minimumLevel,
+  });
+
+  final String skillId;
+  final String name;
+  final SkillLevel minimumLevel;
+
+  factory JobOfferSkill.fromJson(Map<String, dynamic> json) {
+    return JobOfferSkill(
+      skillId: json['skillId'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      minimumLevel: SkillLevel.fromString(json['minimumLevel'] as String? ?? 'beginner'),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'skillId': skillId,
+      'name': name,
+      'minimumLevel': minimumLevel.name,
+    };
+  }
 }

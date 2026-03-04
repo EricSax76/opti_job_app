@@ -129,7 +129,12 @@ class TestJobOfferFormCubit extends Cubit<JobOfferFormState>
   void emitState(JobOfferFormState nextState) => emit(nextState);
 
   @override
-  Future<void> submit(JobOfferPayload payload) async {
+  Future<void> submit(
+    JobOfferPayload payload, {
+    String? pipelineId,
+    List<dynamic>? pipelineStages,
+    List<dynamic>? knockoutQuestions,
+  }) async {
     submittedPayloads.add(payload);
   }
 }

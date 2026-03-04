@@ -53,4 +53,16 @@ class AiSchemaFactory {
       ],
     );
   }
+
+  static Schema biasCheckSchema() {
+    return Schema.object(
+      properties: {
+        'score': Schema.integer(minimum: 0, maximum: 100),
+        'issues': Schema.array(
+          items: Schema.string(),
+        ),
+      },
+      propertyOrdering: ['score', 'issues'],
+    );
+  }
 }

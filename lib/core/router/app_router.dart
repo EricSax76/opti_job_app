@@ -15,6 +15,7 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_dashboard_screen.dart';
 import 'package:opti_job_app/home/pages/landing_screen.dart';
+import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_list_screen.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
@@ -22,6 +23,9 @@ import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart
 import 'package:opti_job_app/modules/job_offers/ui/pages/job_offer_detail_screen.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
+import 'package:opti_job_app/features/ai/models/ai_service.dart';
+import 'package:opti_job_app/modules/ats/cubits/pipeline_template_cubit.dart';
+import 'package:opti_job_app/modules/ats/repositories/pipeline_repository.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_profile_form_cubit.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.dart';
@@ -54,15 +58,20 @@ import 'package:opti_job_app/features/calendar/repositories/calendar_repository.
 class GoRouterCombinedRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _candidateAuthSubscription;
   late final StreamSubscription<dynamic> _companyAuthSubscription;
+  late final StreamSubscription<dynamic> _recruiterAuthSubscription;
 
   GoRouterCombinedRefreshStream(
     CandidateAuthCubit candidateAuthCubit,
     CompanyAuthCubit companyAuthCubit,
+    RecruiterAuthCubit recruiterAuthCubit,
   ) {
     _candidateAuthSubscription = candidateAuthCubit.stream.listen(
       (_) => notifyListeners(),
     );
     _companyAuthSubscription = companyAuthCubit.stream.listen(
+      (_) => notifyListeners(),
+    );
+    _recruiterAuthSubscription = recruiterAuthCubit.stream.listen(
       (_) => notifyListeners(),
     );
   }
@@ -71,6 +80,7 @@ class GoRouterCombinedRefreshStream extends ChangeNotifier {
   void dispose() {
     _candidateAuthSubscription.cancel();
     _companyAuthSubscription.cancel();
+    _recruiterAuthSubscription.cancel();
     super.dispose();
   }
 }
@@ -612,6 +622,32 @@ class AppRouter {
             );
           },
         ),
+        // ─── Fase 0 RBAC: Recruiter routes (stubs — UI se implementa en fases posteriores) ───
+        GoRoute(
+          path: '/recruiter-login',
+          name: 'recruiter-login',
+          builder: (context, state) => const _RecruiterPlaceholderScreen(
+            title: 'Acceso Reclutadores',
+          ),
+        ),
+        GoRoute(
+          path: '/recruiter-register',
+          name: 'recruiter-register',
+          builder: (context, state) => const _RecruiterPlaceholderScreen(
+            title: 'Registro Reclutador',
+          ),
+        ),
+        GoRoute(
+          path: '/recruiter/:uid/dashboard',
+          name: 'recruiter-dashboard',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            return _RecruiterPlaceholderScreen(
+              title: 'Dashboard Reclutador',
+              subtitle: 'uid: $uid',
+            );
+          },
+        ),
       ],
     );
   }
@@ -631,6 +667,7 @@ class AppRouter {
 
     final jobOfferFormCubit = JobOfferFormCubit(
       context.read<JobOfferRepository>(),
+      context.read<AiService>(),
     );
 
     final offerApplicantsCubit = OfferApplicantsCubit(
@@ -652,6 +689,10 @@ class AppRouter {
       uid: uid,
     );
 
+    final pipelineTemplateCubit = PipelineTemplateCubit(
+      pipelineRepository: context.read<PipelineRepository>(),
+    )..loadPipelines(uid);
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => companyJobOffersCubit),
@@ -660,6 +701,7 @@ class AppRouter {
         BlocProvider(create: (_) => companyDashboardCubit),
         BlocProvider(create: (_) => companyOfferCreationCubit),
         BlocProvider(create: (_) => interviewListCubit),
+        BlocProvider(create: (_) => pipelineTemplateCubit),
       ],
       child: CompanyDashboardScreen(
         dashboardCubit: companyDashboardCubit,
@@ -702,8 +744,10 @@ class AppRouter {
   String? _redirectLogic(BuildContext context, GoRouterState state) {
     final candidateAuthState = context.read<CandidateAuthCubit>().state;
     final companyAuthState = context.read<CompanyAuthCubit>().state;
+    final recruiterAuthState = context.read<RecruiterAuthCubit>().state;
     final candidateUid = candidateAuthState.candidate?.uid ?? '';
     final companyUid = companyAuthState.company?.uid ?? '';
+    final recruiterUid = recruiterAuthState.recruiter?.uid ?? '';
 
     // Determine the active auth state based on who is authenticated
     final authState = candidateAuthState.isAuthenticated
@@ -721,17 +765,34 @@ class AppRouter {
     final bool authBootstrapRoute = location == _authBootstrapPath;
     final bool companyArea = location.startsWith('/company/');
     final bool candidateArea = location.startsWith('/candidate/');
+    final bool recruiterArea = location.startsWith('/recruiter/') ||
+        location == '/recruiter-login' ||
+        location == '/recruiter-register';
     final companyDashboardCanonicalPath = _companyDashboardCanonicalPath(
       location: uriPath,
       companyUid: companyUid,
     );
     final routeUid = state.pathParameters['uid'];
     final bool hasAuthenticatedSession =
-        candidateAuthState.isAuthenticated || companyAuthState.isAuthenticated;
+        candidateAuthState.isAuthenticated ||
+        companyAuthState.isAuthenticated ||
+        recruiterAuthState.isAuthenticated;
     final bool pendingSessionRestore =
         !hasAuthenticatedSession &&
         (candidateAuthState.status == AuthStatus.unknown ||
-            companyAuthState.status == AuthStatus.unknown);
+            companyAuthState.status == AuthStatus.unknown ||
+            recruiterAuthState.status == AuthStatus.unknown);
+
+    // ─ Recruiter area: requires recruiter authentication ─
+    if (recruiterArea && location.startsWith('/recruiter/')) {
+      if (!recruiterAuthState.isAuthenticated) return '/recruiter-login';
+      if (routeUid != null &&
+          routeUid.isNotEmpty &&
+          routeUid != recruiterUid) {
+        return '/recruiter/$recruiterUid/dashboard';
+      }
+      return null;
+    }
 
     if (pendingSessionRestore) {
       if (authBootstrapRoute) return null;
@@ -824,6 +885,53 @@ class AppRouter {
     }
 
     return null;
+  }
+}
+
+/// Pantalla temporal para las rutas de reclutadores (Fase 0).
+/// Se reemplazará con UI real en fases posteriores.
+class _RecruiterPlaceholderScreen extends StatelessWidget {
+  const _RecruiterPlaceholderScreen({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Scaffold(
+      backgroundColor: colors.surface,
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.groups_outlined, size: 64, color: colors.primary),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            if (subtitle != null) ...[  
+              const SizedBox(height: 8),
+              Text(
+                subtitle!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              'Disponible en fases posteriores',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colors.outline,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

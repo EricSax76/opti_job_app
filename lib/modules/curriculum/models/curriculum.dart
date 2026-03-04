@@ -1,4 +1,4 @@
-
+import 'package:opti_job_app/modules/skills/models/skill.dart';
 import 'package:equatable/equatable.dart';
 
 class Curriculum extends Equatable {
@@ -8,6 +8,7 @@ class Curriculum extends Equatable {
     required this.phone,
     required this.location,
     required this.skills,
+    this.structuredSkills = const [],
     required this.experiences,
     required this.education,
     this.attachment,
@@ -19,6 +20,7 @@ class Curriculum extends Equatable {
   final String phone;
   final String location;
   final List<String> skills;
+  final List<Skill> structuredSkills;
   final List<CurriculumItem> experiences;
   final List<CurriculumItem> education;
   final CurriculumAttachment? attachment;
@@ -31,6 +33,7 @@ class Curriculum extends Equatable {
         phone,
         location,
         skills,
+        structuredSkills,
         experiences,
         education,
         attachment,
@@ -43,6 +46,7 @@ class Curriculum extends Equatable {
       phone.trim().isNotEmpty ||
       location.trim().isNotEmpty ||
       skills.isNotEmpty ||
+      structuredSkills.isNotEmpty ||
       experiences.isNotEmpty ||
       education.isNotEmpty;
 
@@ -53,6 +57,7 @@ class Curriculum extends Equatable {
       phone: '',
       location: '',
       skills: [],
+      structuredSkills: [],
       experiences: [],
       education: [],
     );
@@ -64,6 +69,7 @@ class Curriculum extends Equatable {
     String? phone,
     String? location,
     List<String>? skills,
+    List<Skill>? structuredSkills,
     List<CurriculumItem>? experiences,
     List<CurriculumItem>? education,
     CurriculumAttachment? attachment,
@@ -75,6 +81,7 @@ class Curriculum extends Equatable {
       phone: phone ?? this.phone,
       location: location ?? this.location,
       skills: skills ?? this.skills,
+      structuredSkills: structuredSkills ?? this.structuredSkills,
       experiences: experiences ?? this.experiences,
       education: education ?? this.education,
       attachment: attachment ?? this.attachment,
@@ -90,6 +97,10 @@ class Curriculum extends Equatable {
       location: json['location'] as String? ?? '',
       skills: (json['skills'] as List<dynamic>? ?? const [])
           .whereType<String>()
+          .toList(),
+      structuredSkills: (json['structuredSkills'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(Skill.fromJson)
           .toList(),
       experiences: (json['experiences'] as List<dynamic>? ?? const [])
           .whereType<Map<String, dynamic>>()
@@ -113,6 +124,7 @@ class Curriculum extends Equatable {
       'phone': phone,
       'location': location,
       'skills': skills,
+      'structuredSkills': structuredSkills.map((s) => s.toJson()).toList(),
       'experiences': experiences.map((item) => item.toJson()).toList(),
       'education': education.map((item) => item.toJson()).toList(),
       if (attachment != null) 'attachment': attachment!.toJson(),

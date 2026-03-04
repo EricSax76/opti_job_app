@@ -3,14 +3,22 @@ class AiMatchResult {
     required this.score,
     required this.reasons,
     required this.recommendations,
+    required this.explanation,
+    this.skillsOverlap,
     this.summary,
+    this.modelVersion,
+    this.generatedAt,
   });
 
   /// 0..100
   final int score;
   final List<String> reasons;
   final List<String> recommendations;
+  final String explanation;
+  final SkillsOverlap? skillsOverlap;
   final String? summary;
+  final String? modelVersion;
+  final DateTime? generatedAt;
 
   factory AiMatchResult.fromJson(Map<String, dynamic> json) {
     final rawScore = json['score'];
@@ -27,12 +35,34 @@ class AiMatchResult {
             .where((value) => value.isNotEmpty)
             .toList();
     final summary = (json['summary'] as String?)?.trim();
+    
     return AiMatchResult(
       score: score,
       reasons: reasons,
       recommendations: recommendations,
+      explanation: json['explanation'] as String? ?? '',
+      skillsOverlap: json['skillsOverlap'] != null 
+          ? SkillsOverlap.fromJson(json['skillsOverlap'] as Map<String, dynamic>) 
+          : null,
       summary: (summary?.isEmpty ?? true) ? null : summary,
+      modelVersion: json['modelVersion'] as String?,
+      generatedAt: json['generatedAt'] != null 
+          ? DateTime.tryParse(json['generatedAt'] as String) 
+          : null,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'score': score,
+      'reasons': reasons,
+      'recommendations': recommendations,
+      'explanation': explanation,
+      if (skillsOverlap != null) 'skillsOverlap': skillsOverlap!.toJson(),
+      'summary': summary,
+      'modelVersion': modelVersion,
+      'generatedAt': generatedAt?.toIso8601String(),
+    };
   }
 
   static int _parseScore(dynamic raw) {
@@ -49,5 +79,33 @@ class AiMatchResult {
       return normalized.round().clamp(0, 100);
     }
     throw const FormatException('Missing score');
+  }
+}
+
+class SkillsOverlap {
+  const SkillsOverlap({
+    this.matched = const [],
+    this.missing = const [],
+    this.adjacent = const [],
+  });
+
+  final List<String> matched;
+  final List<String> missing;
+  final List<String> adjacent;
+
+  factory SkillsOverlap.fromJson(Map<String, dynamic> json) {
+    return SkillsOverlap(
+      matched: (json['matched'] as List<dynamic>? ?? const []).whereType<String>().toList(),
+      missing: (json['missing'] as List<dynamic>? ?? const []).whereType<String>().toList(),
+      adjacent: (json['adjacent'] as List<dynamic>? ?? const []).whereType<String>().toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'matched': matched,
+      'missing': missing,
+      'adjacent': adjacent,
+    };
   }
 }

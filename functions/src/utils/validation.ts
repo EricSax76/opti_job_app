@@ -118,9 +118,20 @@ export function validateJobOffer(offer: any): void {
     "title",
     "description",
     "location",
+    "salary_min",
+    "salary_max",
+    "salary_currency",
+    "salary_period",
   ]);
 
-  if (offer.job_type) {
+  // AI Act / Resumen RGPD: Prohibido recoger historial salarial
+  if ("previous_salary" in offer || "salary_history" in offer) {
+    throw new ValidationError(
+      "Illegal field detected: Asking for salary history is prohibited by law"
+    );
+  }
+
+  if (typeof offer.job_type === "string" && offer.job_type) {
     const validJobTypes = [
       "Presencial",
       "Híbrido",
@@ -138,8 +149,10 @@ export function validateJobOffer(offer: any): void {
     }
   }
 
-  if (offer.salary_min && offer.salary_max &&
-      offer.salary_min > offer.salary_max) {
+  // Parse as numbers to compare properly
+  const min = Number(offer.salary_min);
+  const max = Number(offer.salary_max);
+  if (!isNaN(min) && !isNaN(max) && min > max) {
     throw new ValidationError("salary_min cannot be greater than salary_max");
   }
 }

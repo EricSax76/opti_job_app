@@ -1,0 +1,110 @@
+/**
+ * Callable: acceptInvitation
+ *
+ * Permite a un usuario autenticado canjear un código de invitación
+ * para unirse a una empresa como reclutador.
+ *
+ * Operación atómica (transacción Firestore):
+ * 1. Lee y valida la invitación.
+ * 2. Crea recruiters/{uid}.
+ * 3. Marca invitations/{code}.status = 'accepted'.
+ */
+
+import * as functions from "firebase-functions/v1";
+import * as admin from "firebase-admin";
+import { createLogger } from "../../utils/logger";
+import { Recruiter, Invitation } from "../../types/models";
+
+const logger = createLogger({ function: "acceptInvitation" });
+
+interface AcceptInvitationRequest {
+  code: string;
+  name: string;
+}
+
+export const acceptInvitation = functions
+  .region("europe-west1")
+  .https.onCall(async (data: AcceptInvitationRequest, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Debes iniciar sesión para aceptar una invitación."
+      );
+    }
+
+    if (!data.code || typeof data.code !== "string") {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Código de invitación requerido."
+      );
+    }
+
+    const uid = context.auth.uid;
+    const email = context.auth.token.email || "";
+    const code = data.code.toUpperCase().trim();
+    const db = admin.firestore();
+    const now = admin.firestore.Timestamp.now();
+
+    await db.runTransaction(async (transaction) => {
+      const invitationRef = db.collection("invitations").doc(code);
+      const invitationDoc = await transaction.get(invitationRef);
+
+      if (!invitationDoc.exists) {
+        throw new functions.https.HttpsError(
+          "not-found",
+          "Invitación no encontrada."
+        );
+      }
+
+      const invitation = invitationDoc.data() as Invitation;
+
+      if (invitation.status !== "pending") {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "Esta invitación ya fue usada o está expirada."
+        );
+      }
+
+      const expiresAt = invitation.expiresAt as admin.firestore.Timestamp;
+      if (now.seconds > expiresAt.seconds) {
+        throw new functions.https.HttpsError(
+          "deadline-exceeded",
+          "La invitación ha caducado (72h)."
+        );
+      }
+
+      // Verificar que no existe ya un doc recruiter para este uid
+      const recruiterRef = db.collection("recruiters").doc(uid);
+      const existingRecruiter = await transaction.get(recruiterRef);
+      if (existingRecruiter.exists) {
+        throw new functions.https.HttpsError(
+          "already-exists",
+          "Ya eres miembro de una empresa."
+        );
+      }
+
+      const recruiter: Recruiter = {
+        uid,
+        companyId: invitation.companyId,
+        email,
+        name: data.name || email.split("@")[0],
+        role: invitation.role,
+        status: "active",
+        invitedBy: invitation.createdBy,
+        invitedAt: invitation.createdAt,
+        acceptedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      transaction.set(recruiterRef, recruiter);
+      transaction.update(invitationRef, {
+        status: "accepted",
+        usedBy: uid,
+      });
+    });
+
+    logger.info("Invitation accepted", { uid, code });
+
+    return { success: true };
+  });

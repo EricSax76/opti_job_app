@@ -94,6 +94,7 @@ class OfferFormFields extends StatelessWidget {
                 validator: (value) => _validateSalary(
                   value,
                   otherValue: controllers.salaryMax.text,
+                  isRequired: true,
                 ),
               ),
             ),
@@ -108,7 +109,30 @@ class OfferFormFields extends StatelessWidget {
                   value,
                   otherValue: controllers.salaryMin.text,
                   isMax: true,
+                  isRequired: true,
                 ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: uiSpacing12),
+        Row(
+          children: [
+            Expanded(
+              child: _OfferDropdownField(
+                controller: controllers.salaryPeriod,
+                label: 'Periodo',
+                items: const ['Anual', 'Mensual', 'Hora'],
+                isRequired: true,
+              ),
+            ),
+            const SizedBox(width: uiSpacing12),
+            Expanded(
+              child: _OfferDropdownField(
+                controller: controllers.salaryCurrency,
+                label: 'Moneda',
+                items: const ['EUR', 'USD', 'GBP'],
+                isRequired: true,
               ),
             ),
           ],
@@ -131,7 +155,11 @@ class OfferFormFields extends StatelessWidget {
     String? value, {
     required String otherValue,
     bool isMax = false,
+    bool isRequired = false,
   }) {
+    if (isRequired && (value == null || value.trim().isEmpty)) {
+      return 'El salario es obligatorio';
+    }
     final salary = _parseSalary(value);
     final otherSalary = _parseSalary(otherValue);
     if (salary == null || otherSalary == null) {
