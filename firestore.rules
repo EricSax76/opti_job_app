@@ -79,6 +79,13 @@ service cloud.firestore {
         allow read: if (isSignedIn() && request.auth.uid == candidateId)
           || isCompany();
       }
+
+      match /verifiedCredentials/{credentialId} {
+        allow create, update, delete: if isSignedIn()
+          && request.auth.uid == candidateId;
+        allow read: if isSignedIn()
+          && request.auth.uid == candidateId;
+      }
     }
 
     match /companies/{companyId} {
@@ -303,6 +310,12 @@ service cloud.firestore {
         allow read: if (isCompany() && companyId == request.auth.uid)
                       || recruiterCanViewReports(companyId);
       }
+    }
+
+    match /performanceDashboards/{dashboardId} {
+      allow read: if (isCompany() && resource.data.companyId == request.auth.uid)
+                    || recruiterCanViewReports(resource.data.companyId);
+      allow write: if false;
     }
   }
 }

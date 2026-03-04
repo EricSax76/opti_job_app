@@ -1,22 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
+import 'package:opti_job_app/core/utils/firestore_utils.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
 import 'package:opti_job_app/auth/models/auth_exceptions.dart';
+import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 
 class AuthService {
   AuthService({
     required FirebaseAuth firebaseAuth,
     required FirebaseFirestore firestore,
+    required FirebaseFunctions functions,
+    required FirebaseFunctions fallbackFunctions,
   }) : _auth = firebaseAuth,
-       _firestore = firestore;
+       _firestore = firestore,
+       _functions = functions,
+       _fallbackFunctions = fallbackFunctions;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   Stream<String?> get uidStream =>
       _auth.authStateChanges().map((user) => user?.uid);
@@ -90,6 +99,70 @@ class AuthService {
     return CandidateMapper.fromFirestore({...candidateData, 'token': token});
   }
 
+  Future<Candidate> signInCandidateWithEudiWallet({
+    required EudiWalletSignInInput input,
+  }) async {
+    final response = await _callCallableWithFallback(
+      name: 'signInWithEudiWallet',
+      payload: input.toJson(),
+    );
+
+    final customToken = response['customToken']?.toString().trim();
+    if (customToken == null || customToken.isEmpty) {
+      throw StateError('No se recibió customToken al iniciar con EUDI Wallet.');
+    }
+
+    final credential = await _auth.signInWithCustomToken(customToken);
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'No se pudo resolver el usuario autenticado con EUDI Wallet.',
+      );
+    }
+
+    final doc = await _candidatesCollection.doc(user.uid).get();
+    if (!doc.exists || doc.data() == null) {
+      await _auth.signOut();
+      throw StateError('No existe un perfil de candidato asociado.');
+    }
+
+    final token = await user.getIdToken();
+    return CandidateMapper.fromFirestore({...doc.data()!, 'token': token});
+  }
+
+  Future<void> importEudiCredential({
+    required EudiWalletCredentialInput credential,
+  }) async {
+    await _callCallableWithFallback(
+      name: 'importEudiCredential',
+      payload: {'credential': credential.toJson()},
+    );
+  }
+
+  Future<List<VerifiedCredential>> fetchCandidateVerifiedCredentials(
+    String candidateUid,
+  ) async {
+    final normalizedUid = candidateUid.trim();
+    if (normalizedUid.isEmpty) return const [];
+
+    final snapshot = await _candidatesCollection
+        .doc(normalizedUid)
+        .collection('verifiedCredentials')
+        .orderBy('updatedAt', descending: true)
+        .limit(50)
+        .get();
+
+    return snapshot.docs
+        .map(
+          (doc) => VerifiedCredential.fromJson(
+            FirestoreUtils.transformFirestoreData(doc.data()),
+            id: doc.id,
+          ),
+        )
+        .toList(growable: false);
+  }
+
   Future<Company> loginCompany({
     required String email,
     required String password,
@@ -153,6 +226,34 @@ class AuthService {
 
   Future<void> logout() {
     return _auth.signOut();
+  }
+
+  Future<Map<String, dynamic>> _callCallableWithFallback({
+    required String name,
+    Map<String, dynamic> payload = const {},
+  }) async {
+    try {
+      final result = await _functions.httpsCallable(name).call(payload);
+      final data = result.data;
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) {
+        return Map<String, dynamic>.from(data);
+      }
+      return const <String, dynamic>{};
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      final fallback = await _fallbackFunctions
+          .httpsCallable(name)
+          .call(payload);
+      final data = fallback.data;
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) {
+        return Map<String, dynamic>.from(data);
+      }
+      return const <String, dynamic>{};
+    }
   }
 
   // ─── Recruiter auth ──────────────────────────────────────────────────────

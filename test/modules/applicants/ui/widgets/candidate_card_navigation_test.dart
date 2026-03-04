@@ -11,6 +11,8 @@ void main() {
       const candidate = CandidateGroup(
         candidateUid: 'candidate-1',
         displayName: 'Candidato Uno',
+        anonymizedLabel: 'Candidato #CANDID',
+        isAnonymousScreening: false,
         entries: [
           CandidateOfferEntry(
             offerId: 'offer-1',

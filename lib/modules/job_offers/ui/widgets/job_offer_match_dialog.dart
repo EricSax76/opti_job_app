@@ -62,6 +62,38 @@ class JobOfferMatchResultDialog extends StatelessWidget {
                   ),
                 ),
             ],
+            if (result.skillRoadmap.isNotEmpty) ...[
+              const SizedBox(height: uiSpacing12 + 2),
+              Text(
+                'Mapa predictivo de skills',
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: uiSpacing8),
+              for (final step in result.skillRoadmap.take(4))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: uiSpacing8 - 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('• '),
+                      Expanded(
+                        child: Text(
+                          '${step.skill} (+${step.estimatedScoreDelta} pts): ${step.rationale}',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (result.projectedScore != null) ...[
+                const SizedBox(height: uiSpacing8),
+                Text(
+                  'Impacto estimado si completas el roadmap: ${result.projectedScore}/100',
+                  style: textTheme.bodySmall,
+                ),
+              ],
+            ],
           ],
         ),
       ),

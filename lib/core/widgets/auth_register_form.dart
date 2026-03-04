@@ -15,6 +15,9 @@ class AuthRegisterForm extends StatefulWidget {
     required this.isLoading,
     required this.onSubmit,
     required this.onLogin,
+    this.secondaryActionLabel,
+    this.secondaryActionIcon,
+    this.onSecondaryAction,
   });
 
   final String tagline;
@@ -27,6 +30,9 @@ class AuthRegisterForm extends StatefulWidget {
   final bool isLoading;
   final void Function(String name, String email, String password) onSubmit;
   final VoidCallback onLogin;
+  final String? secondaryActionLabel;
+  final IconData? secondaryActionIcon;
+  final VoidCallback? onSecondaryAction;
 
   @override
   State<AuthRegisterForm> createState() => _AuthRegisterFormState();
@@ -226,6 +232,20 @@ class _AuthRegisterFormState extends State<AuthRegisterForm> {
                     child: const Text('¿Ya tienes cuenta? Inicia sesión'),
                   ),
                 ),
+                if (widget.onSecondaryAction != null &&
+                    widget.secondaryActionLabel != null) ...[
+                  const SizedBox(height: uiSpacing8),
+                  OutlinedButton.icon(
+                    onPressed: widget.isLoading
+                        ? null
+                        : widget.onSecondaryAction,
+                    icon: Icon(
+                      widget.secondaryActionIcon ??
+                          Icons.account_balance_wallet_outlined,
+                    ),
+                    label: Text(widget.secondaryActionLabel!),
+                  ),
+                ],
               ],
             ),
           ),

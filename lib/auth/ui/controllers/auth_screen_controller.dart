@@ -8,6 +8,7 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_cubit.dart';
 import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_state.dart';
+import 'package:opti_job_app/auth/ui/widgets/eudi_wallet_dialogs.dart';
 
 class AuthScreenController {
   const AuthScreenController._();
@@ -114,6 +115,12 @@ class AuthScreenController {
       email: email,
       password: password,
     );
+  }
+
+  static Future<void> submitCandidateWalletSignIn(BuildContext context) async {
+    final input = await showEudiWalletSignInDialog(context);
+    if (input == null || !context.mounted) return;
+    context.read<CandidateAuthCubit>().signInWithEudiWallet(input: input);
   }
 
   static void submitCompanyLogin(

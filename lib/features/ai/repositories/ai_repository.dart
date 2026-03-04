@@ -108,10 +108,16 @@ class AiRepository {
     final mergedOverlap = _mergeOverlap(baseResult.skillsOverlap, semantic);
     final blendedScore = _blendScores(baseResult.score, semantic.score);
     final mergedReasons = _mergeReasons(baseResult.reasons, semantic);
+    final skillRoadmap = _buildSkillRoadmap(
+      offer: offer,
+      overlap: mergedOverlap,
+    );
+    final projectedScore = _projectScore(blendedScore, roadmap: skillRoadmap);
     final explanation = _mergeExplanation(
       baseResult: baseResult,
       semantic: semantic,
       blendedScore: blendedScore,
+      projectedScore: projectedScore,
     );
 
     return baseResult.copyWith(
@@ -119,6 +125,8 @@ class AiRepository {
       reasons: mergedReasons,
       explanation: explanation,
       skillsOverlap: mergedOverlap,
+      skillRoadmap: skillRoadmap,
+      projectedScore: projectedScore,
     );
   }
 
@@ -189,6 +197,7 @@ class AiRepository {
     required AiMatchResult baseResult,
     required SemanticSkillsMatch semantic,
     required int blendedScore,
+    required int projectedScore,
   }) {
     final base = baseResult.explanation.trim();
     final semanticBlock = StringBuffer()
@@ -204,9 +213,134 @@ class AiRepository {
         ..write(semantic.overlap.adjacent.take(4).join(', '))
         ..write('.');
     }
+    if (projectedScore > blendedScore) {
+      semanticBlock.write(
+        ' Si completas las recomendaciones prioritarias, el score estimado puede subir hasta $projectedScore/100.',
+      );
+    }
 
     if (base.isEmpty) return semanticBlock.toString();
     return '$base\n\n${semanticBlock.toString()}';
+  }
+
+  int _projectScore(
+    int blendedScore, {
+    required List<SkillImpactRecommendation> roadmap,
+  }) {
+    if (roadmap.isEmpty) return blendedScore;
+    final potentialDelta = roadmap
+        .take(3)
+        .fold<int>(0, (acc, item) => acc + item.estimatedScoreDelta);
+    final projected = blendedScore + potentialDelta;
+    return projected.clamp(0, 100);
+  }
+
+  List<SkillImpactRecommendation> _buildSkillRoadmap({
+    required JobOffer offer,
+    required SkillsOverlap overlap,
+  }) {
+    if (overlap.missing.isEmpty && overlap.adjacent.isEmpty) {
+      return const [];
+    }
+
+    final requiredByNormalized = <String, String>{
+      for (final skill in offer.requiredSkills)
+        _normalizeSkillName(skill.name): skill.name.trim(),
+    };
+    final preferredByNormalized = <String, String>{
+      for (final skill in offer.preferredSkills)
+        _normalizeSkillName(skill.name): skill.name.trim(),
+    };
+    final adjacentByRequired = _adjacentByRequired(overlap.adjacent);
+    final seen = <String>{};
+    final roadmap = <SkillImpactRecommendation>[];
+
+    void addRecommendation({
+      required String skill,
+      required bool isRequired,
+      String? adjacentEvidence,
+    }) {
+      final normalized = _normalizeSkillName(skill);
+      if (normalized.isEmpty || !seen.add(normalized)) return;
+
+      final hasAdjacentBase =
+          adjacentEvidence != null && adjacentEvidence.trim().isNotEmpty;
+      final delta = isRequired
+          ? (hasAdjacentBase ? 6 : 8)
+          : (hasAdjacentBase ? 3 : 5);
+      final rationale = isRequired
+          ? 'Competencia clave para cumplir requisitos obligatorios del puesto.'
+          : 'Competencia preferente que mejora afinidad y ranking final.';
+
+      roadmap.add(
+        SkillImpactRecommendation(
+          skill: skill.trim(),
+          estimatedScoreDelta: delta,
+          rationale: rationale,
+          currentAdjacentEvidence: adjacentEvidence,
+          priority: isRequired ? 1 : 2,
+        ),
+      );
+    }
+
+    for (final missing in overlap.missing) {
+      final normalized = _normalizeSkillName(missing);
+      if (normalized.isEmpty) continue;
+      final requiredSkill = requiredByNormalized[normalized];
+      if (requiredSkill != null) {
+        addRecommendation(
+          skill: requiredSkill,
+          isRequired: true,
+          adjacentEvidence: adjacentByRequired[normalized],
+        );
+        continue;
+      }
+      final preferredSkill = preferredByNormalized[normalized];
+      if (preferredSkill != null) {
+        addRecommendation(
+          skill: preferredSkill,
+          isRequired: false,
+          adjacentEvidence: adjacentByRequired[normalized],
+        );
+      }
+    }
+
+    for (final entry in adjacentByRequired.entries) {
+      if (seen.contains(entry.key)) continue;
+      final requiredSkill = requiredByNormalized[entry.key];
+      if (requiredSkill != null) {
+        addRecommendation(
+          skill: requiredSkill,
+          isRequired: true,
+          adjacentEvidence: entry.value,
+        );
+      }
+    }
+
+    roadmap.sort((a, b) {
+      final priorityComparison = a.priority.compareTo(b.priority);
+      if (priorityComparison != 0) return priorityComparison;
+      return b.estimatedScoreDelta.compareTo(a.estimatedScoreDelta);
+    });
+    return roadmap.take(6).toList(growable: false);
+  }
+
+  Map<String, String> _adjacentByRequired(List<String> adjacent) {
+    final result = <String, String>{};
+    for (final line in adjacent) {
+      final parts = line.split('↔');
+      if (parts.length != 2) continue;
+      final requiredSkill = parts.first.trim();
+      final evidence = parts.last.trim();
+      final key = _normalizeSkillName(requiredSkill);
+      if (key.isEmpty || evidence.isEmpty) continue;
+      result.putIfAbsent(key, () => evidence);
+    }
+    return result;
+  }
+
+  String _normalizeSkillName(String raw) {
+    return raw.trim().toLowerCase();
   }
 
   String _skillIdFromName(String name) {

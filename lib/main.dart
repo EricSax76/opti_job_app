@@ -5,6 +5,7 @@ import 'package:opti_job_app/app/app_scope.dart';
 import 'package:opti_job_app/bootstrap/app_dependencies.dart';
 import 'package:opti_job_app/bootstrap/firebase_bootstrap.dart';
 import 'package:opti_job_app/bootstrap/get_it_bootstrap.dart';
+import 'package:opti_job_app/core/performance/web_vitals_telemetry.dart';
 import 'package:opti_job_app/home/models/app_observer.dart';
 
 Future<void> main() async {
@@ -14,6 +15,7 @@ Future<void> main() async {
   await maybeUseFirebaseEmulators();
 
   setupGetIt();
+  startWebVitalsTelemetry();
 
   Bloc.observer = const AppBlocObserver();
 

@@ -25,6 +25,10 @@ class CandidateCard extends StatelessWidget {
     final avatarBg = colorScheme.primary;
     final avatarFg = colorScheme.onPrimary;
     const ok = Color(0xFF16A34A); // Success color
+    final isAnonymousScreening = candidate.isAnonymousScreening;
+    final displayName = isAnonymousScreening
+        ? candidate.anonymizedLabel
+        : candidate.displayName;
     final bool? hasCoverLetter = candidateProfile?.hasCoverLetter;
     final bool? hasVideoCurriculum = candidateProfile?.hasVideoCurriculum;
 
@@ -59,21 +63,28 @@ class CandidateCard extends StatelessWidget {
       child: ListTile(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        onTap: candidate.entries.isEmpty
+        onTap: candidate.entries.isEmpty || isAnonymousScreening
             ? null
             : () => _openCvPicker(context, candidate),
         leading: CircleAvatar(
           backgroundColor: avatarBg,
           foregroundColor: avatarFg,
-          child: Text(candidate.displayName.substring(0, 1).toUpperCase()),
+          child: Text(displayName.substring(0, 1).toUpperCase()),
         ),
         title: Text(
-          candidate.displayName,
+          displayName,
           style: TextStyle(color: ink, fontWeight: FontWeight.w700),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (isAnonymousScreening) ...[
+              Text(
+                'Perfil anonimizado en fase inicial de criba.',
+                style: TextStyle(color: muted, height: 1.35),
+              ),
+              const SizedBox(height: 6),
+            ],
             Text(
               candidate.entries.map((e) => e.offerTitle).join(' • '),
               maxLines: 2,
@@ -100,19 +111,16 @@ class CandidateCard extends StatelessWidget {
           ],
         ),
         trailing: TextButton(
-          onPressed: candidate.entries.isEmpty
+          onPressed: candidate.entries.isEmpty || isAnonymousScreening
               ? null
               : () => _openCvPicker(context, candidate),
-          child: const Text('CV'),
+          child: Text(isAnonymousScreening ? 'Anónimo' : 'CV'),
         ),
       ),
     );
   }
 
-  void _openCvPicker(
-    BuildContext context,
-    CandidateGroup candidate,
-  ) {
+  void _openCvPicker(BuildContext context, CandidateGroup candidate) {
     if (candidate.entries.isEmpty) return;
 
     // By user request, we skip the intermediate offer selection step in the "Candidates" tab.

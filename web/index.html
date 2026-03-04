@@ -36,6 +36,159 @@
     }
   </script>
 
+  <script>
+    // Minimal Web Vitals telemetry collector (INP/LCP/CLS/FCP) for Flutter Web.
+    // Events are buffered on window.__optiWebVitalsQueue and flushed by Dart code.
+    (function () {
+      if (typeof window === "undefined") return;
+      var storageKey = "opti_web_vitals_queue";
+
+      function readQueue() {
+        try {
+          var raw = window.localStorage.getItem(storageKey);
+          if (!raw) return [];
+          var parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function writeQueue(items) {
+        try {
+          var safeItems = Array.isArray(items) ? items.slice(-200) : [];
+          window.localStorage.setItem(storageKey, JSON.stringify(safeItems));
+        } catch (_) {}
+      }
+
+      var pageLoadId = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+      var navEntry = null;
+      try {
+        var navEntries = performance.getEntriesByType("navigation");
+        navEntry = navEntries && navEntries.length > 0 ? navEntries[0] : null;
+      } catch (_) {}
+
+      function normalizeRating(metric, value) {
+        if (!Number.isFinite(value)) return "unknown";
+        if (metric === "INP") return value <= 200 ? "good" : value <= 500 ? "needs_improvement" : "poor";
+        if (metric === "LCP") return value <= 2500 ? "good" : value <= 4000 ? "needs_improvement" : "poor";
+        if (metric === "CLS") return value <= 0.1 ? "good" : value <= 0.25 ? "needs_improvement" : "poor";
+        if (metric === "FCP") return value <= 1800 ? "good" : value <= 3000 ? "needs_improvement" : "poor";
+        return "unknown";
+      }
+
+      function pushMetric(metric, value, rating) {
+        if (!Number.isFinite(value) || value < 0) return;
+        var queue = readQueue();
+        queue.push({
+          metric: metric,
+          value: Math.round(value * 100) / 100,
+          rating: rating || normalizeRating(metric, value),
+          path: (window.location.pathname || "/") + (window.location.search || ""),
+          navigationType: navEntry && navEntry.type ? navEntry.type : "navigate",
+          pageLoadId: pageLoadId,
+          userAgent: navigator.userAgent || "",
+          capturedAt: new Date().toISOString(),
+        });
+        writeQueue(queue);
+      }
+
+      // FCP
+      try {
+        var paints = performance.getEntriesByType("paint");
+        for (var i = 0; i < paints.length; i++) {
+          if (paints[i] && paints[i].name === "first-contentful-paint") {
+            pushMetric("FCP", paints[i].startTime);
+            break;
+          }
+        }
+      } catch (_) {}
+
+      // LCP
+      var latestLcp = 0;
+      var lcpReported = false;
+      try {
+        var lcpObserver = new PerformanceObserver(function (entryList) {
+          var entries = entryList.getEntries();
+          for (var i = 0; i < entries.length; i++) {
+            latestLcp = entries[i].startTime || latestLcp;
+          }
+        });
+        lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
+      } catch (_) {}
+
+      // CLS
+      var clsValue = 0;
+      var clsReported = false;
+      try {
+        var clsObserver = new PerformanceObserver(function (entryList) {
+          var entries = entryList.getEntries();
+          for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            if (entry && !entry.hadRecentInput) {
+              clsValue += entry.value || 0;
+            }
+          }
+        });
+        clsObserver.observe({ type: "layout-shift", buffered: true });
+      } catch (_) {}
+
+      // INP (approximation using Event Timing)
+      var maxInteractionLatency = 0;
+      var inpReported = false;
+      var interactionDurations = {};
+      try {
+        var inpObserver = new PerformanceObserver(function (entryList) {
+          var entries = entryList.getEntries();
+          for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            var duration = Number(entry && entry.duration ? entry.duration : 0);
+            if (!Number.isFinite(duration) || duration <= 0) continue;
+            var interactionId = Number(entry.interactionId || 0);
+            if (interactionId > 0) {
+              interactionDurations[interactionId] = Math.max(
+                interactionDurations[interactionId] || 0,
+                duration
+              );
+            } else {
+              maxInteractionLatency = Math.max(maxInteractionLatency, duration);
+            }
+          }
+        });
+        inpObserver.observe({ type: "event", durationThreshold: 16, buffered: true });
+      } catch (_) {}
+
+      function flushFinalMetrics() {
+        if (!lcpReported && latestLcp > 0) {
+          pushMetric("LCP", latestLcp);
+          lcpReported = true;
+        }
+        if (!clsReported) {
+          pushMetric("CLS", clsValue);
+          clsReported = true;
+        }
+        if (!inpReported) {
+          for (var key in interactionDurations) {
+            if (Object.prototype.hasOwnProperty.call(interactionDurations, key)) {
+              maxInteractionLatency = Math.max(maxInteractionLatency, interactionDurations[key]);
+            }
+          }
+          if (maxInteractionLatency > 0) {
+            pushMetric("INP", maxInteractionLatency);
+            inpReported = true;
+          }
+        }
+      }
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") {
+          flushFinalMetrics();
+        }
+      });
+      window.addEventListener("beforeunload", flushFinalMetrics);
+    })();
+  </script>
+
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

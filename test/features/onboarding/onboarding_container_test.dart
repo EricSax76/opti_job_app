@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/features/onboarding/view/containers/onboarding_container.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
@@ -40,6 +41,11 @@ class _TestCandidateAuthCubit extends Cubit<CandidateAuthState>
     required String name,
     required String email,
     required String password,
+  }) async {}
+
+  @override
+  Future<void> signInWithEudiWallet({
+    required EudiWalletSignInInput input,
   }) async {}
 
   @override

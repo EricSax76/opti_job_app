@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
+import 'package:opti_job_app/modules/applicants/logic/candidate_anonymization_logic.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/ats/cubits/pipeline_board_cubit.dart';
 
@@ -43,6 +44,13 @@ class _CardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isAnonymousScreening = shouldAnonymizeApplication(application);
+    final displayName = isAnonymousScreening
+        ? buildAnonymizedCandidateLabel(application.candidateUid)
+        : (application.candidateName ?? 'Desconocido');
+    final displayEmail = isAnonymousScreening
+        ? 'Identidad oculta en criba inicial'
+        : (application.candidateEmail ?? '');
 
     return AppCard(
       borderRadius: uiTileRadius,
@@ -59,12 +67,16 @@ class _CardContent extends StatelessWidget {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
-                backgroundImage: application.candidateAvatarUrl != null
+                backgroundImage:
+                    !isAnonymousScreening &&
+                        application.candidateAvatarUrl != null
                     ? NetworkImage(application.candidateAvatarUrl!)
                     : null,
-                child: application.candidateAvatarUrl == null
+                child:
+                    isAnonymousScreening ||
+                        application.candidateAvatarUrl == null
                     ? Text(
-                        (application.candidateName ?? 'C')[0].toUpperCase(),
+                        displayName.substring(0, 1).toUpperCase(),
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(color: colorScheme.primary),
                       )
@@ -73,7 +85,7 @@ class _CardContent extends StatelessWidget {
               const SizedBox(width: uiSpacing12),
               Expanded(
                 child: Text(
-                  application.candidateName ?? 'Desconocido',
+                  displayName,
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -85,7 +97,7 @@ class _CardContent extends StatelessWidget {
           ),
           const SizedBox(height: uiSpacing12),
           Text(
-            application.candidateEmail ?? '',
+            displayEmail,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),

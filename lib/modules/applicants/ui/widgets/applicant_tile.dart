@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/modules/applicants/logic/candidate_anonymization_logic.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applications/models/application_status.dart';
 import 'package:opti_job_app/modules/applications/ui/widgets/application_status_badge.dart';
@@ -27,13 +28,24 @@ class ApplicantTile extends StatelessWidget {
     final border = colorScheme.outline;
     final avatarBg = colorScheme.primary;
     final avatarFg = colorScheme.onPrimary;
+    final isAnonymousScreening = shouldAnonymizeApplication(application);
+    final displayName = isAnonymousScreening
+        ? buildAnonymizedCandidateLabel(application.candidateUid)
+        : (application.candidateName ??
+              application.candidateEmail ??
+              application.candidateUid);
 
     final subtitleParts = <String>[];
-    if (application.candidateEmail != null &&
+    if (!isAnonymousScreening &&
+        application.candidateEmail != null &&
         application.candidateEmail!.isNotEmpty) {
       subtitleParts.add(application.candidateEmail!);
+    } else if (isAnonymousScreening) {
+      subtitleParts.add('Identidad oculta hasta etapas avanzadas');
     }
-    subtitleParts.add('Estado: ${ApplicationStatus.fromString(application.status).label}');
+    subtitleParts.add(
+      'Estado: ${ApplicationStatus.fromString(application.status).label}',
+    );
 
     final canChangeStatus = onStatusChanged != null && onStartInterview != null;
 
@@ -50,12 +62,10 @@ class ApplicantTile extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: avatarBg,
           foregroundColor: avatarFg,
-          child: Text(_initials(application)),
+          child: Text(_initials(displayName)),
         ),
         title: Text(
-          application.candidateName ??
-              application.candidateEmail ??
-              application.candidateUid,
+          displayName,
           style: TextStyle(color: ink, fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
@@ -75,25 +85,28 @@ class ApplicantTile extends StatelessWidget {
                 },
                 itemBuilder: (context) {
                   return ApplicationStatus.values
-                      .where((s) =>
-                          s != ApplicationStatus.pending &&
-                          s != ApplicationStatus.unknown &&
-                          s != ApplicationStatus.withdrawn)
+                      .where(
+                        (s) =>
+                            s != ApplicationStatus.pending &&
+                            s != ApplicationStatus.unknown &&
+                            s != ApplicationStatus.withdrawn,
+                      )
                       .map((status) {
-                    final isSelected = status.name == application.status;
-                    return PopupMenuItem<String>(
-                      value: status.name,
-                      child: Row(
-                        children: [
-                          if (isSelected)
-                            const Icon(Icons.check, size: 16)
-                          else
-                            const SizedBox(width: 16),
-                          Text(status.label),
-                        ],
-                      ),
-                    );
-                  }).toList();
+                        final isSelected = status.name == application.status;
+                        return PopupMenuItem<String>(
+                          value: status.name,
+                          child: Row(
+                            children: [
+                              if (isSelected)
+                                const Icon(Icons.check, size: 16)
+                              else
+                                const SizedBox(width: 16),
+                              Text(status.label),
+                            ],
+                          ),
+                        );
+                      })
+                      .toList();
                 },
                 child: ApplicationStatusBadge.fromString(application.status),
               ),
@@ -102,16 +115,8 @@ class ApplicantTile extends StatelessWidget {
   }
 }
 
-
-
-String _initials(Application application) {
-  final raw =
-      (application.candidateName?.trim().isNotEmpty == true
-              ? application.candidateName!
-              : application.candidateEmail?.trim().isNotEmpty == true
-                  ? application.candidateEmail!
-                  : application.candidateUid)
-          .trim();
+String _initials(String label) {
+  final raw = label.trim();
   if (raw.isEmpty) {
     return '?';
   }

@@ -121,6 +121,9 @@ class ApplicationsList extends StatelessWidget {
     final company = offer?.companyName ?? 'Empresa no especificada';
     final salary = offer?.formattedSalary;
     final location = offer?.location;
+    final feedback = _CandidateMicroFeedback.fromApplication(
+      entry.application.candidateFeedback,
+    );
     final modality = offer == null
         ? null
         : (offer.jobType ?? 'Modalidad no especificada');
@@ -130,11 +133,12 @@ class ApplicationsList extends StatelessWidget {
     return CandidateOfferCardBase(
       title: title,
       company: company,
-      description: offer?.description,
+      description: feedback?.message ?? offer?.description,
       avatarUrl: offer?.companyAvatarUrl,
       salary: salary,
       location: location,
       modality: modality,
+      tags: feedback?.actions.take(2).toList(growable: false),
       topRightBadge: statusChip,
       heroTag: '$heroTagPrefix-$index-$heroId',
       heroTagPrefix: 'application_avatar',
@@ -142,5 +146,30 @@ class ApplicationsList extends StatelessWidget {
           ? null
           : () => context.push('/job-offer/${offer.id}'),
     );
+  }
+}
+
+class _CandidateMicroFeedback {
+  const _CandidateMicroFeedback({required this.message, required this.actions});
+
+  final String message;
+  final List<String> actions;
+
+  static _CandidateMicroFeedback? fromApplication(
+    Map<String, dynamic> candidateFeedback,
+  ) {
+    if (candidateFeedback.isEmpty) return null;
+    final latest = candidateFeedback['latest'];
+    if (latest is! Map) return null;
+    final latestMap = Map<String, dynamic>.from(latest);
+    final message = (latestMap['message'] as String?)?.trim() ?? '';
+    final actions =
+        (latestMap['actions'] as List<dynamic>? ?? const <dynamic>[])
+            .whereType<String>()
+            .map((value) => value.trim())
+            .where((value) => value.isNotEmpty)
+            .toList(growable: false);
+    if (message.isEmpty && actions.isEmpty) return null;
+    return _CandidateMicroFeedback(message: message, actions: actions);
   }
 }

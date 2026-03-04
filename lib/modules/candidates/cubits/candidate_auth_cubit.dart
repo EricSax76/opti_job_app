@@ -5,6 +5,7 @@ import 'package:opti_job_app/auth/cubits/auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 
 class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
   final AuthRepository _repository;
@@ -103,6 +104,33 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
         name: name,
         email: email,
         password: password,
+      );
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          candidate: candidate,
+          needsOnboarding: _needsOnboarding(candidate),
+        ),
+      );
+    } catch (error) {
+      final authException = _repository.mapException(error);
+      emit(
+        state.copyWith(
+          status: AuthStatus.failure,
+          errorMessage: authException.message,
+          clearCandidate: true,
+        ),
+      );
+    }
+  }
+
+  Future<void> signInWithEudiWallet({
+    required EudiWalletSignInInput input,
+  }) async {
+    emit(state.copyWith(status: AuthStatus.authenticating, clearError: true));
+    try {
+      final candidate = await _repository.signInCandidateWithEudiWallet(
+        input: input,
       );
       emit(
         state.copyWith(

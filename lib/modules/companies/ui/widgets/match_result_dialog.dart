@@ -56,9 +56,34 @@ class MatchResultDialog extends StatelessWidget {
                   ),
                 ),
             ],
+            if (result.skillRoadmap.isNotEmpty) ...[
+              const SizedBox(height: uiSpacing8),
+              Text(
+                'Roadmap de skills adyacentes',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: uiSpacing8),
+              for (final step in result.skillRoadmap.take(4))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: uiSpacing8),
+                  child: _BulletText(
+                    icon: Icons.route_outlined,
+                    text:
+                        '${step.skill} (+${step.estimatedScoreDelta} pts): ${step.rationale}',
+                  ),
+                ),
+              if (result.projectedScore != null)
+                Text(
+                  'Score proyectado al completar roadmap: ${result.projectedScore}/100',
+                  style: theme.textTheme.bodySmall,
+                ),
+            ],
             if (result.summary == null &&
                 result.reasons.isEmpty &&
-                result.recommendations.isEmpty)
+                result.recommendations.isEmpty &&
+                result.skillRoadmap.isEmpty)
               const Text('No hay detalles adicionales disponibles.'),
           ],
         ),

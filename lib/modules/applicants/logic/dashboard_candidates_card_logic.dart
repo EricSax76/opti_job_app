@@ -1,4 +1,5 @@
 import 'package:opti_job_app/modules/applicants/ui/models/dashboard_candidates_card_view_model.dart';
+import 'package:opti_job_app/modules/applicants/logic/candidate_anonymization_logic.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 
 class DashboardCandidatesCardLogic {
@@ -13,8 +14,9 @@ class DashboardCandidatesCardLogic {
         final uid = application.candidateUid.trim();
         if (uid.isEmpty || byUid.containsKey(uid)) continue;
 
-        final displayName =
-            (application.candidateName?.trim().isNotEmpty == true)
+        final displayName = shouldAnonymizeApplication(application)
+            ? buildAnonymizedCandidateLabel(uid)
+            : (application.candidateName?.trim().isNotEmpty == true)
             ? application.candidateName!.trim()
             : (application.candidateEmail?.trim().isNotEmpty == true)
             ? application.candidateEmail!.trim()

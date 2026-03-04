@@ -42,9 +42,12 @@ export * from './scheduled/complianceJobs';
 export * from './scheduled/computeMonthlyAnalytics';
 export * from './triggers/firestore/onApplicationStatusChange';
 export * from './callable/analytics/getAnalyticsSummary';
+export * from './callable/performance/webVitalsCallables';
+export * from './scheduled/aggregateWebVitals';
 
 // Callable Functions
 export { submitApplication } from "./callable/applications/submitApplication";
+export * from "./callable/auth/eudiWalletCallables";
 
 // Interview Callables
 export { startInterview } from "./callable/interviews/startInterview";

@@ -36,6 +36,8 @@ class CandidateRegisterScreen extends StatelessWidget {
                 password: password,
               ),
           onLogin: () => context.go('/CandidateLogin'),
+          onEudiWallet: () =>
+              AuthScreenController.submitCandidateWalletSignIn(context),
         ),
       ),
     );

@@ -70,6 +70,8 @@ void setupGetIt({
     () => AuthService(
       firebaseAuth: getIt<FirebaseAuth>(),
       firestore: getIt<FirebaseFirestore>(),
+      functions: functionsInstance,
+      fallbackFunctions: fallbackFunctionsInstance,
     ),
   );
   getIt.registerLazySingleton(() => AuthRepository(getIt<AuthService>()));

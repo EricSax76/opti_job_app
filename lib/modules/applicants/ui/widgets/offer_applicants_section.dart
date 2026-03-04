@@ -9,6 +9,7 @@ import 'package:opti_job_app/modules/applicants/ui/widgets/applicant_tile.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/applicants/cubits/applicant_interaction_cubit.dart';
 import 'package:opti_job_app/modules/applicants/logic/offer_applicants_section_logic.dart';
+import 'package:opti_job_app/modules/applicants/logic/candidate_anonymization_logic.dart';
 
 class OfferApplicantsSection extends StatelessWidget {
   const OfferApplicantsSection({
@@ -83,9 +84,14 @@ class OfferApplicantsSection extends StatelessWidget {
               separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final application = viewModel.applicants[index];
+                final isAnonymousScreening = shouldAnonymizeApplication(
+                  application,
+                );
                 return ApplicantTile(
                   application: application,
-                  onTap: application.candidateUid.trim().isEmpty
+                  onTap:
+                      application.candidateUid.trim().isEmpty ||
+                          isAnonymousScreening
                       ? null
                       : () => context.pushNamed(
                           'company-applicant-cv',
@@ -117,8 +123,8 @@ class OfferApplicantsSection extends StatelessWidget {
                 );
               },
             );
-          }
-        },
-      );
+        }
+      },
+    );
   }
 }

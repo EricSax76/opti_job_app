@@ -1,15 +1,20 @@
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/applicants/logic/candidate_anonymization_logic.dart';
 
 class CandidateGroup {
   const CandidateGroup({
     required this.candidateUid,
     required this.displayName,
+    required this.anonymizedLabel,
+    required this.isAnonymousScreening,
     required this.entries,
   });
 
   final String candidateUid;
   final String displayName;
+  final String anonymizedLabel;
+  final bool isAnonymousScreening;
   final List<CandidateOfferEntry> entries;
 }
 
@@ -18,11 +23,15 @@ class CandidateOfferEntry {
     required this.offerId,
     required this.offerTitle,
     required this.status,
+    this.pipelineStageId,
+    this.pipelineStageName,
   });
 
   final String offerId;
   final String offerTitle;
   final String status;
+  final String? pipelineStageId;
+  final String? pipelineStageName;
 }
 
 List<CandidateGroup> groupCandidates({
@@ -57,6 +66,8 @@ List<CandidateGroup> groupCandidates({
                         offerId: application.jobOfferId,
                         offerTitle: offerTitle,
                         status: application.status,
+                        pipelineStageId: application.pipelineStageId,
+                        pipelineStageName: application.pipelineStageName,
                       );
                     })
                     .toList(growable: false)
@@ -73,9 +84,21 @@ List<CandidateGroup> groupCandidates({
                     return bDate.compareTo(aDate);
                   });
 
+            final isAnonymousScreening = entries.every((entry) {
+              return shouldAnonymizeCandidateByStage(
+                status: entry.status,
+                pipelineStageId: entry.pipelineStageId,
+                pipelineStageName: entry.pipelineStageName,
+              );
+            });
+
             return CandidateGroup(
               candidateUid: accumulator.candidateUid,
               displayName: accumulator.displayName,
+              anonymizedLabel: buildAnonymizedCandidateLabel(
+                accumulator.candidateUid,
+              ),
+              isAnonymousScreening: isAnonymousScreening,
               entries: entries,
             );
           })

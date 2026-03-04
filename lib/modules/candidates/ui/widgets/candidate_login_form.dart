@@ -7,11 +7,13 @@ class CandidateLoginForm extends StatelessWidget {
     required this.isLoading,
     required this.onSubmit,
     required this.onRegister,
+    required this.onEudiWallet,
   });
 
   final bool isLoading;
   final void Function(String email, String password) onSubmit;
   final VoidCallback onRegister;
+  final VoidCallback onEudiWallet;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,9 @@ class CandidateLoginForm extends StatelessWidget {
       isLoading: isLoading,
       onSubmit: onSubmit,
       onRegister: onRegister,
+      secondaryActionLabel: 'Entrar con EUDI Wallet',
+      secondaryActionIcon: Icons.badge_outlined,
+      onSecondaryAction: onEudiWallet,
     );
   }
 }

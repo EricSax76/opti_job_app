@@ -3,6 +3,7 @@ import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
 import 'package:opti_job_app/auth/models/auth_service.dart';
 import 'package:opti_job_app/auth/models/auth_exceptions.dart';
+import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 
 class AuthRepository {
   AuthRepository(this._service);
@@ -28,6 +29,24 @@ class AuthRepository {
       email: email,
       password: password,
     );
+  }
+
+  Future<Candidate> signInCandidateWithEudiWallet({
+    required EudiWalletSignInInput input,
+  }) {
+    return _service.signInCandidateWithEudiWallet(input: input);
+  }
+
+  Future<void> importEudiCredential({
+    required EudiWalletCredentialInput credential,
+  }) {
+    return _service.importEudiCredential(credential: credential);
+  }
+
+  Future<List<VerifiedCredential>> fetchCandidateVerifiedCredentials(
+    String candidateUid,
+  ) {
+    return _service.fetchCandidateVerifiedCredentials(candidateUid);
   }
 
   Future<Company> loginCompany({

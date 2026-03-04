@@ -5,6 +5,8 @@ class AiMatchResult {
     required this.recommendations,
     required this.explanation,
     this.skillsOverlap,
+    this.skillRoadmap = const [],
+    this.projectedScore,
     this.summary,
     this.modelVersion,
     this.generatedAt,
@@ -16,6 +18,8 @@ class AiMatchResult {
   final List<String> recommendations;
   final String explanation;
   final SkillsOverlap? skillsOverlap;
+  final List<SkillImpactRecommendation> skillRoadmap;
+  final int? projectedScore;
   final String? summary;
   final String? modelVersion;
   final DateTime? generatedAt;
@@ -26,11 +30,15 @@ class AiMatchResult {
     List<String>? recommendations,
     String? explanation,
     SkillsOverlap? skillsOverlap,
+    List<SkillImpactRecommendation>? skillRoadmap,
+    int? projectedScore,
     String? summary,
     String? modelVersion,
     DateTime? generatedAt,
     bool clearSummary = false,
     bool clearSkillsOverlap = false,
+    bool clearSkillRoadmap = false,
+    bool clearProjectedScore = false,
   }) {
     return AiMatchResult(
       score: score ?? this.score,
@@ -40,6 +48,12 @@ class AiMatchResult {
       skillsOverlap: clearSkillsOverlap
           ? null
           : skillsOverlap ?? this.skillsOverlap,
+      skillRoadmap: clearSkillRoadmap
+          ? const []
+          : skillRoadmap ?? this.skillRoadmap,
+      projectedScore: clearProjectedScore
+          ? null
+          : projectedScore ?? this.projectedScore,
       summary: clearSummary ? null : summary ?? this.summary,
       modelVersion: modelVersion ?? this.modelVersion,
       generatedAt: generatedAt ?? this.generatedAt,
@@ -72,6 +86,12 @@ class AiMatchResult {
               json['skillsOverlap'] as Map<String, dynamic>,
             )
           : null,
+      skillRoadmap: (json['skillRoadmap'] as List<dynamic>? ?? const [])
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .map(SkillImpactRecommendation.fromJson)
+          .toList(growable: false),
+      projectedScore: _parseOptionalScore(json['projectedScore']),
       summary: (summary?.isEmpty ?? true) ? null : summary,
       modelVersion: json['modelVersion'] as String?,
       generatedAt: json['generatedAt'] != null
@@ -87,6 +107,9 @@ class AiMatchResult {
       'recommendations': recommendations,
       'explanation': explanation,
       if (skillsOverlap != null) 'skillsOverlap': skillsOverlap!.toJson(),
+      if (skillRoadmap.isNotEmpty)
+        'skillRoadmap': skillRoadmap.map((item) => item.toJson()).toList(),
+      if (projectedScore != null) 'projectedScore': projectedScore,
       'summary': summary,
       'modelVersion': modelVersion,
       'generatedAt': generatedAt?.toIso8601String(),
@@ -107,6 +130,18 @@ class AiMatchResult {
       return normalized.round().clamp(0, 100);
     }
     throw const FormatException('Missing score');
+  }
+
+  static int? _parseOptionalScore(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is int) return raw.clamp(0, 100);
+    if (raw is num) return raw.round().clamp(0, 100);
+    if (raw is String && raw.trim().isNotEmpty) {
+      final parsed = num.tryParse(raw.trim());
+      if (parsed == null) return null;
+      return parsed.round().clamp(0, 100);
+    }
+    return null;
   }
 }
 
@@ -137,5 +172,51 @@ class SkillsOverlap {
 
   Map<String, dynamic> toJson() {
     return {'matched': matched, 'missing': missing, 'adjacent': adjacent};
+  }
+}
+
+class SkillImpactRecommendation {
+  const SkillImpactRecommendation({
+    required this.skill,
+    required this.estimatedScoreDelta,
+    required this.rationale,
+    this.currentAdjacentEvidence,
+    this.priority = 1,
+  });
+
+  final String skill;
+  final int estimatedScoreDelta;
+  final String rationale;
+  final String? currentAdjacentEvidence;
+  final int priority;
+
+  factory SkillImpactRecommendation.fromJson(Map<String, dynamic> json) {
+    final rawDelta = json['estimatedScoreDelta'];
+    final delta = rawDelta is int
+        ? rawDelta
+        : (rawDelta is num ? rawDelta.round() : 0);
+    final rawPriority = json['priority'];
+    final priority = rawPriority is int
+        ? rawPriority
+        : (rawPriority is num ? rawPriority.round() : 1);
+
+    return SkillImpactRecommendation(
+      skill: json['skill'] as String? ?? '',
+      estimatedScoreDelta: delta,
+      rationale: json['rationale'] as String? ?? '',
+      currentAdjacentEvidence: json['currentAdjacentEvidence'] as String?,
+      priority: priority.clamp(1, 5),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'skill': skill,
+      'estimatedScoreDelta': estimatedScoreDelta,
+      'rationale': rationale,
+      if (currentAdjacentEvidence != null)
+        'currentAdjacentEvidence': currentAdjacentEvidence,
+      'priority': priority,
+    };
   }
 }

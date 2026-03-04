@@ -6,6 +6,7 @@ import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/analytics/cubits/analytics_dashboard_cubit.dart';
 import 'package:opti_job_app/modules/analytics/models/kpi_metric.dart';
+import 'package:opti_job_app/modules/analytics/ui/widgets/inp_performance_card.dart';
 import 'package:opti_job_app/modules/analytics/ui/widgets/kpi_summary_card.dart';
 import 'package:opti_job_app/modules/analytics/ui/widgets/pipeline_funnel_chart.dart';
 import 'package:opti_job_app/modules/analytics/ui/widgets/recruiter_performance_table.dart';
@@ -91,6 +92,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                   subtitle: 'KPIs, embudo y desempeño del equipo',
                   titleFontSize: 24,
                 ),
+                if (state.performanceDashboard != null) ...[
+                  const SizedBox(height: uiSpacing16),
+                  InpPerformanceCard(dashboard: state.performanceDashboard!),
+                ],
                 const SizedBox(height: uiSpacing20),
                 _buildKpiGrid(metrics),
                 const SizedBox(height: uiSpacing24),

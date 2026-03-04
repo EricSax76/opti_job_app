@@ -22,6 +22,7 @@ class Application {
     this.sourceChannel,
     this.aiMatchResult = const {},
     this.humanOverride = const {},
+    this.candidateFeedback = const {},
     this.consentRecordId,
     this.blockedAt,
     this.blockedReason,
@@ -52,6 +53,7 @@ class Application {
   final String? sourceChannel;
   final Map<String, dynamic> aiMatchResult;
   final Map<String, dynamic> humanOverride;
+  final Map<String, dynamic> candidateFeedback;
   final String? consentRecordId;
   final DateTime? blockedAt;
   final String? blockedReason;
@@ -73,6 +75,14 @@ class Application {
       if (value is String) return int.tryParse(value);
       if (value is double) return value.toInt();
       return null;
+    }
+
+    Map<String, dynamic> parseMap(dynamic value) {
+      if (value is Map<String, dynamic>) return value;
+      if (value is Map) {
+        return Map<String, dynamic>.from(value);
+      }
+      return const {};
     }
 
     return Application(
@@ -107,15 +117,18 @@ class Application {
       pipelineStageId: json['pipelineStageId'] as String?,
       pipelineStageName: json['pipelineStageName'] as String?,
       pipelineHistory: json['pipelineHistory'] as List<dynamic>?,
-      knockoutResponses: json['knockoutResponses'] as Map<String, dynamic>?,
+      knockoutResponses: parseMap(json['knockoutResponses']),
       assignedTo: json['assignedTo'] as String?,
       matchScore: (json['match_score'] as num?)?.toDouble(),
       sourceChannel:
           json['sourceChannel'] as String? ??
           json['source_channel'] as String? ??
           json['source'] as String?,
-      aiMatchResult: json['aiMatchResult'] as Map<String, dynamic>? ?? const {},
-      humanOverride: json['humanOverride'] as Map<String, dynamic>? ?? const {},
+      aiMatchResult: parseMap(json['aiMatchResult']),
+      humanOverride: parseMap(json['humanOverride']),
+      candidateFeedback: parseMap(
+        json['candidateFeedback'] ?? json['candidate_feedback'],
+      ),
       consentRecordId: json['consentRecordId'] as String?,
       blockedAt: parseDate(json['blockedAt']),
       blockedReason: json['blockedReason'] as String?,
@@ -153,6 +166,10 @@ class Application {
       },
       if (aiMatchResult.isNotEmpty) 'aiMatchResult': aiMatchResult,
       if (humanOverride.isNotEmpty) 'humanOverride': humanOverride,
+      if (candidateFeedback.isNotEmpty) ...{
+        'candidateFeedback': candidateFeedback,
+        'candidate_feedback': candidateFeedback,
+      },
       if (consentRecordId != null) 'consentRecordId': consentRecordId,
       if (blockedAt != null) 'blockedAt': blockedAt!.toIso8601String(),
       if (blockedReason != null) 'blockedReason': blockedReason,
@@ -185,6 +202,7 @@ class Application {
     String? sourceChannel,
     Map<String, dynamic>? aiMatchResult,
     Map<String, dynamic>? humanOverride,
+    Map<String, dynamic>? candidateFeedback,
     String? consentRecordId,
     DateTime? blockedAt,
     String? blockedReason,
@@ -215,6 +233,7 @@ class Application {
       sourceChannel: sourceChannel ?? this.sourceChannel,
       aiMatchResult: aiMatchResult ?? this.aiMatchResult,
       humanOverride: humanOverride ?? this.humanOverride,
+      candidateFeedback: candidateFeedback ?? this.candidateFeedback,
       consentRecordId: consentRecordId ?? this.consentRecordId,
       blockedAt: blockedAt ?? this.blockedAt,
       blockedReason: blockedReason ?? this.blockedReason,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
+import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
@@ -80,6 +81,11 @@ class _StubCandidateAuthCubit extends Cubit<CandidateAuthState>
     required String name,
     required String email,
     required String password,
+  }) async {}
+
+  @override
+  Future<void> signInWithEudiWallet({
+    required EudiWalletSignInInput input,
   }) async {}
 
   @override
