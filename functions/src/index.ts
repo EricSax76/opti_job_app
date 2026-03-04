@@ -48,6 +48,8 @@ export * from './scheduled/aggregateWebVitals';
 // Callable Functions
 export { submitApplication } from "./callable/applications/submitApplication";
 export * from "./callable/auth/eudiWalletCallables";
+export * from "./callable/auth/eudiSelectiveDisclosureCallables";
+export * from "./callable/applications/qualifiedSignatureCallables";
 
 // Interview Callables
 export { startInterview } from "./callable/interviews/startInterview";

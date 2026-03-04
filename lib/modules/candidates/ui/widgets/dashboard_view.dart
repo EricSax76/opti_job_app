@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_reminders_visibility_cubit.dart';
+import 'package:opti_job_app/modules/candidates/logic/candidate_genui_personalization_logic.dart';
 import 'package:opti_job_app/modules/candidates/logic/candidate_onboarding_filter_logic.dart';
 import 'package:opti_job_app/modules/candidates/logic/dashboard_layout_logic.dart';
 import 'package:opti_job_app/modules/candidates/logic/dashboard_scroll_logic.dart';
@@ -55,14 +56,29 @@ class _DashboardViewState extends State<DashboardView> {
 
   @override
   Widget build(BuildContext context) {
+    final profileCandidate = context.select<ProfileCubit, Candidate?>(
+      (cubit) => cubit.state.candidate,
+    );
     final profileCandidateName = context.select<ProfileCubit, String?>(
       (cubit) => cubit.state.candidate?.name,
     );
     final authCandidateName = context.select<CandidateAuthCubit, String?>(
       (cubit) => cubit.state.candidate?.name,
     );
+    final displayedOfferCount = context.select<JobOffersCubit, int>(
+      (cubit) => cubit.state.displayedOffers.length,
+    );
+    final hasActiveFilters = context.select<JobOffersCubit, bool>(
+      (cubit) => cubit.state.activeFilters.hasActiveFilters,
+    );
     final candidateName =
         profileCandidateName ?? authCandidateName ?? 'Candidato';
+    final adaptiveCopy = CandidateGenUiPersonalizationLogic.build(
+      candidateName: candidateName,
+      candidate: profileCandidate,
+      displayedOfferCount: displayedOfferCount,
+      hasActiveFilters: hasActiveFilters,
+    );
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -81,6 +97,7 @@ class _DashboardViewState extends State<DashboardView> {
             theme: theme,
             colorScheme: colorScheme,
             candidateName: candidateName,
+            adaptiveCopy: adaptiveCopy,
           ),
         );
       },
@@ -92,6 +109,7 @@ class _DashboardViewState extends State<DashboardView> {
     required ThemeData theme,
     required ColorScheme colorScheme,
     required String candidateName,
+    required CandidateGenUiCopy adaptiveCopy,
   }) {
     final isDark = theme.brightness == Brightness.dark;
     final _ = isDark ? uiDarkOnPrimaryContainer : uiLightOnPrimaryContainer;
@@ -138,6 +156,9 @@ class _DashboardViewState extends State<DashboardView> {
               children: [
                 CandidateDashboardWelcomeHeader(
                   candidateName: candidateName,
+                  titleText: adaptiveCopy.title,
+                  subtitleText: adaptiveCopy.subtitle,
+                  assistiveHint: adaptiveCopy.assistiveHint,
                   useCompactHeader: useCompactHeader,
                   shouldAutoHideHeader: shouldAutoHideHeader,
                   isVisible: _isMobileHeaderVisible,

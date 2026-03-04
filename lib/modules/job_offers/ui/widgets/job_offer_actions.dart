@@ -8,6 +8,7 @@ class JobOfferActions extends StatelessWidget {
     required this.isApplying,
     required this.applicationStatus,
     required this.onApply,
+    this.onQualifiedSign,
     required this.onMatch,
     required this.onBack,
   });
@@ -16,6 +17,7 @@ class JobOfferActions extends StatelessWidget {
   final bool isApplying;
   final String? applicationStatus;
   final VoidCallback onApply;
+  final VoidCallback? onQualifiedSign;
   final VoidCallback? onMatch;
   final VoidCallback onBack;
 
@@ -23,6 +25,10 @@ class JobOfferActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final hasApplied = applicationStatus != null;
+    final normalizedStatus = applicationStatus?.trim().toLowerCase() ?? '';
+    final canSignOffer =
+        normalizedStatus == 'offered' ||
+        normalizedStatus == 'accepted_pending_signature';
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -41,6 +47,12 @@ class JobOfferActions extends StatelessWidget {
                         ? 'Postulación: ${ApplicationStatus.fromString(applicationStatus).label}'
                         : 'Postularme',
                   ),
+          ),
+        if (isAuthenticated && canSignOffer && onQualifiedSign != null)
+          FilledButton.icon(
+            onPressed: isApplying ? null : onQualifiedSign,
+            icon: const Icon(Icons.draw_outlined),
+            label: const Text('Firmar oferta'),
           ),
         if (isAuthenticated)
           OutlinedButton.icon(

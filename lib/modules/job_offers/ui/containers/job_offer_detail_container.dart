@@ -34,6 +34,14 @@ class JobOfferDetailContainer extends StatelessWidget {
             companiesById: companiesById,
           );
           final matchRequest = viewModel.matchRequest;
+          final application = viewModel.state.application;
+          final applicationId = application?.id;
+          final VoidCallback? onQualifiedSign = applicationId == null
+              ? null
+              : () => JobOfferDetailController.signQualifiedOffer(
+                  context,
+                  applicationId: applicationId,
+                );
 
           return JobOfferDetailContent(
             state: viewModel.state,
@@ -41,6 +49,7 @@ class JobOfferDetailContainer extends StatelessWidget {
             companyAvatarUrl: viewModel.companyAvatarUrl,
             onApply: () =>
                 JobOfferDetailController.apply(context, viewModel.applyRequest),
+            onQualifiedSign: onQualifiedSign,
             onMatch: matchRequest == null
                 ? null
                 : () => JobOfferDetailController.showMatchResult(context),

@@ -95,6 +95,7 @@ void main() {
             body: ApplicantCurriculumContent(
               candidate: candidate,
               curriculum: curriculum,
+              offerId: 'offer-1',
               isExporting: false,
               isMatching: false,
               onExport: () {},

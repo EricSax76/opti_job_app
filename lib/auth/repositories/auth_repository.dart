@@ -43,6 +43,26 @@ class AuthRepository {
     return _service.importEudiCredential(credential: credential);
   }
 
+  Future<SelectiveDisclosureProofResult> createSelectiveDisclosureProof({
+    required SelectiveDisclosureProofInput input,
+  }) {
+    return _service.createSelectiveDisclosureProof(input: input);
+  }
+
+  Future<SelectiveDisclosureVerificationResult> verifySelectiveDisclosureProof({
+    required String proofId,
+    required String proofToken,
+  }) {
+    return _service.verifySelectiveDisclosureProof(
+      proofId: proofId,
+      proofToken: proofToken,
+    );
+  }
+
+  Future<void> revokeSelectiveDisclosureProof({required String proofId}) {
+    return _service.revokeSelectiveDisclosureProof(proofId: proofId);
+  }
+
   Future<List<VerifiedCredential>> fetchCandidateVerifiedCredentials(
     String candidateUid,
   ) {

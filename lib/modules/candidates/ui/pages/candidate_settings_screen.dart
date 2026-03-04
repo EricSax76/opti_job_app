@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
+import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/auth/ui/widgets/eudi_wallet_dialogs.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
@@ -158,7 +160,7 @@ class _EudiWalletSection extends StatelessWidget {
             ),
             const SizedBox(height: uiSpacing8),
             Text(
-              'Importa y gestiona títulos o certificaciones firmadas digitalmente.',
+              'Importa títulos/certificaciones verificadas y comparte pruebas selectivas (ZKP) sin exponer el documento completo.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -187,16 +189,250 @@ class _EudiWalletSection extends StatelessWidget {
   }
 }
 
-class _CredentialList extends StatelessWidget {
+class _CredentialList extends StatefulWidget {
   const _CredentialList({required this.candidateUid});
 
   final String candidateUid;
 
   @override
+  State<_CredentialList> createState() => _CredentialListState();
+}
+
+class _CredentialListState extends State<_CredentialList> {
+  final Set<String> _creatingProofForCredentials = <String>{};
+  final Set<String> _revokingProofIds = <String>{};
+
+  Future<void> _createSelectiveProof(String credentialId) async {
+    if (_creatingProofForCredentials.contains(credentialId)) return;
+    final repository = context.read<AuthRepository>();
+    final params = await _showCreateProofDialog();
+    if (!mounted || params == null) return;
+
+    setState(() => _creatingProofForCredentials.add(credentialId));
+    try {
+      final result = await repository.createSelectiveDisclosureProof(
+        input: SelectiveDisclosureProofInput(
+          credentialId: credentialId,
+          claimKey: params.claimKey,
+          statement: params.statement,
+          applicationId: params.applicationId,
+          audienceCompanyUid: params.audienceCompanyUid,
+          expiresInMinutes: params.expiresInMinutes,
+        ),
+      );
+
+      if (!mounted) return;
+      await _showProofCreatedDialog(result);
+    } catch (error) {
+      if (!mounted) return;
+      final message = repository.mapException(error).message;
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) {
+        setState(() => _creatingProofForCredentials.remove(credentialId));
+      }
+    }
+  }
+
+  Future<_SelectiveDisclosureDialogResult?> _showCreateProofDialog() {
+    final applicationController = TextEditingController();
+    final companyController = TextEditingController();
+    final claimKeyController = TextEditingController(text: 'type');
+    final statementController = TextEditingController(
+      text:
+          'Prueba de posesión emitida con divulgación selectiva para proceso de selección.',
+    );
+    final expiresController = TextEditingController(text: '60');
+    final formKey = GlobalKey<FormState>();
+
+    return showDialog<_SelectiveDisclosureDialogResult>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Generar prueba selectiva'),
+          content: SizedBox(
+            width: 520,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: applicationController,
+                    decoration: const InputDecoration(
+                      labelText: 'ID de candidatura (recomendado)',
+                    ),
+                  ),
+                  const SizedBox(height: uiSpacing8),
+                  TextFormField(
+                    controller: companyController,
+                    decoration: const InputDecoration(
+                      labelText:
+                          'UID empresa destino (si no indicas candidatura)',
+                    ),
+                  ),
+                  const SizedBox(height: uiSpacing8),
+                  TextFormField(
+                    controller: claimKeyController,
+                    decoration: const InputDecoration(
+                      labelText: 'Claim a demostrar',
+                      helperText: 'Ejemplo: type, title, issuer',
+                    ),
+                    validator: (value) {
+                      if ((value ?? '').trim().isEmpty) {
+                        return 'Indica el claim a demostrar.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: uiSpacing8),
+                  TextFormField(
+                    controller: statementController,
+                    decoration: const InputDecoration(
+                      labelText: 'Mensaje visible para la empresa',
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: uiSpacing8),
+                  TextFormField(
+                    controller: expiresController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Expiración (minutos)',
+                    ),
+                    validator: (value) {
+                      final parsed = int.tryParse((value ?? '').trim());
+                      if (parsed == null || parsed < 5 || parsed > 1440) {
+                        return 'Introduce un valor entre 5 y 1440.';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final appId = applicationController.text.trim();
+                final companyUid = companyController.text.trim();
+                if (!formKey.currentState!.validate()) return;
+                if (appId.isEmpty && companyUid.isEmpty) {
+                  ScaffoldMessenger.maybeOf(dialogContext)
+                    ?..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Indica candidatura o empresa destino para generar la prueba.',
+                        ),
+                      ),
+                    );
+                  return;
+                }
+
+                Navigator.of(dialogContext).pop(
+                  _SelectiveDisclosureDialogResult(
+                    applicationId: appId,
+                    audienceCompanyUid: companyUid,
+                    claimKey: claimKeyController.text.trim(),
+                    statement: statementController.text.trim(),
+                    expiresInMinutes:
+                        int.tryParse(expiresController.text.trim()) ?? 60,
+                  ),
+                );
+              },
+              child: const Text('Generar prueba'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showProofCreatedDialog(SelectiveDisclosureProofResult result) {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Prueba generada'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _CopyFieldTile(
+                label: 'Proof ID',
+                value: result.proofId,
+                onCopy: () => _copyValue(result.proofId),
+              ),
+              const SizedBox(height: uiSpacing8),
+              _CopyFieldTile(
+                label: 'Proof Token',
+                value: result.proofToken,
+                onCopy: () => _copyValue(result.proofToken),
+              ),
+              const SizedBox(height: uiSpacing8),
+              Text(
+                'Comparte ambos valores por un canal seguro. El token no se vuelve a mostrar.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _copyValue(String value) async {
+    await Clipboard.setData(ClipboardData(text: value));
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Copiado al portapapeles.')));
+  }
+
+  Future<void> _revokeProof(String proofId) async {
+    if (_revokingProofIds.contains(proofId)) return;
+    final repository = context.read<AuthRepository>();
+    setState(() => _revokingProofIds.add(proofId));
+    try {
+      await repository.revokeSelectiveDisclosureProof(proofId: proofId);
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Prueba selectiva revocada.')),
+        );
+    } catch (error) {
+      if (!mounted) return;
+      final message = repository.mapException(error).message;
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) {
+        setState(() => _revokingProofIds.remove(proofId));
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final stream = FirebaseFirestore.instance
         .collection('candidates')
-        .doc(candidateUid)
+        .doc(widget.candidateUid)
         .collection('verifiedCredentials')
         .orderBy('updatedAt', descending: true)
         .limit(10)
@@ -222,18 +458,18 @@ class _CredentialList extends StatelessWidget {
         }
 
         final docs = snapshot.data?.docs ?? const [];
-        if (docs.isEmpty) {
-          return Text(
-            'Aún no has importado credenciales verificadas.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          );
-        }
-
         return Column(
-          children: docs
-              .map((doc) {
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (docs.isEmpty)
+              Text(
+                'Aún no has importado credenciales verificadas.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              )
+            else
+              ...docs.map((doc) {
                 final data = doc.data();
                 final title =
                     (data['title'] as String?)?.trim() ?? 'Credencial';
@@ -246,6 +482,9 @@ class _CredentialList extends StatelessWidget {
                   if (issuedAt != null && issuedAt.isNotEmpty)
                     'Emitida: ${issuedAt.split('T').first}',
                 ];
+                final isCreating = _creatingProofForCredentials.contains(
+                  doc.id,
+                );
 
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -260,6 +499,213 @@ class _CredentialList extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  trailing: OutlinedButton.icon(
+                    onPressed: isCreating
+                        ? null
+                        : () => _createSelectiveProof(doc.id),
+                    icon: isCreating
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.verified_user_outlined),
+                    label: const Text('Crear ZKP'),
+                  ),
+                );
+              }),
+            const SizedBox(height: uiSpacing8),
+            Divider(color: Theme.of(context).colorScheme.outlineVariant),
+            const SizedBox(height: uiSpacing8),
+            Text(
+              'Pruebas selectivas generadas',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: uiSpacing8),
+            _SelectiveProofList(
+              candidateUid: widget.candidateUid,
+              revokingProofIds: _revokingProofIds,
+              onRevoke: _revokeProof,
+              onCopy: _copyValue,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SelectiveDisclosureDialogResult {
+  const _SelectiveDisclosureDialogResult({
+    required this.applicationId,
+    required this.audienceCompanyUid,
+    required this.claimKey,
+    required this.statement,
+    required this.expiresInMinutes,
+  });
+
+  final String applicationId;
+  final String audienceCompanyUid;
+  final String claimKey;
+  final String statement;
+  final int expiresInMinutes;
+}
+
+class _CopyFieldTile extends StatelessWidget {
+  const _CopyFieldTile({
+    required this.label,
+    required this.value,
+    required this.onCopy,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onCopy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 2),
+              Text(value, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: 'Copiar',
+          onPressed: onCopy,
+          icon: const Icon(Icons.copy_all_outlined),
+        ),
+      ],
+    );
+  }
+}
+
+class _SelectiveProofList extends StatelessWidget {
+  const _SelectiveProofList({
+    required this.candidateUid,
+    required this.revokingProofIds,
+    required this.onRevoke,
+    required this.onCopy,
+  });
+
+  final String candidateUid;
+  final Set<String> revokingProofIds;
+  final ValueChanged<String> onRevoke;
+  final ValueChanged<String> onCopy;
+
+  @override
+  Widget build(BuildContext context) {
+    final stream = FirebaseFirestore.instance
+        .collection('credentialProofShares')
+        .where('candidateUid', isEqualTo: candidateUid)
+        .limit(20)
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LinearProgressIndicator();
+        }
+        if (snapshot.hasError) {
+          return Text(
+            'No se pudieron cargar las pruebas selectivas.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+
+        final docs = [...(snapshot.data?.docs ?? const [])]
+          ..sort((a, b) {
+            final aDate = _parseTimestamp(a.data()['createdAt']);
+            final bDate = _parseTimestamp(b.data()['createdAt']);
+            if (aDate == null && bDate == null) return 0;
+            if (aDate == null) return 1;
+            if (bDate == null) return -1;
+            return bDate.compareTo(aDate);
+          });
+        if (docs.isEmpty) {
+          return Text(
+            'Aún no has generado pruebas selectivas.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          );
+        }
+
+        return Column(
+          children: docs
+              .map((doc) {
+                final data = doc.data();
+                final proofId = (data['proofId'] as String?)?.trim() ?? doc.id;
+                final statement =
+                    (data['statement'] as String?)?.trim().isNotEmpty == true
+                    ? (data['statement'] as String).trim()
+                    : 'Prueba selectiva';
+                final status = (data['status'] as String?)?.trim() ?? 'active';
+                final expiresAt = _parseTimestamp(data['expiresAt']);
+                final expiresLabel = expiresAt == null
+                    ? 'Sin expiración'
+                    : 'Expira: ${expiresAt.toLocal()}'.split('.').first;
+                final isRevoking = revokingProofIds.contains(proofId);
+
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    status == 'active'
+                        ? Icons.verified_user_outlined
+                        : Icons.block_outlined,
+                  ),
+                  title: Text(
+                    statement,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    'ID: $proofId • Estado: $status • $expiresLabel',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: Wrap(
+                    spacing: 4,
+                    children: [
+                      IconButton(
+                        tooltip: 'Copiar proofId',
+                        onPressed: () => onCopy(proofId),
+                        icon: const Icon(Icons.copy_outlined),
+                      ),
+                      if (status == 'active')
+                        IconButton(
+                          tooltip: 'Revocar prueba',
+                          onPressed: isRevoking
+                              ? null
+                              : () => onRevoke(proofId),
+                          icon: isRevoking
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.cancel_outlined),
+                        ),
+                    ],
+                  ),
                 );
               })
               .toList(growable: false),
@@ -267,6 +713,13 @@ class _CredentialList extends StatelessWidget {
       },
     );
   }
+}
+
+DateTime? _parseTimestamp(dynamic raw) {
+  if (raw is Timestamp) return raw.toDate();
+  if (raw is DateTime) return raw;
+  if (raw is String) return DateTime.tryParse(raw);
+  return null;
 }
 
 class _SettingsPlaceholderMessage extends StatelessWidget {

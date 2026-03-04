@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applications/models/candidate_application_entry.dart';
+import 'package:opti_job_app/modules/applications/models/qualified_signature_models.dart';
 import 'package:opti_job_app/modules/applications/repositories/application_repository.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
@@ -158,6 +159,72 @@ class ApplicationService {
       }
     } catch (_) {
       // No bloqueamos la postulación si falla la evaluación automática.
+    }
+  }
+
+  Future<QualifiedSignatureStartResult> startQualifiedOfferSignature({
+    required String applicationId,
+    String provider = 'qualified_trust_service_eidas',
+  }) async {
+    final data = await _callCallableWithFallback(
+      name: 'startQualifiedOfferSignature',
+      payload: {
+        'applicationId': applicationId.trim(),
+        'provider': provider.trim().isEmpty
+            ? 'qualified_trust_service_eidas'
+            : provider.trim(),
+      },
+    );
+    return QualifiedSignatureStartResult.fromJson(data);
+  }
+
+  Future<QualifiedSignatureConfirmResult> confirmQualifiedOfferSignature({
+    required String requestId,
+    required String otpCode,
+    required String certificateFingerprint,
+    required String providerReference,
+  }) async {
+    final data = await _callCallableWithFallback(
+      name: 'confirmQualifiedOfferSignature',
+      payload: {
+        'requestId': requestId.trim(),
+        'otpCode': otpCode.trim(),
+        'certificateFingerprint': certificateFingerprint.trim(),
+        'providerReference': providerReference.trim(),
+      },
+    );
+    return QualifiedSignatureConfirmResult.fromJson(data);
+  }
+
+  Future<QualifiedSignatureStatusResult> getQualifiedOfferSignatureStatus({
+    required String applicationId,
+  }) async {
+    final data = await _callCallableWithFallback(
+      name: 'getQualifiedOfferSignatureStatus',
+      payload: {'applicationId': applicationId.trim()},
+    );
+    return QualifiedSignatureStatusResult.fromJson(data);
+  }
+
+  Future<Map<String, dynamic>> _callCallableWithFallback({
+    required String name,
+    Map<String, dynamic> payload = const <String, dynamic>{},
+  }) async {
+    try {
+      final result = await _functions.httpsCallable(name).call(payload);
+      final data = result.data;
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+      return const <String, dynamic>{};
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      final result = await _fallbackFunctions.httpsCallable(name).call(payload);
+      final data = result.data;
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+      return const <String, dynamic>{};
     }
   }
 }

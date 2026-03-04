@@ -5,6 +5,7 @@
   "scripts": {
     "lint": "echo \"No lint configured\"",
     "build": "tsc -p tsconfig.json",
+    "test:e2e": "npm run build && firebase emulators:exec --config ../firebase.json --project demo-opti-job --only firestore \"node --test e2e/*.test.js\"",
     "migrate:applications": "node scripts/migrate-applications-schema.js"
   },
   "engines": {

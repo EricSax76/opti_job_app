@@ -6,12 +6,18 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
   const CandidateDashboardWelcomeHeader({
     super.key,
     required this.candidateName,
+    required this.titleText,
+    required this.subtitleText,
+    this.assistiveHint,
     required this.useCompactHeader,
     required this.shouldAutoHideHeader,
     required this.isVisible,
   });
 
   final String candidateName;
+  final String titleText;
+  final String subtitleText;
+  final String? assistiveHint;
   final bool useCompactHeader;
   final bool shouldAutoHideHeader;
   final bool isVisible;
@@ -80,20 +86,24 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Hola, $candidateName',
-                      style:
-                          (useCompactHeader
-                                  ? theme.textTheme.titleMedium
-                                  : theme.textTheme.headlineSmall)
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: headerTitleColor,
-                              ),
+                    Semantics(
+                      label: 'Cabecera personalizada',
+                      value: '$candidateName. $titleText',
+                      child: Text(
+                        titleText,
+                        style:
+                            (useCompactHeader
+                                    ? theme.textTheme.titleMedium
+                                    : theme.textTheme.headlineSmall)
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: headerTitleColor,
+                                ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Aquí tienes las mejores ofertas seleccionadas para ti.',
+                      subtitleText,
                       maxLines: useCompactHeader ? 2 : null,
                       overflow: useCompactHeader
                           ? TextOverflow.ellipsis
@@ -104,6 +114,31 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
                                   : theme.textTheme.bodyLarge)
                               ?.copyWith(color: headerSubtitleColor),
                     ),
+                    if (assistiveHint != null &&
+                        assistiveHint!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.tips_and_updates_outlined,
+                            size: 16,
+                            color: headerSubtitleColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              assistiveHint!,
+                              maxLines: useCompactHeader ? 2 : 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: headerSubtitleColor,
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

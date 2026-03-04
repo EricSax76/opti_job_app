@@ -114,3 +114,133 @@ class VerifiedCredential {
     );
   }
 }
+
+class SelectiveDisclosureProofInput {
+  const SelectiveDisclosureProofInput({
+    required this.credentialId,
+    this.claimKey = 'type',
+    this.statement,
+    this.applicationId,
+    this.audienceCompanyUid,
+    this.expiresInMinutes = 60,
+  });
+
+  final String credentialId;
+  final String claimKey;
+  final String? statement;
+  final String? applicationId;
+  final String? audienceCompanyUid;
+  final int expiresInMinutes;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'credentialId': credentialId,
+      'claimKey': claimKey,
+      if (statement != null && statement!.trim().isNotEmpty)
+        'statement': statement!.trim(),
+      if (applicationId != null && applicationId!.trim().isNotEmpty)
+        'applicationId': applicationId!.trim(),
+      if (audienceCompanyUid != null && audienceCompanyUid!.trim().isNotEmpty)
+        'audienceCompanyUid': audienceCompanyUid!.trim(),
+      'expiresInMinutes': expiresInMinutes,
+    };
+  }
+}
+
+class SelectiveDisclosureProofResult {
+  const SelectiveDisclosureProofResult({
+    required this.proofId,
+    required this.proofToken,
+    required this.disclosureMode,
+    required this.statement,
+    this.companyUid,
+    this.applicationId,
+    this.expiresAt,
+  });
+
+  final String proofId;
+  final String proofToken;
+  final String disclosureMode;
+  final String statement;
+  final String? companyUid;
+  final String? applicationId;
+  final DateTime? expiresAt;
+
+  factory SelectiveDisclosureProofResult.fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
+    return SelectiveDisclosureProofResult(
+      proofId: json['proofId']?.toString() ?? '',
+      proofToken: json['proofToken']?.toString() ?? '',
+      disclosureMode:
+          json['disclosureMode']?.toString().trim().isNotEmpty == true
+          ? json['disclosureMode'].toString().trim()
+          : 'zkp_selective',
+      statement: json['statement']?.toString() ?? '',
+      companyUid: json['companyUid']?.toString(),
+      applicationId: json['applicationId']?.toString(),
+      expiresAt: parseDate(json['expiresAt']),
+    );
+  }
+}
+
+class SelectiveDisclosureVerificationResult {
+  const SelectiveDisclosureVerificationResult({
+    required this.verified,
+    required this.proofId,
+    required this.disclosureMode,
+    required this.statement,
+    this.candidateUid,
+    this.applicationId,
+    this.jobOfferId,
+    this.companyUid,
+    this.claimKey,
+    this.expiresAt,
+    this.verifiedAt,
+  });
+
+  final bool verified;
+  final String proofId;
+  final String disclosureMode;
+  final String statement;
+  final String? candidateUid;
+  final String? applicationId;
+  final String? jobOfferId;
+  final String? companyUid;
+  final String? claimKey;
+  final DateTime? expiresAt;
+  final DateTime? verifiedAt;
+
+  factory SelectiveDisclosureVerificationResult.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
+    return SelectiveDisclosureVerificationResult(
+      verified: json['verified'] == true,
+      proofId: json['proofId']?.toString() ?? '',
+      disclosureMode:
+          json['disclosureMode']?.toString().trim().isNotEmpty == true
+          ? json['disclosureMode'].toString().trim()
+          : 'zkp_selective',
+      statement: json['statement']?.toString() ?? '',
+      candidateUid: json['candidateUid']?.toString(),
+      applicationId: json['applicationId']?.toString(),
+      jobOfferId: json['jobOfferId']?.toString(),
+      companyUid: json['companyUid']?.toString(),
+      claimKey: json['claimKey']?.toString(),
+      expiresAt: parseDate(json['expiresAt']),
+      verifiedAt: parseDate(json['verifiedAt']),
+    );
+  }
+}

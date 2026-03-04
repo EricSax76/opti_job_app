@@ -46,6 +46,15 @@ service cloud.firestore {
       return recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager']);
     }
 
+    function recruiterCanAccessCompanyData(companyId) {
+      return recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager', 'external_evaluator']);
+    }
+
+    function isCompanyOrRecruiterForCompany(companyId) {
+      return (isCompany() && request.auth.uid == companyId)
+        || recruiterCanAccessCompanyData(companyId);
+    }
+
     function offerCompanyUid(data) {
       return data.get('company_uid', data.get('companyUid', data.get('owner_uid', '')));
     }
@@ -295,6 +304,40 @@ service cloud.firestore {
       allow read: if (isCompany() && request.auth.uid == resource.data.companyId)
                     || recruiterCanViewReports(resource.data.companyId)
                     || recruiterCanManageOffers(resource.data.companyId);
+      allow write: if false;
+    }
+
+    // ─── Fase P2: EUDI selective disclosure + qualified signature ─────────────────
+
+    match /credentialProofs/{proofId} {
+      allow read: if isSignedIn() && (
+          request.auth.uid == resource.data.get('candidateUid', resource.data.get('candidate_uid', ''))
+          || isCompanyOrRecruiterForCompany(resource.data.get('companyUid', resource.data.get('company_uid', '')))
+        );
+      allow write: if false;
+    }
+
+    match /credentialProofShares/{proofId} {
+      allow read: if isSignedIn() && (
+          request.auth.uid == resource.data.get('candidateUid', resource.data.get('candidate_uid', ''))
+          || isCompanyOrRecruiterForCompany(resource.data.get('companyUid', resource.data.get('company_uid', '')))
+        );
+      allow write: if false;
+    }
+
+    match /offerSignatureRequests/{requestId} {
+      allow read: if isSignedIn() && (
+          request.auth.uid == resource.data.get('candidateUid', resource.data.get('candidate_uid', ''))
+          || isCompanyOrRecruiterForCompany(resource.data.get('companyUid', resource.data.get('company_uid', '')))
+        );
+      allow write: if false;
+    }
+
+    match /qualifiedSignatures/{signatureId} {
+      allow read: if isSignedIn() && (
+          request.auth.uid == resource.data.get('candidateUid', resource.data.get('candidate_uid', ''))
+          || isCompanyOrRecruiterForCompany(resource.data.get('companyUid', resource.data.get('company_uid', '')))
+        );
       allow write: if false;
     }
 

@@ -140,6 +140,34 @@ class AuthService {
     );
   }
 
+  Future<SelectiveDisclosureProofResult> createSelectiveDisclosureProof({
+    required SelectiveDisclosureProofInput input,
+  }) async {
+    final response = await _callCallableWithFallback(
+      name: 'createSelectiveDisclosureProof',
+      payload: input.toJson(),
+    );
+    return SelectiveDisclosureProofResult.fromJson(response);
+  }
+
+  Future<SelectiveDisclosureVerificationResult> verifySelectiveDisclosureProof({
+    required String proofId,
+    required String proofToken,
+  }) async {
+    final response = await _callCallableWithFallback(
+      name: 'verifySelectiveDisclosureProof',
+      payload: {'proofId': proofId.trim(), 'proofToken': proofToken.trim()},
+    );
+    return SelectiveDisclosureVerificationResult.fromJson(response);
+  }
+
+  Future<void> revokeSelectiveDisclosureProof({required String proofId}) async {
+    await _callCallableWithFallback(
+      name: 'revokeSelectiveDisclosureProof',
+      payload: {'proofId': proofId.trim()},
+    );
+  }
+
   Future<List<VerifiedCredential>> fetchCandidateVerifiedCredentials(
     String candidateUid,
   ) async {

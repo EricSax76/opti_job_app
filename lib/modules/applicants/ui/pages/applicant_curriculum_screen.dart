@@ -96,6 +96,7 @@ class _ApplicantCurriculumBody extends StatelessWidget {
         return ApplicantCurriculumContent(
           candidate: candidate,
           curriculum: curriculum,
+          offerId: offerId,
           isExporting: state.isExporting,
           isMatching: state.isMatching,
           onExport: cubit.exportPdf,

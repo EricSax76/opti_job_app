@@ -14,6 +14,7 @@ class JobOfferDetailContent extends StatelessWidget {
     required this.isAuthenticated,
     required this.companyAvatarUrl,
     required this.onApply,
+    required this.onQualifiedSign,
     required this.onMatch,
     required this.onBack,
   });
@@ -22,6 +23,7 @@ class JobOfferDetailContent extends StatelessWidget {
   final bool isAuthenticated;
   final String? companyAvatarUrl;
   final VoidCallback onApply;
+  final VoidCallback? onQualifiedSign;
   final VoidCallback? onMatch;
   final VoidCallback onBack;
 
@@ -67,6 +69,7 @@ class JobOfferDetailContent extends StatelessWidget {
           isApplying: isApplying,
           applicationStatus: application?.status,
           onApply: onApply,
+          onQualifiedSign: onQualifiedSign,
           onMatch: onMatch,
           onBack: onBack,
         ),
