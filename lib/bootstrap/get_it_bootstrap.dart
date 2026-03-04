@@ -18,8 +18,12 @@ import 'package:opti_job_app/features/video_curriculum/repositories/video_curric
 import 'package:opti_job_app/features/video_curriculum/services/video_curriculum_service.dart';
 import 'package:opti_job_app/modules/applicants/data/repositories/firebase_applicants_repository.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/analytics/repositories/analytics_repository.dart';
+import 'package:opti_job_app/modules/analytics/repositories/firebase_analytics_repository.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/applications/repositories/application_repository.dart';
+import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
+import 'package:opti_job_app/modules/compliance/repositories/firebase_compliance_repository.dart';
 import 'package:opti_job_app/modules/companies/repositories/companies_repository.dart';
 import 'package:opti_job_app/modules/companies/repositories/firebase_companies_repository.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
@@ -116,6 +120,8 @@ void setupGetIt({
   getIt.registerLazySingleton(
     () => ApplicationService(
       applicationRepository: getIt<ApplicationRepository>(),
+      functions: functionsInstance,
+      fallbackFunctions: fallbackFunctionsInstance,
     ),
   );
 
@@ -170,6 +176,25 @@ void setupGetIt({
       functions: functionsInstance,
       fallbackFunctions: fallbackFunctionsInstance,
     ),
+  );
+
+  // Compliance
+  getIt.registerLazySingleton<FirebaseComplianceRepository>(
+    () => FirebaseComplianceRepository(firestore: getIt<FirebaseFirestore>()),
+  );
+  getIt.registerLazySingleton<AuditRepository>(
+    () => getIt<FirebaseComplianceRepository>(),
+  );
+  getIt.registerLazySingleton<DataRequestRepository>(
+    () => getIt<FirebaseComplianceRepository>(),
+  );
+  getIt.registerLazySingleton<ConsentRepository>(
+    () => getIt<FirebaseComplianceRepository>(),
+  );
+
+  // Analytics
+  getIt.registerLazySingleton<AnalyticsRepository>(
+    () => FirebaseAnalyticsRepository(firestore: getIt<FirebaseFirestore>()),
   );
 
   // Recruiters (Fase 0 RBAC)

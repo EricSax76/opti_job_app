@@ -10,6 +10,7 @@ import 'package:opti_job_app/auth/ui/pages/candidate_login_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/candidate_register_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/company_login_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/company_register_screen.dart';
+import 'package:opti_job_app/core/config/feature_flags.dart';
 import 'package:opti_job_app/features/onboarding/view/pages/onboarding_screen.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
@@ -41,7 +42,14 @@ import 'package:opti_job_app/modules/curriculum/models/curriculum_share_service.
 import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
 import 'package:opti_job_app/modules/applicants/ui/pages/applicant_curriculum_screen.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/analytics/cubits/analytics_dashboard_cubit.dart';
+import 'package:opti_job_app/modules/analytics/repositories/analytics_repository.dart';
+import 'package:opti_job_app/modules/analytics/ui/pages/analytics_dashboard_screen.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
+import 'package:opti_job_app/modules/compliance/cubits/data_requests_cubit.dart';
+import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
+import 'package:opti_job_app/modules/compliance/ui/pages/candidate_privacy_portal_screen.dart';
+import 'package:opti_job_app/modules/compliance/ui/pages/consent_management_screen.dart';
 import 'package:opti_job_app/modules/interviews/ui/pages/interview_chat_page.dart';
 
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
@@ -50,6 +58,9 @@ import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
+import 'package:opti_job_app/modules/recruiters/ui/pages/recruiter_dashboard_screen.dart';
+import 'package:opti_job_app/modules/recruiters/ui/pages/recruiter_login_screen.dart';
+import 'package:opti_job_app/modules/recruiters/ui/pages/recruiter_register_info_screen.dart';
 import 'package:opti_job_app/modules/applications/cubits/my_applications_cubit.dart';
 import 'package:opti_job_app/features/calendar/cubits/calendar_cubit.dart';
 import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
@@ -461,6 +472,20 @@ class AppRouter {
           },
         ),
         GoRoute(
+          path: '/candidate/:uid/privacy',
+          name: 'candidate-privacy-portal',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final cubit = DataRequestsCubit(
+              repository: context.read<DataRequestRepository>(),
+            );
+            return BlocProvider(
+              create: (_) => cubit,
+              child: CandidatePrivacyPortalScreen(candidateUid: uid),
+            );
+          },
+        ),
+        GoRoute(
           path: '/DashboardCompany',
           name: 'company-dashboard-legacy',
           builder: (context, state) {
@@ -547,6 +572,28 @@ class AppRouter {
             );
           },
         ),
+        GoRoute(
+          path: '/company/:uid/consents',
+          name: 'company-consents',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            return ConsentManagementScreen(companyId: uid);
+          },
+        ),
+        GoRoute(
+          path: '/company/:uid/analytics',
+          name: 'company-analytics',
+          builder: (context, state) {
+            final uid = state.pathParameters['uid'] ?? '';
+            final cubit = AnalyticsDashboardCubit(
+              repository: context.read<AnalyticsRepository>(),
+            );
+            return BlocProvider(
+              create: (_) => cubit,
+              child: AnalyticsDashboardScreen(companyId: uid),
+            );
+          },
+        ),
 
         // ... (existing imports)
         GoRoute(
@@ -622,30 +669,23 @@ class AppRouter {
             );
           },
         ),
-        // ─── Fase 0 RBAC: Recruiter routes (stubs — UI se implementa en fases posteriores) ───
+        // ─── Fase 0 RBAC: Recruiter routes ───
         GoRoute(
           path: '/recruiter-login',
           name: 'recruiter-login',
-          builder: (context, state) => const _RecruiterPlaceholderScreen(
-            title: 'Acceso Reclutadores',
-          ),
+          builder: (context, state) => const RecruiterLoginScreen(),
         ),
         GoRoute(
           path: '/recruiter-register',
           name: 'recruiter-register',
-          builder: (context, state) => const _RecruiterPlaceholderScreen(
-            title: 'Registro Reclutador',
-          ),
+          builder: (context, state) => const RecruiterRegisterInfoScreen(),
         ),
         GoRoute(
           path: '/recruiter/:uid/dashboard',
           name: 'recruiter-dashboard',
           builder: (context, state) {
             final uid = state.pathParameters['uid'] ?? '';
-            return _RecruiterPlaceholderScreen(
-              title: 'Dashboard Reclutador',
-              subtitle: 'uid: $uid',
-            );
+            return RecruiterDashboardScreen(recruiterUid: uid);
           },
         ),
       ],
@@ -765,7 +805,8 @@ class AppRouter {
     final bool authBootstrapRoute = location == _authBootstrapPath;
     final bool companyArea = location.startsWith('/company/');
     final bool candidateArea = location.startsWith('/candidate/');
-    final bool recruiterArea = location.startsWith('/recruiter/') ||
+    final bool recruiterArea =
+        location.startsWith('/recruiter/') ||
         location == '/recruiter-login' ||
         location == '/recruiter-register';
     final companyDashboardCanonicalPath = _companyDashboardCanonicalPath(
@@ -783,12 +824,20 @@ class AppRouter {
             companyAuthState.status == AuthStatus.unknown ||
             recruiterAuthState.status == AuthStatus.unknown);
 
+    if (!FeatureFlags.recruiterModule && recruiterArea) {
+      return '/';
+    }
+
+    // Si ya está autenticado como reclutador, evita volver a login/register.
+    if ((location == '/recruiter-login' || location == '/recruiter-register') &&
+        recruiterAuthState.isAuthenticated) {
+      return '/recruiter/$recruiterUid/dashboard';
+    }
+
     // ─ Recruiter area: requires recruiter authentication ─
     if (recruiterArea && location.startsWith('/recruiter/')) {
       if (!recruiterAuthState.isAuthenticated) return '/recruiter-login';
-      if (routeUid != null &&
-          routeUid.isNotEmpty &&
-          routeUid != recruiterUid) {
+      if (routeUid != null && routeUid.isNotEmpty && routeUid != recruiterUid) {
         return '/recruiter/$recruiterUid/dashboard';
       }
       return null;
@@ -812,6 +861,9 @@ class AppRouter {
       if (hasValidFrom) {
         return from;
       }
+      if (recruiterAuthState.isAuthenticated) {
+        return '/recruiter/$recruiterUid/dashboard';
+      }
       if (!authState.isAuthenticated) return '/';
       if (authState.needsOnboarding) return '/onboarding';
       if (authState.isCandidate) {
@@ -821,6 +873,23 @@ class AppRouter {
         return '/CandidateDashboard';
       }
       return _companyDashboardHomePath(companyUid);
+    }
+
+    final recruiterOnlySession =
+        recruiterAuthState.isAuthenticated &&
+        !candidateAuthState.isAuthenticated &&
+        !companyAuthState.isAuthenticated;
+    final recruiterCompanyRouteAllowed =
+        recruiterOnlySession &&
+        companyArea &&
+        routeUid != null &&
+        routeUid.isNotEmpty &&
+        routeUid == recruiterAuthState.recruiter?.companyId &&
+        (uriPath.endsWith('/analytics') || uriPath.endsWith('/consents'));
+
+    if (recruiterOnlySession) {
+      if (recruiterArea || recruiterCompanyRouteAllowed) return null;
+      return '/recruiter/$recruiterUid/dashboard';
     }
 
     if (!authState.isAuthenticated) {
@@ -859,6 +928,14 @@ class AppRouter {
     }
 
     if (authState.isCompany &&
+        companyArea &&
+        routeUid != null &&
+        routeUid.isNotEmpty &&
+        routeUid != companyUid) {
+      return _companyDashboardHomePath(companyUid);
+    }
+
+    if (authState.isCompany &&
         companyDashboardCanonicalPath != null &&
         companyDashboardCanonicalPath != uriPath) {
       return companyDashboardCanonicalPath;
@@ -885,53 +962,6 @@ class AppRouter {
     }
 
     return null;
-  }
-}
-
-/// Pantalla temporal para las rutas de reclutadores (Fase 0).
-/// Se reemplazará con UI real en fases posteriores.
-class _RecruiterPlaceholderScreen extends StatelessWidget {
-  const _RecruiterPlaceholderScreen({required this.title, this.subtitle});
-
-  final String title;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: colors.surface,
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.groups_outlined, size: 64, color: colors.primary),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            if (subtitle != null) ...[  
-              const SizedBox(height: 8),
-              Text(
-                subtitle!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ],
-            const SizedBox(height: 8),
-            Text(
-              'Disponible en fases posteriores',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colors.outline,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

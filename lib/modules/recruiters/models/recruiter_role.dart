@@ -6,6 +6,12 @@ enum RecruiterRole {
   /// Puede gestionar ofertas y puntuar candidatos, pero no gestionar equipo.
   recruiter,
 
+  /// Responsable técnico del área, enfocado en feedback/evaluación.
+  hiringManager,
+
+  /// Evaluador temporal externo con permisos mínimos de evaluación.
+  externalEvaluator,
+
   /// Solo puede ver información; sin capacidad de edición.
   viewer;
 
@@ -14,6 +20,10 @@ enum RecruiterRole {
     return switch (value) {
       'admin' => RecruiterRole.admin,
       'recruiter' => RecruiterRole.recruiter,
+      'hiring_manager' => RecruiterRole.hiringManager,
+      'hiringmanager' => RecruiterRole.hiringManager,
+      'external_evaluator' => RecruiterRole.externalEvaluator,
+      'externalevaluator' => RecruiterRole.externalEvaluator,
       'viewer' => RecruiterRole.viewer,
       _ => RecruiterRole.viewer, // valor por defecto seguro
     };
@@ -24,6 +34,8 @@ enum RecruiterRole {
     return switch (this) {
       RecruiterRole.admin => 'admin',
       RecruiterRole.recruiter => 'recruiter',
+      RecruiterRole.hiringManager => 'hiring_manager',
+      RecruiterRole.externalEvaluator => 'external_evaluator',
       RecruiterRole.viewer => 'viewer',
     };
   }

@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applications/models/candidate_application_entry.dart';
 import 'package:opti_job_app/modules/applications/repositories/application_repository.dart';
@@ -6,14 +7,23 @@ import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 
 class ApplicationService {
   final ApplicationRepository _applicationRepository;
+  final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
-  ApplicationService({required ApplicationRepository applicationRepository})
-    : _applicationRepository = applicationRepository;
+  ApplicationService({
+    required ApplicationRepository applicationRepository,
+    FirebaseFunctions? functions,
+    FirebaseFunctions? fallbackFunctions,
+  }) : _applicationRepository = applicationRepository,
+       _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
 
-  Future<void> createApplication({
+  Future<String> createApplication({
     required JobOffer jobOffer,
     required Candidate candidate,
     int? candidateProfileId,
+    Map<String, dynamic>? knockoutResponses,
   }) async {
     final exists = await _applicationRepository.applicationExists(
       jobOfferId: jobOffer.id,
@@ -24,11 +34,21 @@ class ApplicationService {
       throw Exception('Application already exists');
     }
 
-    await _applicationRepository.createApplication(
+    final applicationId = await _applicationRepository.createApplication(
       jobOffer: jobOffer,
       candidate: candidate,
       candidateProfileId: candidateProfileId ?? candidate.id,
+      knockoutResponses: knockoutResponses,
     );
+
+    if (knockoutResponses != null && knockoutResponses.isNotEmpty) {
+      await _evaluateKnockoutSafely(
+        applicationId: applicationId,
+        responses: knockoutResponses,
+      );
+    }
+
+    return applicationId;
   }
 
   Future<List<CandidateApplicationEntry>> getApplicationEntriesForCandidate(
@@ -67,5 +87,30 @@ class ApplicationService {
       applicationId: applicationId,
       status: status,
     );
+  }
+
+  Future<void> _evaluateKnockoutSafely({
+    required String applicationId,
+    required Map<String, dynamic> responses,
+  }) async {
+    final payload = <String, dynamic>{
+      'applicationId': applicationId,
+      'responses': responses,
+    };
+
+    try {
+      await _functions.httpsCallable('evaluateKnockoutQuestions').call(payload);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found') return;
+      try {
+        await _fallbackFunctions
+            .httpsCallable('evaluateKnockoutQuestions')
+            .call(payload);
+      } on FirebaseFunctionsException {
+        // No bloqueamos la postulación si falla la evaluación automática.
+      }
+    } catch (_) {
+      // No bloqueamos la postulación si falla la evaluación automática.
+    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
@@ -12,10 +13,13 @@ import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_sta
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/companies/ui/pages/company_dashboard_screen.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
+import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 
 import '../support/test_cubits.dart';
+
+class _MockInterviewRepository extends Mock implements InterviewRepository {}
 
 void main() {
   testWidgets('shows unauthenticated message when no company is in session', (
@@ -153,9 +157,13 @@ Widget _wrap({
     const CompanyOfferCreationState(),
   );
   final interviewsCubit = TestInterviewListCubit(InterviewListInitial());
+  final interviewRepository = _MockInterviewRepository();
 
   return MultiBlocProvider(
     providers: [
+      RepositoryProvider<InterviewRepository>.value(
+        value: interviewRepository,
+      ),
       BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
       BlocProvider<CompanyAuthCubit>.value(value: authCubit),
       BlocProvider<CompanyJobOffersCubit>.value(value: offersCubit),

@@ -6,6 +6,8 @@ import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
+import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_cubit.dart';
+import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_state.dart';
 
 class AuthScreenController {
   const AuthScreenController._();
@@ -74,6 +76,22 @@ class AuthScreenController {
     if (route != null) context.go(route);
   }
 
+  static void handleRecruiterLoginState(
+    BuildContext context,
+    RecruiterAuthState state,
+  ) {
+    final errorMessage = AuthFormScreenLogic.resolveErrorMessage(
+      state.errorMessage,
+    );
+    if (errorMessage != null) {
+      _showErrorMessage(context, errorMessage);
+      return;
+    }
+
+    final route = AuthFormScreenLogic.recruiterLoginNavigation(state);
+    if (route != null) context.go(route);
+  }
+
   static void submitCandidateLogin(
     BuildContext context, {
     required String email,
@@ -117,6 +135,17 @@ class AuthScreenController {
   }) {
     context.read<CompanyAuthCubit>().registerCompany(
       name: name,
+      email: email,
+      password: password,
+    );
+  }
+
+  static void submitRecruiterLogin(
+    BuildContext context, {
+    required String email,
+    required String password,
+  }) {
+    context.read<RecruiterAuthCubit>().loginRecruiter(
       email: email,
       password: password,
     );

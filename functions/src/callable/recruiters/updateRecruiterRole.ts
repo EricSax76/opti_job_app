@@ -14,7 +14,7 @@ const logger = createLogger({ function: "updateRecruiterRole" });
 
 interface UpdateRecruiterRoleRequest {
   targetUid: string;
-  newRole: "admin" | "recruiter" | "viewer";
+  newRole: "admin" | "recruiter" | "hiring_manager" | "external_evaluator" | "viewer";
 }
 
 export const updateRecruiterRole = functions
@@ -36,7 +36,7 @@ export const updateRecruiterRole = functions
       );
     }
 
-    const validRoles = ["admin", "recruiter", "viewer"];
+    const validRoles = ["admin", "recruiter", "hiring_manager", "external_evaluator", "viewer"];
     if (!validRoles.includes(data.newRole)) {
       throw new functions.https.HttpsError(
         "invalid-argument",

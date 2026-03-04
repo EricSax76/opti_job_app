@@ -1,8 +1,4 @@
-enum KnockoutQuestionType {
-  boolean,
-  multipleChoice,
-  text,
-}
+enum KnockoutQuestionType { boolean, multipleChoice, text }
 
 class KnockoutQuestion {
   const KnockoutQuestion({
@@ -20,11 +16,15 @@ class KnockoutQuestion {
   final dynamic requiredAnswer; // Puede ser bool o String.
 
   static KnockoutQuestion fromFirestore(Map<String, dynamic> data) {
-    final typeStr = data['type'] as String?;
-    final type = KnockoutQuestionType.values.firstWhere(
-      (e) => e.name.toLowerCase() == typeStr?.toLowerCase(),
-      orElse: () => KnockoutQuestionType.text,
-    );
+    final typeStr = (data['type'] as String? ?? '').toLowerCase().trim();
+    final type = switch (typeStr) {
+      'boolean' => KnockoutQuestionType.boolean,
+      'multiple_choice' => KnockoutQuestionType.multipleChoice,
+      'multiplechoice' => KnockoutQuestionType.multipleChoice,
+      'multiplechoicequestion' => KnockoutQuestionType.multipleChoice,
+      'text' => KnockoutQuestionType.text,
+      _ => KnockoutQuestionType.text,
+    };
 
     return KnockoutQuestion(
       id: data['id'] as String? ?? '',

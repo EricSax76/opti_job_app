@@ -52,12 +52,12 @@ class _CandidatePrivacyPortalScreenState
             const SectionHeader(
               title: 'Tus derechos ARSULIPO',
               subtitle:
-                  'Gestiona acceso, rectificación, supresión, limitación, portabilidad y oposición.',
+                  'Gestiona derechos RGPD y solicita explicación humana de decisiones asistidas por IA.',
               titleFontSize: 22,
             ),
             const SizedBox(height: uiSpacing8),
             Text(
-              'Como titular de los datos, puedes ejercer tus derechos de acceso, rectificación, supresión (bloqueo), limitación, portabilidad y oposición.',
+              'Como titular de los datos, puedes ejercer acceso, rectificación, supresión (bloqueo), limitación, portabilidad, oposición y solicitar explicación humana de decisiones de IA.',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: uiSpacing16),
@@ -67,7 +67,7 @@ class _CandidatePrivacyPortalScreenState
               children: DataRequestType.values
                   .map(
                     (type) => ActionChip(
-                      label: Text(type.name.toUpperCase()),
+                      label: Text(_requestTypeLabel(type)),
                       onPressed: () => _showRequestDialog(context, type),
                     ),
                   )
@@ -113,11 +113,11 @@ class _CandidatePrivacyPortalScreenState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Ejercicio de ${type.name.toUpperCase()}'),
+        title: Text(_dialogTitle(type)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Describe brevemente tu solicitud de ${type.name}:'),
+            Text(_dialogDescription(type)),
             const SizedBox(height: uiSpacing8),
             TextField(
               controller: controller,
@@ -149,6 +149,32 @@ class _CandidatePrivacyPortalScreenState
       ),
     );
   }
+
+  String _dialogTitle(DataRequestType type) {
+    if (type == DataRequestType.aiExplanation) {
+      return 'Explicación humana de IA';
+    }
+    return 'Ejercicio de ${_requestTypeLabel(type)}';
+  }
+
+  String _dialogDescription(DataRequestType type) {
+    if (type == DataRequestType.aiExplanation) {
+      return 'Indica qué decisión asistida por IA quieres que revise una persona.';
+    }
+    return 'Describe brevemente tu solicitud de ${_requestTypeLabel(type)}.';
+  }
+
+  String _requestTypeLabel(DataRequestType type) {
+    return switch (type) {
+      DataRequestType.access => 'ACCESO',
+      DataRequestType.rectification => 'RECTIFICACIÓN',
+      DataRequestType.deletion => 'SUPRESIÓN',
+      DataRequestType.limitation => 'LIMITACIÓN',
+      DataRequestType.portability => 'PORTABILIDAD',
+      DataRequestType.opposition => 'OPOSICIÓN',
+      DataRequestType.aiExplanation => 'EXPLICACIÓN IA',
+    };
+  }
 }
 
 class _RequestTile extends StatelessWidget {
@@ -163,7 +189,7 @@ class _RequestTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: uiSpacing8),
       padding: EdgeInsets.zero,
       child: ListTile(
-        title: Text(request.type.name.toUpperCase()),
+        title: Text(_typeLabel(request.type)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -178,6 +204,18 @@ class _RequestTile extends StatelessWidget {
         trailing: _StatusBadge(status: request.status),
       ),
     );
+  }
+
+  String _typeLabel(DataRequestType type) {
+    return switch (type) {
+      DataRequestType.access => 'ACCESO',
+      DataRequestType.rectification => 'RECTIFICACIÓN',
+      DataRequestType.deletion => 'SUPRESIÓN',
+      DataRequestType.limitation => 'LIMITACIÓN',
+      DataRequestType.portability => 'PORTABILIDAD',
+      DataRequestType.opposition => 'OPOSICIÓN',
+      DataRequestType.aiExplanation => 'EXPLICACIÓN IA',
+    };
   }
 }
 

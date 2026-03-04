@@ -12,10 +12,11 @@ class ApplicationRepository {
 
   final FirebaseFirestore _firestore;
 
-  Future<void> createApplication({
+  Future<String> createApplication({
     required JobOffer jobOffer,
     required Candidate candidate,
     int? candidateProfileId,
+    Map<String, dynamic>? knockoutResponses,
   }) async {
     final application = Application(
       jobOfferId: jobOffer.id,
@@ -26,14 +27,29 @@ class ApplicationRepository {
       candidateEmail: candidate.email,
       candidateProfileId: candidateProfileId ?? candidate.id,
       status: 'pending',
+      knockoutResponses: knockoutResponses,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
     final data = application.toJson()
       ..['createdAt'] = FieldValue.serverTimestamp()
-      ..['updatedAt'] = FieldValue.serverTimestamp();
-    await _firestore.collection('applications').add(data);
+      ..['updatedAt'] = FieldValue.serverTimestamp()
+      ..['submittedAt'] = FieldValue.serverTimestamp()
+      // Backward-compatible keys used by Cloud Functions v1/v2 callables.
+      ..['job_offer_id'] = jobOffer.id
+      ..['candidate_uid'] = candidate.uid
+      ..['candidate_name'] = candidate.name
+      ..['candidate_email'] = candidate.email
+      ..['submitted_at'] = FieldValue.serverTimestamp()
+      ..['updated_at'] = FieldValue.serverTimestamp();
+
+    if (jobOffer.companyUid != null && jobOffer.companyUid!.isNotEmpty) {
+      data['company_uid'] = jobOffer.companyUid;
+    }
+
+    final doc = await _firestore.collection('applications').add(data);
+    return doc.id;
   }
 
   Future<bool> applicationExists({
@@ -49,7 +65,9 @@ class ApplicationRepository {
     return query.docs.isNotEmpty;
   }
 
-  Future<List<Application>> getApplicationsForJobOffer(String jobOfferId) async {
+  Future<List<Application>> getApplicationsForJobOffer(
+    String jobOfferId,
+  ) async {
     return getApplicationsForOffer(jobOfferId: jobOfferId, companyUid: '');
   }
 

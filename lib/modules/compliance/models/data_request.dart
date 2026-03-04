@@ -6,7 +6,8 @@ enum DataRequestType {
   deletion,
   limitation,
   portability,
-  opposition;
+  opposition,
+  aiExplanation;
 
   static DataRequestType fromString(String value) {
     return DataRequestType.values.firstWhere(
@@ -57,24 +58,26 @@ class DataRequest extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        candidateUid,
-        type,
-        status,
-        description,
-        response,
-        processedBy,
-        createdAt,
-        processedAt,
-        dueAt,
-      ];
+    id,
+    candidateUid,
+    type,
+    status,
+    description,
+    response,
+    processedBy,
+    createdAt,
+    processedAt,
+    dueAt,
+  ];
 
   factory DataRequest.fromJson(Map<String, dynamic> json, {String? id}) {
     return DataRequest(
       id: id ?? json['id']?.toString() ?? '',
       candidateUid: json['candidateUid'] as String? ?? '',
       type: DataRequestType.fromString(json['type'] as String? ?? 'access'),
-      status: DataRequestStatus.fromString(json['status'] as String? ?? 'pending'),
+      status: DataRequestStatus.fromString(
+        json['status'] as String? ?? 'pending',
+      ),
       description: json['description'] as String? ?? '',
       response: json['response'] as String?,
       processedBy: json['processedBy'] as String?,

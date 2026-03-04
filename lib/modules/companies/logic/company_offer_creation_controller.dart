@@ -7,6 +7,7 @@ import 'package:opti_job_app/modules/companies/controllers/offer_form_controller
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
 import 'package:opti_job_app/modules/companies/logic/company_offer_creation_logic.dart';
+import 'package:opti_job_app/modules/compliance/logic/salary_history_guard.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/generate_offer_dialog.dart';
 
@@ -45,6 +46,16 @@ class CompanyOfferCreationController {
           'Debes iniciar sesión como empresa para publicar.',
         );
       }
+      return;
+    }
+
+    if (SalaryHistoryGuard.knockoutQuestionsContainProhibitedPrompt(
+      knockoutQuestions,
+    )) {
+      _showMessage(
+        context,
+        'No puedes solicitar historial salarial en preguntas eliminatorias.',
+      );
       return;
     }
 

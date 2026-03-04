@@ -7,8 +7,10 @@ import 'package:opti_job_app/features/calendar/repositories/calendar_repository.
 import 'package:opti_job_app/features/cover_letter/repositories/cover_letter_repository.dart';
 import 'package:opti_job_app/features/video_curriculum/repositories/video_curriculum_repository.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/analytics/repositories/analytics_repository.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/applications/repositories/application_repository.dart';
+import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
 import 'package:opti_job_app/modules/companies/repositories/companies_repository.dart';
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
@@ -38,6 +40,9 @@ class AppDependencies {
     required this.coverLetterRepository,
     required this.videoCurriculumRepository,
     required this.interviewRepository,
+    required this.dataRequestRepository,
+    required this.consentRepository,
+    required this.analyticsRepository,
     required this.firebaseAuth,
     required this.recruiterRepository,
     required this.invitationService,
@@ -67,6 +72,9 @@ class AppDependencies {
       coverLetterRepository: getIt<CoverLetterRepository>(),
       videoCurriculumRepository: getIt<VideoCurriculumRepository>(),
       interviewRepository: getIt<InterviewRepository>(),
+      dataRequestRepository: getIt<DataRequestRepository>(),
+      consentRepository: getIt<ConsentRepository>(),
+      analyticsRepository: getIt<AnalyticsRepository>(),
       firebaseAuth: getIt<FirebaseAuth>(),
       recruiterRepository: getIt<RecruiterRepository>(),
       invitationService: getIt<InvitationService>(),
@@ -89,6 +97,9 @@ class AppDependencies {
   final CoverLetterRepository coverLetterRepository;
   final VideoCurriculumRepository videoCurriculumRepository;
   final InterviewRepository interviewRepository;
+  final DataRequestRepository dataRequestRepository;
+  final ConsentRepository consentRepository;
+  final AnalyticsRepository analyticsRepository;
   final FirebaseAuth firebaseAuth;
 
   // Fase 0 RBAC

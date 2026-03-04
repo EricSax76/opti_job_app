@@ -31,7 +31,7 @@ function generateCode(): string {
 }
 
 interface CreateInvitationRequest {
-  role: "admin" | "recruiter" | "viewer";
+  role: "admin" | "recruiter" | "hiring_manager" | "external_evaluator" | "viewer";
   email?: string;
 }
 
@@ -67,11 +67,11 @@ export const createInvitation = functions
     }
 
     // Validar rol
-    const validRoles = ["admin", "recruiter", "viewer"];
+    const validRoles = ["admin", "recruiter", "hiring_manager", "external_evaluator", "viewer"];
     if (!validRoles.includes(data.role)) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Rol inválido. Usa: admin, recruiter o viewer."
+        "Rol inválido. Usa: admin, recruiter, hiring_manager, external_evaluator o viewer."
       );
     }
 

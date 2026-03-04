@@ -93,7 +93,7 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
         .collection("applications")
         .where("job_offer_id", "==", jobOfferId)
         .where("candidate_uid", "==", candidateUid)
-        .where("status", "in", ["submitted", "reviewed", "shortlisted"])
+        .where("status", "in", ["submitted", "pending", "reviewing", "interviewing", "offered", "hired"])
         .get();
 
       if (!existingApplications.empty) {
@@ -150,7 +150,7 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
         candidateEmail: candidate.email,
         curriculum_id: curriculumId,
         curriculumId,
-        status: "submitted",
+        status: "pending",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         submitted_at: now as any,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -187,7 +187,7 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
       // Return response
       const response: SubmitApplicationResponse = {
         applicationId,
-        status: "submitted",
+        status: "pending",
         submittedAt: admin.firestore.Timestamp.now() as FirebaseFirestore.Timestamp,
       };
 

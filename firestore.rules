@@ -82,7 +82,7 @@ service cloud.firestore {
       allow read: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && resource.data.companyId == request.auth.uid ||
                      isRecruiter() && recruiterBelongsToCompany(resource.data.companyId);
       allow write: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && request.resource.data.companyId == request.auth.uid ||
-                      isRecruiter() && recruiterBelongsToCompany(request.resource.data.companyId) && recruiterHasRole('admin', 'recruiter');
+                      isRecruiter() && recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter']);
     }
 
     match /jobOffers/{offerId} {
@@ -228,19 +228,25 @@ service cloud.firestore {
     }
 
     match /consentRecords/{recordId} {
-      allow read: if isSignedIn() && (request.auth.uid == resource.data.candidateUid || isCompany());
+      allow read: if isSignedIn() && (
+          request.auth.uid == resource.data.candidateUid
+          || isCompany()
+          || recruiterHasRole(resource.data.companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager'])
+        );
       allow write: if isCandidate() && request.auth.uid == request.resource.data.candidateUid;
     }
 
     // ─── Fase 7: Analytics ────────────────────────────────────────────
 
     match /analytics/{companyId} {
-      allow read: if isCompany() && companyId == request.auth.uid;
+      allow read: if (isCompany() && companyId == request.auth.uid)
+                    || recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager']);
       // Las escrituras las hace el sistema (Cloud Functions)
       allow write: if false;
 
       match /monthly/{period} {
-        allow read: if isCompany() && companyId == request.auth.uid;
+        allow read: if (isCompany() && companyId == request.auth.uid)
+                      || recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager']);
       }
     }
   }

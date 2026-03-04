@@ -4,6 +4,7 @@ import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/inline_state_message.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/modules/ats/models/knockout_question.dart';
+import 'package:opti_job_app/modules/compliance/logic/salary_history_guard.dart';
 
 class KnockoutQuestionsForm extends StatefulWidget {
   const KnockoutQuestionsForm({
@@ -85,6 +86,8 @@ class _KnockoutQuestionsFormState extends State<KnockoutQuestionsForm> {
           separatorBuilder: (context, _) => const SizedBox(height: uiSpacing16),
           itemBuilder: (context, index) {
             final q = _questions[index];
+            final blockedBySalaryHistory =
+                SalaryHistoryGuard.containsProhibitedPrompt(q.question);
             return AppCard(
               padding: const EdgeInsets.all(uiSpacing16),
               borderRadius: uiFieldRadius,
@@ -96,9 +99,12 @@ class _KnockoutQuestionsFormState extends State<KnockoutQuestionsForm> {
                       Expanded(
                         child: TextFormField(
                           initialValue: q.question,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Pregunta',
                             isDense: true,
+                            errorText: blockedBySalaryHistory
+                                ? 'No se permite solicitar historial salarial.'
+                                : null,
                           ),
                           onChanged: (val) {
                             _updateQuestion(
@@ -136,6 +142,10 @@ class _KnockoutQuestionsFormState extends State<KnockoutQuestionsForm> {
                               child: Text('Sí / No'),
                             ),
                             DropdownMenuItem(
+                              value: KnockoutQuestionType.multipleChoice,
+                              child: Text('Opción múltiple'),
+                            ),
+                            DropdownMenuItem(
                               value: KnockoutQuestionType.text,
                               child: Text('Texto libre'),
                             ),
@@ -148,11 +158,21 @@ class _KnockoutQuestionsFormState extends State<KnockoutQuestionsForm> {
                                   id: q.id,
                                   question: q.question,
                                   type: newType,
-                                  options: q.options,
+                                  options:
+                                      newType ==
+                                          KnockoutQuestionType.multipleChoice
+                                      ? (q.options ?? const ['Sí', 'No'])
+                                      : null,
                                   requiredAnswer:
                                       newType == KnockoutQuestionType.boolean
                                       ? true
-                                      : null,
+                                      : (newType ==
+                                                KnockoutQuestionType
+                                                    .multipleChoice
+                                            ? (q.options?.isNotEmpty == true
+                                                  ? q.options!.first
+                                                  : null)
+                                            : null),
                                 ),
                               );
                             }
@@ -188,8 +208,78 @@ class _KnockoutQuestionsFormState extends State<KnockoutQuestionsForm> {
                             },
                           ),
                         ),
+                      if (q.type == KnockoutQuestionType.multipleChoice)
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue:
+                                (q.requiredAnswer is String &&
+                                    (q.options ?? const <String>[]).contains(
+                                      q.requiredAnswer,
+                                    ))
+                                ? q.requiredAnswer as String
+                                : null,
+                            decoration: const InputDecoration(
+                              labelText: 'Respuesta esperada',
+                              isDense: true,
+                            ),
+                            items: (q.options ?? const <String>[])
+                                .map(
+                                  (option) => DropdownMenuItem<String>(
+                                    value: option,
+                                    child: Text(option),
+                                  ),
+                                )
+                                .toList(growable: false),
+                            onChanged: (newAns) {
+                              _updateQuestion(
+                                index,
+                                KnockoutQuestion(
+                                  id: q.id,
+                                  question: q.question,
+                                  type: q.type,
+                                  options: q.options,
+                                  requiredAnswer: newAns,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                     ],
                   ),
+                  if (q.type == KnockoutQuestionType.multipleChoice) ...[
+                    const SizedBox(height: uiSpacing12),
+                    TextFormField(
+                      initialValue: (q.options ?? const <String>[]).join(', '),
+                      decoration: const InputDecoration(
+                        labelText: 'Opciones (separadas por coma)',
+                        hintText: 'Ejemplo: Sí, No, Depende',
+                        isDense: true,
+                      ),
+                      onChanged: (raw) {
+                        final options = raw
+                            .split(',')
+                            .map((e) => e.trim())
+                            .where((e) => e.isNotEmpty)
+                            .toList(growable: false);
+
+                        final currentAnswer = q.requiredAnswer?.toString();
+                        final nextAnswer = options.contains(currentAnswer)
+                            ? currentAnswer
+                            : (options.isNotEmpty ? options.first : null);
+
+                        _updateQuestion(
+                          index,
+                          KnockoutQuestion(
+                            id: q.id,
+                            question: q.question,
+                            type: q.type,
+                            options: options,
+                            requiredAnswer: nextAnswer,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             );

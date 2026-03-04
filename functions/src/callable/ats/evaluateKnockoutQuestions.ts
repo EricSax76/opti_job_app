@@ -3,8 +3,8 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { Application, JobOffer, KnockoutQuestion } from "../../types/models";
 
 /**
- * Función Callable que recibe las respuestas de un candidato a las preguntas eliminatorias.
- * Si alguna respuesta requerida no coincide, el candidato debe moverse a una etapa "rejected" o flaggearse.
+ * Evalúa respuestas de knockout sin realizar rechazo totalmente automatizado.
+ * Si falla un criterio, la candidatura queda marcada para revisión humana.
  */
 export const evaluateKnockoutQuestions = onCall(async (request) => {
   if (!request.auth) {
@@ -69,32 +69,34 @@ export const evaluateKnockoutQuestions = onCall(async (request) => {
         }
       }
 
-      const updateData: Partial<Application> = {
+      const updateData: Record<string, unknown> = {
         knockoutResponses: responses,
+        knockoutPassed: !failedKnockout,
+        requiresHumanReview: failedKnockout,
         updated_at: FieldValue.serverTimestamp() as unknown as Application["updated_at"],
       };
 
       let statusMsg = "Knockout questions evaluated successfully.";
 
-      // Si falla las preguntas eliminatorias, se puede mover de pipelineStage o poner status = rejected
-      // Dependerá de la implementación exacta, asumiendo stage "rejected"
+      // AI Act: no se permite rechazo totalmente automatizado sin validación humana.
+      // Si falla el knockout, se marca para revisión y (si existe) se mueve a etapa screening.
       if (failedKnockout) {
-        // En una app real podríamos buscar dinámicamente el StageType "rejected"
-        const rejectedStageId = offerData.pipelineStages?.find(s => s.type === "rejected")?.id;
-        if (rejectedStageId) {
-          updateData.pipelineStageId = rejectedStageId;
-          updateData.pipelineStageName = "Descartado";
+        const screeningStage = offerData.pipelineStages?.find(
+          (s) => s.type === "screening"
+        );
+        if (screeningStage) {
+          updateData.pipelineStageId = screeningStage.id;
+          updateData.pipelineStageName = screeningStage.name;
           const now = new Date().toISOString();
           updateData.pipelineHistory = FieldValue.arrayUnion({
-            stageId: rejectedStageId,
-            stageName: "Descartado (Auto-filtro)",
+            stageId: screeningStage.id,
+            stageName: `${screeningStage.name} (Revisión humana requerida)`,
             movedBy: "system",
             movedAt: now,
           }) as unknown as Application["pipelineHistory"];
-          
-          updateData.status = "rejected";
         }
-        statusMsg = "Knockout questions failed. Application marked as rejected.";
+        updateData.status = "reviewing";
+        statusMsg = "Knockout failed. Application flagged for human review.";
       }
 
       transaction.update(applicationRef, updateData);

@@ -154,6 +154,7 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
   Future<void> apply({
     required Candidate candidate,
     required JobOffer offer,
+    Map<String, dynamic>? knockoutResponses,
   }) async {
     if (state.application != null) {
       emit(
@@ -176,6 +177,7 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
         candidate: candidate,
         jobOffer: offer,
         candidateProfileId: candidate.id,
+        knockoutResponses: knockoutResponses,
       );
       final application = await _applicationService
           .getApplicationForCandidateOffer(

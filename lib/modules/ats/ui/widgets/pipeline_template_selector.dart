@@ -11,7 +11,23 @@ class PipelineTemplateSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    PipelineTemplateCubit? pipelineCubit;
+    try {
+      pipelineCubit = context.read<PipelineTemplateCubit>();
+    } catch (_) {
+      pipelineCubit = null;
+    }
+
+    if (pipelineCubit == null) {
+      return const InlineStateMessage(
+        icon: Icons.view_kanban_outlined,
+        message: 'Pipelines no disponibles en este contexto.',
+        color: uiMuted,
+      );
+    }
+
     return BlocConsumer<PipelineTemplateCubit, PipelineTemplateState>(
+      bloc: pipelineCubit,
       listener: (context, state) {
         if (state is PipelineTemplateLoaded) {
           onPipelineSelected(state.selectedPipelineId);

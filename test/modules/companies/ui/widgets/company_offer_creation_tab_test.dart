@@ -29,12 +29,9 @@ void main() {
     final formCubit = TestJobOfferFormCubit(const JobOfferFormState());
     await tester.pumpWidget(_wrap(formCubit: formCubit));
 
-    await tester.enterText(
-      find.byType(TextFormField).at(0),
-      'Backend Engineer',
-    );
-    await tester.enterText(find.byType(TextFormField).at(1), 'API development');
-    await tester.enterText(find.byType(TextFormField).at(2), 'Madrid');
+    await _enterTextField(tester, 'Título', 'Backend Engineer');
+    await _enterTextField(tester, 'Descripción', 'API development');
+    await _enterTextField(tester, 'Ubicación', 'Madrid');
 
     // Select required dropdown values.
     await _selectDropdown(tester, 'Modalidad', 'Presencial');
@@ -43,6 +40,10 @@ void main() {
     await _selectDropdown(tester, 'Estudios mínimos', 'Grado');
     await _selectDropdown(tester, 'Jornada laboral', 'Completa');
     await _selectDropdown(tester, 'Tipo de contrato', 'Indefinido');
+    await _enterTextField(tester, 'Salario mínimo', '45000');
+    await _enterTextField(tester, 'Salario máximo', '65000');
+    await _selectDropdown(tester, 'Periodo', 'Anual');
+    await _selectDropdown(tester, 'Moneda', 'EUR');
 
     final publishButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Publicar oferta'),
@@ -62,6 +63,10 @@ void main() {
     expect(payload.education, 'Grado');
     expect(payload.workSchedule, 'Completa');
     expect(payload.contractType, 'Indefinido');
+    expect(payload.salaryMin, '45000');
+    expect(payload.salaryMax, '65000');
+    expect(payload.salaryPeriod, 'Anual');
+    expect(payload.salaryCurrency, 'EUR');
   });
 
   testWidgets('does not submit when required fields contain only spaces', (
@@ -70,9 +75,9 @@ void main() {
     final formCubit = TestJobOfferFormCubit(const JobOfferFormState());
     await tester.pumpWidget(_wrap(formCubit: formCubit));
 
-    await tester.enterText(find.byType(TextFormField).at(0), '   ');
-    await tester.enterText(find.byType(TextFormField).at(1), '   ');
-    await tester.enterText(find.byType(TextFormField).at(2), '   ');
+    await _enterTextField(tester, 'Título', '   ');
+    await _enterTextField(tester, 'Descripción', '   ');
+    await _enterTextField(tester, 'Ubicación', '   ');
 
     final publishButton = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Publicar oferta'),
@@ -92,9 +97,9 @@ void main() {
     final formCubit = TestJobOfferFormCubit(const JobOfferFormState());
     await tester.pumpWidget(_wrap(formCubit: formCubit));
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'Data Engineer');
-    await tester.enterText(find.byType(TextFormField).at(1), 'Data platform');
-    await tester.enterText(find.byType(TextFormField).at(2), 'Barcelona');
+    await _enterTextField(tester, 'Título', 'Data Engineer');
+    await _enterTextField(tester, 'Descripción', 'Data platform');
+    await _enterTextField(tester, 'Ubicación', 'Barcelona');
     expect(find.text('Data Engineer'), findsOneWidget);
 
     formCubit.emitState(
@@ -133,6 +138,21 @@ Future<void> _selectDropdown(
   await tester.ensureVisible(itemFinder);
   await tester.pumpAndSettle();
   await tester.tap(itemFinder);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _enterTextField(
+  WidgetTester tester,
+  String label,
+  String value,
+) async {
+  final labelFinder = find.text(label);
+  final fieldFinder = find.ancestor(
+    of: labelFinder,
+    matching: find.byType(TextFormField),
+  );
+  await tester.ensureVisible(fieldFinder);
+  await tester.enterText(fieldFinder, value);
   await tester.pumpAndSettle();
 }
 

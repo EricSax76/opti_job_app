@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:equatable/equatable.dart';
 import 'package:opti_job_app/modules/interviews/models/interview.dart';
 import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
@@ -66,7 +67,6 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
   }
 
   void retry() => unawaited(refresh());
-
 
   Future<void> markAsSeen() async {
     try {
@@ -148,6 +148,12 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
   }
 
   String _normalizeErrorMessage(Object error) {
+    if (error is FirebaseFunctionsException) {
+      final message = error.message?.trim();
+      if (message != null && message.isNotEmpty) {
+        return message;
+      }
+    }
     final message = error.toString().trim();
     if (message.isEmpty) {
       return 'No se pudo completar la acción.';

@@ -15,6 +15,33 @@ import { Interview, Message } from "../../types/models";
 
 const logger = createLogger({ function: "sendInterviewMessage" });
 
+const salaryHistoryPatterns = [
+  /historial\s+salarial/i,
+  /salario\s+(anterior|previo|actual)/i,
+  /sueldo\s+(anterior|previo|actual)/i,
+  /n[oó]mina\s+(anterior|previa|actual)/i,
+  /cu[aá]nto\s+(cobrabas|cobraste|ganabas)/i,
+  /previous\s+salary/i,
+  /salary\s+history/i,
+  /last\s+salary/i,
+  /prior\s+salary/i,
+  /current\s+salary/i,
+  /payslip/i,
+];
+
+function containsProhibitedSalaryHistoryPrompt(content: string): boolean {
+  const trimmed = content.trim();
+  if (trimmed.length === 0) return false;
+
+  // Pedir expectativa salarial sigue siendo legal.
+  if (/expectativas?\s+salariales?/i.test(trimmed) ||
+      /salary\s+expectations?/i.test(trimmed)) {
+    return false;
+  }
+
+  return salaryHistoryPatterns.some((pattern) => pattern.test(trimmed));
+}
+
 export const sendInterviewMessage = functions.region("europe-west1").https.onCall(
   async (
     data: { interviewId: string; content: string; type?: Message["type"]; metadata?: Message["metadata"] },
@@ -29,16 +56,25 @@ export const sendInterviewMessage = functions.region("europe-west1").https.onCal
     }
     const senderUid = context.auth.uid;
     const { interviewId, content, type = "text", metadata } = data;
+    const trimmedContent = (content ?? "").trim();
 
-    if (!interviewId || !content) {
+    if (!interviewId || !trimmedContent) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "interviewId and content are required"
       );
     }
 
+    if (type === "text" && containsProhibitedSalaryHistoryPrompt(trimmedContent)) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "No se permite solicitar ni registrar historial salarial en procesos de selección."
+      );
+    }
+
     const db = admin.firestore();
     const loggerCtx = { interviewId, senderUid };
+    let createdMessageId = "";
 
     try {
       await db.runTransaction(async (transaction) => {
@@ -62,10 +98,11 @@ export const sendInterviewMessage = functions.region("europe-west1").https.onCal
         // 3. Create Message Logic
         const now = admin.firestore.Timestamp.now();
         const messagesRef = interviewRef.collection("messages").doc();
+        createdMessageId = messagesRef.id;
         const message: Message = {
           id: messagesRef.id,
           senderUid: senderUid,
-          content: content.trim(),
+          content: trimmedContent,
           type: type,
           createdAt: now,
         };
@@ -95,10 +132,7 @@ export const sendInterviewMessage = functions.region("europe-west1").https.onCal
         transaction.update(interviewRef, updates);
       });
 
-      return { messageId: "sent" }; // ID is generated but not returned here easily without variable scope, but mostly need check.
-                                    // Actually I can generate ID outside if needed, but doc ref logic is fine.
-                                    // Let's verify return type match. I promised messageId.
-                                    // I should grab the ID. Firestore doc() generates ID synchronously.
+      return { messageId: createdMessageId || "sent" };
 
     } catch (error) {
       logger.error("Error sending message", error, loggerCtx);

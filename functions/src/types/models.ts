@@ -291,7 +291,7 @@ export interface Recruiter {
   companyId: string;
   email: string;
   name: string;
-  role: "admin" | "recruiter" | "viewer";
+  role: "admin" | "recruiter" | "hiring_manager" | "external_evaluator" | "viewer";
   status: "active" | "invited" | "disabled";
   invitedBy?: string;
   invitedAt?: FirebaseFirestore.Timestamp;
@@ -303,7 +303,7 @@ export interface Recruiter {
 export interface Invitation {
   code: string;
   companyId: string;
-  role: "admin" | "recruiter" | "viewer";
+  role: "admin" | "recruiter" | "hiring_manager" | "external_evaluator" | "viewer";
   email?: string;
   createdBy: string;
   usedBy?: string;

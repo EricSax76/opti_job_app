@@ -44,9 +44,9 @@ export const moveApplicationStage = onCall(async (request) => {
         if (recruiterData?.companyId !== companyUid || recruiterData?.status !== "active") {
           throw new HttpsError("permission-denied", "No tienes acceso a esta postulación.");
         }
-        // Solo un viewer no puede mover la card.
-        if (recruiterData?.role === "viewer") {
-          throw new HttpsError("permission-denied", "Los visores no pueden cambiar etapas.");
+        // Solo admin/recruiter pueden mover etapas del pipeline.
+        if (!["admin", "recruiter"].includes(String(recruiterData?.role ?? ""))) {
+          throw new HttpsError("permission-denied", "Tu rol no tiene permiso para cambiar etapas.");
         }
       }
 
