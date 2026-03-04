@@ -20,10 +20,11 @@ class JobOfferHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final ink = isDark ? uiDarkInk : uiInk;
-    final muted = isDark ? uiDarkMuted : uiMuted;
-    final avatarBackground = isDark ? uiDarkSurface : uiBackground;
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final avatarBackground = colorScheme.surfaceContainerHighest;
 
     final title = offer.title.trim().isEmpty ? 'Oferta' : offer.title.trim();
     final company = offer.companyName?.trim().isNotEmpty == true
@@ -53,9 +54,8 @@ class JobOfferHeader extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
+                  style: textTheme.headlineSmall?.copyWith(
                     color: ink,
-                    fontSize: 20,
                     fontWeight: FontWeight.w800,
                     height: 1.15,
                   ),
@@ -90,9 +90,8 @@ class JobOfferHeader extends StatelessWidget {
                   company,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: textTheme.bodyMedium?.copyWith(
                     color: muted,
-                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

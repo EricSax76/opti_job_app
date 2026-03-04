@@ -64,7 +64,7 @@ class CandidateReminderPanel extends StatelessWidget {
           child: Column(
             children: [
               Material(
-                color: Colors.transparent,
+                color: colorScheme.surface.withValues(alpha: 0),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(uiFieldRadius),
                   onTap: collapsible ? onToggle : null,
@@ -149,7 +149,10 @@ class CandidateReminderPanel extends StatelessWidget {
                                   label: const Text('Hoy'),
                                   selected:
                                       !isSevenDayWindow &&
-                                      CalendarLogic.isSameDay(selectedDay, today),
+                                      CalendarLogic.isSameDay(
+                                        selectedDay,
+                                        today,
+                                      ),
                                   onSelected: (_) {
                                     onWindowChanged(
                                       CandidateReminderWindow.selectedDay,
@@ -166,7 +169,10 @@ class CandidateReminderPanel extends StatelessWidget {
                                   label: const Text('Mañana'),
                                   selected:
                                       !isSevenDayWindow &&
-                                      CalendarLogic.isSameDay(selectedDay, tomorrow),
+                                      CalendarLogic.isSameDay(
+                                        selectedDay,
+                                        tomorrow,
+                                      ),
                                   onSelected: (_) {
                                     onWindowChanged(
                                       CandidateReminderWindow.selectedDay,

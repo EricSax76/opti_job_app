@@ -22,7 +22,8 @@ class CompanyDashboardSidebar extends StatefulWidget {
   final ValueChanged<int> onSelected;
 
   @override
-  State<CompanyDashboardSidebar> createState() => _CompanyDashboardSidebarState();
+  State<CompanyDashboardSidebar> createState() =>
+      _CompanyDashboardSidebarState();
 }
 
 class _CompanyDashboardSidebarState extends State<CompanyDashboardSidebar> {
@@ -34,7 +35,8 @@ class _CompanyDashboardSidebarState extends State<CompanyDashboardSidebar> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 90),
@@ -79,7 +81,9 @@ class _CompanyDashboardSidebarState extends State<CompanyDashboardSidebar> {
                     icon: BlocBuilder<ThemeCubit, ThemeState>(
                       builder: (context, state) {
                         final isDark = state.themeMode == ThemeMode.dark;
-                        return Icon(isDark ? Icons.light_mode : Icons.dark_mode);
+                        return Icon(
+                          isDark ? Icons.light_mode : Icons.dark_mode,
+                        );
                       },
                     ),
                     tooltip: 'Cambiar tema',
@@ -121,7 +125,9 @@ class _CompanySidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     final icon = Icon(
       item.icon,
@@ -151,7 +157,7 @@ class _CompanySidebarItem extends StatelessWidget {
         leading: icon,
         title: Text(
           item.label,
-          style: TextStyle(
+          style: textTheme.bodyLarge?.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: isSelected ? colorScheme.primary : colorScheme.onSurface,
           ),
@@ -182,10 +188,7 @@ class _CompanyThemeToggle extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
-                Icon(
-                  isDark ? Icons.dark_mode : Icons.light_mode,
-                  size: 20,
-                ),
+                Icon(isDark ? Icons.dark_mode : Icons.light_mode, size: 20),
                 const SizedBox(width: 10),
                 const Expanded(child: Text('Tema oscuro')),
                 Switch.adaptive(

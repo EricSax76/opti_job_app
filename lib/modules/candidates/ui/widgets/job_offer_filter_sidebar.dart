@@ -35,8 +35,9 @@ class JobOfferFilterSidebar extends StatelessWidget {
           ),
         ),
         BlocProvider(
-          create: (context) => JobOfferLocationCatalogCubit()
-            ..initialize(initialProvinceId: currentFilters.provinceId),
+          create: (context) =>
+              JobOfferLocationCatalogCubit()
+                ..initialize(initialProvinceId: currentFilters.provinceId),
         ),
       ],
       child: _JobOfferFilterSidebarContent(
@@ -64,7 +65,8 @@ class _JobOfferFilterSidebarContent extends StatelessWidget {
     return MultiBlocListener(
       listeners: [
         BlocListener<JobOfferFilterCubit, JobOfferFilterState>(
-          listenWhen: (previous, current) => previous.filters != current.filters,
+          listenWhen: (previous, current) =>
+              previous.filters != current.filters,
           listener: (context, state) {
             if (state.filters == currentFilters) return;
           },
@@ -73,9 +75,9 @@ class _JobOfferFilterSidebarContent extends StatelessWidget {
           listenWhen: (previous, current) =>
               previous.filters.provinceId != current.filters.provinceId,
           listener: (context, state) {
-            context.read<JobOfferLocationCatalogCubit>().loadMunicipalitiesForProvince(
-              state.filters.provinceId,
-            );
+            context
+                .read<JobOfferLocationCatalogCubit>()
+                .loadMunicipalitiesForProvince(state.filters.provinceId);
           },
         ),
       ],
@@ -119,12 +121,16 @@ class _SidebarBodyState extends State<_SidebarBody> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JobOfferLocationCatalogCubit, JobOfferLocationCatalogState>(
+    return BlocBuilder<
+      JobOfferLocationCatalogCubit,
+      JobOfferLocationCatalogState
+    >(
       builder: (context, catalogState) {
         return BlocBuilder<JobOfferFilterCubit, JobOfferFilterState>(
           builder: (context, state) {
             final cubit = context.read<JobOfferFilterCubit>();
-            final locationCatalogCubit = context.read<JobOfferLocationCatalogCubit>();
+            final locationCatalogCubit = context
+                .read<JobOfferLocationCatalogCubit>();
             final filters = state.filters;
 
             return GestureDetector(
@@ -159,11 +165,7 @@ class _SidebarBodyState extends State<_SidebarBody> {
                         hintText: 'Buscar ofertas...',
                         controller: cubit.searchController,
                         prefixIcon: Icons.search,
-                        textFontSize:
-                            JobOfferFilterSidebarTokens.searchFontSize,
                         inputStyle: const JobOfferFilterInputStyle(
-                          hintFontSize:
-                              JobOfferFilterSidebarTokens.searchFontSize,
                           borderRadius: JobOfferFilterSidebarTokens
                               .searchFieldBorderRadius,
                           contentPadding: JobOfferFilterSidebarTokens

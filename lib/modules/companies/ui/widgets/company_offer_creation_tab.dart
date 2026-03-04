@@ -30,7 +30,7 @@ class _CompanyOfferCreationView extends StatefulWidget {
 class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
   final _formKey = GlobalKey<FormState>();
   final _formControllers = OfferFormControllers();
-  
+
   String? _selectedPipelineId;
   List<KnockoutQuestion> _knockoutQuestions = [];
 
@@ -73,13 +73,16 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
         formControllers: _formControllers,
         isGeneratingOffer: viewModel.isGeneratingOffer,
         onPipelineSelected: (id) => setState(() => _selectedPipelineId = id),
-        onKnockoutQuestionsChanged: (q) => setState(() => _knockoutQuestions = q),
+        onKnockoutQuestionsChanged: (q) =>
+            setState(() => _knockoutQuestions = q),
         onSubmit: () => CompanyOfferCreationController.submit(
           context: context,
           formKey: _formKey,
           formControllers: _formControllers,
           pipelineId: _selectedPipelineId,
-          knockoutQuestions: _knockoutQuestions.map((q) => q.toFirestore()).toList(),
+          knockoutQuestions: _knockoutQuestions
+              .map((q) => q.toFirestore())
+              .toList(),
         ),
         onGenerateWithAi: () => CompanyOfferCreationController.generateWithAi(
           context: context,

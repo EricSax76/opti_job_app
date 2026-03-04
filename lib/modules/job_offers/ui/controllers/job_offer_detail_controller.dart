@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_detail_logic.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
@@ -27,7 +26,7 @@ class JobOfferDetailController {
       _showSnackBar(
         context,
         message: successMessage,
-        backgroundColor: Colors.green,
+        backgroundColor: Theme.of(context).colorScheme.tertiary,
       );
       context.read<JobOfferDetailCubit>().clearMessages();
       return;
@@ -181,7 +180,9 @@ class JobOfferDetailController {
               ),
               FilledButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                style: FilledButton.styleFrom(backgroundColor: uiInk),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                ),
                 child: const Text('Continuar postulación'),
               ),
             ],

@@ -86,7 +86,7 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
       child: Material(
-        color: Colors.transparent,
+        color: theme.colorScheme.surface.withValues(alpha: 0),
         child: AppCard(
           onTap: widget.onTap,
           padding: EdgeInsets.zero, // Custom padding inside
@@ -139,11 +139,11 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
                                   Expanded(
                                     child: Text(
                                       widget.company,
-                                      style: TextStyle(
-                                        color: palette.muted,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: palette.muted,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -158,9 +158,8 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
                               const SizedBox(height: 4),
                               Text(
                                 widget.title,
-                                style: TextStyle(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   color: palette.ink,
-                                  fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                   height: 1.2,
                                 ),
@@ -180,9 +179,8 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
                         widget.description!.isNotEmpty) ...[
                       Text(
                         _normalizeDescription(widget.description),
-                        style: TextStyle(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: palette.muted,
-                          fontSize: 13,
                           height: 1.4,
                         ),
                         maxLines: 2,

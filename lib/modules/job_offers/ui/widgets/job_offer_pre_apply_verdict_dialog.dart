@@ -10,6 +10,7 @@ class JobOfferPreApplyVerdictDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final verdict = JobOfferPreApplyLogic.buildVerdict(score: result.score);
     final appearance = _appearanceFor(verdict.level, context);
 
@@ -38,7 +39,9 @@ class JobOfferPreApplyVerdictDialog extends StatelessWidget {
                       children: [
                         Text(
                           verdict.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: uiSpacing4),
                         Text(verdict.description),
@@ -54,9 +57,11 @@ class JobOfferPreApplyVerdictDialog extends StatelessWidget {
             ],
             if (result.reasons.isNotEmpty) ...[
               const SizedBox(height: uiSpacing12),
-              const Text(
+              Text(
                 'Puntos clave',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: uiSpacing8),
               for (final reason in result.reasons)
@@ -73,9 +78,11 @@ class JobOfferPreApplyVerdictDialog extends StatelessWidget {
             ],
             if (result.recommendations.isNotEmpty) ...[
               const SizedBox(height: uiSpacing12),
-              const Text(
+              Text(
                 'Recomendaciones',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: uiSpacing8),
               for (final recommendation in result.recommendations)
@@ -100,7 +107,9 @@ class JobOfferPreApplyVerdictDialog extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: FilledButton.styleFrom(backgroundColor: uiInk),
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
           child: Text(verdict.actionLabel),
         ),
       ],
@@ -113,22 +122,25 @@ class JobOfferPreApplyVerdictDialog extends StatelessWidget {
   ) {
     switch (level) {
       case JobOfferApplicationVerdictLevel.recommended:
+        final color = Theme.of(context).colorScheme.tertiary;
         return _VerdictAppearance(
           icon: Icons.check_circle_outline,
-          iconColor: const Color(0xFF0F766E),
-          backgroundColor: const Color(0xFFE6F8F4),
+          iconColor: color,
+          backgroundColor: color.withValues(alpha: 0.12),
         );
       case JobOfferApplicationVerdictLevel.caution:
+        final color = Theme.of(context).colorScheme.secondary;
         return _VerdictAppearance(
           icon: Icons.warning_amber_rounded,
-          iconColor: const Color(0xFF9A6700),
-          backgroundColor: const Color(0xFFFFF4D6),
+          iconColor: color,
+          backgroundColor: color.withValues(alpha: 0.14),
         );
       case JobOfferApplicationVerdictLevel.notRecommended:
+        final color = Theme.of(context).colorScheme.error;
         return _VerdictAppearance(
           icon: Icons.do_not_disturb_on_outlined,
-          iconColor: Theme.of(context).colorScheme.error,
-          backgroundColor: const Color(0xFFFFEBEE),
+          iconColor: color,
+          backgroundColor: color.withValues(alpha: 0.12),
         );
     }
   }

@@ -21,7 +21,10 @@ class SectionMessage extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: colorScheme.onSurfaceVariant, height: 1.4),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+          height: 1.4,
+        ),
       ),
     );
   }

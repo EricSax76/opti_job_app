@@ -18,7 +18,9 @@ class CandidateDashboardDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Drawer(
       child: ListView(
@@ -29,7 +31,7 @@ class CandidateDashboardDrawer extends StatelessWidget {
             child: Center(
               child: Text(
                 'OPTIJOB',
-                style: TextStyle(
+                style: textTheme.titleMedium?.copyWith(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
@@ -67,7 +69,9 @@ class CandidateDashboardDrawer extends StatelessWidget {
                 subtitle: Text(remindersVisible ? 'Visibles' : 'Ocultos'),
                 trailing: Switch.adaptive(
                   value: remindersVisible,
-                  onChanged: (_) => context.read<CandidateRemindersVisibilityCubit>().toggleReminders(),
+                  onChanged: (_) => context
+                      .read<CandidateRemindersVisibilityCubit>()
+                      .toggleReminders(),
                 ),
               );
             },

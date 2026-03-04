@@ -22,16 +22,16 @@ void main() {
           controller: controller,
           onChanged: (_) {},
           onClear: () => clearPressed = true,
-          inputStyle: const JobOfferFilterInputStyle(
-            hintFontSize: 16,
-            borderRadius: 14,
-          ),
+          inputStyle: const JobOfferFilterInputStyle(borderRadius: 14),
         ),
       ),
     );
 
     final textField = tester.widget<TextField>(find.byType(TextField));
-    expect(textField.decoration?.hintStyle?.fontSize, 16);
+    expect(
+      textField.decoration?.hintStyle?.fontSize,
+      textField.style?.fontSize,
+    );
     final border = textField.decoration?.border as OutlineInputBorder;
     expect(border.borderRadius, BorderRadius.circular(14));
 

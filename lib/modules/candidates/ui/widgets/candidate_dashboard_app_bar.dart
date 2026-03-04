@@ -227,7 +227,7 @@ class CandidateDashboardAppBar extends StatelessWidget
               indicatorColor: colorScheme.primary,
               tabAlignment: TabAlignment.center,
               isScrollable: true,
-              dividerColor: Colors.transparent,
+              dividerColor: colorScheme.surface.withValues(alpha: 0),
               tabs: [
                 for (final item in candidateDashboardTabItems)
                   if (item.label != 'Entrevistas' || FeatureFlags.interviews)

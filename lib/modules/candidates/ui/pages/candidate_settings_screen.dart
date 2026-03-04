@@ -8,10 +8,9 @@ class CandidateSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final background = isDark ? uiDarkBackground : uiBackground;
-    final border = isDark ? uiDarkBorder : uiBorder;
-    final appBarBg = isDark ? uiDarkBackground : Colors.white;
+    final background = colorScheme.surface;
+    final border = colorScheme.outlineVariant;
+    final appBarBg = colorScheme.surface;
 
     return Scaffold(
       backgroundColor: background,
@@ -20,7 +19,7 @@ class CandidateSettingsScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: appBarBg,
         foregroundColor: colorScheme.onSurface,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: colorScheme.surface.withValues(alpha: 0),
         elevation: 0,
         shape: Border(bottom: BorderSide(color: border, width: 1)),
       ),
@@ -74,9 +73,9 @@ class _SettingsPlaceholderMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final border = isDark ? uiDarkBorder : uiBorder;
+    final border = colorScheme.outlineVariant;
     return Container(
       padding: const EdgeInsets.all(uiSpacing16),
       decoration: BoxDecoration(
@@ -86,7 +85,10 @@ class _SettingsPlaceholderMessage extends StatelessWidget {
       ),
       child: Text(
         'Estamos preparando cada apartado. En otro momento desarrollaremos cada sección.',
-        style: TextStyle(color: colorScheme.onSurfaceVariant, height: 1.35),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+          height: 1.35,
+        ),
       ),
     );
   }
@@ -102,8 +104,7 @@ class _SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final cardColor = Theme.of(context).cardTheme.color ?? colorScheme.surface;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final border = isDark ? uiDarkBorder : uiBorder;
+    final border = colorScheme.outlineVariant;
 
     return Container(
       decoration: BoxDecoration(
@@ -162,8 +163,7 @@ class _SettingsStandaloneItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final cardColor = Theme.of(context).cardTheme.color ?? colorScheme.surface;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final border = isDark ? uiDarkBorder : uiBorder;
+    final border = colorScheme.outlineVariant;
 
     return Container(
       decoration: BoxDecoration(

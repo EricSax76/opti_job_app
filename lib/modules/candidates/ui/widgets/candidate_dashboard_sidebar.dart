@@ -174,7 +174,7 @@ class _CandidateDashboardSidebarState extends State<CandidateDashboardSidebar> {
           sidebar,
           Positioned.fill(
             child: Material(
-              color: Colors.transparent,
+              color: colorScheme.surface.withValues(alpha: 0),
               child: InkWell(
                 onTap: _toggleCollapse,
                 splashColor: colorScheme.primary.withValues(alpha: 0.08),

@@ -29,12 +29,12 @@ class CandidateDashboardThemeToggle extends StatelessWidget {
                   Icon(isDark ? Icons.dark_mode : Icons.light_mode),
                   if (showLabel) ...[
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Tema oscuro',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
                   ] else

@@ -32,7 +32,9 @@ class CreateOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final muted = colorScheme.onSurfaceVariant;
     final ink = colorScheme.onSurface;
 
@@ -45,9 +47,8 @@ class CreateOfferCard extends StatelessWidget {
           children: [
             Text(
               'PUBLICAR',
-              style: TextStyle(
+              style: textTheme.labelSmall?.copyWith(
                 color: muted,
-                fontSize: 12,
                 letterSpacing: 2,
                 fontWeight: FontWeight.w600,
               ),
@@ -55,8 +56,7 @@ class CreateOfferCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'Crear nueva oferta',
-              style: TextStyle(
-                fontSize: 22,
+              style: textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: ink,
               ),
@@ -64,7 +64,7 @@ class CreateOfferCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Completa los datos principales y publícala para recibir postulaciones.',
-              style: TextStyle(color: muted, fontSize: 15, height: 1.4),
+              style: textTheme.bodyMedium?.copyWith(color: muted, height: 1.4),
             ),
             const SizedBox(height: 24),
             Align(
@@ -92,14 +92,13 @@ class CreateOfferCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             OfferFormFields(controllers: controllers),
-            
+
             const Divider(height: uiSpacing32),
-            
+
             // Integración ATS Module
             Text(
               'Ajustes del Applicant Tracking System (ATS)',
-              style: TextStyle(
-                fontSize: 18,
+              style: textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: ink,
               ),
@@ -111,9 +110,9 @@ class CreateOfferCard extends StatelessWidget {
               initialQuestions: const [],
               onQuestionsChanged: onKnockoutQuestionsChanged,
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             BlocBuilder<JobOfferFormCubit, JobOfferFormState>(
               builder: (context, state) {
                 final isSubmitting =

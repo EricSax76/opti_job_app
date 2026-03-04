@@ -25,17 +25,15 @@ class CandidateDashboardFilterToggleRow extends StatelessWidget {
             canPinFilters
                 ? (showFilters ? Icons.filter_list_off : Icons.filter_list)
                 : (isMobileFiltersOpen
-                    ? Icons.filter_list_off
-                    : Icons.filter_list),
+                      ? Icons.filter_list_off
+                      : Icons.filter_list),
           ),
           label: Text(
             canPinFilters
                 ? (showFilters ? 'Ocultar filtros' : 'Filtros')
                 : (isMobileFiltersOpen ? 'Cerrar filtros' : 'Filtros'),
           ),
-          style: TextButton.styleFrom(
-            foregroundColor: colorScheme.secondary,
-          ),
+          style: TextButton.styleFrom(foregroundColor: colorScheme.secondary),
         ),
         const Spacer(),
       ],

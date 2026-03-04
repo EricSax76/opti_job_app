@@ -26,11 +26,11 @@ class JobOfferSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final ink = isDark ? uiDarkInk : uiInk;
-    final muted = isDark ? uiDarkMuted : uiMuted;
-    final surface = isDark ? uiDarkBackground : uiBackground;
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final surface = colorScheme.surfaceContainerHighest;
 
     return AppCard(
       onTap: onTap,
@@ -56,9 +56,8 @@ class JobOfferSummaryCard extends StatelessWidget {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: textTheme.titleMedium?.copyWith(
                           color: ink,
-                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                           height: 1.2,
                         ),
@@ -78,8 +77,8 @@ class JobOfferSummaryCard extends StatelessWidget {
                       backgroundColor: surface,
                       backgroundImage:
                           (avatarUrl != null && avatarUrl!.isNotEmpty)
-                              ? NetworkImage(avatarUrl!)
-                              : null,
+                          ? NetworkImage(avatarUrl!)
+                          : null,
                       child: (avatarUrl == null || avatarUrl!.isEmpty)
                           ? Icon(
                               Icons.business_outlined,
@@ -94,9 +93,8 @@ class JobOfferSummaryCard extends StatelessWidget {
                         company,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: textTheme.bodyMedium?.copyWith(
                           color: muted,
-                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -114,7 +112,9 @@ class JobOfferSummaryCard extends StatelessWidget {
                         InfoPill(icon: Icons.payments_outlined, label: salary!),
                       if (modality != null && modality!.trim().isNotEmpty)
                         InfoPill(
-                            icon: Icons.home_work_outlined, label: modality!),
+                          icon: Icons.home_work_outlined,
+                          label: modality!,
+                        ),
                     ],
                   ),
                 ],
@@ -125,11 +125,7 @@ class JobOfferSummaryCard extends StatelessWidget {
             const SizedBox(width: uiSpacing8 + 2),
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
-                color: muted,
-              ),
+              child: Icon(Icons.arrow_forward_ios, size: 14, color: muted),
             ),
           ],
         ],
@@ -137,4 +133,3 @@ class JobOfferSummaryCard extends StatelessWidget {
     );
   }
 }
-

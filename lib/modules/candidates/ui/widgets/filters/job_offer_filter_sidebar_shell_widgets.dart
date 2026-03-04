@@ -11,6 +11,7 @@ class JobOfferFilterSidebarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       children: [
         Icon(
@@ -21,8 +22,7 @@ class JobOfferFilterSidebarHeader extends StatelessWidget {
         const SizedBox(width: uiSpacing8),
         Text(
           'Filtros',
-          style: TextStyle(
-            fontSize: JobOfferFilterSidebarTokens.headerTitleFontSize,
+          style: textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
             color: palette.ink,
           ),
@@ -48,6 +48,7 @@ class JobOfferFilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -62,8 +63,7 @@ class JobOfferFilterSection extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
-                  fontSize: JobOfferFilterSidebarTokens.sectionTitleFontSize,
+                style: textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: palette.ink,
                 ),

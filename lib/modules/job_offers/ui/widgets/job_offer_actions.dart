@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/applications/models/application_status.dart';
 
 class JobOfferActions extends StatelessWidget {
@@ -22,6 +21,7 @@ class JobOfferActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final hasApplied = applicationStatus != null;
     return Wrap(
       spacing: 12,
@@ -30,7 +30,7 @@ class JobOfferActions extends StatelessWidget {
         if (isAuthenticated)
           FilledButton(
             onPressed: (isApplying || hasApplied) ? null : onApply,
-            style: FilledButton.styleFrom(backgroundColor: uiInk),
+            style: FilledButton.styleFrom(backgroundColor: colorScheme.primary),
             child: isApplying
                 ? const SizedBox.square(
                     dimension: 24,

@@ -131,10 +131,9 @@ class JobOfferFilterLocationSections extends StatelessWidget {
           const SizedBox(height: uiSpacing8),
           Text(
             catalogState.catalogError!,
-            style: TextStyle(
-              color: palette.muted,
-              fontSize: JobOfferFilterSidebarTokens.regularFontSize - 1,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: palette.muted),
           ),
         ],
       ],

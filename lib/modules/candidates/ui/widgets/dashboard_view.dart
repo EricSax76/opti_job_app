@@ -179,7 +179,10 @@ class _DashboardViewState extends State<DashboardView> {
                                 ),
                               ),
                             ),
-                            BlocBuilder<CandidateRemindersVisibilityCubit, bool>(
+                            BlocBuilder<
+                              CandidateRemindersVisibilityCubit,
+                              bool
+                            >(
                               builder: (context, remindersVisible) {
                                 if (!remindersVisible) {
                                   return const SizedBox.shrink();
@@ -187,13 +190,21 @@ class _DashboardViewState extends State<DashboardView> {
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 16),
                                   child: Dismissible(
-                                    key: const ValueKey('mobile_reminder_panel'),
+                                    key: const ValueKey(
+                                      'mobile_reminder_panel',
+                                    ),
                                     direction: DismissDirection.startToEnd,
                                     onDismissed: (_) {
-                                      context.read<CandidateRemindersVisibilityCubit>().hideReminders();
+                                      context
+                                          .read<
+                                            CandidateRemindersVisibilityCubit
+                                          >()
+                                          .hideReminders();
                                     },
                                     background: Container(
-                                      color: Colors.transparent,
+                                      color: colorScheme.surface.withValues(
+                                        alpha: 0,
+                                      ),
                                     ),
                                     child: CandidateReminderPanel(
                                       isExpanded: _isMobileRemindersExpanded,
@@ -303,7 +314,9 @@ class _DashboardViewState extends State<DashboardView> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(
+        context,
+      ).colorScheme.surface.withValues(alpha: 0),
       elevation: 0,
       builder: (sheetContext) {
         return FractionallySizedBox(
@@ -312,45 +325,62 @@ class _DashboardViewState extends State<DashboardView> {
             selector: (state) => state.activeFilters,
             builder: (context, filters) {
               return Container(
-                clipBehavior: Clip.antiAlias,
-                margin: const EdgeInsets.only(top: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 24,
-                      offset: const Offset(0, -8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12, bottom: 8),
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
+                    clipBehavior: Clip.antiAlias,
+                    margin: const EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(32),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.shadow.withValues(alpha: 0.15),
+                          blurRadius: 24,
+                          offset: const Offset(0, -8),
                         ),
-                      ),
+                      ],
                     ),
-                    Expanded(
-                      child: JobOfferFilterSidebar(
-                        currentFilters: filters,
-                        onFiltersChanged: context.read<JobOffersCubit>().applyFilters,
-                      ),
+                    child: Column(
+                      children: [
+                        Center(
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 12, bottom: 8),
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: JobOfferFilterSidebar(
+                            currentFilters: filters,
+                            onFiltersChanged: context
+                                .read<JobOffersCubit>()
+                                .applyFilters,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )
-              .animate()
-              .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-              .slideY(begin: 0.1, duration: 600.ms, curve: Curves.easeOutQuart)
-              .scaleXY(begin: 0.1, end: 1.0, duration: 600.ms, curve: Curves.easeOutQuart);
+                  )
+                  .animate()
+                  .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+                  .slideY(
+                    begin: 0.1,
+                    duration: 600.ms,
+                    curve: Curves.easeOutQuart,
+                  )
+                  .scaleXY(
+                    begin: 0.1,
+                    end: 1.0,
+                    duration: 600.ms,
+                    curve: Curves.easeOutQuart,
+                  );
             },
           ),
         );

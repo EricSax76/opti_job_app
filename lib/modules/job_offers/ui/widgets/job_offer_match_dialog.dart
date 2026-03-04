@@ -9,6 +9,7 @@ class JobOfferMatchResultDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return AlertDialog(
       title: Text('Match: ${result.score}/100'),
       content: SingleChildScrollView(
@@ -21,9 +22,11 @@ class JobOfferMatchResultDialog extends StatelessWidget {
               const SizedBox(height: uiSpacing12),
             ],
             if (result.reasons.isNotEmpty) ...[
-              const Text(
+              Text(
                 'Puntos clave',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: uiSpacing8),
               for (final reason in result.reasons)
@@ -40,9 +43,11 @@ class JobOfferMatchResultDialog extends StatelessWidget {
             ],
             if (result.recommendations.isNotEmpty) ...[
               const SizedBox(height: uiSpacing12 + 2),
-              const Text(
+              Text(
                 'Recomendaciones',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: uiSpacing8),
               for (final recommendation in result.recommendations)

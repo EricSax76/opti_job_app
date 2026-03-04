@@ -104,14 +104,14 @@ class CandidateOfferActionIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Theme.of(context).colorScheme.primary;
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
           actionLabel,
-          style: TextStyle(
+          style: textTheme.labelMedium?.copyWith(
             color: accent,
-            fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),

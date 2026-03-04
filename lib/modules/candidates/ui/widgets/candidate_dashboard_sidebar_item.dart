@@ -22,6 +22,7 @@ class CandidateDashboardSidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final icon = item.index == 2
         ? CandidateInterviewsBadge(
             child: Icon(
@@ -60,7 +61,7 @@ class CandidateDashboardSidebarItem extends StatelessWidget {
         leading: icon,
         title: Text(
           item.label,
-          style: TextStyle(
+          style: textTheme.bodyLarge?.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: isSelected ? colorScheme.primary : colorScheme.onSurface,
           ),

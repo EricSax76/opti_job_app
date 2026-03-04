@@ -49,28 +49,30 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: useCompactHeader
                       ? (isDark
-                          ? uiDarkHeaderGradientStart.withValues(alpha: 0.75)
-                          : uiLightHeaderGradientStart.withValues(alpha: 0.85))
+                            ? uiDarkHeaderGradientStart.withValues(alpha: 0.75)
+                            : uiLightHeaderGradientStart.withValues(
+                                alpha: 0.85,
+                              ))
                       : null,
                   gradient: useCompactHeader
                       ? null
                       : (isDark
-                          ? const LinearGradient(
-                              colors: [
-                                uiDarkHeaderGradientStart,
-                                uiDarkHeaderGradientEnd,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : const LinearGradient(
-                              colors: [
-                                uiLightHeaderGradientStart,
-                                uiLightHeaderGradientEnd,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )),
+                            ? const LinearGradient(
+                                colors: [
+                                  uiDarkHeaderGradientStart,
+                                  uiDarkHeaderGradientEnd,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : const LinearGradient(
+                                colors: [
+                                  uiLightHeaderGradientStart,
+                                  uiLightHeaderGradientEnd,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )),
                   borderRadius: BorderRadius.circular(
                     useCompactHeader ? 14 : uiCardRadius,
                   ),
@@ -80,13 +82,14 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
                   children: [
                     Text(
                       'Hola, $candidateName',
-                      style: (useCompactHeader
-                              ? theme.textTheme.titleMedium
-                              : theme.textTheme.headlineSmall)
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: headerTitleColor,
-                          ),
+                      style:
+                          (useCompactHeader
+                                  ? theme.textTheme.titleMedium
+                                  : theme.textTheme.headlineSmall)
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: headerTitleColor,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -95,10 +98,11 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
                       overflow: useCompactHeader
                           ? TextOverflow.ellipsis
                           : TextOverflow.visible,
-                      style: (useCompactHeader
-                              ? theme.textTheme.bodyMedium
-                              : theme.textTheme.bodyLarge)
-                          ?.copyWith(color: headerSubtitleColor),
+                      style:
+                          (useCompactHeader
+                                  ? theme.textTheme.bodyMedium
+                                  : theme.textTheme.bodyLarge)
+                              ?.copyWith(color: headerSubtitleColor),
                     ),
                   ],
                 ),

@@ -11,10 +11,12 @@ class JobOfferDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? uiDarkInk : uiInk;
-    final muted = isDark ? uiDarkMuted : uiMuted;
-    final surface = isDark ? uiDarkSurface : Colors.white;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final ink = colorScheme.onSurface;
+    final muted = colorScheme.onSurfaceVariant;
+    final surface = colorScheme.surface;
     final description = offer.description.trim().isEmpty
         ? 'Sin descripción.'
         : offer.description.trim();
@@ -42,7 +44,7 @@ class JobOfferDetails extends StatelessWidget {
             title: 'Descripción',
             child: Text(
               description,
-              style: TextStyle(color: ink, height: 1.5),
+              style: textTheme.bodyMedium?.copyWith(color: ink, height: 1.5),
             ),
           ),
           const SizedBox(height: uiSpacing12),
@@ -79,7 +81,10 @@ class JobOfferDetails extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Revisa los detalles y postúlate cuando estés listo.',
-                    style: TextStyle(color: muted, height: 1.4),
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: muted,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -99,9 +104,10 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final muted = isDark ? uiDarkMuted : uiMuted;
-    final ink = isDark ? uiDarkInk : uiInk;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final ink = theme.colorScheme.onSurface;
     return Padding(
       padding: const EdgeInsets.only(bottom: uiSpacing12 - 2),
       child: Row(
@@ -111,14 +117,17 @@ class _DetailRow extends StatelessWidget {
             width: 100,
             child: Text(
               label,
-              style: TextStyle(color: muted, fontWeight: FontWeight.w700),
+              style: textTheme.labelMedium?.copyWith(
+                color: muted,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: uiSpacing12 - 2),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(color: ink, height: 1.35),
+              style: textTheme.bodyMedium?.copyWith(color: ink, height: 1.35),
             ),
           ),
         ],

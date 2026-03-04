@@ -13,9 +13,16 @@ class DashboardOffersCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final muted = colorScheme.onSurfaceVariant;
     final ink = colorScheme.onSurface;
+    final sectionLabelStyle = textTheme.labelSmall?.copyWith(
+      color: muted,
+      letterSpacing: 2,
+      fontWeight: FontWeight.w600,
+    );
 
     return AppCard(
       padding: const EdgeInsets.all(uiSpacing16 + 2),
@@ -30,19 +37,14 @@ class DashboardOffersCard extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'OFERTAS PUBLICADAS',
-                  style: TextStyle(
-                    color: muted,
-                    fontSize: 12,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text('OFERTAS PUBLICADAS', style: sectionLabelStyle),
                 const SizedBox(height: 10),
                 Text(
                   state.errorMessage ?? 'No se pudieron cargar tus ofertas.',
-                  style: TextStyle(color: muted, height: 1.4),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: muted,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Align(
@@ -62,21 +64,12 @@ class DashboardOffersCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'OFERTAS PUBLICADAS',
-                style: TextStyle(
-                  color: muted,
-                  fontSize: 12,
-                  letterSpacing: 2,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text('OFERTAS PUBLICADAS', style: sectionLabelStyle),
               const SizedBox(height: 10),
               Text(
                 '${offers.length}',
-                style: TextStyle(
+                style: textTheme.displaySmall?.copyWith(
                   color: ink,
-                  fontSize: 34,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -84,7 +77,10 @@ class DashboardOffersCard extends StatelessWidget {
               if (offers.isEmpty)
                 Text(
                   'Aún no has publicado ofertas.',
-                  style: TextStyle(color: muted, height: 1.4),
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: muted,
+                    height: 1.4,
+                  ),
                 )
               else
                 Column(
@@ -120,7 +116,9 @@ class _OfferRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -139,7 +137,7 @@ class _OfferRow extends StatelessWidget {
             children: [
               Text(
                 offer.title,
-                style: TextStyle(
+                style: textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
@@ -147,7 +145,7 @@ class _OfferRow extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 offer.location,
-                style: TextStyle(
+                style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   height: 1.3,
                 ),

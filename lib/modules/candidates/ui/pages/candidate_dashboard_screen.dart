@@ -188,14 +188,10 @@ class _CandidateDashboardScreenState extends State<CandidateDashboardScreen>
       _tabController.index = state.tabIndex;
       _isProgrammaticTabChange = false;
     }
-
   }
 
   void _navigateToSection(BuildContext context, int index) {
-    final path = candidateDashboardPathForIndex(
-      uid: widget.uid,
-      index: index,
-    );
+    final path = candidateDashboardPathForIndex(uid: widget.uid, index: index);
     if (path != null) {
       context.go(path);
     }

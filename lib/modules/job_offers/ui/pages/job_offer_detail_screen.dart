@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/shell/core_shell.dart';
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/job_offers/ui/containers/job_offer_detail_container.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,9 +17,7 @@ class JobOfferDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final background = isDark ? uiDarkBackground : uiBackground;
+    final background = Theme.of(context).colorScheme.surface;
 
     return BlocProvider.value(
       value: cubit,

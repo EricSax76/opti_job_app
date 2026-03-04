@@ -19,7 +19,9 @@ class CompanyDashboardDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Drawer(
       child: ListView(
@@ -30,7 +32,7 @@ class CompanyDashboardDrawer extends StatelessWidget {
             child: Center(
               child: Text(
                 'OPTIJOB',
-                style: TextStyle(
+                style: textTheme.titleMedium?.copyWith(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,

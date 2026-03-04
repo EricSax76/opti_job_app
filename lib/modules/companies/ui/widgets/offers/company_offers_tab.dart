@@ -13,9 +13,8 @@ class CompanyOffersTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ApplicantInteractionCubit(
-        context.read<InterviewRepository>(),
-      ),
+      create: (context) =>
+          ApplicantInteractionCubit(context.read<InterviewRepository>()),
       child: BlocListener<ApplicantInteractionCubit, ApplicantInteractionState>(
         listener: OfferApplicantsSectionLogic.handleInteractionState,
         child: const CustomScrollView(

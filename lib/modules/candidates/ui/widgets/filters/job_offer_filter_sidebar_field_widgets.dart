@@ -15,7 +15,6 @@ class JobOfferFilterTextField extends StatelessWidget {
     this.prefixIcon,
     this.onClear,
     this.inputStyle = const JobOfferFilterInputStyle(),
-    this.textFontSize = JobOfferFilterSidebarTokens.regularFontSize,
   });
 
   final JobOfferFilterPalette palette;
@@ -25,15 +24,18 @@ class JobOfferFilterTextField extends StatelessWidget {
   final IconData? prefixIcon;
   final VoidCallback? onClear;
   final JobOfferFilterInputStyle inputStyle;
-  final double textFontSize;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final baseHintStyle =
+        textTheme.bodyMedium ?? DefaultTextStyle.of(context).style;
     return TextField(
       controller: controller,
       decoration: JobOfferFilterFieldDecorators.inputDecoration(
         palette: palette,
         hintText: hintText,
+        hintStyle: baseHintStyle,
         style: inputStyle,
         prefixIcon: prefixIcon == null
             ? null
@@ -45,7 +47,7 @@ class JobOfferFilterTextField extends StatelessWidget {
               )
             : null,
       ),
-      style: TextStyle(color: palette.ink, fontSize: textFontSize),
+      style: textTheme.bodyMedium?.copyWith(color: palette.ink),
       onChanged: onChanged,
     );
   }
@@ -75,6 +77,9 @@ class JobOfferFilterDropdownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final baseHintStyle =
+        textTheme.bodyMedium ?? DefaultTextStyle.of(context).style;
     return DropdownButtonFormField<String>(
       key: fieldKey,
       initialValue: initialValue,
@@ -83,6 +88,7 @@ class JobOfferFilterDropdownField extends StatelessWidget {
       decoration: JobOfferFilterFieldDecorators.inputDecoration(
         palette: palette,
         hintText: hintText,
+        hintStyle: baseHintStyle,
         style: inputStyle,
       ),
       items: items
@@ -91,10 +97,7 @@ class JobOfferFilterDropdownField extends StatelessWidget {
               value: item,
               child: Text(
                 item,
-                style: TextStyle(
-                  fontSize: JobOfferFilterSidebarTokens.regularFontSize,
-                  color: palette.ink,
-                ),
+                style: textTheme.bodyMedium?.copyWith(color: palette.ink),
               ),
             ),
           )
@@ -122,14 +125,14 @@ class JobOfferSalaryRangeFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '${minSalary.toInt()}€ - ${maxSalary.toInt()}€',
-          style: TextStyle(
+          style: textTheme.bodyMedium?.copyWith(
             color: palette.accent,
-            fontSize: JobOfferFilterSidebarTokens.regularFontSize,
             fontWeight: FontWeight.w600,
           ),
         ),

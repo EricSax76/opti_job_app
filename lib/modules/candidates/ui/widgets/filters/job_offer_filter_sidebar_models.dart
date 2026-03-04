@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
 import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_filter_sidebar_tokens.dart';
 
@@ -22,14 +20,14 @@ class JobOfferFilterPalette {
   final Color inputFill;
 
   factory JobOfferFilterPalette.fromTheme(ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     return JobOfferFilterPalette(
-      ink: isDark ? uiDarkInk : uiInk,
-      muted: isDark ? uiDarkMuted : uiMuted,
-      border: isDark ? uiDarkBorder : uiBorder,
-      accent: uiAccent,
-      surface: isDark ? uiDarkSurface : Colors.white,
-      inputFill: isDark ? uiDarkBackground : Colors.white,
+      ink: colorScheme.onSurface,
+      muted: colorScheme.onSurfaceVariant,
+      border: colorScheme.outlineVariant,
+      accent: colorScheme.primary,
+      surface: colorScheme.surface,
+      inputFill: colorScheme.surfaceContainerLowest,
     );
   }
 }

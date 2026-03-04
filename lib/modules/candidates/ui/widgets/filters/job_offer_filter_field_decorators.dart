@@ -6,13 +6,11 @@ import 'package:opti_job_app/modules/candidates/ui/widgets/filters/job_offer_fil
 
 class JobOfferFilterInputStyle {
   const JobOfferFilterInputStyle({
-    this.hintFontSize = JobOfferFilterSidebarTokens.regularFontSize,
     this.borderRadius = JobOfferFilterSidebarTokens.regularFieldBorderRadius,
     this.contentPadding =
         JobOfferFilterSidebarTokens.regularFieldContentPadding,
   });
 
-  final double hintFontSize;
   final double borderRadius;
   final EdgeInsetsGeometry contentPadding;
 }
@@ -23,13 +21,14 @@ class JobOfferFilterFieldDecorators {
   static InputDecoration inputDecoration({
     required JobOfferFilterPalette palette,
     required String hintText,
+    required TextStyle hintStyle,
     JobOfferFilterInputStyle style = const JobOfferFilterInputStyle(),
     Widget? prefixIcon,
     Widget? suffixIcon,
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(color: palette.muted, fontSize: style.hintFontSize),
+      hintStyle: hintStyle.copyWith(color: palette.muted),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: _inputBorder(palette, style.borderRadius),

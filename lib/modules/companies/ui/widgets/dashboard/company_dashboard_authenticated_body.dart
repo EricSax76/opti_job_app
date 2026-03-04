@@ -21,9 +21,6 @@ class CompanyDashboardAuthenticatedBody extends StatelessWidget {
       );
     }
 
-    return IndexedStack(
-      index: selectedIndex,
-      children: tabPages,
-    );
+    return IndexedStack(index: selectedIndex, children: tabPages);
   }
 }

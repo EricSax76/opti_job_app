@@ -19,6 +19,7 @@ class OfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
     final surface = theme.cardTheme.color ?? colorScheme.surface;
     final surfaceContainer = colorScheme.surfaceContainerHighest;
@@ -38,7 +39,9 @@ class OfferCard extends StatelessWidget {
       backgroundColor: surface,
       clipBehavior: Clip.antiAlias,
       child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        data: theme.copyWith(
+          dividerColor: colorScheme.surface.withValues(alpha: 0),
+        ),
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(
             horizontal: uiSpacing16 + 2,
@@ -62,11 +65,14 @@ class OfferCard extends StatelessWidget {
           ),
           title: Text(
             offer.title,
-            style: TextStyle(color: ink, fontWeight: FontWeight.w600),
+            style: textTheme.bodyLarge?.copyWith(
+              color: ink,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           subtitle: Text(
             viewModel.subtitle,
-            style: TextStyle(color: muted, height: 1.4),
+            style: textTheme.bodySmall?.copyWith(color: muted, height: 1.4),
           ),
           onExpansionChanged: (expanded) =>
               OfferCardController.onExpansionChanged(

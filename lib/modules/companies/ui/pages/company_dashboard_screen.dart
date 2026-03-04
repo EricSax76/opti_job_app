@@ -49,10 +49,7 @@ class _CompanyDashboardScreenState extends State<CompanyDashboardScreen> {
 
   void _navigateToTab(BuildContext context, int index) {
     final companyUid = widget.dashboardCubit.companyUid;
-    final path = companyDashboardPathForIndex(
-      uid: companyUid,
-      index: index,
-    );
+    final path = companyDashboardPathForIndex(uid: companyUid, index: index);
     if (path != null) {
       context.go(path);
     }
