@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/offer_applicants_section.dart';
+import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/logic/offer_card_logic.dart';
 
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
@@ -15,6 +17,10 @@ class OfferCard extends StatelessWidget {
   const OfferCard({super.key, required this.offer});
 
   final JobOffer offer;
+
+  bool get _salaryGapBlocked =>
+      offer.status == 'blocked_pending_salary_justification' ||
+      offer.salaryGapJustificationRequired;
 
   @override
   Widget build(BuildContext context) {
@@ -86,11 +92,39 @@ class OfferCard extends StatelessWidget {
               spacing: uiSpacing8,
               runSpacing: uiSpacing8,
               children: [
+                if (_salaryGapBlocked)
+                  InfoPill(
+                    icon: Icons.warning_amber_rounded,
+                    label: 'Bloqueada por brecha salarial',
+                    backgroundColor: colorScheme.errorContainer,
+                    borderColor: colorScheme.error,
+                  ),
                 OutlinedButton.icon(
                   onPressed: () => context.push('/job-offer/${offer.id}'),
                   icon: const Icon(Icons.open_in_new, size: 18),
                   label: const Text('Ver detalle'),
                 ),
+                FilledButton.icon(
+                  onPressed: _salaryGapBlocked
+                      ? null
+                      : () => _publishToExternalChannels(context),
+                  icon: const Icon(Icons.send_to_mobile_outlined, size: 18),
+                  label: const Text('Multiposting'),
+                ),
+                if (_salaryGapBlocked)
+                  FilledButton.icon(
+                    onPressed: () => _openJustificationDialog(context),
+                    icon: const Icon(Icons.rule_folder_outlined, size: 18),
+                    label: const Text('Enviar justificación'),
+                  ),
+                if (offer.multipostingEnabledChannels.isNotEmpty)
+                  InfoPill(
+                    icon: Icons.hub_outlined,
+                    label:
+                        'Canales: ${offer.multipostingEnabledChannels.length}',
+                    backgroundColor: colorScheme.primaryContainer,
+                    borderColor: colorScheme.primary,
+                  ),
                 InfoPill(
                   icon: Icons.tag_outlined,
                   label: 'Oferta #${offer.id}',
@@ -107,6 +141,190 @@ class OfferCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _openJustificationDialog(BuildContext context) async {
+    final result = await showDialog<_SalaryGapJustificationInput>(
+      context: context,
+      builder: (_) => const _SalaryGapJustificationDialog(),
+    );
+    if (result == null || !context.mounted) return;
+    await _submitJustification(context, result);
+  }
+
+  Future<void> _submitJustification(
+    BuildContext context,
+    _SalaryGapJustificationInput input,
+  ) async {
+    try {
+      final callable = FirebaseFunctions.instanceFor(
+        region: 'europe-west1',
+      ).httpsCallable('submitSalaryGapJustification');
+      await callable.call({
+        'jobOfferId': offer.id,
+        'justification': input.justification,
+        'objectiveCriteria': input.objectiveCriteria,
+      });
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Justificación enviada. La oferta se ha desbloqueado.',
+          ),
+        ),
+      );
+      context.read<CompanyJobOffersCubit>().refresh();
+    } on FirebaseFunctionsException catch (error) {
+      if (!context.mounted) return;
+      final message =
+          error.message?.trim().isNotEmpty == true
+          ? error.message!
+          : 'No se pudo enviar la justificación.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo enviar la justificación.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _publishToExternalChannels(BuildContext context) async {
+    try {
+      final callable = FirebaseFunctions.instanceFor(
+        region: 'europe-west1',
+      ).httpsCallable('publishOfferMultiposting');
+      await callable.call({'jobOfferId': offer.id});
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Oferta publicada en canales externos (LinkedIn, Indeed y Universidades).',
+          ),
+        ),
+      );
+      context.read<CompanyJobOffersCubit>().refresh();
+    } on FirebaseFunctionsException catch (error) {
+      if (!context.mounted) return;
+      final message =
+          error.message?.trim().isNotEmpty == true
+          ? error.message!
+          : 'No se pudo publicar en canales externos.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo publicar en canales externos.'),
+        ),
+      );
+    }
+  }
+}
+
+class _SalaryGapJustificationInput {
+  const _SalaryGapJustificationInput({
+    required this.justification,
+    required this.objectiveCriteria,
+  });
+
+  final String justification;
+  final List<String> objectiveCriteria;
+}
+
+class _SalaryGapJustificationDialog extends StatefulWidget {
+  const _SalaryGapJustificationDialog();
+
+  @override
+  State<_SalaryGapJustificationDialog> createState() =>
+      _SalaryGapJustificationDialogState();
+}
+
+class _SalaryGapJustificationDialogState
+    extends State<_SalaryGapJustificationDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _justificationController = TextEditingController();
+  final _criteriaController = TextEditingController();
+
+  @override
+  void dispose() {
+    _justificationController.dispose();
+    _criteriaController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Justificación objetiva de brecha salarial'),
+      content: Form(
+        key: _formKey,
+        child: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _justificationController,
+                minLines: 4,
+                maxLines: 6,
+                decoration: const InputDecoration(
+                  labelText: 'Justificación',
+                  hintText:
+                      'Describe criterios objetivos (mercado, seniority, certificaciones, etc.)',
+                ),
+                validator: (value) {
+                  final v = value?.trim() ?? '';
+                  if (v.isEmpty) return 'La justificación es obligatoria';
+                  if (v.length < 20) return 'Añade más detalle objetivo';
+                  return null;
+                },
+              ),
+              const SizedBox(height: uiSpacing12),
+              TextFormField(
+                controller: _criteriaController,
+                decoration: const InputDecoration(
+                  labelText: 'Criterios objetivos (separados por coma)',
+                  hintText:
+                      'Ejemplo: seniority, certificación oficial, idiomas',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
+            final criteria = _criteriaController.text
+                .split(',')
+                .map((v) => v.trim())
+                .where((v) => v.isNotEmpty)
+                .toList(growable: false);
+            Navigator.of(context).pop(
+              _SalaryGapJustificationInput(
+                justification: _justificationController.text.trim(),
+                objectiveCriteria: criteria,
+              ),
+            );
+          },
+          child: const Text('Enviar'),
+        ),
+      ],
     );
   }
 }

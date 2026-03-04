@@ -19,6 +19,7 @@ class Application {
     this.knockoutResponses,
     this.assignedTo,
     this.matchScore,
+    this.sourceChannel,
     this.aiMatchResult = const {},
     this.humanOverride = const {},
     this.consentRecordId,
@@ -48,6 +49,7 @@ class Application {
   final Map<String, dynamic>? knockoutResponses;
   final String? assignedTo;
   final double? matchScore;
+  final String? sourceChannel;
   final Map<String, dynamic> aiMatchResult;
   final Map<String, dynamic> humanOverride;
   final String? consentRecordId;
@@ -108,6 +110,10 @@ class Application {
       knockoutResponses: json['knockoutResponses'] as Map<String, dynamic>?,
       assignedTo: json['assignedTo'] as String?,
       matchScore: (json['match_score'] as num?)?.toDouble(),
+      sourceChannel:
+          json['sourceChannel'] as String? ??
+          json['source_channel'] as String? ??
+          json['source'] as String?,
       aiMatchResult: json['aiMatchResult'] as Map<String, dynamic>? ?? const {},
       humanOverride: json['humanOverride'] as Map<String, dynamic>? ?? const {},
       consentRecordId: json['consentRecordId'] as String?,
@@ -140,6 +146,11 @@ class Application {
       if (knockoutResponses != null) 'knockoutResponses': knockoutResponses,
       if (assignedTo != null) 'assignedTo': assignedTo,
       if (matchScore != null) 'match_score': matchScore,
+      if (sourceChannel != null) ...{
+        'sourceChannel': sourceChannel,
+        'source_channel': sourceChannel,
+        'source': sourceChannel,
+      },
       if (aiMatchResult.isNotEmpty) 'aiMatchResult': aiMatchResult,
       if (humanOverride.isNotEmpty) 'humanOverride': humanOverride,
       if (consentRecordId != null) 'consentRecordId': consentRecordId,
@@ -171,6 +182,7 @@ class Application {
     Map<String, dynamic>? knockoutResponses,
     String? assignedTo,
     double? matchScore,
+    String? sourceChannel,
     Map<String, dynamic>? aiMatchResult,
     Map<String, dynamic>? humanOverride,
     String? consentRecordId,
@@ -200,6 +212,7 @@ class Application {
       knockoutResponses: knockoutResponses ?? this.knockoutResponses,
       assignedTo: assignedTo ?? this.assignedTo,
       matchScore: matchScore ?? this.matchScore,
+      sourceChannel: sourceChannel ?? this.sourceChannel,
       aiMatchResult: aiMatchResult ?? this.aiMatchResult,
       humanOverride: humanOverride ?? this.humanOverride,
       consentRecordId: consentRecordId ?? this.consentRecordId,

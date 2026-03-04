@@ -24,6 +24,7 @@ class ApplicationService {
     required Candidate candidate,
     int? candidateProfileId,
     Map<String, dynamic>? knockoutResponses,
+    String sourceChannel = 'platform',
   }) async {
     final exists = await _applicationRepository.applicationExists(
       jobOfferId: jobOffer.id,
@@ -39,6 +40,7 @@ class ApplicationService {
       candidate: candidate,
       candidateProfileId: candidateProfileId ?? candidate.id,
       knockoutResponses: knockoutResponses,
+      sourceChannel: sourceChannel,
     );
 
     if (knockoutResponses != null && knockoutResponses.isNotEmpty) {

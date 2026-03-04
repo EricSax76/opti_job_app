@@ -66,9 +66,11 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
     required CurriculumRepository curriculumRepository,
     required AiRepository aiRepository,
     required ProfileRepository profileRepository,
+    String? sourceChannel,
   }) : _curriculumRepository = curriculumRepository,
        _aiRepository = aiRepository,
        _profileRepository = profileRepository,
+       _sourceChannel = _normalizeSourceChannel(sourceChannel),
        super(const JobOfferDetailState());
 
   final JobOfferRepository _repository;
@@ -76,6 +78,7 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
   final CurriculumRepository _curriculumRepository;
   final AiRepository _aiRepository;
   final ProfileRepository _profileRepository;
+  final String _sourceChannel;
 
   String? _offerId;
   String? _candidateUid;
@@ -178,6 +181,7 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
         jobOffer: offer,
         candidateProfileId: candidate.id,
         knockoutResponses: knockoutResponses,
+        sourceChannel: _sourceChannel,
       );
       final application = await _applicationService
           .getApplicationForCandidateOffer(
@@ -228,4 +232,10 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
   void clearMessages() {
     emit(state.copyWith(clearError: true, clearSuccess: true));
   }
+}
+
+String _normalizeSourceChannel(String? value) {
+  final normalized = value?.trim().toLowerCase() ?? '';
+  if (normalized.isEmpty) return 'platform';
+  return normalized;
 }

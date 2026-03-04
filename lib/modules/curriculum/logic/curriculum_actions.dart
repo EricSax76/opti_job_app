@@ -87,8 +87,9 @@ class CurriculumLogic {
         return const ActionFailure('Selecciona un PDF o DOCX válido.');
       }
 
+      final supportsExtraction = extension == 'docx' || extension == 'pdf';
       var extractedData = false;
-      if (extension == 'docx') {
+      if (supportsExtraction) {
         extractedData = await formCubit.analyzeCvFile(bytes, file.name);
       }
 
@@ -103,7 +104,7 @@ class CurriculumLogic {
 
       // Persist extracted form data after import so the parsed content is not
       // left only in local UI state.
-      if (extension == 'docx' && extractedData) {
+      if (supportsExtraction && extractedData) {
         await curriculumCubit.save(
           _buildCurriculumFromForm(
             formCubit: formCubit,
@@ -115,8 +116,8 @@ class CurriculumLogic {
       }
 
       return ActionSuccess(
-        extension != 'docx'
-            ? 'Archivo importado. (Info: solo .docx soporta extracción automática)'
+        !supportsExtraction
+            ? 'Archivo importado. (Info: solo PDF y DOCX soportan extracción automática)'
             : extractedData
             ? 'Archivo importado y datos extraídos.'
             : 'Archivo importado. No se pudieron extraer datos automáticamente.',

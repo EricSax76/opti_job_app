@@ -35,6 +35,7 @@ export * from './scheduled/expireTalentPoolConsent';
 
 // Compliance
 export * from './callable/compliance/complianceCallables';
+export * from './callable/compliance/salaryGapCallables';
 export * from './scheduled/complianceJobs';
 
 // Analytics
@@ -57,6 +58,7 @@ export { completeInterview } from "./callable/interviews/completeInterview";
 // ats
 export { moveApplicationStage } from "./callable/ats/moveApplicationStage";
 export { evaluateKnockoutQuestions } from "./callable/ats/evaluateKnockoutQuestions";
+export { publishOfferMultiposting } from "./callable/ats/publishOfferMultiposting";
 
 // recruiters
 export { createInvitation } from "./callable/recruiters/createInvitation";

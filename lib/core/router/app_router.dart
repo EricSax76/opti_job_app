@@ -135,6 +135,7 @@ class AppRouter {
           name: 'job-offer-detail',
           builder: (context, state) {
             final id = state.pathParameters['id'] ?? '';
+            final sourceChannel = state.uri.queryParameters['source'];
             final candidateUid = context
                 .read<CandidateAuthCubit>()
                 .state
@@ -147,6 +148,7 @@ class AppRouter {
               curriculumRepository: context.read<CurriculumRepository>(),
               aiRepository: context.read<AiRepository>(),
               profileRepository: context.read<ProfileRepository>(),
+              sourceChannel: sourceChannel,
             )..start(id, candidateUid: candidateUid);
 
             return BlocProvider(

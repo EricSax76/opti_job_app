@@ -6,6 +6,7 @@ class JobOffer {
     required this.title,
     required this.description,
     required this.location,
+    this.status,
     this.provinceId,
     this.provinceName,
     this.municipalityId,
@@ -28,6 +29,11 @@ class JobOffer {
     this.pipelineStages,
     this.knockoutQuestions,
     this.languageCheckResult,
+    this.salaryGapJustificationRequired = false,
+    this.salaryGapAudit,
+    this.publicationBlockReason,
+    this.multiposting,
+    this.multipostingEnabledChannels = const [],
     this.requiredSkills = const [],
     this.preferredSkills = const [],
     this.createdAt,
@@ -37,6 +43,7 @@ class JobOffer {
   final String title;
   final String description;
   final String location;
+  final String? status;
   final String? provinceId;
   final String? provinceName;
   final String? municipalityId;
@@ -59,6 +66,11 @@ class JobOffer {
   final List<dynamic>? pipelineStages;
   final List<dynamic>? knockoutQuestions;
   final Map<String, dynamic>? languageCheckResult;
+  final bool salaryGapJustificationRequired;
+  final Map<String, dynamic>? salaryGapAudit;
+  final String? publicationBlockReason;
+  final Map<String, dynamic>? multiposting;
+  final List<String> multipostingEnabledChannels;
   final List<JobOfferSkill> requiredSkills;
   final List<Skill> preferredSkills;
   final DateTime? createdAt;
@@ -69,6 +81,7 @@ class JobOffer {
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       location: json['location'] as String? ?? '',
+      status: _readNullableString(json['status']),
       provinceId: _readNullableString(
         json['province_id'] ?? json['provinceId'],
       ),
@@ -109,6 +122,25 @@ class JobOffer {
       pipelineStages: json['pipelineStages'] as List<dynamic>?,
       knockoutQuestions: json['knockoutQuestions'] as List<dynamic>?,
       languageCheckResult: json['languageCheckResult'] as Map<String, dynamic>?,
+      salaryGapJustificationRequired:
+          json['salary_gap_justification_required'] as bool? ??
+          json['salaryGapJustificationRequired'] as bool? ??
+          false,
+      salaryGapAudit:
+          json['salary_gap_audit'] as Map<String, dynamic>? ??
+          json['salaryGapAudit'] as Map<String, dynamic>?,
+      publicationBlockReason:
+          json['publication_block_reason'] as String? ??
+          json['publicationBlockReason'] as String?,
+      multiposting:
+          json['multiposting'] as Map<String, dynamic>?,
+      multipostingEnabledChannels:
+          (json['multiposting_enabled_channels'] as List<dynamic>? ??
+                  json['multipostingEnabledChannels'] as List<dynamic>? ??
+                  const [])
+              .map((e) => e.toString().trim())
+              .where((e) => e.isNotEmpty)
+              .toList(),
       requiredSkills: (json['requiredSkills'] as List<dynamic>? ?? const [])
           .whereType<Map<String, dynamic>>()
           .map(JobOfferSkill.fromJson)
@@ -127,6 +159,7 @@ class JobOffer {
       'title': title,
       'description': description,
       'location': location,
+      if (status != null) 'status': status,
       'province_id': provinceId,
       'province_name': provinceName,
       'municipality_id': municipalityId,
@@ -150,6 +183,12 @@ class JobOffer {
       if (knockoutQuestions != null) 'knockoutQuestions': knockoutQuestions,
       if (languageCheckResult != null)
         'languageCheckResult': languageCheckResult,
+      'salary_gap_justification_required': salaryGapJustificationRequired,
+      if (salaryGapAudit != null) 'salary_gap_audit': salaryGapAudit,
+      if (publicationBlockReason != null)
+        'publication_block_reason': publicationBlockReason,
+      if (multiposting != null) 'multiposting': multiposting,
+      'multiposting_enabled_channels': multipostingEnabledChannels,
       'requiredSkills': requiredSkills.map((s) => s.toJson()).toList(),
       'preferredSkills': preferredSkills.map((s) => s.toJson()).toList(),
       if (createdAt != null) 'created_at': createdAt?.toIso8601String(),
@@ -161,6 +200,7 @@ class JobOffer {
     String? title,
     String? description,
     String? location,
+    String? status,
     String? provinceId,
     String? provinceName,
     String? municipalityId,
@@ -183,6 +223,11 @@ class JobOffer {
     List<dynamic>? pipelineStages,
     List<dynamic>? knockoutQuestions,
     Map<String, dynamic>? languageCheckResult,
+    bool? salaryGapJustificationRequired,
+    Map<String, dynamic>? salaryGapAudit,
+    String? publicationBlockReason,
+    Map<String, dynamic>? multiposting,
+    List<String>? multipostingEnabledChannels,
     List<JobOfferSkill>? requiredSkills,
     List<Skill>? preferredSkills,
     DateTime? createdAt,
@@ -192,6 +237,7 @@ class JobOffer {
       title: title ?? this.title,
       description: description ?? this.description,
       location: location ?? this.location,
+      status: status ?? this.status,
       provinceId: provinceId ?? this.provinceId,
       provinceName: provinceName ?? this.provinceName,
       municipalityId: municipalityId ?? this.municipalityId,
@@ -214,6 +260,13 @@ class JobOffer {
       pipelineStages: pipelineStages ?? this.pipelineStages,
       knockoutQuestions: knockoutQuestions ?? this.knockoutQuestions,
       languageCheckResult: languageCheckResult ?? this.languageCheckResult,
+      salaryGapJustificationRequired: salaryGapJustificationRequired ??
+          this.salaryGapJustificationRequired,
+      salaryGapAudit: salaryGapAudit ?? this.salaryGapAudit,
+      publicationBlockReason: publicationBlockReason ?? this.publicationBlockReason,
+      multiposting: multiposting ?? this.multiposting,
+      multipostingEnabledChannels:
+          multipostingEnabledChannels ?? this.multipostingEnabledChannels,
       requiredSkills: requiredSkills ?? this.requiredSkills,
       preferredSkills: preferredSkills ?? this.preferredSkills,
       createdAt: createdAt ?? this.createdAt,

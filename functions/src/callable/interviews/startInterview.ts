@@ -37,7 +37,7 @@ export const startInterview = functions.region("europe-west1").https.onCall(
         "User must be authenticated"
       );
     }
-    const companyUid = context.auth.uid;
+    const actorUid = context.auth.uid;
     const { applicationId } = data;
 
     if (!applicationId) {
@@ -48,7 +48,7 @@ export const startInterview = functions.region("europe-west1").https.onCall(
     }
 
     const db = admin.firestore();
-    const loggerCtx = { applicationId, companyUid };
+    const loggerCtx = { applicationId, actorUid };
     logger.info("Starting interview process", loggerCtx);
 
     try {
@@ -83,19 +83,43 @@ export const startInterview = functions.region("europe-west1").https.onCall(
         const offerDoc = await transaction.get(offerRef);
         
         if (!offerDoc.exists) {
-           throw new ValidationError("Job offer not found");
+          throw new ValidationError("Job offer not found");
         }
         const offer = offerDoc.data() as JobOffer;
-        
-        // Check if the requester is the company owner
-        // Support both old and new field names if necessary, but models.ts says company_uid
+
+        // Check requester ownership / RBAC:
+        // - Company main account can start interviews.
+        // - Recruiters with role admin|recruiter in the same company can start interviews.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const offerOwner = offer.company_uid || (offer as any).companyUid || (offer as any).owner_uid;
-        if (offerOwner !== companyUid) {
-          throw new functions.https.HttpsError(
-            "permission-denied",
-            "Only the job offer owner can start an interview"
-          );
+        if (!offerOwner) {
+          throw new ValidationError("Job offer is missing company owner");
+        }
+
+        if (actorUid !== offerOwner) {
+          const recruiterRef = db.collection("recruiters").doc(actorUid);
+          const recruiterDoc = await transaction.get(recruiterRef);
+          if (!recruiterDoc.exists) {
+            throw new functions.https.HttpsError(
+              "permission-denied",
+              "Only company owner or recruiter with interview permissions can start an interview"
+            );
+          }
+          const recruiter = recruiterDoc.data() as Record<string, unknown>;
+          const role = String(recruiter.role ?? "");
+          const status = String(recruiter.status ?? "");
+          const recruiterCompanyId = String(recruiter.companyId ?? "");
+          const canStartInterview = ["admin", "recruiter"].includes(role);
+          if (
+            recruiterCompanyId !== offerOwner ||
+            status !== "active" ||
+            !canStartInterview
+          ) {
+            throw new functions.https.HttpsError(
+              "permission-denied",
+              "Your recruiter role cannot start interviews for this company"
+            );
+          }
         }
 
         // 3. Check for existing interview (Idempotency)
@@ -109,13 +133,17 @@ export const startInterview = functions.region("europe-west1").https.onCall(
 
         // 4. Create Interview Document
         const now = admin.firestore.Timestamp.now();
+        const participants = actorUid === offerOwner
+          ? [offerOwner, candidateUid]
+          : [offerOwner, candidateUid, actorUid];
+
         const interview: Interview = {
           id: applicationId,
           applicationId: applicationId,
           jobOfferId: jobOfferId,
-          companyUid: companyUid,
+          companyUid: offerOwner,
           candidateUid: candidateUid,
-          participants: [companyUid, candidateUid],
+          participants,
           status: "scheduling",
           createdAt: now,
           updatedAt: now,
@@ -136,7 +164,7 @@ export const startInterview = functions.region("europe-west1").https.onCall(
         const messagesRef = interviewRef.collection("messages").doc();
         transaction.set(messagesRef, {
           id: messagesRef.id,
-          senderUid: companyUid,
+          senderUid: actorUid,
           content: "Interview process started. Please propose a date.",
           type: "system",
           createdAt: now,

@@ -17,14 +17,16 @@ class CvAnalysisService {
     try {
       // 1. Extraer texto del documento
       String text = '';
-      if (fileName.toLowerCase().endsWith('.docx')) {
+      final lowerFileName = fileName.toLowerCase();
+      if (lowerFileName.endsWith('.docx')) {
         text = await compute(_extractTextFromDocx, bytes);
+      } else if (lowerFileName.endsWith('.pdf')) {
+        text = await compute(_extractTextFromPdf, bytes);
       }
-      // (Aquí podrías añadir lógica para PDF si integras un paquete compatible)
 
       if (text.isEmpty) {
         throw Exception(
-          'No se pudo leer el texto del archivo. Asegúrate de que sea un .docx válido.',
+          'No se pudo leer el texto del archivo. Usa un PDF/DOCX con texto seleccionable.',
         );
       }
 
@@ -108,6 +110,10 @@ class CvAnalysisService {
 
 String _extractTextFromDocx(Uint8List bytes) {
   return DocumentParser.extractTextFromDocx(bytes);
+}
+
+String _extractTextFromPdf(Uint8List bytes) {
+  return DocumentParser.extractTextFromPdf(bytes);
 }
 
 class CvAnalysisResult {

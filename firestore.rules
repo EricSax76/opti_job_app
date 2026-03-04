@@ -34,6 +34,26 @@ service cloud.firestore {
         get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.status == 'active';
     }
 
+    function recruiterCanManageOffers(companyId) {
+      return recruiterHasRole(companyId, ['admin', 'recruiter']);
+    }
+
+    function recruiterCanScore(companyId) {
+      return recruiterHasRole(companyId, ['admin', 'recruiter', 'hiring_manager', 'external_evaluator']);
+    }
+
+    function recruiterCanViewReports(companyId) {
+      return recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager']);
+    }
+
+    function offerCompanyUid(data) {
+      return data.get('company_uid', data.get('companyUid', data.get('owner_uid', '')));
+    }
+
+    function applicationCompanyUid(data) {
+      return data.get('company_uid', data.get('companyUid', ''));
+    }
+
     match /candidates/{candidateId} {
       allow create: if isSignedIn()
         && request.auth.uid == candidateId
@@ -82,13 +102,15 @@ service cloud.firestore {
       allow read: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && resource.data.companyId == request.auth.uid ||
                      isRecruiter() && recruiterBelongsToCompany(resource.data.companyId);
       allow write: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && request.resource.data.companyId == request.auth.uid ||
-                      isRecruiter() && recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter']);
+                      isRecruiter() && recruiterCanManageOffers(request.resource.data.companyId);
     }
 
     match /jobOffers/{offerId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isCompany()
-        || recruiterHasRole(resource.data.get('companyUid', resource.data.get('company_uid', '')), ['admin', 'recruiter']);
+      allow create: if (isCompany() && request.auth.uid == offerCompanyUid(request.resource.data))
+                     || recruiterCanManageOffers(offerCompanyUid(request.resource.data));
+      allow update, delete: if (isCompany() && request.auth.uid == offerCompanyUid(resource.data))
+                            || recruiterCanManageOffers(offerCompanyUid(resource.data));
     }
 
     function isOfferOwner(offerId) {
@@ -114,11 +136,20 @@ service cloud.firestore {
               || request.auth.uid == resource.data.candidate_uid))
         || (request.auth.uid == resource.data.companyUid)
         || (request.auth.uid == resource.data.company_uid)
-        || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')));
+        || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')))
+        || recruiterCanViewReports(applicationCompanyUid(resource.data))
+        || recruiterHasRole(applicationCompanyUid(resource.data), ['hiring_manager'])
+        || (recruiterHasRole(applicationCompanyUid(resource.data), ['external_evaluator'])
+            && (
+              resource.data.get('assignedTo', '') == request.auth.uid
+              || resource.data.get('assignedEvaluatorUid', '') == request.auth.uid
+              || request.auth.uid in resource.data.get('externalEvaluatorUids', [])
+            ));
 
       allow update: if request.auth.uid == resource.data.companyUid
             || request.auth.uid == resource.data.company_uid
-            || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')));
+            || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')))
+            || recruiterCanManageOffers(applicationCompanyUid(resource.data));
 
       allow delete: if false; // Deletion is not allowed for now.
     }
@@ -131,9 +162,12 @@ service cloud.firestore {
     }
     match /interviews/{interviewId} {
       allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
-      allow create: if isCompany() 
+      allow create: if (isCompany() 
           && request.resource.data.companyUid == request.auth.uid
-          && request.auth.uid in request.resource.data.participants;
+          && request.auth.uid in request.resource.data.participants)
+        || (isRecruiter()
+          && recruiterCanManageOffers(request.resource.data.companyUid)
+          && request.auth.uid in request.resource.data.participants);
       allow update: if isSignedIn() 
           && request.auth.uid in resource.data.participants
           // Prevent participants from changing immutable fields like applicationId or participants list
@@ -154,33 +188,34 @@ service cloud.firestore {
     match /recruiters/{uid} {
       // Puede leer su propio doc o cualquier reclutador activo de la misma empresa
       allow read: if (isSignedIn() && request.auth.uid == uid)
-                    || isRecruiter();
+                    || (isRecruiter() && recruiterBelongsToCompany(resource.data.companyId));
       // Las escrituras son gestionadas exclusivamente por Cloud Functions
       allow write: if false;
     }
 
     match /invitations/{code} {
       // Los reclutadores pueden leer invitaciones (para mostrar código generado)
-      allow read: if isRecruiter();
+      allow read: if isRecruiter() && recruiterBelongsToCompany(resource.data.companyId);
       // Las escrituras son gestionadas exclusivamente por Cloud Functions
       allow write: if false;
     }
 
     match /scorecardTemplates/{templateId} {
-      allow read: if isCompany() || isRecruiter();
-      allow write: if isCompany() || recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter']);
+      allow read: if (isCompany() && request.auth.uid == resource.data.companyId)
+                    || recruiterBelongsToCompany(resource.data.companyId);
+      allow write: if isCompany() || recruiterCanManageOffers(request.resource.data.companyId);
     }
 
     match /evaluations/{evaluationId} {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
-      allow create: if isCompany() || isRecruiter();
+      allow create: if isCompany() || recruiterCanScore(request.resource.data.companyId);
       allow update: if (isCompany() && request.auth.uid == resource.data.companyId) || 
                       (isRecruiter() && request.auth.uid == resource.data.evaluatorUid);
     }
 
     match /approvals/{approvalId} {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
-      allow create: if isCompany() || recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter']);
+      allow create: if isCompany() || recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter', 'hiring_manager']);
       allow update: if isCompany() || isRecruiter();
     }
 
@@ -231,22 +266,42 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
           request.auth.uid == resource.data.candidateUid
           || isCompany()
-          || recruiterHasRole(resource.data.companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager'])
+          || recruiterCanViewReports(resource.data.companyId)
         );
       allow write: if isCandidate() && request.auth.uid == request.resource.data.candidateUid;
+    }
+
+    match /salaryBenchmarks/{benchmarkId} {
+      allow read: if (isCompany() && request.auth.uid == resource.data.companyId)
+                    || recruiterCanViewReports(resource.data.companyId);
+      allow write: if (isCompany() && request.auth.uid == request.resource.data.companyId)
+                    || recruiterCanManageOffers(request.resource.data.companyId);
+    }
+
+    match /salaryGapAlerts/{alertId} {
+      allow read: if (isCompany() && request.auth.uid == resource.data.companyId)
+                    || recruiterCanViewReports(resource.data.companyId);
+      allow write: if false;
+    }
+
+    match /multipostingPublications/{publicationId} {
+      allow read: if (isCompany() && request.auth.uid == resource.data.companyId)
+                    || recruiterCanViewReports(resource.data.companyId)
+                    || recruiterCanManageOffers(resource.data.companyId);
+      allow write: if false;
     }
 
     // ─── Fase 7: Analytics ────────────────────────────────────────────
 
     match /analytics/{companyId} {
       allow read: if (isCompany() && companyId == request.auth.uid)
-                    || recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager']);
+                    || recruiterCanViewReports(companyId);
       // Las escrituras las hace el sistema (Cloud Functions)
       allow write: if false;
 
       match /monthly/{period} {
         allow read: if (isCompany() && companyId == request.auth.uid)
-                      || recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager']);
+                      || recruiterCanViewReports(companyId);
       }
     }
   }

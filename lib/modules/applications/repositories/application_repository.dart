@@ -17,6 +17,7 @@ class ApplicationRepository {
     required Candidate candidate,
     int? candidateProfileId,
     Map<String, dynamic>? knockoutResponses,
+    String sourceChannel = 'platform',
   }) async {
     final application = Application(
       jobOfferId: jobOffer.id,
@@ -28,6 +29,9 @@ class ApplicationRepository {
       candidateProfileId: candidateProfileId ?? candidate.id,
       status: 'pending',
       knockoutResponses: knockoutResponses,
+      sourceChannel: sourceChannel.trim().isEmpty
+          ? 'platform'
+          : sourceChannel.trim().toLowerCase(),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -41,6 +45,8 @@ class ApplicationRepository {
       ..['candidate_uid'] = candidate.uid
       ..['candidate_name'] = candidate.name
       ..['candidate_email'] = candidate.email
+      ..['source_channel'] = application.sourceChannel
+      ..['source'] = application.sourceChannel
       ..['submitted_at'] = FieldValue.serverTimestamp()
       ..['updated_at'] = FieldValue.serverTimestamp();
 

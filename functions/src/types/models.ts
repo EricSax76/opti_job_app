@@ -91,7 +91,12 @@ export interface JobOffer {
   contract_type?: string;
   experience_years?: number;
   skills: string[];
-  status: "active" | "closed" | "expired" | "draft";
+  status:
+    | "active"
+    | "closed"
+    | "expired"
+    | "draft"
+    | "blocked_pending_salary_justification";
   applications_count: number;
   expires_at?: FirebaseFirestore.Timestamp;
   created_at: FirebaseFirestore.Timestamp;
@@ -212,6 +217,7 @@ export interface SubmitApplicationRequest {
   coverLetter?: string;
   curriculumId: string;
   additionalDocuments?: string[];
+  sourceChannel?: string;
 }
 
 export interface SubmitApplicationResponse {

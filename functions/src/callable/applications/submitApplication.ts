@@ -37,7 +37,8 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
     }
 
     const candidateUid = context.auth.uid;
-    const { jobOfferId, coverLetter, curriculumId } = data;
+    const { jobOfferId, coverLetter, curriculumId, sourceChannel } = data;
+    const normalizedSource = String(sourceChannel ?? "").trim().toLowerCase() || "platform";
 
     funcLogger.info("Application submission started", {
       candidateUid,
@@ -150,6 +151,9 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
         candidateEmail: candidate.email,
         curriculum_id: curriculumId,
         curriculumId,
+        source_channel: normalizedSource,
+        sourceChannel: normalizedSource,
+        source: normalizedSource,
         status: "pending",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         submitted_at: now as any,

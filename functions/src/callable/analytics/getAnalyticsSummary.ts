@@ -14,6 +14,31 @@ export const getAnalyticsSummary = functions.https.onCall(async (data, context) 
     throw new functions.https.HttpsError('invalid-argument', 'companyId and period are required.');
   }
 
+  const requesterUid = context.auth.uid;
+  if (requesterUid !== String(companyId)) {
+    const db = admin.firestore();
+    const recruiterDoc = await db.collection('recruiters').doc(requesterUid).get();
+    if (!recruiterDoc.exists) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Only company users or authorized recruiters can access analytics.',
+      );
+    }
+
+    const recruiter = recruiterDoc.data() as Record<string, unknown>;
+    const recruiterCompanyId = String(recruiter.companyId ?? '').trim();
+    const recruiterStatus = String(recruiter.status ?? '').trim();
+    const recruiterRole = String(recruiter.role ?? '').trim();
+    const canViewReports = ['admin', 'recruiter', 'viewer', 'hiring_manager'].includes(recruiterRole);
+
+    if (recruiterCompanyId !== String(companyId) || recruiterStatus !== 'active' || !canViewReports) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Your recruiter role does not allow viewing analytics.',
+      );
+    }
+  }
+
   const db = admin.firestore();
   const analyticsDoc = await db.collection('analytics')
     .doc(companyId)
