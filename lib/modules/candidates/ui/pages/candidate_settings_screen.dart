@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 
@@ -25,6 +26,14 @@ class _CandidateSettingsScreenState extends State<CandidateSettingsScreen> {
     final background = colorScheme.surface;
     final border = colorScheme.outlineVariant;
     final appBarBg = colorScheme.surface;
+    ThemeCubit? themeCubit;
+    try {
+      themeCubit = context.read<ThemeCubit>();
+    } catch (_) {
+      themeCubit = null;
+    }
+    final focusModeEnabled =
+        themeCubit?.state.focusModeEnabled ?? false;
     final candidateUid = context.select<CandidateAuthCubit, String?>(
       (cubit) => cubit.state.candidate?.uid,
     );
@@ -52,6 +61,13 @@ class _CandidateSettingsScreenState extends State<CandidateSettingsScreen> {
           children: [
             const _SettingsPlaceholderMessage(),
             const SizedBox(height: uiSpacing16),
+            if (themeCubit != null) ...[
+              _FocusModeSection(
+                enabled: focusModeEnabled,
+                onChanged: themeCubit.setFocusModeEnabled,
+              ),
+              const SizedBox(height: uiSpacing16),
+            ],
             _EudiWalletSection(
               candidateUid: candidateUid,
               isImportingCredential: _isImportingCredential,
@@ -168,16 +184,22 @@ class _EudiWalletSection extends StatelessWidget {
             else
               _CredentialList(candidateUid: normalizedUid),
             const SizedBox(height: uiSpacing12),
-            OutlinedButton.icon(
-              onPressed: isImportingCredential ? null : onImportCredential,
-              icon: isImportingCredential
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add_link_outlined),
-              label: const Text('Importar credencial EUDI'),
+            Semantics(
+              button: true,
+              label: 'Importar credencial EUDI',
+              hint:
+                  'Abre el flujo nativo de wallet para importar credenciales verificadas.',
+              child: OutlinedButton.icon(
+                onPressed: isImportingCredential ? null : onImportCredential,
+                icon: isImportingCredential
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add_link_outlined),
+                label: const Text('Importar credencial EUDI'),
+              ),
             ),
           ],
         ),
@@ -741,6 +763,104 @@ class _SettingsPlaceholderMessage extends StatelessWidget {
           height: 1.35,
         ),
       ),
+    );
+  }
+}
+
+class _FocusModeSection extends StatelessWidget {
+  const _FocusModeSection({
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final border = colorScheme.outlineVariant;
+    final cardColor = theme.cardTheme.color ?? colorScheme.surface;
+
+    return Semantics(
+      container: true,
+      label: 'Modo enfoque para candidatos',
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(uiTileRadius),
+          border: Border.all(color: border),
+        ),
+        child: Column(
+          children: [
+            SwitchListTile.adaptive(
+              value: enabled,
+              onChanged: onChanged,
+              title: const Text('Modo enfoque'),
+              subtitle: const Text(
+                'Reduce estímulos visuales y prioriza acciones esenciales.',
+              ),
+              secondary: const Icon(Icons.center_focus_strong_outlined),
+            ),
+            const Divider(height: 1),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                uiSpacing16,
+                uiSpacing12,
+                uiSpacing16,
+                uiSpacing16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _FocusModeBullet(
+                    icon: Icons.visibility_off_outlined,
+                    text: 'Oculta paneles no esenciales.',
+                  ),
+                  SizedBox(height: uiSpacing8),
+                  _FocusModeBullet(
+                    icon: Icons.motion_photos_paused_outlined,
+                    text: 'Reduce o pausa animaciones no necesarias.',
+                  ),
+                  SizedBox(height: uiSpacing8),
+                  _FocusModeBullet(
+                    icon: Icons.density_small_outlined,
+                    text: 'Simplifica la densidad visual de la interfaz.',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusModeBullet extends StatelessWidget {
+  const _FocusModeBullet({
+    required this.icon,
+    required this.text,
+  });
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16),
+        const SizedBox(width: uiSpacing8),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
     );
   }
 }

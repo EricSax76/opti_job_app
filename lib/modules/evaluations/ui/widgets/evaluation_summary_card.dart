@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/modules/evaluations/models/evaluation.dart';
 
@@ -73,23 +74,12 @@ class EvaluationSummaryCard extends StatelessWidget {
             if (evaluation.aiAssisted) ...[
               const SizedBox(height: uiSpacing8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.auto_awesome,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: uiSpacing4),
-                  Text(
-                    'AI Assisted',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  const Expanded(child: AiGeneratedLabel(compact: true)),
                   if (evaluation.aiOverridden)
                     Padding(
-                      padding: const EdgeInsets.only(left: uiSpacing8),
+                      padding: const EdgeInsets.only(left: uiSpacing8, top: 4),
                       child: Text(
                         '(Overridden)',
                         style: textTheme.labelSmall?.copyWith(

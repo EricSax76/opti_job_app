@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:opti_job_app/core/theme/theme_cubit.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/core/widgets/auth_login_form.dart';
 import 'package:opti_job_app/core/widgets/auth_register_form.dart';
 import 'package:opti_job_app/modules/companies/models/company_dashboard_navigation.dart';
@@ -122,6 +123,26 @@ void main() {
         await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       },
     );
+
+    testWidgets('Etiqueta IA expone semántica de transparencia', (
+      tester,
+    ) async {
+      final semanticsHandle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: AiGeneratedLabel(),
+            ),
+          ),
+        ),
+      );
+
+      final semanticsNode = tester.getSemantics(find.byType(AiGeneratedLabel));
+      expect(semanticsNode.label, contains('Contenido generado por IA'));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      semanticsHandle.dispose();
+    });
   });
 }
 

@@ -45,7 +45,11 @@ class CandidateDashboardAppBar extends StatelessWidget
     final avatarDiameter = avatarRadius * 2;
     final accountNameMaxWidth = isMobileLayout ? 120.0 : 148.0;
 
-    final accountMenu = PopupMenuButton<_CandidateAccountAction>(
+    final accountMenu = Semantics(
+      button: true,
+      label: 'Acciones de cuenta del candidato',
+      hint: 'Abre ajustes, perfil o cierre de sesión.',
+      child: PopupMenuButton<_CandidateAccountAction>(
       tooltip: 'Cuenta',
       padding: EdgeInsets.zero,
       onSelected: (action) {
@@ -184,7 +188,7 @@ class CandidateDashboardAppBar extends StatelessWidget
                       color: colorScheme.onSecondaryContainer,
                     ),
             ),
-    );
+    ));
 
     return AppBar(
       toolbarHeight: toolbarHeight,

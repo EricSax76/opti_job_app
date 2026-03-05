@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/features/cover_letter/view/models/cover_letter_view_model.dart';
 
 class CoverLetterContent extends StatelessWidget {
@@ -28,6 +29,8 @@ class CoverLetterContent extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: uiSpacing8),
+          const AiGeneratedLabel(),
+          const SizedBox(height: uiSpacing8),
           TextField(
             controller: controller,
             maxLines: 8,
@@ -38,21 +41,27 @@ class CoverLetterContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: uiSpacing16),
-          ElevatedButton.icon(
-            onPressed: viewModel.isImproving ? null : onImprove,
-            icon: viewModel.isImproving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.auto_awesome),
-            label: Text(
-              viewModel.isImproving ? 'Generando...' : 'Generar con IA',
-            ),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.onSecondary,
-              backgroundColor: Theme.of(context).colorScheme.secondary,
+          Semantics(
+            button: true,
+            label: 'Generar carta de presentación con IA',
+            hint:
+                'La IA propone un borrador inicial basado en tu currículo. Puedes editarlo antes de guardar.',
+            child: ElevatedButton.icon(
+              onPressed: viewModel.isImproving ? null : onImprove,
+              icon: viewModel.isImproving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome),
+              label: Text(
+                viewModel.isImproving ? 'Generando...' : 'Generar con IA',
+              ),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
             ),
           ),
           const SizedBox(height: uiSpacing24),

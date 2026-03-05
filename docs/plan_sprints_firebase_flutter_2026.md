@@ -145,7 +145,7 @@ Migrar matching a embeddings + vector search y reforzar explicabilidad AI Act.
 ### Criterios de aceptacion (DoD)
 - Matching devuelve resultados semanticos medibles en pruebas comparativas.
 - Cada decision AI tiene log explicable recuperable por `applicationId`.
-- Flujo de override humano operativo y auditado.
+- Flujo de override humano operativo y auditado
 
 ---
 

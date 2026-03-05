@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/modules/ats/models/knockout_question.dart';
 import 'package:opti_job_app/modules/ats/ui/widgets/knockout_questions_form.dart';
 import 'package:opti_job_app/modules/ats/ui/widgets/pipeline_template_selector.dart';
@@ -69,25 +70,40 @@ class CreateOfferCard extends StatelessWidget {
             const SizedBox(height: 24),
             Align(
               alignment: Alignment.centerRight,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(48, 48),
-                  tapTargetSize: MaterialTapTargetSize.padded,
-                ),
-                onPressed: isGenerating ? null : onGenerateWithAi,
-                child: Wrap(
-                  spacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    isGenerating
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.auto_awesome_outlined),
-                    Text(isGenerating ? 'Generando...' : 'Generar con IA'),
-                  ],
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const AiGeneratedLabel(compact: true),
+                  const SizedBox(height: uiSpacing8),
+                  Semantics(
+                    button: true,
+                    label: 'Generar borrador de oferta con IA',
+                    hint:
+                        'Crea un borrador inicial que debes revisar antes de publicar.',
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                      ),
+                      onPressed: isGenerating ? null : onGenerateWithAi,
+                      child: Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          isGenerating
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.auto_awesome_outlined),
+                          Text(isGenerating ? 'Generando...' : 'Generar con IA'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
@@ -119,27 +135,33 @@ class CreateOfferCard extends StatelessWidget {
                     state.status == JobOfferFormStatus.submitting;
                 return SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: uiSpacing12,
+                  child: Semantics(
+                    button: true,
+                    label: 'Publicar oferta',
+                    hint:
+                        'Publica la oferta para abrir candidaturas en el sistema.',
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: uiSpacing12,
+                        ),
                       ),
-                    ),
-                    onPressed: isSubmitting ? null : onSubmit,
-                    child: isSubmitting
-                        ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                colorScheme.onPrimary,
+                      onPressed: isSubmitting ? null : onSubmit,
+                      child: isSubmitting
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  colorScheme.onPrimary,
+                                ),
                               ),
-                            ),
-                          )
-                        : const Text('Publicar oferta'),
+                            )
+                          : const Text('Publicar oferta'),
+                    ),
                   ),
                 );
               },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/controllers/curriculum_summary_actions_controller.dart';
 
@@ -68,31 +69,47 @@ class _CurriculumPersonalInfoFormState
             ),
             Padding(
               padding: const EdgeInsets.all(uiSpacing8),
-              child: TextButton.icon(
-                onPressed: widget.state.isSaving || _isImprovingSummary
-                    ? null
-                    : _handleImproveSummary,
-                style: TextButton.styleFrom(
-                  backgroundColor: uiAccentSoft,
-                  padding: const EdgeInsets.symmetric(horizontal: uiSpacing12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(uiPillRadius),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const AiGeneratedLabel(compact: true),
+                  const SizedBox(height: uiSpacing8),
+                  Semantics(
+                    button: true,
+                    label: 'Mejorar resumen profesional con IA',
+                    hint:
+                        'Genera una sugerencia de resumen que puedes aceptar o descartar.',
+                    child: TextButton.icon(
+                      onPressed: widget.state.isSaving || _isImprovingSummary
+                          ? null
+                          : _handleImproveSummary,
+                      style: TextButton.styleFrom(
+                        backgroundColor: uiAccentSoft,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: uiSpacing12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(uiPillRadius),
+                        ),
+                      ),
+                      icon: _isImprovingSummary
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.auto_awesome, size: 16),
+                      label: Text(
+                        _isImprovingSummary ? 'Mejorando...' : 'Mejorar con IA',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                icon: _isImprovingSummary
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.auto_awesome, size: 16),
-                label: Text(
-                  _isImprovingSummary ? 'Mejorando...' : 'Mejorar con IA',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                ],
               ),
             ),
           ],

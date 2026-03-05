@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
 
@@ -42,6 +43,8 @@ class AiExplanationCard extends StatelessWidget {
                 ),
             ],
           ),
+          const SizedBox(height: uiSpacing8),
+          const AiGeneratedLabel(compact: true),
           const SizedBox(height: uiSpacing12),
           Text(
             result.explanation,

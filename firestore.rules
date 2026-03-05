@@ -295,6 +295,22 @@ service cloud.firestore {
                               (isRecruiter() && request.auth.uid == resource.data.recruiterUid);
     }
 
+    match /candidateEmbeddings/{candidateUid} {
+      // Los embeddings de candidato se generan y actualizan solo en backend.
+      // Lectura limitada al titular para transparencia/portabilidad.
+      allow read: if isSignedIn() && request.auth.uid == candidateUid;
+      allow write: if false;
+    }
+
+    match /aiDecisionLogs/{logId} {
+      // Derecho a explicación: candidato dueño, empresa propietaria o perfiles autorizados.
+      allow read: if (isSignedIn() && request.auth.uid == resource.data.candidateUid)
+        || (isCompany() && request.auth.uid == resource.data.companyId)
+        || recruiterCanViewReports(resource.data.companyId)
+        || recruiterCanAccessBlockedArchive(resource.data.companyId);
+      allow write: if false;
+    }
+
     // ─── Fase 6: Compliance ───────────────────────────────────────────
 
     match /auditLogs/{logId} {

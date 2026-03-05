@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/core/widgets/inline_state_message.dart';
@@ -549,6 +550,8 @@ class _CandidateDecisionRequestsSection extends StatelessWidget {
                   ),
                   if (item.aiExplanation != null &&
                       item.aiExplanation!.trim().isNotEmpty) ...[
+                    const SizedBox(height: uiSpacing8),
+                    const AiGeneratedLabel(compact: true),
                     const SizedBox(height: uiSpacing8),
                     Text(
                       item.aiExplanation!,

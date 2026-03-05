@@ -12,6 +12,7 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
     required this.useCompactHeader,
     required this.shouldAutoHideHeader,
     required this.isVisible,
+    this.simplified = false,
   });
 
   final String candidateName;
@@ -21,10 +22,12 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
   final bool useCompactHeader;
   final bool shouldAutoHideHeader;
   final bool isVisible;
+  final bool simplified;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final isDark = theme.brightness == Brightness.dark;
     final headerTitleColor = isDark
         ? uiDarkOnPrimaryContainer
@@ -32,7 +35,9 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
     final headerSubtitleColor = headerTitleColor.withValues(alpha: 0.82);
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 180),
+      duration: disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 180),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) {
@@ -49,18 +54,26 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(
-                  horizontal: useCompactHeader ? 14 : 24,
-                  vertical: useCompactHeader ? 12 : 24,
+                  horizontal: simplified
+                      ? 12
+                      : (useCompactHeader ? 14 : 24),
+                  vertical: simplified
+                      ? 10
+                      : (useCompactHeader ? 12 : 24),
                 ),
                 decoration: BoxDecoration(
-                  color: useCompactHeader
+                  color: simplified
+                      ? theme.colorScheme.surfaceContainerHighest.withValues(
+                          alpha: isDark ? 0.42 : 0.55,
+                        )
+                      : useCompactHeader
                       ? (isDark
                             ? uiDarkHeaderGradientStart.withValues(alpha: 0.75)
                             : uiLightHeaderGradientStart.withValues(
                                 alpha: 0.85,
                               ))
                       : null,
-                  gradient: useCompactHeader
+                  gradient: simplified || useCompactHeader
                       ? null
                       : (isDark
                             ? const LinearGradient(
@@ -102,19 +115,21 @@ class CandidateDashboardWelcomeHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      subtitleText,
-                      maxLines: useCompactHeader ? 2 : null,
-                      overflow: useCompactHeader
-                          ? TextOverflow.ellipsis
-                          : TextOverflow.visible,
-                      style:
-                          (useCompactHeader
-                                  ? theme.textTheme.bodyMedium
-                                  : theme.textTheme.bodyLarge)
-                              ?.copyWith(color: headerSubtitleColor),
-                    ),
-                    if (assistiveHint != null &&
+                    if (!simplified)
+                      Text(
+                        subtitleText,
+                        maxLines: useCompactHeader ? 2 : null,
+                        overflow: useCompactHeader
+                            ? TextOverflow.ellipsis
+                            : TextOverflow.visible,
+                        style:
+                            (useCompactHeader
+                                    ? theme.textTheme.bodyMedium
+                                    : theme.textTheme.bodyLarge)
+                                ?.copyWith(color: headerSubtitleColor),
+                      ),
+                    if (!simplified &&
+                        assistiveHint != null &&
                         assistiveHint!.trim().isNotEmpty) ...[
                       const SizedBox(height: 10),
                       Row(

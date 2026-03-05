@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { writeAiDecisionLog, writeAuditLog } from "../../utils/aiDecisionLogs";
 
 const SKILL_ALIASES: Record<string, string[]> = {
   flutter: ["flutter", "flutter framework"],
@@ -111,6 +112,11 @@ function toScore(earned: number, total: number): number {
   return Math.max(0, Math.min(100, Math.round((earned / total) * 100)));
 }
 
+function randomId(prefix: string): string {
+  const random = Math.random().toString(16).slice(2, 10);
+  return `${prefix}_${Date.now()}_${random}`;
+}
+
 export const matchCandidateWithSkills = functions.region("europe-west1").https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
@@ -139,10 +145,22 @@ export const matchCandidateWithSkills = functions.region("europe-west1").https.o
 
   const app = appDoc.data() as Record<string, unknown>;
   const offer = offerDoc.data() as Record<string, unknown>;
+  const candidateUid = String(app.candidate_uid ?? app.candidateId ?? "").trim();
+  const companyId = String(app.company_uid ?? app.companyUid ?? "").trim();
   const curriculumId = String(app.curriculum_id ?? app.curriculumId ?? "").trim();
-  const curriculumDoc = curriculumId
-    ? await db.collection("curriculum").doc(curriculumId).get()
+  const nestedCurriculumDoc = candidateUid && curriculumId
+    ? await db
+      .collection("candidates")
+      .doc(candidateUid)
+      .collection("curriculum")
+      .doc(curriculumId)
+      .get()
     : null;
+  const curriculumDoc = nestedCurriculumDoc?.exists
+    ? nestedCurriculumDoc
+    : curriculumId
+      ? await db.collection("curriculum").doc(curriculumId).get()
+      : null;
   const curriculum = curriculumDoc?.exists
     ? (curriculumDoc.data() as Record<string, unknown>)
     : null;
@@ -234,6 +252,12 @@ export const matchCandidateWithSkills = functions.region("europe-west1").https.o
       adjacent: [...adjacent],
     },
     modelVersion: "semantic-ranker-v1",
+    weights: {
+      semanticWeight: 0,
+      skillsWeight: 1,
+      locationWeight: 0,
+      experienceWeight: 0,
+    },
     generatedAt: admin.firestore.FieldValue.serverTimestamp(),
   };
 
@@ -244,5 +268,64 @@ export const matchCandidateWithSkills = functions.region("europe-west1").https.o
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  return aiResult;
+  const requestId = String(data?.requestId ?? "").trim() || randomId("req");
+  const executionId = randomId("exec");
+  const decisionLogId = await writeAiDecisionLog({
+    applicationId,
+    companyId: companyId || null,
+    candidateUid: candidateUid || null,
+    jobOfferId,
+    decisionType: "skill_match",
+    decisionStatus: "generated",
+    score,
+    weights: aiResult.weights,
+    model: {
+      provider: "rules_based",
+      model: "semantic-ranker-v1",
+      version: "v1",
+      source: "skills_adjacency",
+    },
+    requestId,
+    executionId,
+    features: {
+      matchedSkills: aiResult.skillsOverlap.matched,
+      missingSkills: aiResult.skillsOverlap.missing,
+      adjacentSkills: aiResult.skillsOverlap.adjacent,
+      reasons: aiResult.reasons,
+    },
+    metadata: {
+      callable: "matchCandidateWithSkills",
+    },
+    actorUid: context.auth.uid,
+    actorRole: "authenticated_user",
+  });
+
+  await Promise.all([
+    appDoc.ref.set({
+      aiMatchResult: {
+        decisionLogId,
+      },
+    }, { merge: true }),
+    writeAuditLog({
+      action: "ai_skill_match_generated",
+      actorUid: context.auth.uid,
+      actorRole: "authenticated_user",
+      targetType: "application",
+      targetId: applicationId,
+      companyId: companyId || null,
+      metadata: {
+        requestId,
+        executionId,
+        decisionLogId,
+        score,
+      },
+    }),
+  ]);
+
+  return {
+    ...aiResult,
+    decisionLogId,
+    requestId,
+    executionId,
+  };
 });

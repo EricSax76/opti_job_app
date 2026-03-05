@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 
 class GenerateOfferDialog extends StatefulWidget {
   const GenerateOfferDialog({
@@ -71,6 +73,11 @@ class _GenerateOfferDialogState extends State<GenerateOfferDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: AiGeneratedLabel(compact: true),
+              ),
+              const SizedBox(height: uiSpacing12),
               TextFormField(
                 controller: _role,
                 decoration: _inputDecoration(labelText: 'Título'),
@@ -137,23 +144,29 @@ class _GenerateOfferDialogState extends State<GenerateOfferDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
-          onPressed: () {
-            if (!_formKey.currentState!.validate()) return;
-            final payload = <String, dynamic>{
-              'companyName': widget.companyName,
-              'role': _role.text.trim(),
-              'location': _location.text.trim(),
-              'jobType': _jobType.text.trim(),
-              'salaryMin': _salaryMin.text.trim(),
-              'salaryMax': _salaryMax.text.trim(),
-              'education': _education.text.trim(),
-              'keyIndicators': _keyIndicators.text.trim(),
-            };
+        Semantics(
+          button: true,
+          label: 'Generar borrador de oferta con IA',
+          hint:
+              'Genera un borrador inicial que será revisado y editado por la empresa.',
+          child: FilledButton(
+            onPressed: () {
+              if (!_formKey.currentState!.validate()) return;
+              final payload = <String, dynamic>{
+                'companyName': widget.companyName,
+                'role': _role.text.trim(),
+                'location': _location.text.trim(),
+                'jobType': _jobType.text.trim(),
+                'salaryMin': _salaryMin.text.trim(),
+                'salaryMax': _salaryMax.text.trim(),
+                'education': _education.text.trim(),
+                'keyIndicators': _keyIndicators.text.trim(),
+              };
 
-            Navigator.of(context).pop(payload);
-          },
-          child: const Text('Generar'),
+              Navigator.of(context).pop(payload);
+            },
+            child: const Text('Generar'),
+          ),
         ),
       ],
     );

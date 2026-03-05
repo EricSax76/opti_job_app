@@ -21,6 +21,10 @@ export { onInterviewUpdate } from "./triggers/firestore/onInterviewUpdate";
 export { onRecruiterCreate } from "./triggers/firestore/onRecruiterCreate";
 export { onRecruiterWrite } from "./triggers/firestore/onRecruiterWrite";
 export {
+  onCurriculumWriteRefreshEmbedding,
+  onJobOfferWriteRefreshEmbedding,
+} from "./triggers/firestore/vectorEmbeddings";
+export {
   syncCandidateProfileToApplications,
   syncCompanyProfileToOffers,
   syncJobOfferTitleToApplications,
@@ -32,6 +36,8 @@ export { onApprovalUpdate } from "./triggers/firestore/approvals/onApprovalUpdat
 // AI & Skills
 export * from './scheduled/seedSkillsTaxonomy';
 export * from './callable/ai/matchCandidateWithSkills';
+export * from './callable/ai/matchCandidateVector';
+export * from './callable/ai/getAiDecisionReview';
 export * from './callable/ai/overrideAiDecision';
 
 // Talent Pool

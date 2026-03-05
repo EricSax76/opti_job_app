@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 
 class AIRecommendationCard extends StatelessWidget {
@@ -54,6 +55,8 @@ class AIRecommendationCard extends StatelessWidget {
                 ),
             ],
           ),
+          const SizedBox(height: uiSpacing8),
+          const AiGeneratedLabel(compact: true),
           const SizedBox(height: uiSpacing12),
           Row(
             children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_pre_apply_logic.dart';
 
@@ -21,6 +22,8 @@ class JobOfferPreApplyVerdictDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const AiGeneratedLabel(compact: true),
+            const SizedBox(height: uiSpacing12),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(uiSpacing12),

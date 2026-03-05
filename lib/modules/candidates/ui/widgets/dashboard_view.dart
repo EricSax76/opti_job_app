@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:opti_job_app/core/theme/theme_cubit.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_reminders_visibility_cubit.dart';
@@ -79,6 +80,9 @@ class _DashboardViewState extends State<DashboardView> {
       displayedOfferCount: displayedOfferCount,
       hasActiveFilters: hasActiveFilters,
     );
+    final isFocusMode = context.select<ThemeCubit, bool>(
+      (cubit) => cubit.state.focusModeEnabled,
+    );
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -98,6 +102,7 @@ class _DashboardViewState extends State<DashboardView> {
             colorScheme: colorScheme,
             candidateName: candidateName,
             adaptiveCopy: adaptiveCopy,
+            isFocusMode: isFocusMode,
           ),
         );
       },
@@ -110,6 +115,7 @@ class _DashboardViewState extends State<DashboardView> {
     required ColorScheme colorScheme,
     required String candidateName,
     required CandidateGenUiCopy adaptiveCopy,
+    required bool isFocusMode,
   }) {
     final isDark = theme.brightness == Brightness.dark;
     final _ = isDark ? uiDarkOnPrimaryContainer : uiLightOnPrimaryContainer;
@@ -129,10 +135,12 @@ class _DashboardViewState extends State<DashboardView> {
         layout.canDismissPinnedFiltersFromSidebar;
     final showOffersGrid = layout.showOffersGrid;
 
+    final showPinnedFiltersInMode = showPinnedFilters && !isFocusMode;
+
     final content = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (showPinnedFilters)
+        if (showPinnedFiltersInMode)
           BlocSelector<JobOffersCubit, JobOffersState, JobOfferFilters>(
             selector: (state) => state.activeFilters,
             builder: (context, filters) {
@@ -162,17 +170,20 @@ class _DashboardViewState extends State<DashboardView> {
                   useCompactHeader: useCompactHeader,
                   shouldAutoHideHeader: shouldAutoHideHeader,
                   isVisible: _isMobileHeaderVisible,
+                  simplified: isFocusMode,
                 ),
-                CandidateDashboardFilterToggleRow(
-                  canPinFilters: canPinFilters,
-                  showFilters: _showFilters,
-                  isMobileFiltersOpen: _isMobileFiltersOpen,
-                  onToggle: () => _handleFiltersToggle(
-                    context: context,
+                if (!isFocusMode)
+                  CandidateDashboardFilterToggleRow(
                     canPinFilters: canPinFilters,
+                    showFilters: _showFilters,
+                    isMobileFiltersOpen: _isMobileFiltersOpen,
+                    onToggle: () => _handleFiltersToggle(
+                      context: context,
+                      canPinFilters: canPinFilters,
+                      reduceMotion: isFocusMode,
+                    ),
                   ),
-                ),
-                SizedBox(height: useCompactHeader ? 12 : 16),
+                SizedBox(height: useCompactHeader ? 12 : (isFocusMode ? 8 : 16)),
                 Expanded(
                   child: hasDesktopNavigation
                       ? NotificationListener<ScrollNotification>(
@@ -205,7 +216,7 @@ class _DashboardViewState extends State<DashboardView> {
                               bool
                             >(
                               builder: (context, remindersVisible) {
-                                if (!remindersVisible) {
+                                if (isFocusMode || !remindersVisible) {
                                   return const SizedBox.shrink();
                                 }
                                 return Padding(
@@ -319,6 +330,7 @@ class _DashboardViewState extends State<DashboardView> {
   Future<void> _handleFiltersToggle({
     required BuildContext context,
     required bool canPinFilters,
+    required bool reduceMotion,
   }) async {
     if (canPinFilters) {
       setState(() => _showFilters = !_showFilters);
@@ -345,7 +357,7 @@ class _DashboardViewState extends State<DashboardView> {
           child: BlocSelector<JobOffersCubit, JobOffersState, JobOfferFilters>(
             selector: (state) => state.activeFilters,
             builder: (context, filters) {
-              return Container(
+              final sheet = Container(
                     clipBehavior: Clip.antiAlias,
                     margin: const EdgeInsets.only(top: 8),
                     decoration: BoxDecoration(
@@ -388,7 +400,11 @@ class _DashboardViewState extends State<DashboardView> {
                         ),
                       ],
                     ),
-                  )
+                  );
+              final disableSheetAnimation =
+                  reduceMotion || MediaQuery.disableAnimationsOf(context);
+              if (disableSheetAnimation) return sheet;
+              return sheet
                   .animate()
                   .fadeIn(duration: 400.ms, curve: Curves.easeOut)
                   .slideY(

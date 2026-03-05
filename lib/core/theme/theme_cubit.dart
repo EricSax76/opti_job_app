@@ -17,4 +17,14 @@ class ThemeCubit extends Cubit<ThemeState> {
   void setThemeMode(ThemeMode mode) {
     emit(state.copyWith(themeMode: mode));
   }
+
+  /// Toggle candidate focus mode for reduced sensory load.
+  void toggleFocusMode() {
+    emit(state.copyWith(focusModeEnabled: !state.focusModeEnabled));
+  }
+
+  /// Set focus mode explicitly.
+  void setFocusModeEnabled(bool enabled) {
+    emit(state.copyWith(focusModeEnabled: enabled));
+  }
 }

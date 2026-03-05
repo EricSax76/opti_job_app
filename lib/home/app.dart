@@ -16,15 +16,35 @@ class InfoJobsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeState>(
       builder: (context, themeState) {
+        final focusModeEnabled = themeState.focusModeEnabled;
+        final lightTheme = focusModeEnabled
+            ? AppTheme.light.copyWith(visualDensity: VisualDensity.compact)
+            : AppTheme.light;
+        final darkTheme = focusModeEnabled
+            ? AppTheme.dark.copyWith(visualDensity: VisualDensity.compact)
+            : AppTheme.dark;
+
         return MaterialApp.router(
           onGenerateTitle: (context) =>
               AppLocalizations.of(context)?.appTitle ?? 'Opti Job',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
+          theme: lightTheme,
+          darkTheme: darkTheme,
           themeMode: themeState.themeMode,
           themeAnimationDuration: Duration.zero,
           themeAnimationCurve: Curves.linear,
+          builder: (context, child) {
+            if (child == null) return const SizedBox.shrink();
+            final media = MediaQuery.maybeOf(context);
+            if (media == null) return child;
+            return MediaQuery(
+              data: media.copyWith(
+                disableAnimations:
+                    focusModeEnabled || media.disableAnimations,
+              ),
+              child: child,
+            );
+          },
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router,

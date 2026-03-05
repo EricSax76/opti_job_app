@@ -207,12 +207,58 @@
       ]
     },
     {
-      "collectionGroup": "monthly",
+      "collectionGroup": "aiDecisionLogs",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "period", "order": "DESCENDING" }
+        { "fieldPath": "applicationId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "aiDecisionLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "companyId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "jobOffers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "requirementsEmbedding",
+          "vectorConfig": {
+            "dimension": 256,
+            "flat": {}
+          }
+        }
+      ]
+    },
+    {
+      "collectionGroup": "candidateEmbeddings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "profileEmbedding",
+          "vectorConfig": {
+            "dimension": 256,
+            "flat": {}
+          }
+        }
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "videoInterviewRecordings",
+      "fieldPath": "ttlDeleteAt",
+      "ttl": true,
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" },
+        { "order": "DESCENDING", "queryScope": "COLLECTION_GROUP" },
+        { "arrayConfig": "CONTAINS", "queryScope": "COLLECTION_GROUP" }
+      ]
+    }
+  ]
 }

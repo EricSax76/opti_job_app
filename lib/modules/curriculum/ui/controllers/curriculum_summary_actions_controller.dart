@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/logic/curriculum_actions.dart';
@@ -44,7 +46,17 @@ class CurriculumSummaryActionsController {
       builder: (context) {
         return AlertDialog(
           title: const Text('Resumen sugerido'),
-          content: SingleChildScrollView(child: SelectableText(suggestion)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AiGeneratedLabel(compact: true),
+                const SizedBox(height: uiSpacing12),
+                SelectableText(suggestion),
+              ],
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),

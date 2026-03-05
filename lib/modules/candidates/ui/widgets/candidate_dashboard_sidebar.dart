@@ -69,12 +69,18 @@ class _CandidateDashboardSidebarState extends State<CandidateDashboardSidebar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isFocusMode = context.select<ThemeCubit, bool>(
+      (cubit) => cubit.state.focusModeEnabled,
+    );
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final sidebar = Semantics(
       container: true,
       label: 'Menú lateral de navegación de candidato',
       expanded: !_isCollapsed,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 90),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 90),
         curve: _isCollapsed ? Curves.easeInCubic : Curves.easeOutSine,
         width: _isCollapsed
             ? CandidateDashboardSidebar.collapsedWidth
@@ -118,16 +124,17 @@ class _CandidateDashboardSidebarState extends State<CandidateDashboardSidebar> {
                           ),
                       if (!useCompactVisuals) ...[
                         const SizedBox(height: 12),
-                        CandidateReminderPanel(
-                          isExpanded: _isCalendarExpanded,
-                          onToggle: _toggleCalendarSection,
-                          window: _calendarWindow,
-                          onWindowChanged: (window) {
-                            setState(() {
-                              _calendarWindow = window;
-                            });
-                          },
-                        ),
+                        if (!isFocusMode)
+                          CandidateReminderPanel(
+                            isExpanded: _isCalendarExpanded,
+                            onToggle: _toggleCalendarSection,
+                            window: _calendarWindow,
+                            onWindowChanged: (window) {
+                              setState(() {
+                                _calendarWindow = window;
+                              });
+                            },
+                          ),
                       ],
                     ],
                   ),
