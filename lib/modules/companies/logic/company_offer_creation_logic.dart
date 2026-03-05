@@ -40,7 +40,9 @@ class CompanyOfferCreationLogic {
     final salaryMin = formControllers.salaryMin.text.trim();
     final salaryMax = formControllers.salaryMax.text.trim();
     final salaryCurrency = formControllers.salaryCurrency.text.trim();
-    final salaryPeriod = formControllers.salaryPeriod.text.trim();
+    final salaryPeriod = _normalizeSalaryPeriodForPayload(
+      formControllers.salaryPeriod.text.trim(),
+    );
     final education = formControllers.education.text.trim();
     final jobCategory = formControllers.jobCategory.text.trim();
     final workSchedule = formControllers.workSchedule.text.trim();
@@ -66,5 +68,46 @@ class CompanyOfferCreationLogic {
       contractType: contractType.isEmpty ? null : contractType,
       keyIndicators: keyIndicators.isEmpty ? null : keyIndicators,
     );
+  }
+
+  static String _normalizeSalaryPeriodForPayload(String raw) {
+    final normalized = raw.trim().toLowerCase();
+    if (normalized.isEmpty) return raw.trim();
+
+    if (normalized == 'hour' ||
+        normalized == 'hourly' ||
+        normalized == 'hora' ||
+        normalized == 'horas' ||
+        normalized == 'por hora') {
+      return 'hour';
+    }
+    if (normalized == 'day' ||
+        normalized == 'daily' ||
+        normalized == 'dia' ||
+        normalized == 'diario' ||
+        normalized == 'diaria') {
+      return 'day';
+    }
+    if (normalized == 'week' ||
+        normalized == 'weekly' ||
+        normalized == 'semana' ||
+        normalized == 'semanal') {
+      return 'week';
+    }
+    if (normalized == 'month' ||
+        normalized == 'monthly' ||
+        normalized == 'mes' ||
+        normalized == 'mensual') {
+      return 'month';
+    }
+    if (normalized == 'year' ||
+        normalized == 'yearly' ||
+        normalized == 'annual' ||
+        normalized == 'anual' ||
+        normalized == 'anualmente') {
+      return 'year';
+    }
+
+    return raw.trim();
   }
 }

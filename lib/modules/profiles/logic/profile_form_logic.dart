@@ -45,7 +45,8 @@ class ProfileFormLogic {
   }
 
   static String? validateLastName(String? value) {
-    if (_normalizeText(value) == null) return requiredLastNameMessage;
+    // Last name is optional; many existing accounts only have a single name.
+    // Keeping this optional prevents blocking avatar/profile saves.
     return null;
   }
 

@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
 import 'package:opti_job_app/core/utils/firestore_utils.dart';
+import 'package:opti_job_app/modules/companies/models/company_compliance_profile.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/modules/companies/models/company_multiposting_settings.dart';
 import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
 import 'package:opti_job_app/auth/models/auth_exceptions.dart';
 import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
@@ -421,6 +423,15 @@ class AuthService {
       'role': 'company',
       'uid': user.uid,
       'onboarding_completed': false,
+      'website': '',
+      'industry': '',
+      'team_size': '',
+      'headquarters': '',
+      'description': '',
+      'multiposting_channel_settings': const {
+        'enabledChannels': companyDefaultMultipostingChannels,
+      },
+      'compliance_settings': const CompanyComplianceProfile().toJson(),
     };
 
     final usersRef = _firestore.collection('users').doc(user.uid);

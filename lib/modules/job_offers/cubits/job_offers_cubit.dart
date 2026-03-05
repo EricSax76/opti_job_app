@@ -152,7 +152,7 @@ class JobOffersCubit extends Cubit<JobOffersState> {
       final serverMunicipalityId = _normalizeGeoId(
         state.activeFilters.municipalityId,
       );
-      final page = await _repository.fetchPage(
+      final page = await _fetchVisiblePage(
         jobType: selectedJobType,
         provinceId: serverProvinceId,
         municipalityId: serverMunicipalityId,
@@ -236,7 +236,7 @@ class JobOffersCubit extends Cubit<JobOffersState> {
       final serverMunicipalityId = _normalizeGeoId(
         state.activeFilters.municipalityId,
       );
-      final page = await _repository.fetchPage(
+      final page = await _fetchVisiblePage(
         jobType: state.selectedJobType,
         provinceId: serverProvinceId,
         municipalityId: serverMunicipalityId,
@@ -573,6 +573,44 @@ class JobOffersCubit extends Cubit<JobOffersState> {
         return now.subtract(const Duration(days: 15));
       default:
         return null; // 'Cualquier fecha'
+    }
+  }
+
+  List<JobOffer> _sanitizeOffersForCandidates(List<JobOffer> offers) {
+    return offers
+        .where((offer) => offer.isOpenForApplications)
+        .toList(growable: false);
+  }
+
+  Future<JobOffersPage> _fetchVisiblePage({
+    String? jobType,
+    String? provinceId,
+    String? municipalityId,
+    required int limit,
+    JobOffersPageCursor? startAfter,
+  }) async {
+    var cursor = startAfter;
+
+    while (true) {
+      final page = await _repository.fetchPage(
+        jobType: jobType,
+        provinceId: provinceId,
+        municipalityId: municipalityId,
+        limit: limit,
+        startAfter: cursor,
+      );
+      final visibleOffers = _sanitizeOffersForCandidates(page.offers);
+
+      final hasNextPage = page.hasMore && page.nextPageCursor != null;
+      if (visibleOffers.isNotEmpty || !hasNextPage) {
+        return JobOffersPage(
+          offers: visibleOffers,
+          hasMore: hasNextPage,
+          nextPageCursor: hasNextPage ? page.nextPageCursor : null,
+        );
+      }
+
+      cursor = page.nextPageCursor;
     }
   }
 }

@@ -26,7 +26,21 @@ class CurriculumService {
   Future<Curriculum> fetchCurriculum(String candidateUid) async {
     final snapshot = await _docRef(candidateUid).get();
     if (!snapshot.exists) {
-      return Curriculum.empty();
+      final empty = Curriculum.empty();
+      try {
+        await _docRef(candidateUid).set({
+          ...empty.toJson(),
+          'updated_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        final createdSnapshot = await _docRef(candidateUid).get();
+        final createdData = createdSnapshot.data();
+        if (createdData != null) {
+          return CurriculumMapper.fromFirestore(createdData);
+        }
+      } catch (_) {
+        // Si no se puede crear el doc (reglas/permisos), devolvemos vacío.
+      }
+      return empty;
     }
     final data = snapshot.data();
     if (data == null) return Curriculum.empty();

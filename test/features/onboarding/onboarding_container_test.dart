@@ -8,6 +8,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 import 'package:opti_job_app/auth/cubits/auth_status.dart';
 import 'package:opti_job_app/features/onboarding/view/containers/onboarding_container.dart';
+import 'package:opti_job_app/features/onboarding/view/widgets/onboarding_card_base/widgets/onboarding_primary_button.dart';
 import 'package:opti_job_app/l10n/app_localizations.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
@@ -15,6 +16,8 @@ import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/modules/companies/models/company_compliance_profile.dart';
+import 'package:opti_job_app/modules/companies/models/company_multiposting_settings.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
 import 'package:opti_job_app/modules/profiles/cubits/profile_state.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
@@ -153,6 +156,9 @@ void main() {
         workStyleSkipped: true,
       ),
     );
+    registerFallbackValue(const CompanyMultipostingSettings());
+    registerFallbackValue(const CompanyComplianceProfile());
+    registerFallbackValue(Uint8List(0));
   });
 
   group('OnboardingContainer', () {
@@ -275,6 +281,9 @@ void main() {
     testWidgets('company branch confirms and navigates to company dashboard', (
       tester,
     ) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       final profileRepository = _MockProfileRepository();
       final candidateAuthCubit = _TestCandidateAuthCubit(
         const CandidateAuthState(status: AuthStatus.unauthenticated),
@@ -293,6 +302,21 @@ void main() {
         ),
       );
 
+      when(
+        () => profileRepository.updateCompanyProfile(
+          uid: any(named: 'uid'),
+          name: any(named: 'name'),
+          website: any(named: 'website'),
+          industry: any(named: 'industry'),
+          teamSize: any(named: 'teamSize'),
+          headquarters: any(named: 'headquarters'),
+          description: any(named: 'description'),
+          multipostingSettings: any(named: 'multipostingSettings'),
+          complianceProfile: any(named: 'complianceProfile'),
+          avatarBytes: any(named: 'avatarBytes'),
+        ),
+      ).thenAnswer((_) async => authenticatedCompany);
+
       await tester.pumpWidget(
         _buildHarness(
           profileRepository: profileRepository,
@@ -303,11 +327,51 @@ void main() {
       );
 
       expect(find.text('Hola, Acme 👋'), findsOneWidget);
-      await tester.tap(find.text('Entendido'));
+      await tester.enterText(find.byType(TextFormField).at(1), 'Tecnologia');
+      await tester.enterText(find.byType(TextFormField).at(2), '11-50');
+      await tester.enterText(find.byType(TextFormField).at(3), 'Madrid');
+      await tester.enterText(find.byType(TextFormField).at(5), 'Acme Labs SL');
+      await tester.enterText(find.byType(TextFormField).at(6), 'B12345678');
+      await tester.enterText(
+        find.byType(TextFormField).at(7),
+        'privacidad@acme.com',
+      );
+      await tester.enterText(find.byType(TextFormField).at(8), 'Laura DPO');
+      await tester.enterText(find.byType(TextFormField).at(9), 'dpo@acme.com');
+      await tester.enterText(
+        find.byType(TextFormField).at(10),
+        'https://acme.com/privacidad',
+      );
+      await tester.enterText(
+        find.byType(TextFormField).at(11),
+        'Conservamos datos de candidatos durante 36 meses.',
+      );
+      final primaryButton = find.byType(OnboardingPrimaryButton).first;
+      await tester.dragUntilVisible(
+        primaryButton,
+        find.byType(Scrollable).first,
+        const Offset(0, -200),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(primaryButton, warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(find.text('company-dashboard-company-1'), findsOneWidget);
       expect(companyAuthCubit.completeOnboardingCallCount, 1);
+      verify(
+        () => profileRepository.updateCompanyProfile(
+          uid: 'company-1',
+          name: 'Acme',
+          website: any(named: 'website'),
+          industry: 'Tecnologia',
+          teamSize: '11-50',
+          headquarters: 'Madrid',
+          description: any(named: 'description'),
+          multipostingSettings: any(named: 'multipostingSettings'),
+          complianceProfile: any(named: 'complianceProfile'),
+          avatarBytes: null,
+        ),
+      ).called(1);
       verifyNever(
         () => profileRepository.saveCandidateOnboardingProfile(
           uid: any(named: 'uid'),

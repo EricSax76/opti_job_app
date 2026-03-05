@@ -34,6 +34,7 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.calendarRepository),
         RepositoryProvider.value(value: dependencies.applicationRepository),
         RepositoryProvider.value(value: dependencies.applicationService),
+        RepositoryProvider.value(value: dependencies.aiService),
         RepositoryProvider.value(value: dependencies.aiRepository),
         RepositoryProvider.value(value: dependencies.coverLetterRepository),
         RepositoryProvider.value(value: dependencies.videoCurriculumRepository),

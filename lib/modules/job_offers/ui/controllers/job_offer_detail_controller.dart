@@ -18,8 +18,8 @@ import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_pre_apply_v
 class JobOfferDetailController {
   const JobOfferDetailController._();
 
-  static const String _aiConsentTextVersion = '2026.04';
-  static const String _aiConsentText =
+  static const String _defaultAiConsentTextVersion = '2026.04';
+  static const String _defaultAiConsentText =
       'Autorizo el uso de sistemas de IA para test y entrevistas de esta candidatura. '
       'Entiendo que puedo solicitar revisión humana y revocar en el portal de privacidad.';
 
@@ -147,11 +147,23 @@ class JobOfferDetailController {
     }
 
     final scopes = _requiredAiConsentScopes(request.offer);
+    final consentTextVersion =
+        request.offer.companyAiConsentTextVersion?.trim().isNotEmpty == true
+        ? request.offer.companyAiConsentTextVersion!.trim()
+        : _defaultAiConsentTextVersion;
+    final consentText =
+        request.offer.companyAiConsentText?.trim().isNotEmpty == true
+        ? request.offer.companyAiConsentText!.trim()
+        : _defaultAiConsentText;
+
     final accepted = await _showAiConsentDialog(
       context,
       scopes: scopes,
-      consentTextVersion: _aiConsentTextVersion,
-      consentText: _aiConsentText,
+      consentTextVersion: consentTextVersion,
+      consentText: consentText,
+      privacyContactEmail: request.offer.companyPrivacyContactEmail,
+      dpoEmail: request.offer.companyDpoEmail,
+      privacyPolicyUrl: request.offer.companyPrivacyPolicyUrl,
     );
     if (accepted != true || !context.mounted) return false;
 
@@ -168,9 +180,9 @@ class JobOfferDetailController {
             type: 'ai_granular',
             granted: true,
             legalBasis: LegalBasis.consent,
-            informationNoticeVersion: _aiConsentTextVersion,
-            consentTextVersion: _aiConsentTextVersion,
-            consentTextSnapshot: _aiConsentText,
+            informationNoticeVersion: consentTextVersion,
+            consentTextVersion: consentTextVersion,
+            consentTextSnapshot: consentText,
             scope: scopes,
             immutable: true,
           ),
@@ -221,6 +233,9 @@ class JobOfferDetailController {
     required List<String> scopes,
     required String consentTextVersion,
     required String consentText,
+    String? privacyContactEmail,
+    String? dpoEmail,
+    String? privacyPolicyUrl,
   }) {
     final scopeLabels = scopes.map(_scopeLabel).join(', ');
     return showDialog<bool>(
@@ -239,6 +254,20 @@ class JobOfferDetailController {
                 Text('Versión del texto: $consentTextVersion'),
                 const SizedBox(height: 12),
                 Text(consentText),
+                if (privacyContactEmail != null &&
+                    privacyContactEmail.trim().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text('Contacto privacidad: ${privacyContactEmail.trim()}'),
+                ],
+                if (dpoEmail != null && dpoEmail.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text('Encargado/DPO: ${dpoEmail.trim()}'),
+                ],
+                if (privacyPolicyUrl != null &&
+                    privacyPolicyUrl.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text('Política de privacidad: ${privacyPolicyUrl.trim()}'),
+                ],
               ],
             ),
           ),
@@ -748,6 +777,7 @@ class _KnockoutAnswerField extends StatelessWidget {
             ButtonSegment<bool>(value: true, label: Text('Sí')),
             ButtonSegment<bool>(value: false, label: Text('No')),
           ],
+          emptySelectionAllowed: true,
           selected: boolValue == null ? const <bool>{} : <bool>{boolValue},
           onSelectionChanged: (selection) {
             if (selection.isEmpty) return;

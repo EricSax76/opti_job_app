@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/applications/models/application.dart';
@@ -159,6 +160,15 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
     required JobOffer offer,
     Map<String, dynamic>? knockoutResponses,
   }) async {
+    if (!offer.isOpenForApplications) {
+      emit(
+        state.copyWith(
+          status: JobOfferDetailStatus.failure,
+          errorMessage: 'La oferta ya no está activa.',
+        ),
+      );
+      return;
+    }
     if (state.application != null) {
       emit(
         state.copyWith(
@@ -195,14 +205,77 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
           successMessage: '¡Te has postulado a esta oferta!',
         ),
       );
-    } catch (error) {
+    } on FirebaseFunctionsException catch (error) {
       emit(
         state.copyWith(
           status: JobOfferDetailStatus.failure,
-          errorMessage: 'Ya te has postulado a esta oferta.',
+          errorMessage: _resolveApplyErrorMessage(error),
+        ),
+      );
+    } on Exception catch (error) {
+      emit(
+        state.copyWith(
+          status: JobOfferDetailStatus.failure,
+          errorMessage: _resolveApplyErrorMessage(error),
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          status: JobOfferDetailStatus.failure,
+          errorMessage: 'No se pudo enviar tu postulación. Inténtalo de nuevo.',
         ),
       );
     }
+  }
+
+  String _resolveApplyErrorMessage(Object error) {
+    if (error is FirebaseFunctionsException) {
+      final code = error.code.trim().toLowerCase();
+      final message = error.message?.trim() ?? '';
+      final normalized = '$code $message'.toLowerCase();
+
+      if (normalized.contains('already applied') ||
+          normalized.contains('already exists')) {
+        return 'Ya te has postulado a esta oferta.';
+      }
+      if (normalized.contains('curriculum not found')) {
+        return 'No encontramos tu currículum principal. Completa tu perfil antes de postular.';
+      }
+      if (normalized.contains('job offer not found')) {
+        return 'La oferta ya no está disponible.';
+      }
+      if (normalized.contains('not active')) {
+        return 'La oferta ya no está activa.';
+      }
+      if (normalized.contains('expired')) {
+        return 'La oferta ha expirado.';
+      }
+
+      if (message.isNotEmpty) return message;
+      return 'No se pudo enviar tu postulación. Inténtalo de nuevo.';
+    }
+
+    final normalized = error.toString().trim().toLowerCase();
+    if (normalized.contains('application already exists') ||
+        normalized.contains('already applied') ||
+        normalized.contains('already exists')) {
+      return 'Ya te has postulado a esta oferta.';
+    }
+    if (normalized.contains('curriculum not found')) {
+      return 'No encontramos tu currículum principal. Completa tu perfil antes de postular.';
+    }
+    if (normalized.contains('job offer not found')) {
+      return 'La oferta ya no está disponible.';
+    }
+    if (normalized.contains('not active')) {
+      return 'La oferta ya no está activa.';
+    }
+    if (normalized.contains('expired')) {
+      return 'La oferta ha expirado.';
+    }
+
+    return 'No se pudo enviar tu postulación. Inténtalo de nuevo.';
   }
 
   Future<void> computeMatch() async {

@@ -49,7 +49,7 @@ void main() {
 
     await tester.tap(find.byTooltip('Cuenta'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Mi perfil'));
+    await tester.tap(find.text('Ajustes de empresa'));
     await tester.pumpAndSettle();
 
     expect(find.text('Perfil Route'), findsOneWidget);

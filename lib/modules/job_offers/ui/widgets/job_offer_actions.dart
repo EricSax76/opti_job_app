@@ -5,6 +5,7 @@ class JobOfferActions extends StatelessWidget {
   const JobOfferActions({
     super.key,
     required this.isAuthenticated,
+    required this.canApply,
     required this.isApplying,
     required this.applicationStatus,
     required this.onApply,
@@ -14,6 +15,7 @@ class JobOfferActions extends StatelessWidget {
   });
 
   final bool isAuthenticated;
+  final bool canApply;
   final bool isApplying;
   final String? applicationStatus;
   final VoidCallback onApply;
@@ -35,7 +37,7 @@ class JobOfferActions extends StatelessWidget {
       children: [
         if (isAuthenticated)
           FilledButton(
-            onPressed: (isApplying || hasApplied) ? null : onApply,
+            onPressed: (isApplying || hasApplied || !canApply) ? null : onApply,
             style: FilledButton.styleFrom(backgroundColor: colorScheme.primary),
             child: isApplying
                 ? const SizedBox.square(
@@ -45,6 +47,8 @@ class JobOfferActions extends StatelessWidget {
                 : Text(
                     hasApplied
                         ? 'Postulación: ${ApplicationStatus.fromString(applicationStatus).label}'
+                        : !canApply
+                        ? 'Oferta no activa'
                         : 'Postularme',
                   ),
           ),

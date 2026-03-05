@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -12,22 +13,52 @@ class CurriculumPdfService {
     required Curriculum curriculum,
   }) async {
     final doc = pw.Document();
+    final avatarImage = await _loadAvatarImage(candidate.avatarUrl);
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         build: (context) => [
-          pw.Text(
-            '${candidate.name} ${candidate.lastName}'.trim(),
-            style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      '${candidate.name} ${candidate.lastName}'.trim(),
+                      style: pw.TextStyle(
+                        fontSize: 22,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    if (curriculum.headline.trim().isNotEmpty) ...[
+                      pw.SizedBox(height: 6),
+                      pw.Text(
+                        curriculum.headline.trim(),
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          color: PdfColors.grey800,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (avatarImage != null) ...[
+                pw.SizedBox(width: 16),
+                pw.ClipOval(
+                  child: pw.Image(
+                    avatarImage,
+                    width: 72,
+                    height: 72,
+                    fit: pw.BoxFit.cover,
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (curriculum.headline.trim().isNotEmpty) ...[
-            pw.SizedBox(height: 6),
-            pw.Text(
-              curriculum.headline.trim(),
-              style: pw.TextStyle(fontSize: 12, color: PdfColors.grey800),
-            ),
-          ],
           pw.SizedBox(height: 12),
           pw.Wrap(
             spacing: 10,
@@ -64,7 +95,10 @@ class CurriculumPdfService {
                       color: PdfColors.grey200,
                       borderRadius: pw.BorderRadius.circular(10),
                     ),
-                    child: pw.Text(skill, style: const pw.TextStyle(fontSize: 10)),
+                    child: pw.Text(
+                      skill,
+                      style: const pw.TextStyle(fontSize: 10),
+                    ),
                   ),
               ],
             ),
@@ -85,6 +119,19 @@ class CurriculumPdfService {
       ),
     );
     return doc.save();
+  }
+
+  Future<pw.MemoryImage?> _loadAvatarImage(String? avatarUrl) async {
+    final normalized = avatarUrl?.trim();
+    if (normalized == null || normalized.isEmpty) return null;
+    try {
+      final response = await http.get(Uri.parse(normalized));
+      if (response.statusCode < 200 || response.statusCode >= 300) return null;
+      if (response.bodyBytes.isEmpty) return null;
+      return pw.MemoryImage(response.bodyBytes);
+    } catch (_) {
+      return null;
+    }
   }
 
   pw.Widget _sectionTitle(String text) {
@@ -138,4 +185,3 @@ class CurriculumPdfService {
     );
   }
 }
-

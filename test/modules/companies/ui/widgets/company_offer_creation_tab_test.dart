@@ -35,8 +35,11 @@ void main() {
 
     // Select required dropdown values.
     await _selectDropdown(tester, 'Modalidad', 'Presencial');
-    await _selectDropdown(tester, 'Categoría del puesto',
-        'Informática y telecomunicaciones');
+    await _selectDropdown(
+      tester,
+      'Categoría del puesto',
+      'Informática y telecomunicaciones',
+    );
     await _selectDropdown(tester, 'Estudios mínimos', 'Grado');
     await _selectDropdown(tester, 'Jornada laboral', 'Completa');
     await _selectDropdown(tester, 'Tipo de contrato', 'Indefinido');
@@ -65,7 +68,7 @@ void main() {
     expect(payload.contractType, 'Indefinido');
     expect(payload.salaryMin, '45000');
     expect(payload.salaryMax, '65000');
-    expect(payload.salaryPeriod, 'Anual');
+    expect(payload.salaryPeriod, 'year');
     expect(payload.salaryCurrency, 'EUR');
   });
 

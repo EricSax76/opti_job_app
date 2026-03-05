@@ -32,7 +32,7 @@ class CompanyProfileAppBar extends StatelessWidget
 
     return CoreShellAppBar(
       variant: CoreShellVariant.company,
-      title: 'Perfil',
+      title: 'Ajustes de empresa',
       actions: actions,
     );
   }

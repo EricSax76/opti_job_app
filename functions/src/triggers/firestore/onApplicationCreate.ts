@@ -48,7 +48,12 @@ export const onApplicationCreate = functions
 
       const jobOffer = offerDoc.data() as JobOffer;
 
-      if (jobOffer.status !== "active") {
+      const offerStatus = String(jobOffer.status ?? "").trim().toLowerCase();
+      const isOfferOpenForApplications =
+        offerStatus.length === 0 ||
+        offerStatus === "active" ||
+        offerStatus === "published";
+      if (!isOfferOpenForApplications) {
         logger.warn("Application to non-active job offer", {
           applicationId,
           jobOfferId: application.job_offer_id,

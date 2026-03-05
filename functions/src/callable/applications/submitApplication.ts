@@ -18,6 +18,56 @@ const logger = createLogger({ function: "submitApplication" });
 
 // Rate limiting: max applications per user per day
 const MAX_APPLICATIONS_PER_DAY = 50;
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const BLOCKING_APPLICATION_STATUSES = new Set([
+  "submitted",
+  "pending",
+  "reviewing",
+  "interviewing",
+  "offered",
+  "accepted_pending_signature",
+  "hired",
+]);
+
+function normalizeString(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function normalizeLower(value: unknown): string {
+  return normalizeString(value).toLowerCase();
+}
+
+function parseDate(value: unknown): Date | null {
+  if (value == null) return null;
+  if (value instanceof admin.firestore.Timestamp) {
+    return value.toDate();
+  }
+  if (typeof value === "object" && value !== null) {
+    const maybeWithToDate = value as { toDate?: unknown };
+    if (typeof maybeWithToDate.toDate === "function") {
+      try {
+        const parsed = maybeWithToDate.toDate.call(value) as unknown;
+        if (parsed instanceof Date && !Number.isNaN(parsed.getTime())) {
+          return parsed;
+        }
+      } catch (_) {
+        // Ignore malformed timestamp-like values.
+      }
+    }
+  }
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
+}
 
 export const submitApplication = functions.region("europe-west1").https.onCall(
   async (
@@ -38,32 +88,58 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
 
     const candidateUid = context.auth.uid;
     const { jobOfferId, coverLetter, curriculumId, sourceChannel } = data;
-    const normalizedSource = String(sourceChannel ?? "").trim().toLowerCase() || "platform";
-    const normalizedCurriculumId = String(curriculumId ?? "main").trim() || "main";
+    const requestedJobOfferId = normalizeString(jobOfferId);
+    const normalizedSource = normalizeLower(sourceChannel) || "platform";
+    const normalizedCurriculumId = normalizeString(curriculumId || "main") || "main";
 
     funcLogger.info("Application submission started", {
       candidateUid,
-      jobOfferId,
+      requestedJobOfferId,
     });
 
     try {
       const db = admin.firestore();
 
       // Validate input
-      if (!jobOfferId) {
+      if (!requestedJobOfferId) {
         throw new ValidationError("jobOfferId is required");
       }
 
-      // Check if job offer exists and is active
-      const offerDoc = await db.collection("jobOffers").doc(jobOfferId).get();
+      // Resolve offer first by document ID and then by legacy "id" field.
+      let resolvedJobOfferId = requestedJobOfferId;
+      let offerDoc = await db.collection("jobOffers").doc(resolvedJobOfferId).get();
       if (!offerDoc.exists) {
-        throw new ValidationError("Job offer not found");
+        const offerIdCandidates: unknown[] = [requestedJobOfferId];
+        const numericRequestedId = Number.parseInt(requestedJobOfferId, 10);
+        if (Number.isFinite(numericRequestedId)) {
+          offerIdCandidates.push(numericRequestedId);
+        }
+
+        const legacyOfferSnapshot = await db
+          .collection("jobOffers")
+          .where("id", "in", offerIdCandidates)
+          .limit(1)
+          .get();
+        if (legacyOfferSnapshot.empty) {
+          throw new ValidationError("Job offer not found");
+        }
+
+        offerDoc = legacyOfferSnapshot.docs[0];
+        resolvedJobOfferId = offerDoc.id;
       }
 
       const jobOffer = offerDoc.data();
-      if (jobOffer?.status !== "active") {
+      if (!jobOffer) {
+        throw new ValidationError("Job offer not found");
+      }
+      const offerStatus = String(jobOffer?.status ?? "").trim().toLowerCase();
+      const isOfferOpenForApplications =
+        offerStatus.length === 0 ||
+        offerStatus === "active" ||
+        offerStatus === "published";
+      if (!isOfferOpenForApplications) {
         throw new ValidationError(
-          `Job offer is not active (status: ${jobOffer?.status})`
+          `Job offer is not active (status: ${jobOffer?.status ?? "undefined"})`
         );
       }
 
@@ -99,39 +175,84 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
         throw new ValidationError("Curriculum not found");
       }
 
-      // Check for existing applications to this job
-      const existingApplications = await db
-        .collection("applications")
-        .where("job_offer_id", "==", jobOfferId)
-        .where("candidate_uid", "==", candidateUid)
-        .where("status", "in", ["submitted", "pending", "reviewing", "interviewing", "offered", "hired"])
-        .get();
+      const [applicationsByCandidateUid, applicationsByCandidateId] = await Promise.all([
+        db.collection("applications").where("candidate_uid", "==", candidateUid).get(),
+        db.collection("applications").where("candidateId", "==", candidateUid).get(),
+      ]);
 
-      if (!existingApplications.empty) {
+      const offerIdAliases = new Set<string>(
+        [requestedJobOfferId, resolvedJobOfferId]
+          .map((value) => normalizeString(value))
+          .filter((value) => value.length > 0)
+      );
+      let duplicateApplicationId: string | null = null;
+      const visitedForDuplicate = new Set<string>();
+
+      const detectDuplicate = (
+        snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>
+      ): void => {
+        for (const doc of snapshot.docs) {
+          if (visitedForDuplicate.has(doc.id)) continue;
+          visitedForDuplicate.add(doc.id);
+          const row = doc.data();
+          const status = normalizeLower(row.status);
+          if (!BLOCKING_APPLICATION_STATUSES.has(status)) continue;
+
+          const appOfferId = normalizeString(row.job_offer_id ?? row.jobOfferId);
+          if (!appOfferId || !offerIdAliases.has(appOfferId)) continue;
+          duplicateApplicationId = doc.id;
+          break;
+        }
+      };
+
+      detectDuplicate(applicationsByCandidateUid);
+      if (duplicateApplicationId == null) {
+        detectDuplicate(applicationsByCandidateId);
+      }
+
+      if (duplicateApplicationId != null) {
         funcLogger.warn("Duplicate application attempt", {
           candidateUid,
-          jobOfferId,
-          existingApplicationId: existingApplications.docs[0].id,
+          requestedJobOfferId,
+          resolvedJobOfferId,
+          existingApplicationId: duplicateApplicationId,
         });
         throw new ValidationError(
           "You have already applied to this job offer"
         );
       }
 
-      // Rate limiting: check applications in last 24 hours
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
+      // Rate limiting without composite indexes: count candidate applications
+      // in the last 24h from either snake_case or camelCase timestamps.
+      const rateLimitCutoff = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+      const visitedForRateLimit = new Set<string>();
+      let recentApplicationsCount = 0;
+      const countRecentApplications = (
+        snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>
+      ): void => {
+        for (const doc of snapshot.docs) {
+          if (visitedForRateLimit.has(doc.id)) continue;
+          visitedForRateLimit.add(doc.id);
+          const row = doc.data();
+          const submittedAt = parseDate(
+            row.submitted_at ??
+              row.submittedAt ??
+              row.created_at ??
+              row.createdAt
+          );
+          if (submittedAt != null && submittedAt >= rateLimitCutoff) {
+            recentApplicationsCount += 1;
+          }
+        }
+      };
 
-      const recentApplications = await db
-        .collection("applications")
-        .where("candidate_uid", "==", candidateUid)
-        .where("submitted_at", ">=", admin.firestore.Timestamp.fromDate(yesterday))
-        .get();
+      countRecentApplications(applicationsByCandidateUid);
+      countRecentApplications(applicationsByCandidateId);
 
-      if (recentApplications.size >= MAX_APPLICATIONS_PER_DAY) {
+      if (recentApplicationsCount >= MAX_APPLICATIONS_PER_DAY) {
         funcLogger.warn("Rate limit exceeded", {
           candidateUid,
-          applicationsCount: recentApplications.size,
+          applicationsCount: recentApplicationsCount,
         });
         throw new ValidationError(
           `Daily application limit exceeded (${MAX_APPLICATIONS_PER_DAY})`
@@ -151,8 +272,8 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
       const companyUid =
         jobOffer?.company_uid ?? jobOffer?.companyUid ?? jobOffer?.owner_uid;
       const application: Record<string, unknown> = {
-        job_offer_id: jobOfferId,
-        jobOfferId: jobOfferId,
+        job_offer_id: resolvedJobOfferId,
+        jobOfferId: resolvedJobOfferId,
         candidate_uid: candidateUid,
         candidateId: candidateUid,
         candidate_name: candidate.name,
@@ -199,7 +320,7 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
       const legalAckSubject = "Hemos recibido tu candidatura";
       const legalAckBody = [
         `Solicitud: ${requestId}`,
-        `Oferta: ${jobOffer?.title ?? jobOfferId}`,
+        `Oferta: ${jobOffer?.title ?? resolvedJobOfferId}`,
         "Acuse de recibo legal de candidatura:",
         legalInfoClause,
       ].join("\n");
@@ -212,7 +333,7 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
           userUid: candidateUid,
           companyUid: companyUid ?? null,
           applicationId,
-          jobOfferId,
+          jobOfferId: resolvedJobOfferId,
           title: legalAckSubject,
           message: legalAckBody,
           legalInfoClause,
@@ -228,7 +349,7 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
           candidateUid,
           companyUid: companyUid ?? null,
           applicationId,
-          jobOfferId,
+          jobOfferId: resolvedJobOfferId,
           legalInfoClause,
           status: "queued",
           createdAt: now,
@@ -244,7 +365,8 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
           metadata: {
             requestId,
             candidateUid,
-            jobOfferId,
+            requestedJobOfferId,
+            resolvedJobOfferId,
             notificationChannel: "in_app",
             emailQueued: true,
             legalInfoClauseVersion: "2026-03",
@@ -256,7 +378,8 @@ export const submitApplication = functions.region("europe-west1").https.onCall(
       funcLogger.info("Application created successfully", {
         applicationId,
         candidateUid,
-        jobOfferId,
+        requestedJobOfferId,
+        resolvedJobOfferId,
       });
 
       // Return response

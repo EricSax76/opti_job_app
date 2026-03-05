@@ -8,15 +8,12 @@ import 'package:opti_job_app/modules/profiles/logic/profile_form_logic.dart';
 
 void main() {
   group('ProfileFormLogic', () {
-    test('validates required first and last name fields', () {
+    test('validates required first name and optional last name', () {
       expect(
         ProfileFormLogic.validateFirstName(' '),
         ProfileFormLogic.requiredNameMessage,
       );
-      expect(
-        ProfileFormLogic.validateLastName(''),
-        ProfileFormLogic.requiredLastNameMessage,
-      );
+      expect(ProfileFormLogic.validateLastName(''), isNull);
       expect(ProfileFormLogic.validateFirstName('Ana'), isNull);
       expect(ProfileFormLogic.validateLastName('Lopez'), isNull);
     });

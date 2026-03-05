@@ -15,6 +15,11 @@ class JobOffer {
     this.companyUid,
     this.companyName,
     this.companyAvatarUrl,
+    this.companyPrivacyContactEmail,
+    this.companyDpoEmail,
+    this.companyPrivacyPolicyUrl,
+    this.companyAiConsentTextVersion,
+    this.companyAiConsentText,
     this.jobType,
     this.salaryMin,
     this.salaryMax,
@@ -52,6 +57,11 @@ class JobOffer {
   final String? companyUid;
   final String? companyName;
   final String? companyAvatarUrl;
+  final String? companyPrivacyContactEmail;
+  final String? companyDpoEmail;
+  final String? companyPrivacyPolicyUrl;
+  final String? companyAiConsentTextVersion;
+  final String? companyAiConsentText;
   final String? jobType;
   final String? salaryMin;
   final String? salaryMax;
@@ -74,6 +84,13 @@ class JobOffer {
   final List<JobOfferSkill> requiredSkills;
   final List<Skill> preferredSkills;
   final DateTime? createdAt;
+
+  String get normalizedStatus => (status ?? '').trim().toLowerCase();
+
+  bool get isOpenForApplications =>
+      normalizedStatus.isEmpty ||
+      normalizedStatus == 'active' ||
+      normalizedStatus == 'published';
 
   factory JobOffer.fromJson(Map<String, dynamic> json) {
     return JobOffer(
@@ -106,11 +123,31 @@ class JobOffer {
       companyAvatarUrl:
           json['company_avatar_url'] as String? ??
           json['companyAvatarUrl'] as String?,
+      companyPrivacyContactEmail: _readNullableString(
+        json['company_privacy_contact_email'] ??
+            json['companyPrivacyContactEmail'],
+      ),
+      companyDpoEmail: _readNullableString(
+        json['company_dpo_email'] ?? json['companyDpoEmail'],
+      ),
+      companyPrivacyPolicyUrl: _readNullableString(
+        json['company_privacy_policy_url'] ?? json['companyPrivacyPolicyUrl'],
+      ),
+      companyAiConsentTextVersion: _readNullableString(
+        json['company_ai_consent_text_version'] ??
+            json['companyAiConsentTextVersion'],
+      ),
+      companyAiConsentText: _readNullableString(
+        json['company_ai_consent_text'] ?? json['companyAiConsentText'],
+      ),
       jobType: json['job_type'] as String? ?? json['jobType'] as String?,
       salaryMin: json['salary_min'] as String? ?? json['salaryMin'] as String?,
       salaryMax: json['salary_max'] as String? ?? json['salaryMax'] as String?,
-      salaryCurrency: json['salary_currency'] as String? ?? json['salaryCurrency'] as String?,
-      salaryPeriod: json['salary_period'] as String? ?? json['salaryPeriod'] as String?,
+      salaryCurrency:
+          json['salary_currency'] as String? ??
+          json['salaryCurrency'] as String?,
+      salaryPeriod:
+          json['salary_period'] as String? ?? json['salaryPeriod'] as String?,
       education: json['education'] as String?,
       jobCategory:
           json['job_category'] as String? ?? json['jobCategory'] as String?,
@@ -132,8 +169,7 @@ class JobOffer {
       publicationBlockReason:
           json['publication_block_reason'] as String? ??
           json['publicationBlockReason'] as String?,
-      multiposting:
-          json['multiposting'] as Map<String, dynamic>?,
+      multiposting: json['multiposting'] as Map<String, dynamic>?,
       multipostingEnabledChannels:
           (json['multiposting_enabled_channels'] as List<dynamic>? ??
                   json['multipostingEnabledChannels'] as List<dynamic>? ??
@@ -168,6 +204,11 @@ class JobOffer {
       'company_uid': companyUid,
       'company_name': companyName,
       'company_avatar_url': companyAvatarUrl,
+      'company_privacy_contact_email': companyPrivacyContactEmail,
+      'company_dpo_email': companyDpoEmail,
+      'company_privacy_policy_url': companyPrivacyPolicyUrl,
+      'company_ai_consent_text_version': companyAiConsentTextVersion,
+      'company_ai_consent_text': companyAiConsentText,
       'job_type': jobType,
       'salary_min': salaryMin,
       'salary_max': salaryMax,
@@ -209,6 +250,11 @@ class JobOffer {
     String? companyUid,
     String? companyName,
     String? companyAvatarUrl,
+    String? companyPrivacyContactEmail,
+    String? companyDpoEmail,
+    String? companyPrivacyPolicyUrl,
+    String? companyAiConsentTextVersion,
+    String? companyAiConsentText,
     String? jobType,
     String? salaryMin,
     String? salaryMax,
@@ -246,6 +292,14 @@ class JobOffer {
       companyUid: companyUid ?? this.companyUid,
       companyName: companyName ?? this.companyName,
       companyAvatarUrl: companyAvatarUrl ?? this.companyAvatarUrl,
+      companyPrivacyContactEmail:
+          companyPrivacyContactEmail ?? this.companyPrivacyContactEmail,
+      companyDpoEmail: companyDpoEmail ?? this.companyDpoEmail,
+      companyPrivacyPolicyUrl:
+          companyPrivacyPolicyUrl ?? this.companyPrivacyPolicyUrl,
+      companyAiConsentTextVersion:
+          companyAiConsentTextVersion ?? this.companyAiConsentTextVersion,
+      companyAiConsentText: companyAiConsentText ?? this.companyAiConsentText,
       jobType: jobType ?? this.jobType,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
@@ -260,10 +314,11 @@ class JobOffer {
       pipelineStages: pipelineStages ?? this.pipelineStages,
       knockoutQuestions: knockoutQuestions ?? this.knockoutQuestions,
       languageCheckResult: languageCheckResult ?? this.languageCheckResult,
-      salaryGapJustificationRequired: salaryGapJustificationRequired ??
-          this.salaryGapJustificationRequired,
+      salaryGapJustificationRequired:
+          salaryGapJustificationRequired ?? this.salaryGapJustificationRequired,
       salaryGapAudit: salaryGapAudit ?? this.salaryGapAudit,
-      publicationBlockReason: publicationBlockReason ?? this.publicationBlockReason,
+      publicationBlockReason:
+          publicationBlockReason ?? this.publicationBlockReason,
       multiposting: multiposting ?? this.multiposting,
       multipostingEnabledChannels:
           multipostingEnabledChannels ?? this.multipostingEnabledChannels,
@@ -320,7 +375,9 @@ class JobOfferSkill {
     return JobOfferSkill(
       skillId: json['skillId'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      minimumLevel: SkillLevel.fromString(json['minimumLevel'] as String? ?? 'beginner'),
+      minimumLevel: SkillLevel.fromString(
+        json['minimumLevel'] as String? ?? 'beginner',
+      ),
     );
   }
 

@@ -41,7 +41,12 @@ class ApplicantCurriculumHeader extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
-                child: Text(_initial(candidate)),
+                backgroundImage: candidate.avatarUrl?.trim().isNotEmpty == true
+                    ? NetworkImage(candidate.avatarUrl!.trim())
+                    : null,
+                child: candidate.avatarUrl?.trim().isNotEmpty == true
+                    ? null
+                    : Text(_initial(candidate)),
               ),
               const SizedBox(width: 12),
               Expanded(

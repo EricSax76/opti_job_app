@@ -124,6 +124,14 @@
       ]
     },
     {
+      "collectionGroup": "pipelines",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isTemplate", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "evaluations",
       "queryScope": "COLLECTION",
       "fields": [

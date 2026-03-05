@@ -66,6 +66,7 @@ class JobOfferDetailContent extends StatelessWidget {
         const SizedBox(height: 14),
         JobOfferActions(
           isAuthenticated: isAuthenticated,
+          canApply: offer.isOpenForApplications,
           isApplying: isApplying,
           applicationStatus: application?.status,
           onApply: onApply,

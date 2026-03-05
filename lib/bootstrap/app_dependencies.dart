@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
+import 'package:opti_job_app/features/ai/models/ai_service.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
 import 'package:opti_job_app/features/calendar/repositories/calendar_repository.dart';
 import 'package:opti_job_app/features/cover_letter/repositories/cover_letter_repository.dart';
@@ -36,6 +37,7 @@ class AppDependencies {
     required this.calendarRepository,
     required this.applicationRepository,
     required this.applicationService,
+    required this.aiService,
     required this.aiRepository,
     required this.coverLetterRepository,
     required this.videoCurriculumRepository,
@@ -68,6 +70,7 @@ class AppDependencies {
       calendarRepository: getIt<CalendarRepository>(),
       applicationRepository: getIt<ApplicationRepository>(),
       applicationService: getIt<ApplicationService>(),
+      aiService: getIt<AiService>(),
       aiRepository: getIt<AiRepository>(),
       coverLetterRepository: getIt<CoverLetterRepository>(),
       videoCurriculumRepository: getIt<VideoCurriculumRepository>(),
@@ -93,6 +96,7 @@ class AppDependencies {
   final CalendarRepository calendarRepository;
   final ApplicationRepository applicationRepository;
   final ApplicationService applicationService;
+  final AiService aiService;
   final AiRepository aiRepository;
   final CoverLetterRepository coverLetterRepository;
   final VideoCurriculumRepository videoCurriculumRepository;

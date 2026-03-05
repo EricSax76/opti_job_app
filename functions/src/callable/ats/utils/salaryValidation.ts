@@ -22,11 +22,51 @@ export function toFiniteNumber(value: unknown): number | null {
 export function normalizeSalaryPeriod(value: unknown): string {
   const raw = asTrimmedString(value).toLowerCase();
   if (!raw) return "";
-  if (raw === "hourly") return "hour";
-  if (raw === "daily") return "day";
-  if (raw === "weekly") return "week";
-  if (raw === "monthly") return "month";
-  if (raw === "annual" || raw === "annually" || raw === "yearly") return "year";
+  if (
+    raw === "hour" ||
+    raw === "hourly" ||
+    raw === "hora" ||
+    raw === "horas" ||
+    raw === "por hora"
+  ) {
+    return "hour";
+  }
+  if (
+    raw === "day" ||
+    raw === "daily" ||
+    raw === "dia" ||
+    raw === "diario" ||
+    raw === "diaria"
+  ) {
+    return "day";
+  }
+  if (
+    raw === "week" ||
+    raw === "weekly" ||
+    raw === "semana" ||
+    raw === "semanal"
+  ) {
+    return "week";
+  }
+  if (
+    raw === "month" ||
+    raw === "monthly" ||
+    raw === "mes" ||
+    raw === "mensual"
+  ) {
+    return "month";
+  }
+  if (
+    raw === "year" ||
+    raw === "annual" ||
+    raw === "annually" ||
+    raw === "yearly" ||
+    raw === "anual" ||
+    raw === "anualmente" ||
+    raw === "ano"
+  ) {
+    return "year";
+  }
   return raw;
 }
 

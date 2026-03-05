@@ -159,10 +159,26 @@ service cloud.firestore {
     }
 
     match /pipelines/{pipelineId} {
-      allow read: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && resource.data.companyId == request.auth.uid ||
-                     isRecruiter() && recruiterBelongsToCompany(resource.data.companyId);
-      allow write: if isCompany() && exists(/databases/$(database)/documents/companies/$(request.auth.uid)) && request.resource.data.companyId == request.auth.uid ||
-                      isRecruiter() && recruiterCanManageOffers(request.resource.data.companyId);
+      allow read: if (
+          resource.data.isTemplate == true
+          && (isCompany() || isRecruiter())
+        )
+        || (
+          isCompany()
+          && resource.data.companyId == request.auth.uid
+        )
+        || (
+          isRecruiter()
+          && recruiterBelongsToCompany(resource.data.companyId)
+        );
+      allow write: if (
+          isCompany()
+          && request.resource.data.companyId == request.auth.uid
+        )
+        || (
+          isRecruiter()
+          && recruiterCanManageOffers(request.resource.data.companyId)
+        );
     }
 
     match /jobOffers/{offerId} {

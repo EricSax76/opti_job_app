@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
+import 'package:opti_job_app/modules/companies/models/company_compliance_profile.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/modules/companies/models/company_multiposting_settings.dart';
 
 class ProfileService {
   ProfileService({
@@ -202,6 +204,13 @@ class ProfileService {
   Future<Company> updateCompanyProfile({
     required String uid,
     required String name,
+    String? website,
+    String? industry,
+    String? teamSize,
+    String? headquarters,
+    String? description,
+    CompanyMultipostingSettings? multipostingSettings,
+    CompanyComplianceProfile? complianceProfile,
     Uint8List? avatarBytes,
   }) async {
     final docRef = _firestore.collection('companies').doc(uid);
@@ -220,6 +229,29 @@ class ProfileService {
       'updated_at': FieldValue.serverTimestamp(),
     };
     String? newAvatarUrl;
+
+    if (website != null) {
+      updateData['website'] = website.trim();
+    }
+    if (industry != null) {
+      updateData['industry'] = industry.trim();
+    }
+    if (teamSize != null) {
+      updateData['team_size'] = teamSize.trim();
+    }
+    if (headquarters != null) {
+      updateData['headquarters'] = headquarters.trim();
+    }
+    if (description != null) {
+      updateData['description'] = description.trim();
+    }
+    if (multipostingSettings != null) {
+      updateData['multiposting_channel_settings'] = multipostingSettings
+          .toJson();
+    }
+    if (complianceProfile != null) {
+      updateData['compliance_settings'] = complianceProfile.toJson();
+    }
 
     if (avatarBytes != null) {
       final avatarRef = _storage.ref().child('companies/$uid/avatar.jpg');
@@ -245,7 +277,8 @@ class ProfileService {
         newAvatarUrl != null &&
         newAvatarUrl.isNotEmpty &&
         newAvatarUrl != existingAvatarUrl;
-    if (hasNameChanged || hasAvatarChanged) {
+    final hasComplianceChanged = complianceProfile != null;
+    if (hasNameChanged || hasAvatarChanged || hasComplianceChanged) {
       final offersQuery = await _firestore
           .collection('jobOffers')
           .where('company_uid', isEqualTo: uid)
@@ -258,6 +291,16 @@ class ProfileService {
             if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty) {
               update['company_avatar_url'] = avatarUrlForOffers;
             }
+            if (complianceProfile != null) {
+              update['company_privacy_contact_email'] =
+                  complianceProfile.privacyContactEmail;
+              update['company_dpo_email'] = complianceProfile.dpoEmail;
+              update['company_privacy_policy_url'] =
+                  complianceProfile.privacyPolicyUrl;
+              update['company_ai_consent_text_version'] =
+                  complianceProfile.aiConsentTextVersion;
+              update['company_ai_consent_text'] = complianceProfile.aiConsentText;
+            }
             batch.update(doc.reference, update);
           }
           await batch.commit();
@@ -269,6 +312,15 @@ class ProfileService {
       ...snapshotData,
       'uid': uid,
       'name': name,
+      if (website != null) 'website': website.trim(),
+      if (industry != null) 'industry': industry.trim(),
+      if (teamSize != null) 'team_size': teamSize.trim(),
+      if (headquarters != null) 'headquarters': headquarters.trim(),
+      if (description != null) 'description': description.trim(),
+      if (multipostingSettings != null)
+        'multiposting_channel_settings': multipostingSettings.toJson(),
+      if (complianceProfile != null)
+        'compliance_settings': complianceProfile.toJson(),
       if (avatarUrlForOffers != null && avatarUrlForOffers.isNotEmpty)
         'avatar_url': avatarUrlForOffers,
     });

@@ -9,6 +9,7 @@ class CompanyProfileFormState extends Equatable {
   const CompanyProfileFormState({
     this.company,
     this.avatarBytes,
+    this.enabledMultipostingChannels = const [],
     this.hasChanges = false,
     this.canSubmit = false,
     this.isSaving = false,
@@ -18,6 +19,7 @@ class CompanyProfileFormState extends Equatable {
 
   final Company? company;
   final Uint8List? avatarBytes;
+  final List<String> enabledMultipostingChannels;
   final bool hasChanges;
   final bool canSubmit;
   final bool isSaving;
@@ -28,6 +30,7 @@ class CompanyProfileFormState extends Equatable {
   List<Object?> get props => [
     company,
     avatarBytes,
+    enabledMultipostingChannels,
     hasChanges,
     canSubmit,
     isSaving,
@@ -38,6 +41,7 @@ class CompanyProfileFormState extends Equatable {
   CompanyProfileFormState copyWith({
     Company? company,
     Uint8List? avatarBytes,
+    List<String>? enabledMultipostingChannels,
     bool? hasChanges,
     bool? canSubmit,
     bool? isSaving,
@@ -50,6 +54,8 @@ class CompanyProfileFormState extends Equatable {
     return CompanyProfileFormState(
       company: clearCompany ? null : company ?? this.company,
       avatarBytes: clearAvatarBytes ? null : avatarBytes ?? this.avatarBytes,
+      enabledMultipostingChannels:
+          enabledMultipostingChannels ?? this.enabledMultipostingChannels,
       hasChanges: hasChanges ?? this.hasChanges,
       canSubmit: canSubmit ?? this.canSubmit,
       isSaving: isSaving ?? this.isSaving,

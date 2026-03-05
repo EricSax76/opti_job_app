@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
@@ -146,6 +147,83 @@ void main() {
       ),
     ).called(1);
   });
+
+  test(
+    'apply keeps duplicate message only when backend reports existing application',
+    () async {
+      final candidate = _candidate();
+      final offer = _offer();
+      when(
+        () => applicationService.createApplication(
+          jobOffer: offer,
+          candidate: candidate,
+          candidateProfileId: candidate.id,
+          knockoutResponses: null,
+          sourceChannel: 'platform',
+        ),
+      ).thenThrow(Exception('Application already exists'));
+
+      await cubit.apply(candidate: candidate, offer: offer);
+
+      expect(cubit.state.status, JobOfferDetailStatus.failure);
+      expect(cubit.state.errorMessage, 'Ya te has postulado a esta oferta.');
+      verifyNever(
+        () => applicationService.getApplicationForCandidateOffer(
+          jobOfferId: any(named: 'jobOfferId'),
+          candidateUid: any(named: 'candidateUid'),
+        ),
+      );
+    },
+  );
+
+  test('apply blocks inactive offers before calling backend', () async {
+    final candidate = _candidate();
+    final inactiveOffer = _offer().copyWith(status: 'closed');
+
+    await cubit.apply(candidate: candidate, offer: inactiveOffer);
+
+    expect(cubit.state.status, JobOfferDetailStatus.failure);
+    expect(cubit.state.errorMessage, 'La oferta ya no está activa.');
+    verifyNever(
+      () => applicationService.createApplication(
+        jobOffer: inactiveOffer,
+        candidate: candidate,
+        candidateProfileId: candidate.id,
+        knockoutResponses: null,
+        sourceChannel: 'platform',
+      ),
+    );
+  });
+
+  test(
+    'apply shows curriculum guidance when backend reports missing CV',
+    () async {
+      final candidate = _candidate();
+      final offer = _offer();
+      when(
+        () => applicationService.createApplication(
+          jobOffer: offer,
+          candidate: candidate,
+          candidateProfileId: candidate.id,
+          knockoutResponses: null,
+          sourceChannel: 'platform',
+        ),
+      ).thenThrow(
+        FirebaseFunctionsException(
+          code: 'invalid-argument',
+          message: 'Curriculum not found',
+        ),
+      );
+
+      await cubit.apply(candidate: candidate, offer: offer);
+
+      expect(cubit.state.status, JobOfferDetailStatus.failure);
+      expect(
+        cubit.state.errorMessage,
+        'No encontramos tu currículum principal. Completa tu perfil antes de postular.',
+      );
+    },
+  );
 }
 
 JobOffer _offer() {
@@ -155,5 +233,16 @@ JobOffer _offer() {
     description: 'Build job-search features',
     location: 'Barcelona',
     companyUid: 'company-1',
+  );
+}
+
+Candidate _candidate() {
+  return const Candidate(
+    id: 1,
+    name: 'Test',
+    lastName: 'Candidate',
+    email: 'test@example.com',
+    uid: 'candidate-1',
+    role: 'candidate',
   );
 }

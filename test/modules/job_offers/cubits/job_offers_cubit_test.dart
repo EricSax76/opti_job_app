@@ -115,6 +115,36 @@ void main() {
     },
   );
 
+  test('filters out offers that are not open for applications', () async {
+    when(
+      () => repository.fetchPage(
+        jobType: any(named: 'jobType'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer(
+      (_) async => JobOffersPage(
+        offers: [
+          _offer(id: 'offer-active', jobType: 'Remoto', status: 'active'),
+          _offer(
+            id: 'offer-published',
+            jobType: 'Hibrido',
+            status: 'published',
+          ),
+          _offer(id: 'offer-closed', jobType: 'Presencial', status: 'closed'),
+        ],
+        hasMore: false,
+        nextPageCursor: null,
+      ),
+    );
+
+    await cubit.start();
+
+    expect(
+      cubit.state.offers.map((offer) => offer.id).toList(growable: false),
+      ['offer-active', 'offer-published'],
+    );
+  });
+
   test('clearErrorMessage removes non-blocking refresh error', () async {
     var requestCount = 0;
     when(
@@ -145,7 +175,7 @@ void main() {
   });
 }
 
-JobOffer _offer({required String id, required String jobType}) {
+JobOffer _offer({required String id, required String jobType, String? status}) {
   return JobOffer(
     id: id,
     title: 'Oferta $id',
@@ -153,5 +183,6 @@ JobOffer _offer({required String id, required String jobType}) {
     location: 'Madrid',
     companyUid: 'company-1',
     jobType: jobType,
+    status: status,
   );
 }

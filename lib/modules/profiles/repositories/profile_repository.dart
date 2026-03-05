@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/companies/models/company_compliance_profile.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
+import 'package:opti_job_app/modules/companies/models/company_multiposting_settings.dart';
 import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 
 class ProfileRepository {
@@ -165,11 +167,25 @@ class ProfileRepository {
   Future<Company> updateCompanyProfile({
     required String uid,
     required String name,
+    String? website,
+    String? industry,
+    String? teamSize,
+    String? headquarters,
+    String? description,
+    CompanyMultipostingSettings? multipostingSettings,
+    CompanyComplianceProfile? complianceProfile,
     Uint8List? avatarBytes,
   }) async {
     final updated = await _service.updateCompanyProfile(
       uid: uid,
       name: name,
+      website: website,
+      industry: industry,
+      teamSize: teamSize,
+      headquarters: headquarters,
+      description: description,
+      multipostingSettings: multipostingSettings,
+      complianceProfile: complianceProfile,
       avatarBytes: avatarBytes,
     );
     if (updated.id > 0) {

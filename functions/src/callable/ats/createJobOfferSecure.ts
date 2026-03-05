@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { validateJobOffer } from "../../utils/validation";
+import { ValidationError, validateJobOffer } from "../../utils/validation";
 import {
   JsonRecord,
   asNullableString,
@@ -12,6 +12,13 @@ import { resolveActorCompanyUid } from "./utils/atsAccess";
 
 function pickPipelineArray(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
+}
+
+function asJsonRecord(value: unknown): JsonRecord | null {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as JsonRecord;
 }
 
 export const createJobOfferSecure = onCall({ region: "europe-west1" }, async (request) => {
@@ -41,7 +48,37 @@ export const createJobOfferSecure = onCall({ region: "europe-west1" }, async (re
 
   const salaryValidation = validateSalary(payload);
   const db = getFirestore();
+  const companyDoc = await db.collection("companies").doc(companyUid).get();
+  const companyData = (companyDoc.data() ?? {}) as JsonRecord;
+  const complianceSettings = asJsonRecord(
+    companyData.compliance_settings ?? companyData.complianceSettings,
+  );
+  const companyPrivacyContactEmail = asTrimmedString(
+    complianceSettings?.privacy_contact_email ??
+      complianceSettings?.privacyContactEmail,
+  );
+  const companyDpoEmail = asTrimmedString(
+    complianceSettings?.dpo_email ?? complianceSettings?.dpoEmail,
+  );
+  const companyPrivacyPolicyUrl = asTrimmedString(
+    complianceSettings?.privacy_policy_url ??
+      complianceSettings?.privacyPolicyUrl,
+  );
+  const companyAiConsentTextVersion =
+    asTrimmedString(
+      complianceSettings?.ai_consent_text_version ??
+        complianceSettings?.aiConsentTextVersion,
+    ) || "2026.04";
+  const companyAiConsentText =
+    asTrimmedString(
+      complianceSettings?.ai_consent_text ?? complianceSettings?.aiConsentText,
+    ) ||
+    "Autorizo el uso de sistemas de IA para test y entrevistas de esta candidatura. " +
+      "Entiendo que puedo solicitar revisión humana y revocar en el portal de privacidad.";
   const docRef = db.collection("jobOffers").doc();
+  const pipelineId = asNullableString(payload.pipelineId);
+  const pipelineStages = pickPipelineArray(payload.pipelineStages);
+  const knockoutQuestions = pickPipelineArray(payload.knockoutQuestions);
 
   const offerData: JsonRecord = {
     id: docRef.id,
@@ -74,16 +111,27 @@ export const createJobOfferSecure = onCall({ region: "europe-west1" }, async (re
     key_indicators: asNullableString(
       payload.key_indicators ?? payload.keyIndicators,
     ),
-    pipelineId: asNullableString(payload.pipelineId),
-    pipelineStages: pickPipelineArray(payload.pipelineStages),
-    knockoutQuestions: pickPipelineArray(payload.knockoutQuestions),
     language_check_result:
       payload.language_check_result ?? payload.languageCheckResult ?? null,
+    company_privacy_contact_email: companyPrivacyContactEmail || null,
+    company_dpo_email: companyDpoEmail || null,
+    company_privacy_policy_url: companyPrivacyPolicyUrl || null,
+    company_ai_consent_text_version: companyAiConsentTextVersion,
+    company_ai_consent_text: companyAiConsentText,
     applications_count: 0,
     created_by: request.auth.uid,
     created_at: FieldValue.serverTimestamp(),
     updated_at: FieldValue.serverTimestamp(),
   };
+  if (pipelineId !== null) {
+    offerData.pipelineId = pipelineId;
+  }
+  if (pipelineStages !== undefined) {
+    offerData.pipelineStages = pipelineStages;
+  }
+  if (knockoutQuestions !== undefined) {
+    offerData.knockoutQuestions = knockoutQuestions;
+  }
 
   if (!salaryValidation.valid) {
     offerData.salary_min = salaryValidation.salaryMin;
@@ -122,7 +170,14 @@ export const createJobOfferSecure = onCall({ region: "europe-west1" }, async (re
     checkedAt: FieldValue.serverTimestamp(),
   };
 
-  validateJobOffer(offerData);
+  try {
+    validateJobOffer(offerData);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      throw new HttpsError("invalid-argument", error.message);
+    }
+    throw error;
+  }
   await docRef.set(offerData);
 
   return {

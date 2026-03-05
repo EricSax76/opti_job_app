@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
+import 'package:opti_job_app/modules/companies/models/company_multiposting_settings.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/offer_applicants_section.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/logic/offer_card_logic.dart';
@@ -191,10 +192,34 @@ class OfferCard extends StatelessWidget {
   }
 
   Future<void> _publishToExternalChannels(BuildContext context) async {
+    final companySettings = context
+        .read<CompanyAuthCubit>()
+        .state
+        .company
+        ?.multipostingSettings;
+    final fallbackSelection =
+        companySettings?.enabledChannels ?? companyDefaultMultipostingChannels;
+    final initialSelection = offer.multipostingEnabledChannels.isEmpty
+        ? fallbackSelection
+        : offer.multipostingEnabledChannels;
+
+    final options = companyMultipostingChannelCatalog
+        .map(
+          (channel) => _MultipostingChannelOption(
+            id: channel.id,
+            label: channel.label,
+            estimatedCostEur:
+                companySettings?.resolvedCostEur(channel.id) ??
+                channel.defaultCostEur,
+          ),
+        )
+        .toList(growable: false);
+
     final selectedChannels = await showDialog<List<_MultipostingChannelOption>>(
       context: context,
       builder: (_) => _MultipostingChannelDialog(
-        initialSelection: offer.multipostingEnabledChannels,
+        options: options,
+        initialSelection: initialSelection,
       ),
     );
 
@@ -272,42 +297,13 @@ class _MultipostingChannelOption {
   final double estimatedCostEur;
 }
 
-const _availableMultipostingChannels = <_MultipostingChannelOption>[
-  _MultipostingChannelOption(
-    id: 'linkedin',
-    label: 'LinkedIn',
-    estimatedCostEur: 249,
-  ),
-  _MultipostingChannelOption(
-    id: 'indeed',
-    label: 'Indeed',
-    estimatedCostEur: 199,
-  ),
-  _MultipostingChannelOption(
-    id: 'university_portal',
-    label: 'Portal universitario',
-    estimatedCostEur: 89,
-  ),
-  _MultipostingChannelOption(
-    id: 'infojobs',
-    label: 'InfoJobs',
-    estimatedCostEur: 149,
-  ),
-  _MultipostingChannelOption(
-    id: 'glassdoor',
-    label: 'Glassdoor',
-    estimatedCostEur: 129,
-  ),
-  _MultipostingChannelOption(
-    id: 'github_jobs',
-    label: 'GitHub Jobs',
-    estimatedCostEur: 179,
-  ),
-];
-
 class _MultipostingChannelDialog extends StatefulWidget {
-  const _MultipostingChannelDialog({required this.initialSelection});
+  const _MultipostingChannelDialog({
+    required this.options,
+    required this.initialSelection,
+  });
 
+  final List<_MultipostingChannelOption> options;
   final List<String> initialSelection;
 
   @override
@@ -322,18 +318,17 @@ class _MultipostingChannelDialogState
   @override
   void initState() {
     super.initState();
+    final availableIds = widget.options.map((channel) => channel.id).toSet();
     final initial = widget.initialSelection
         .map((value) => value.trim().toLowerCase())
-        .where((value) => value.isNotEmpty)
+        .where((value) => value.isNotEmpty && availableIds.contains(value))
         .toSet();
-    _selectedChannels = initial.isNotEmpty
-        ? initial
-        : {'linkedin', 'indeed', 'university_portal'};
+    _selectedChannels = initial.isNotEmpty ? initial : {...availableIds};
   }
 
   @override
   Widget build(BuildContext context) {
-    final estimatedTotal = _availableMultipostingChannels
+    final estimatedTotal = widget.options
         .where((channel) => _selectedChannels.contains(channel.id))
         .fold<double>(0, (total, channel) => total + channel.estimatedCostEur);
 
@@ -353,7 +348,7 @@ class _MultipostingChannelDialogState
               height: 280,
               child: SingleChildScrollView(
                 child: Column(
-                  children: _availableMultipostingChannels
+                  children: widget.options
                       .map((channel) {
                         final selected = _selectedChannels.contains(channel.id);
                         return CheckboxListTile(
@@ -397,7 +392,7 @@ class _MultipostingChannelDialogState
           onPressed: _selectedChannels.isEmpty
               ? null
               : () {
-                  final selected = _availableMultipostingChannels
+                  final selected = widget.options
                       .where(
                         (channel) => _selectedChannels.contains(channel.id),
                       )

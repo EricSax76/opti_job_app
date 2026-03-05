@@ -56,7 +56,10 @@ class ApplicantCurriculumContent extends StatelessWidget {
               SectionCard(
                 title: 'Curriculum',
                 child: hasCurriculum
-                    ? CurriculumReadOnlyView(curriculum: curriculum)
+                    ? CurriculumReadOnlyView(
+                        curriculum: curriculum,
+                        avatarUrl: candidate.avatarUrl,
+                      )
                     : InlineStateMessage(
                         icon: Icons.description_outlined,
                         message: 'El aplicante aún no tiene un CV cargado.',

@@ -51,7 +51,7 @@ class CompanyAccountAvatarMenu extends StatelessWidget {
         if (showProfileOption)
           const PopupMenuItem(
             value: CompanyAccountAction.profile,
-            child: Text('Mi perfil'),
+            child: Text('Ajustes de empresa'),
           ),
         if (showProfileOption) const PopupMenuDivider(),
         const PopupMenuItem(

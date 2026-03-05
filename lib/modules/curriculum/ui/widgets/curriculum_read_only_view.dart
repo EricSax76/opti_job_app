@@ -5,18 +5,45 @@ import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/ui/curriculum_read_only_exports.dart';
 
 class CurriculumReadOnlyView extends StatelessWidget {
-  const CurriculumReadOnlyView({super.key, required this.curriculum});
+  const CurriculumReadOnlyView({
+    super.key,
+    required this.curriculum,
+    this.avatarUrl,
+  });
 
   final Curriculum curriculum;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
     final viewModel = CurriculumReadOnlyLogic.buildViewModel(curriculum);
+    final normalizedAvatarUrl = avatarUrl?.trim();
+    final hasAvatar =
+        normalizedAvatarUrl != null && normalizedAvatarUrl.isNotEmpty;
 
     return SelectionArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (hasAvatar) ...[
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundImage: NetworkImage(normalizedAvatarUrl),
+                ),
+                const SizedBox(width: uiSpacing12),
+                Text(
+                  'Foto de perfil',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: uiSpacing24),
+          ],
           if (viewModel.hasHeadline) ...[
             const CurriculumReadOnlySectionTitle(text: 'Titular'),
             CurriculumReadOnlyTextCard(

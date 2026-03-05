@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
@@ -121,10 +122,42 @@ class ProfileCubit extends Cubit<ProfileState> {
       emit(
         state.copyWith(
           status: ProfileStatus.failure,
-          errorMessage: 'No se pudo actualizar el perfil.',
+          errorMessage: _resolveUpdateProfileErrorMessage(error),
         ),
       );
     }
+  }
+
+  String _resolveUpdateProfileErrorMessage(Object error) {
+    if (error is FirebaseException) {
+      final code = error.code.trim().toLowerCase();
+      if (code == 'permission-denied' || code == 'unauthorized') {
+        return 'No tienes permisos para guardar la foto de perfil.';
+      }
+      if (code == 'unauthenticated') {
+        return 'Tu sesión expiró. Inicia sesión de nuevo e inténtalo.';
+      }
+      if (code == 'unavailable' || code == 'network-request-failed') {
+        return 'No se pudo conectar. Revisa tu conexión e inténtalo otra vez.';
+      }
+      final message = error.message?.trim();
+      if (message != null && message.isNotEmpty) return message;
+    }
+
+    final normalized = error.toString().trim().toLowerCase();
+    if (normalized.contains('permission-denied') ||
+        normalized.contains('storage/unauthorized')) {
+      return 'No tienes permisos para guardar la foto de perfil.';
+    }
+    if (normalized.contains('unauthenticated')) {
+      return 'Tu sesión expiró. Inicia sesión de nuevo e inténtalo.';
+    }
+    if (normalized.contains('network-request-failed') ||
+        normalized.contains('unavailable')) {
+      return 'No se pudo conectar. Revisa tu conexión e inténtalo otra vez.';
+    }
+
+    return 'No se pudo actualizar el perfil.';
   }
 
   @override

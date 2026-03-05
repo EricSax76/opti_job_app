@@ -13,7 +13,25 @@ class CompanyProfileFormCard extends StatelessWidget {
     this.avatarBytes,
     required this.onPickAvatar,
     required this.nameController,
+    required this.websiteController,
+    required this.industryController,
+    required this.teamSizeController,
+    required this.headquartersController,
+    required this.descriptionController,
+    required this.controllerLegalNameController,
+    required this.controllerTaxIdController,
+    required this.privacyContactEmailController,
+    required this.dpoNameController,
+    required this.dpoEmailController,
+    required this.privacyPolicyUrlController,
+    required this.retentionPolicySummaryController,
+    required this.internationalTransfersSummaryController,
+    required this.aiConsentTextVersionController,
+    required this.aiConsentTextController,
     required this.email,
+    required this.complianceComplete,
+    required this.enabledMultipostingChannels,
+    required this.onChannelToggle,
     required this.canSubmit,
     required this.isSaving,
     required this.onSubmit,
@@ -27,7 +45,25 @@ class CompanyProfileFormCard extends StatelessWidget {
   final Uint8List? avatarBytes;
   final VoidCallback onPickAvatar;
   final TextEditingController nameController;
+  final TextEditingController websiteController;
+  final TextEditingController industryController;
+  final TextEditingController teamSizeController;
+  final TextEditingController headquartersController;
+  final TextEditingController descriptionController;
+  final TextEditingController controllerLegalNameController;
+  final TextEditingController controllerTaxIdController;
+  final TextEditingController privacyContactEmailController;
+  final TextEditingController dpoNameController;
+  final TextEditingController dpoEmailController;
+  final TextEditingController privacyPolicyUrlController;
+  final TextEditingController retentionPolicySummaryController;
+  final TextEditingController internationalTransfersSummaryController;
+  final TextEditingController aiConsentTextVersionController;
+  final TextEditingController aiConsentTextController;
   final String email;
+  final bool complianceComplete;
+  final List<String> enabledMultipostingChannels;
+  final void Function(String channelId, bool enabled) onChannelToggle;
   final bool canSubmit;
   final bool isSaving;
   final VoidCallback onSubmit;
@@ -63,7 +99,28 @@ class CompanyProfileFormCard extends StatelessWidget {
                 const SizedBox(height: 20),
                 CompanyProfileFormFields(
                   nameController: nameController,
+                  websiteController: websiteController,
+                  industryController: industryController,
+                  teamSizeController: teamSizeController,
+                  headquartersController: headquartersController,
+                  descriptionController: descriptionController,
+                  controllerLegalNameController: controllerLegalNameController,
+                  controllerTaxIdController: controllerTaxIdController,
+                  privacyContactEmailController: privacyContactEmailController,
+                  dpoNameController: dpoNameController,
+                  dpoEmailController: dpoEmailController,
+                  privacyPolicyUrlController: privacyPolicyUrlController,
+                  retentionPolicySummaryController:
+                      retentionPolicySummaryController,
+                  internationalTransfersSummaryController:
+                      internationalTransfersSummaryController,
+                  aiConsentTextVersionController:
+                      aiConsentTextVersionController,
+                  aiConsentTextController: aiConsentTextController,
                   email: email,
+                  complianceComplete: complianceComplete,
+                  enabledMultipostingChannels: enabledMultipostingChannels,
+                  onChannelToggle: onChannelToggle,
                   canSubmit: canSubmit,
                   isSaving: isSaving,
                   onSubmit: onSubmit,
