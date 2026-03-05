@@ -111,7 +111,7 @@ function toScore(earned: number, total: number): number {
   return Math.max(0, Math.min(100, Math.round((earned / total) * 100)));
 }
 
-export const matchCandidateWithSkills = functions.https.onCall(async (data, context) => {
+export const matchCandidateWithSkills = functions.region("europe-west1").https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",

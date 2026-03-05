@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
-export const seedSkillsTaxonomy = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+export const seedSkillsTaxonomy = functions.region("europe-west1").pubsub.schedule('every 24 hours').onRun(async (context) => {
   const skills = [
     { name: 'Flutter', category: 'technical', aliases: ['Dart', 'Flutter Framework'], popularity: 100 },
     { name: 'React', category: 'technical', aliases: ['ReactJS', 'React.js'], popularity: 95 },

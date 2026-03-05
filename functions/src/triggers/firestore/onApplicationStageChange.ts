@@ -141,7 +141,10 @@ function buildFeedback({
 }
 
 export const onApplicationStageChange = onDocumentUpdated(
-  "applications/{applicationId}",
+  {
+    document: "applications/{applicationId}",
+    region: "europe-west1",
+  },
   async (event) => {
     const beforeData = event.data?.before.data() as Application | undefined;
     const afterData = event.data?.after.data() as Application | undefined;

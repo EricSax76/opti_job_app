@@ -10,6 +10,7 @@ import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
 import 'package:opti_job_app/auth/models/auth_exceptions.dart';
 import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
+import 'package:opti_job_app/auth/services/eudi_wallet_native_channel.dart';
 
 class AuthService {
   AuthService({
@@ -17,15 +18,18 @@ class AuthService {
     required FirebaseFirestore firestore,
     required FirebaseFunctions functions,
     required FirebaseFunctions fallbackFunctions,
+    required EudiWalletNativeChannel eudiWalletNativeChannel,
   }) : _auth = firebaseAuth,
        _firestore = firestore,
        _functions = functions,
-       _fallbackFunctions = fallbackFunctions;
+       _fallbackFunctions = fallbackFunctions,
+       _eudiWalletNativeChannel = eudiWalletNativeChannel;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
   final FirebaseFunctions _fallbackFunctions;
+  final EudiWalletNativeChannel _eudiWalletNativeChannel;
 
   Stream<String?> get uidStream =>
       _auth.authStateChanges().map((user) => user?.uid);
@@ -131,12 +135,90 @@ class AuthService {
     return CandidateMapper.fromFirestore({...doc.data()!, 'token': token});
   }
 
-  Future<void> importEudiCredential({
-    required EudiWalletCredentialInput credential,
+  Future<EudiWalletSignInInput> buildEudiWalletSignInInputFromNative({
+    String? initialName,
+    String? initialEmail,
+    String audience = 'opti-job-app:eudi-signin',
+    String proofSchemaVersion = '2026.1',
   }) async {
+    final isAvailable = await _eudiWalletNativeChannel.isWalletAvailable();
+    if (!isAvailable) {
+      throw const EudiWalletNativeException(
+        code: 'wallet-unavailable',
+        message: 'No se detectó una EUDI Wallet nativa en este dispositivo.',
+      );
+    }
+
+    final response = await _eudiWalletNativeChannel.requestPresentation(
+      request: EudiPresentationRequest.forSignIn(
+        audience: audience,
+        proofSchemaVersion: proofSchemaVersion,
+      ),
+    );
+
+    final resolvedEmail =
+        response.email?.trim().toLowerCase() ??
+        initialEmail?.trim().toLowerCase() ??
+        '';
+    if (resolvedEmail.isEmpty) {
+      throw const EudiWalletNativeException(
+        code: 'missing-email',
+        message:
+            'La presentación EUDI no incluye email y no se pudo resolver uno local.',
+      );
+    }
+
+    final resolvedName =
+        response.fullName?.trim() ?? initialName?.trim() ?? 'Candidato EUDI';
+
+    return EudiWalletSignInInput(
+      walletSubject: response.walletSubject.trim(),
+      email: resolvedEmail,
+      fullName: resolvedName,
+      countryCode: response.countryCode.trim().toUpperCase(),
+      assuranceLevel: response.assuranceLevel.trim(),
+      credential: response.credential,
+      verifiablePresentation: response.verifiablePresentation.trim(),
+      expectedAudience: audience,
+      proofSchemaVersion: response.proofSchemaVersion.trim().isNotEmpty
+          ? response.proofSchemaVersion.trim()
+          : proofSchemaVersion,
+      verificationMethod: response.verificationMethod.trim(),
+      issuerDid: response.issuerDid.trim(),
+      credentialType: response.credentialType.trim(),
+    );
+  }
+
+  Future<void> importEudiCredentialFromNativeWallet({
+    String audience = 'opti-job-app:eudi-import',
+    String proofSchemaVersion = '2026.1',
+  }) async {
+    final isAvailable = await _eudiWalletNativeChannel.isWalletAvailable();
+    if (!isAvailable) {
+      throw const EudiWalletNativeException(
+        code: 'wallet-unavailable',
+        message: 'No se detectó una EUDI Wallet nativa en este dispositivo.',
+      );
+    }
+
+    final response = await _eudiWalletNativeChannel.requestPresentation(
+      request: EudiPresentationRequest.forCredentialImport(
+        audience: audience,
+        proofSchemaVersion: proofSchemaVersion,
+      ),
+    );
+
+    final input = EudiCredentialImportInput(
+      verifiablePresentation: response.verifiablePresentation.trim(),
+      expectedAudience: audience,
+      proofSchemaVersion: response.proofSchemaVersion.trim().isNotEmpty
+          ? response.proofSchemaVersion.trim()
+          : proofSchemaVersion,
+    );
+
     await _callCallableWithFallback(
       name: 'importEudiCredential',
-      payload: {'credential': credential.toJson()},
+      payload: input.toJson(),
     );
   }
 
@@ -367,6 +449,9 @@ class AuthService {
   }
 
   AuthException mapFirebaseException(Object e) {
+    if (e is EudiWalletNativeException) {
+      return AuthException(e.message);
+    }
     if (e is FirebaseAuthException) {
       if (kDebugMode) {
         debugPrint(

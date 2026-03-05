@@ -1,12 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opti_job_app/auth/cubits/auth_status.dart';
+import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_state.dart';
 import 'package:opti_job_app/modules/candidates/ui/pages/candidate_settings_screen.dart';
+
+class _StubCandidateAuthCubit extends Cubit<CandidateAuthState>
+    implements CandidateAuthCubit {
+  _StubCandidateAuthCubit()
+    : super(const CandidateAuthState(status: AuthStatus.authenticated));
+
+  @override
+  void clearError() {}
+
+  @override
+  void completeOnboarding() {}
+
+  @override
+  Future<void> loginCandidate({
+    required String email,
+    required String password,
+  }) async {}
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  Future<void> registerCandidate({
+    required String name,
+    required String email,
+    required String password,
+  }) async {}
+
+  @override
+  Future<void> signInWithEudiWallet({
+    required EudiWalletSignInInput input,
+  }) async {}
+
+  @override
+  Future<void> restoreSession() async {}
+}
 
 void main() {
   testWidgets('renderiza los campos base de la sección ajustes', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: CandidateSettingsScreen()));
+    await tester.pumpWidget(
+      BlocProvider<CandidateAuthCubit>(
+        create: (_) => _StubCandidateAuthCubit(),
+        child: const MaterialApp(home: CandidateSettingsScreen()),
+      ),
+    );
 
     expect(find.text('Ajustes'), findsOneWidget);
     expect(find.text('Datos de acceso'), findsOneWidget);

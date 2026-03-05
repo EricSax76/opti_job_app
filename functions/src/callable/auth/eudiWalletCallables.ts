@@ -1,7 +1,16 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 
+import {
+  verifyEudiPresentation,
+  type VerifiedEudiPresentation,
+} from "../../utils/eudiCryptoVerifier";
+
 type JsonRecord = Record<string, unknown>;
+
+const EUDI_SIGN_IN_AUDIENCE = "opti-job-app:eudi-signin";
+const EUDI_IMPORT_AUDIENCE = "opti-job-app:eudi-import";
+const EUDI_PROOF_SCHEMA_VERSION = "2026.1";
 
 function asTrimmedString(value: unknown): string {
   if (value === null || value === undefined) return "";
@@ -85,6 +94,10 @@ async function logAuditEntry({
   targetType,
   targetId,
   metadata,
+  verificationMethod,
+  issuerDid,
+  credentialType,
+  proofSchemaVersion,
 }: {
   action: string;
   actorUid: string;
@@ -92,6 +105,10 @@ async function logAuditEntry({
   targetType: string;
   targetId: string;
   metadata: JsonRecord;
+  verificationMethod?: string | null;
+  issuerDid?: string | null;
+  credentialType?: string | null;
+  proofSchemaVersion?: string | null;
 }): Promise<void> {
   await admin.firestore().collection("auditLogs").add({
     action,
@@ -99,6 +116,10 @@ async function logAuditEntry({
     actorRole,
     targetType,
     targetId,
+    verificationMethod: verificationMethod ?? null,
+    issuerDid: issuerDid ?? null,
+    credentialType: credentialType ?? null,
+    proofSchemaVersion: proofSchemaVersion ?? null,
     metadata,
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   });
@@ -141,6 +162,11 @@ async function upsertVerifiedCredential({
     issuedAt: string | null;
     expiresAt: string | null;
     metadata: JsonRecord;
+    verificationMethod?: string | null;
+    issuerDid?: string | null;
+    credentialType?: string | null;
+    proofSchemaVersion?: string | null;
+    verifiablePresentationHash?: string | null;
   };
   actorUid: string;
 }): Promise<string> {
@@ -158,14 +184,21 @@ async function upsertVerifiedCredential({
       type: credential.type,
       title: credential.title,
       issuer: credential.issuer,
+      issuerDid: credential.issuerDid ?? credential.issuer,
+      credentialType: credential.credentialType ?? credential.type,
+      verificationMethod: credential.verificationMethod ?? null,
+      proofSchemaVersion:
+        credential.proofSchemaVersion ?? EUDI_PROOF_SCHEMA_VERSION,
+      verifiablePresentationHash: credential.verifiablePresentationHash ?? null,
       issuedAt: credential.issuedAt,
       expiresAt: credential.expiresAt,
       verified: true,
-      source: "eudi_wallet",
+      source: "eudi_wallet_native",
       metadata: credential.metadata,
       updatedBy: actorUid,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      cryptographicallyVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
@@ -173,21 +206,104 @@ async function upsertVerifiedCredential({
   return credentialId;
 }
 
+function buildCredentialFromVerifiedPresentation(
+  verifiedPresentation: VerifiedEudiPresentation,
+): {
+  type: string;
+  title: string;
+  issuer: string;
+  issuedAt: string | null;
+  expiresAt: string | null;
+  metadata: JsonRecord;
+  verificationMethod: string;
+  issuerDid: string;
+  credentialType: string;
+  proofSchemaVersion: string;
+  verifiablePresentationHash: string;
+} {
+  return {
+    type: verifiedPresentation.credentialType,
+    title: verifiedPresentation.credentialTitle,
+    issuer: verifiedPresentation.issuerDid,
+    issuedAt: verifiedPresentation.issuedAt,
+    expiresAt: verifiedPresentation.expiresAt,
+    verificationMethod: verifiedPresentation.verificationMethod,
+    issuerDid: verifiedPresentation.issuerDid,
+    credentialType: verifiedPresentation.credentialType,
+    proofSchemaVersion: verifiedPresentation.proofSchemaVersion,
+    verifiablePresentationHash: verifiedPresentation.verifiablePresentationHash,
+    metadata: {
+      ...verifiedPresentation.metadata,
+      audience: verifiedPresentation.audience,
+      proofSchemaVersion: verifiedPresentation.proofSchemaVersion,
+      issuerDid: verifiedPresentation.issuerDid,
+      verificationMethod: verifiedPresentation.verificationMethod,
+      credentialType: verifiedPresentation.credentialType,
+      verifiablePresentationHash: verifiedPresentation.verifiablePresentationHash,
+    },
+  };
+}
+
+function resolveExpectedAudience(
+  data: unknown,
+  fallbackAudience: string,
+): string {
+  const payload = asRecord(data);
+  const requestedAudience = asTrimmedString(payload.expectedAudience);
+  if (requestedAudience) return requestedAudience;
+  return fallbackAudience;
+}
+
 /**
- * MVP EUDI Wallet sign-in/up for candidates.
+ * EUDI Wallet sign-in/up for candidates.
  * Creates or links candidate by wallet subject and returns Firebase custom token.
+ * If a verifiablePresentation is present, identity fields are derived from crypto-validated claims.
  */
 export const signInWithEudiWallet = functions
   .region("europe-west1")
   .https.onCall(async (data, _context) => {
-    const walletSubject = asTrimmedString(data?.walletSubject);
-    const email = normalizeEmail(data?.email);
-    const fullName = asTrimmedString(data?.fullName);
-    const countryCode = asTrimmedString(data?.countryCode || "ES") || "ES";
+    const expectedAudience = resolveExpectedAudience(data, EUDI_SIGN_IN_AUDIENCE);
+    const providedWalletSubject = asTrimmedString(data?.walletSubject);
+    const providedEmail = normalizeEmail(data?.email);
+    const providedFullName = asTrimmedString(data?.fullName);
+    const providedCountryCode = asTrimmedString(data?.countryCode || "ES") || "ES";
+    const providedAssuranceLevel =
+      asTrimmedString(data?.assuranceLevel || "substantial") || "substantial";
+
+    const legacyCredential = parseCredentialPayload(data?.credential);
+    const hasPresentation = data?.verifiablePresentation != null;
+
+    let verifiedPresentation: VerifiedEudiPresentation | null = null;
+    if (hasPresentation) {
+      verifiedPresentation = verifyEudiPresentation({
+        verifiablePresentation: data?.verifiablePresentation,
+        expectedAudience,
+        proofSchemaVersion:
+          asTrimmedString(data?.proofSchemaVersion) || EUDI_PROOF_SCHEMA_VERSION,
+      });
+    }
+
+    if (legacyCredential != null && verifiedPresentation == null) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "No se puede importar credencial EUDI sin verificación criptográfica (verifiablePresentation).",
+      );
+    }
+
+    const walletSubject =
+      verifiedPresentation?.walletSubject || providedWalletSubject;
+    const email = normalizeEmail(
+      verifiedPresentation?.email || providedEmail,
+    );
+    const fullName =
+      asTrimmedString(verifiedPresentation?.fullName || providedFullName);
+    const countryCode =
+      asTrimmedString(verifiedPresentation?.countryCode || providedCountryCode) ||
+      "ES";
     const assuranceLevel =
-      asTrimmedString(data?.assuranceLevel || "substantial") ||
-      "substantial";
-    const credential = parseCredentialPayload(data?.credential);
+      asTrimmedString(
+        verifiedPresentation?.assuranceLevel || providedAssuranceLevel,
+      ) || "substantial";
 
     if (!walletSubject || !email) {
       throw new functions.https.HttpsError(
@@ -224,7 +340,8 @@ export const signInWithEudiWallet = functions
     const candidateRef = db.collection("candidates").doc(candidateUid);
     const candidateDoc = await candidateRef.get();
 
-    const existingCandidateData = (candidateDoc.data() as JsonRecord | undefined) ?? {};
+    const existingCandidateData =
+      (candidateDoc.data() as JsonRecord | undefined) ?? {};
 
     const candidateData: JsonRecord = {
       id: existingCandidateData.id ?? Date.now(),
@@ -249,10 +366,10 @@ export const signInWithEudiWallet = functions
     await candidateRef.set(candidateData, { merge: true });
 
     let importedCredentialId: string | null = null;
-    if (credential != null) {
+    if (verifiedPresentation != null) {
       importedCredentialId = await upsertVerifiedCredential({
         candidateUid,
-        credential,
+        credential: buildCredentialFromVerifiedPresentation(verifiedPresentation),
         actorUid: candidateUid,
       });
     }
@@ -263,10 +380,17 @@ export const signInWithEudiWallet = functions
       actorRole: "candidate",
       targetType: "candidate",
       targetId: candidateUid,
+      verificationMethod: verifiedPresentation?.verificationMethod ?? null,
+      issuerDid: verifiedPresentation?.issuerDid ?? null,
+      credentialType: verifiedPresentation?.credentialType ?? null,
+      proofSchemaVersion:
+        verifiedPresentation?.proofSchemaVersion ?? EUDI_PROOF_SCHEMA_VERSION,
       metadata: {
         provider: "eudi_wallet",
         importedCredential: importedCredentialId != null,
         importedCredentialId,
+        cryptographicallyValidated: verifiedPresentation != null,
+        audience: expectedAudience,
       },
     });
 
@@ -279,11 +403,18 @@ export const signInWithEudiWallet = functions
       customToken,
       importedCredentialId,
       provider: "eudi_wallet",
+      cryptographicallyValidated: verifiedPresentation != null,
+      verificationMethod: verifiedPresentation?.verificationMethod ?? null,
+      issuerDid: verifiedPresentation?.issuerDid ?? null,
+      credentialType: verifiedPresentation?.credentialType ?? null,
+      proofSchemaVersion:
+        verifiedPresentation?.proofSchemaVersion ?? EUDI_PROOF_SCHEMA_VERSION,
     };
   });
 
 /**
  * Import a verified EUDI credential for authenticated candidate.
+ * Requires a cryptographically validated verifiablePresentation.
  */
 export const importEudiCredential = functions
   .region("europe-west1")
@@ -296,16 +427,19 @@ export const importEudiCredential = functions
     }
 
     const candidateUid = context.auth.uid;
-    const credential = parseCredentialPayload(data?.credential);
-    if (credential == null) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Credencial inválida. type, title e issuer son obligatorios.",
-      );
-    }
+    const expectedAudience = resolveExpectedAudience(data, EUDI_IMPORT_AUDIENCE);
+    const proofSchemaVersion =
+      asTrimmedString(data?.proofSchemaVersion) || EUDI_PROOF_SCHEMA_VERSION;
+
+    const verifiedPresentation = verifyEudiPresentation({
+      verifiablePresentation: data?.verifiablePresentation,
+      expectedAudience,
+      proofSchemaVersion,
+    });
 
     const db = admin.firestore();
-    const candidateDoc = await db.collection("candidates").doc(candidateUid).get();
+    const candidateRef = db.collection("candidates").doc(candidateUid);
+    const candidateDoc = await candidateRef.get();
     if (!candidateDoc.exists) {
       throw new functions.https.HttpsError(
         "failed-precondition",
@@ -313,9 +447,32 @@ export const importEudiCredential = functions
       );
     }
 
+    const candidateData = asRecord(candidateDoc.data());
+    const existingWalletSubject = asTrimmedString(candidateData.wallet_subject);
+    if (
+      existingWalletSubject &&
+      existingWalletSubject !== verifiedPresentation.walletSubject
+    ) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "La presentación EUDI no corresponde al wallet vinculado en esta cuenta.",
+      );
+    }
+
+    await candidateRef.set(
+      {
+        wallet_subject: verifiedPresentation.walletSubject,
+        wallet_assurance_level: verifiedPresentation.assuranceLevel,
+        wallet_country_code: verifiedPresentation.countryCode,
+        wallet_linked_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+
     const credentialId = await upsertVerifiedCredential({
       candidateUid,
-      credential,
+      credential: buildCredentialFromVerifiedPresentation(verifiedPresentation),
       actorUid: candidateUid,
     });
 
@@ -325,9 +482,15 @@ export const importEudiCredential = functions
       actorRole: "candidate",
       targetType: "verified_credential",
       targetId: credentialId,
+      verificationMethod: verifiedPresentation.verificationMethod,
+      issuerDid: verifiedPresentation.issuerDid,
+      credentialType: verifiedPresentation.credentialType,
+      proofSchemaVersion: verifiedPresentation.proofSchemaVersion,
       metadata: {
         provider: "eudi_wallet",
-        type: credential.type,
+        type: verifiedPresentation.credentialType,
+        audience: expectedAudience,
+        cryptographicallyValidated: true,
       },
     });
 
@@ -335,5 +498,10 @@ export const importEudiCredential = functions
       candidateUid,
       credentialId,
       verified: true,
+      cryptographicallyValidated: true,
+      verificationMethod: verifiedPresentation.verificationMethod,
+      issuerDid: verifiedPresentation.issuerDid,
+      credentialType: verifiedPresentation.credentialType,
+      proofSchemaVersion: verifiedPresentation.proofSchemaVersion,
     };
   });

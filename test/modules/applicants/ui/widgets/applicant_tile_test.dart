@@ -28,8 +28,11 @@ void main() {
         ),
       );
 
-      expect(find.text('John Doe'), findsOneWidget);
-      expect(find.textContaining('john@example.com'), findsOneWidget);
+      expect(find.text('Candidato #UID1'), findsOneWidget);
+      expect(
+        find.textContaining('Identidad oculta hasta etapas avanzadas'),
+        findsOneWidget,
+      );
       expect(find.textContaining('Estado: Postulado'), findsOneWidget);
     });
 

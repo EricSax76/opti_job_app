@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-export const onEvaluationCreate = functions.firestore
+export const onEvaluationCreate = functions.region("europe-west1").firestore
   .document("evaluations/{evaluationId}")
   .onCreate(async (snapshot, context) => {
     const data = snapshot.data();

@@ -9,6 +9,8 @@ import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { Recruiter } from "../../types/models";
+import { requireSecondFactor } from "../../utils/mfa";
+import { syncRecruiterClaimsFromFirestore } from "../../utils/recruiterClaims";
 
 const logger = createLogger({ function: "removeRecruiter" });
 
@@ -25,10 +27,20 @@ export const removeRecruiter = functions
         "Debes iniciar sesión."
       );
     }
+    requireSecondFactor(context);
+    const payload = (data ?? {}) as RemoveRecruiterRequest;
 
     const callerUid = context.auth.uid;
+    const targetUid = typeof payload.targetUid === "string" ? payload.targetUid.trim() : "";
 
-    if (callerUid === data.targetUid) {
+    if (!targetUid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "targetUid es obligatorio."
+      );
+    }
+
+    if (callerUid === targetUid) {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "No puedes eliminarte a ti mismo."
@@ -51,7 +63,7 @@ export const removeRecruiter = functions
     }
 
     // Validar target pertenece a la misma empresa
-    const targetDoc = await db.collection("recruiters").doc(data.targetUid).get();
+    const targetDoc = await db.collection("recruiters").doc(targetUid).get();
     if (!targetDoc.exists) {
       throw new functions.https.HttpsError("not-found", "Reclutador no encontrado.");
     }
@@ -63,12 +75,24 @@ export const removeRecruiter = functions
       );
     }
 
-    await db.collection("recruiters").doc(data.targetUid).update({
+    await db.collection("recruiters").doc(targetUid).update({
       status: "disabled",
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    logger.info("Recruiter disabled", { callerUid, targetUid: data.targetUid });
+    const syncResult = await syncRecruiterClaimsFromFirestore(targetUid, {
+      revokeRefreshTokens: true,
+      source: "removeRecruiter",
+    });
 
-    return { success: true };
+    logger.info("Recruiter disabled", {
+      callerUid,
+      targetUid,
+      claimsUpdated: syncResult.updated,
+    });
+
+    return {
+      success: true,
+      claimsUpdated: syncResult.updated,
+    };
   });

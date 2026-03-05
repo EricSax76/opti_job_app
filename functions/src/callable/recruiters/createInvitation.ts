@@ -12,6 +12,7 @@ import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { Recruiter, Invitation } from "../../types/models";
+import { requireSecondFactor } from "../../utils/mfa";
 
 const logger = createLogger({ function: "createInvitation" });
 
@@ -31,7 +32,14 @@ function generateCode(): string {
 }
 
 interface CreateInvitationRequest {
-  role: "admin" | "recruiter" | "hiring_manager" | "external_evaluator" | "viewer";
+  role:
+    | "admin"
+    | "recruiter"
+    | "hiring_manager"
+    | "external_evaluator"
+    | "viewer"
+    | "legal"
+    | "auditor";
   email?: string;
 }
 
@@ -44,8 +52,10 @@ export const createInvitation = functions
         "Debes iniciar sesión para crear invitaciones."
       );
     }
+    requireSecondFactor(context);
 
     const callerUid = context.auth.uid;
+    const payload = (data ?? {}) as CreateInvitationRequest;
     const db = admin.firestore();
     const now = admin.firestore.Timestamp.now();
 
@@ -67,11 +77,19 @@ export const createInvitation = functions
     }
 
     // Validar rol
-    const validRoles = ["admin", "recruiter", "hiring_manager", "external_evaluator", "viewer"];
-    if (!validRoles.includes(data.role)) {
+    const validRoles = [
+      "admin",
+      "recruiter",
+      "hiring_manager",
+      "external_evaluator",
+      "viewer",
+      "legal",
+      "auditor",
+    ];
+    if (!validRoles.includes(payload.role)) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Rol inválido. Usa: admin, recruiter, hiring_manager, external_evaluator o viewer."
+        "Rol inválido. Usa: admin, recruiter, hiring_manager, external_evaluator, viewer, legal o auditor."
       );
     }
 
@@ -84,8 +102,8 @@ export const createInvitation = functions
     const invitation: Invitation = {
       code,
       companyId: recruiter.companyId,
-      role: data.role,
-      email: data.email,
+      role: payload.role,
+      email: payload.email,
       createdBy: callerUid,
       status: "pending",
       createdAt: now,
@@ -94,7 +112,7 @@ export const createInvitation = functions
 
     await db.collection("invitations").doc(code).set(invitation);
 
-    logger.info("Invitation created", { code, companyId: recruiter.companyId, role: data.role });
+    logger.info("Invitation created", { code, companyId: recruiter.companyId, role: payload.role });
 
     return { code, expiresAt: expiresAt.toDate().toISOString() };
   });

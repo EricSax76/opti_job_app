@@ -293,7 +293,7 @@ function monthBounds(date: Date): { start: Date; end: Date; period: string } {
   return { start, end, period };
 }
 
-export const computeMonthlyAnalytics = functions.pubsub.schedule("0 0 1 * *").onRun(async () => {
+export const computeMonthlyAnalytics = functions.region("europe-west1").pubsub.schedule("0 0 1 * *").onRun(async () => {
   const db = admin.firestore();
   const now = new Date();
   const targetMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));

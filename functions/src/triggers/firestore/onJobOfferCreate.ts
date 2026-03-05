@@ -152,8 +152,14 @@ export const onJobOfferCreate = functions
     });
 
     try {
-      // Validate job offer data
-      validateJobOffer(jobOffer);
+      const initialStatus = String(jobOffer.status ?? "").trim().toLowerCase();
+      const skipStrictValidation = initialStatus === "blocked_pending_salary_validation";
+
+      // For salary-blocked offers we keep the record as trace evidence.
+      // Strict schema validation remains enforced for publishable offers.
+      if (!skipStrictValidation) {
+        validateJobOffer(jobOffer);
+      }
 
       const db = admin.firestore();
       const updates: Record<string, unknown> = {};

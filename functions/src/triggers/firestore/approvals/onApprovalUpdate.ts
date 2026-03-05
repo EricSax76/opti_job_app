@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-export const onApprovalUpdate = functions.firestore
+export const onApprovalUpdate = functions.region("europe-west1").firestore
   .document("approvals/{approvalId}")
   .onUpdate(async (change, context) => {
     const data = change.after.data();

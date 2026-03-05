@@ -20,7 +20,7 @@ function pickString(value: unknown): string {
   return String(value).trim();
 }
 
-export const submitEvaluation = functions.https.onCall(async (data, context) => {
+export const submitEvaluation = functions.region("europe-west1").https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",

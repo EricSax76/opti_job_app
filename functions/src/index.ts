@@ -19,6 +19,12 @@ export { onApplicationCreate } from "./triggers/firestore/onApplicationCreate";
 export { onJobOfferCreate } from "./triggers/firestore/onJobOfferCreate";
 export { onInterviewUpdate } from "./triggers/firestore/onInterviewUpdate";
 export { onRecruiterCreate } from "./triggers/firestore/onRecruiterCreate";
+export { onRecruiterWrite } from "./triggers/firestore/onRecruiterWrite";
+export {
+  syncCandidateProfileToApplications,
+  syncCompanyProfileToOffers,
+  syncJobOfferTitleToApplications,
+} from "./triggers/firestore/syncDenormalizedFields";
 export { onApplicationStageChange } from "./triggers/firestore/onApplicationStageChange";
 export { onEvaluationCreate } from "./triggers/firestore/evaluations/onEvaluationCreate";
 export { onApprovalUpdate } from "./triggers/firestore/approvals/onApprovalUpdate";
@@ -36,6 +42,7 @@ export * from './scheduled/expireTalentPoolConsent';
 // Compliance
 export * from './callable/compliance/complianceCallables';
 export * from './callable/compliance/salaryGapCallables';
+export * from './callable/compliance/aiConsentCallables';
 export * from './scheduled/complianceJobs';
 
 // Analytics
@@ -64,12 +71,14 @@ export { completeInterview } from "./callable/interviews/completeInterview";
 export { moveApplicationStage } from "./callable/ats/moveApplicationStage";
 export { evaluateKnockoutQuestions } from "./callable/ats/evaluateKnockoutQuestions";
 export { publishOfferMultiposting } from "./callable/ats/publishOfferMultiposting";
+export { createJobOfferSecure } from "./callable/ats/createJobOfferSecure";
 
 // recruiters
 export { createInvitation } from "./callable/recruiters/createInvitation";
 export { acceptInvitation } from "./callable/recruiters/acceptInvitation";
 export { updateRecruiterRole } from "./callable/recruiters/updateRecruiterRole";
 export { removeRecruiter } from "./callable/recruiters/removeRecruiter";
+export { syncRecruiterClaims } from "./callable/recruiters/syncRecruiterClaims";
 
 // evaluations
 export { submitEvaluation } from "./callable/evaluations/submitEvaluation";

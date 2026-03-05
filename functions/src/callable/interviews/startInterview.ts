@@ -13,6 +13,11 @@ import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { ValidationError } from "../../utils/validation";
 import { JobOffer, Interview } from "../../types/models";
+import {
+  AiConsentScope,
+  grantedAtMillis,
+  hasValidAiConsentRecord,
+} from "../../utils/aiConsent";
 
 const logger = createLogger({ function: "startInterview" });
 
@@ -23,6 +28,42 @@ function pickNonEmptyString(...values: unknown[]): string | undefined {
     if (normalized.length > 0) return normalized;
   }
   return undefined;
+}
+
+async function hasValidAiConsent({
+  transaction,
+  db,
+  candidateUid,
+  companyUid,
+  requiredScope,
+}: {
+  transaction: FirebaseFirestore.Transaction;
+  db: FirebaseFirestore.Firestore;
+  candidateUid: string;
+  companyUid: string;
+  requiredScope: AiConsentScope;
+}): Promise<boolean> {
+  const snapshot = await transaction.get(
+    db
+      .collection("consentRecords")
+      .where("candidateUid", "==", candidateUid)
+      .limit(50),
+  );
+  if (snapshot.empty) return false;
+
+  const now = new Date();
+  const records = snapshot.docs
+    .map((doc) => doc.data() as Record<string, unknown>)
+    .sort((a, b) => grantedAtMillis(b) - grantedAtMillis(a));
+
+  return records.some((record) =>
+    hasValidAiConsentRecord({
+      record,
+      companyId: companyUid,
+      requiredScope,
+      now,
+    }),
+  );
 }
 
 export const startInterview = functions.region("europe-west1").https.onCall(
@@ -129,6 +170,20 @@ export const startInterview = functions.region("europe-west1").https.onCall(
         if (interviewDoc.exists) {
           logger.info("Interview already exists", loggerCtx);
           return; // Already created, just return (idempotent)
+        }
+
+        const hasConsent = await hasValidAiConsent({
+          transaction,
+          db,
+          candidateUid,
+          companyUid: offerOwner,
+          requiredScope: "ai_interview",
+        });
+        if (!hasConsent) {
+          throw new functions.https.HttpsError(
+            "failed-precondition",
+            "No existe consentimiento IA vigente del candidato para iniciar entrevista.",
+          );
         }
 
         // 4. Create Interview Document

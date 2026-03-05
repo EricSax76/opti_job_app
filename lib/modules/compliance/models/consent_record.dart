@@ -26,6 +26,11 @@ class ConsentRecord extends Equatable {
     this.revokedAt,
     this.legalBasis = LegalBasis.consent,
     this.informationNoticeVersion = '1.0',
+    this.consentTextVersion = '',
+    this.consentTextSnapshot,
+    this.consentHash = '',
+    this.scope = const [],
+    this.immutable = false,
   });
 
   final String id;
@@ -38,20 +43,30 @@ class ConsentRecord extends Equatable {
   final DateTime? revokedAt;
   final LegalBasis legalBasis;
   final String informationNoticeVersion;
+  final String consentTextVersion;
+  final String? consentTextSnapshot;
+  final String consentHash;
+  final List<String> scope;
+  final bool immutable;
 
   @override
   List<Object?> get props => [
-        id,
-        candidateUid,
-        companyId,
-        type,
-        granted,
-        grantedAt,
-        expiresAt,
-        revokedAt,
-        legalBasis,
-        informationNoticeVersion,
-      ];
+    id,
+    candidateUid,
+    companyId,
+    type,
+    granted,
+    grantedAt,
+    expiresAt,
+    revokedAt,
+    legalBasis,
+    informationNoticeVersion,
+    consentTextVersion,
+    consentTextSnapshot,
+    consentHash,
+    scope,
+    immutable,
+  ];
 
   factory ConsentRecord.fromJson(Map<String, dynamic> json, {String? id}) {
     return ConsentRecord(
@@ -63,8 +78,19 @@ class ConsentRecord extends Equatable {
       grantedAt: _parseDate(json['grantedAt']),
       expiresAt: _parseDate(json['expiresAt']),
       revokedAt: _parseDate(json['revokedAt']),
-      legalBasis: LegalBasis.fromString(json['legalBasis'] as String? ?? 'consent'),
-      informationNoticeVersion: json['informationNoticeVersion'] as String? ?? '1.0',
+      legalBasis: LegalBasis.fromString(
+        json['legalBasis'] as String? ?? 'consent',
+      ),
+      informationNoticeVersion:
+          json['informationNoticeVersion'] as String? ?? '1.0',
+      consentTextVersion:
+          json['consentTextVersion'] as String? ??
+          json['informationNoticeVersion'] as String? ??
+          '1.0',
+      consentTextSnapshot: json['consentTextSnapshot'] as String?,
+      consentHash: json['consentHash'] as String? ?? '',
+      scope: _parseScope(json['scope']),
+      immutable: json['immutable'] as bool? ?? false,
     );
   }
 
@@ -76,6 +102,14 @@ class ConsentRecord extends Equatable {
       'granted': granted,
       'legalBasis': legalBasis.name,
       'informationNoticeVersion': informationNoticeVersion,
+      'consentTextVersion': consentTextVersion.isEmpty
+          ? informationNoticeVersion
+          : consentTextVersion,
+      if (consentTextSnapshot != null)
+        'consentTextSnapshot': consentTextSnapshot,
+      if (consentHash.isNotEmpty) 'consentHash': consentHash,
+      if (scope.isNotEmpty) 'scope': scope,
+      'immutable': immutable,
       if (grantedAt != null) 'grantedAt': grantedAt!.toIso8601String(),
       if (expiresAt != null) 'expiresAt': expiresAt!.toIso8601String(),
       if (revokedAt != null) 'revokedAt': revokedAt!.toIso8601String(),
@@ -88,5 +122,13 @@ class ConsentRecord extends Equatable {
     if (value is Timestamp) return value.toDate();
     if (value is String) return DateTime.tryParse(value);
     return null;
+  }
+
+  static List<String> _parseScope(dynamic value) {
+    if (value is! List) return const [];
+    return value
+        .map((e) => e?.toString().trim() ?? '')
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
   }
 }

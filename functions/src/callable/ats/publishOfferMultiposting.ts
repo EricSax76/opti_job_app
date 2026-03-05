@@ -15,6 +15,7 @@ const DEFAULT_CHANNELS: readonly SupportedChannel[] = [
   "indeed",
   "university_portal",
 ];
+const VALID_SALARY_PERIODS = new Set(["hour", "day", "week", "month", "year"]);
 
 type SupportedChannel = keyof typeof CHANNEL_CATALOG;
 
@@ -201,7 +202,78 @@ function resolveChannelCostEur(
   return CHANNEL_CATALOG[channel].defaultCostEur;
 }
 
-export const publishOfferMultiposting = onCall(async (request) => {
+function toFiniteNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeSalaryPeriod(value: unknown): string {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return "";
+  if (raw === "hourly") return "hour";
+  if (raw === "daily") return "day";
+  if (raw === "weekly") return "week";
+  if (raw === "monthly") return "month";
+  if (raw === "annual" || raw === "annually" || raw === "yearly") return "year";
+  return raw;
+}
+
+function validateOfferSalaryForPublication(offer: Record<string, unknown>): {
+  valid: boolean;
+  reasonCode?: string;
+  reasonMessage?: string;
+} {
+  const status = String(offer.status ?? "").trim().toLowerCase();
+  if (status === "blocked_pending_salary_validation") {
+    return {
+      valid: false,
+      reasonCode: "blocked_pending_salary_validation",
+      reasonMessage: "La oferta está bloqueada por validación salarial.",
+    };
+  }
+
+  const min = toFiniteNumber(offer.salary_min ?? offer.salaryMin);
+  const max = toFiniteNumber(offer.salary_max ?? offer.salaryMax);
+  const currency = String(
+    offer.salary_currency ?? offer.salaryCurrency ?? "",
+  ).trim().toUpperCase();
+  const period = normalizeSalaryPeriod(offer.salary_period ?? offer.salaryPeriod);
+
+  if (min == null || max == null || min <= 0 || max <= 0) {
+    return {
+      valid: false,
+      reasonCode: "invalid_salary_range",
+      reasonMessage: "La oferta no tiene un rango salarial numérico válido.",
+    };
+  }
+  if (min > max) {
+    return {
+      valid: false,
+      reasonCode: "salary_range_inconsistent",
+      reasonMessage: "salary_min no puede ser mayor que salary_max.",
+    };
+  }
+  if (!/^[A-Z]{3}$/.test(currency)) {
+    return {
+      valid: false,
+      reasonCode: "invalid_salary_currency",
+      reasonMessage: "La oferta no tiene una moneda salarial válida.",
+    };
+  }
+  if (!VALID_SALARY_PERIODS.has(period)) {
+    return {
+      valid: false,
+      reasonCode: "invalid_salary_period",
+      reasonMessage: "La oferta no tiene un periodo salarial válido.",
+    };
+  }
+
+  return { valid: true };
+}
+
+export const publishOfferMultiposting = onCall({ region: "europe-west1" }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
   }
@@ -229,6 +301,28 @@ export const publishOfferMultiposting = onCall(async (request) => {
   }
 
   await assertCanManageOffer(db, actorUid, companyId);
+
+  const salaryValidation = validateOfferSalaryForPublication(offer);
+  if (!salaryValidation.valid) {
+    await offerRef.set(
+      {
+        status: "blocked_pending_salary_validation",
+        publication_block_reason:
+          salaryValidation.reasonCode ?? "invalid_salary_range",
+        publication_block_message:
+          salaryValidation.reasonMessage ??
+          "La oferta no cumple validaciones salariales obligatorias.",
+        publication_blocked_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    throw new HttpsError(
+      "failed-precondition",
+      salaryValidation.reasonMessage ??
+        "No se puede publicar sin rango salarial válido.",
+    );
+  }
 
   const companySettings = await getCompanyChannelSettings(db, companyId);
   const requestedChannels = normalizeRequestedChannels(request.data?.channels);

@@ -4,7 +4,7 @@ import * as admin from 'firebase-admin';
 /**
  * Callable function to get a snapshot of current analytics for a company.
  */
-export const getAnalyticsSummary = functions.https.onCall(async (data, context) => {
+export const getAnalyticsSummary = functions.region("europe-west1").https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated.');
   }

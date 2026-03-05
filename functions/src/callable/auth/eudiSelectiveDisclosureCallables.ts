@@ -4,6 +4,8 @@ import * as crypto from "crypto";
 
 type JsonRecord = Record<string, unknown>;
 
+const DEFAULT_PROOF_SCHEMA_VERSION = "2026.1";
+
 function asTrimmedString(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
@@ -28,6 +30,42 @@ function nowPlusMinutes(minutes: number): Date {
   return new Date(Date.now() + minutes * 60 * 1000);
 }
 
+function resolveCredentialTrace(
+  credential: JsonRecord,
+): {
+  verificationMethod: string | null;
+  issuerDid: string | null;
+  credentialType: string | null;
+  proofSchemaVersion: string;
+} {
+  const metadata = asRecord(credential.metadata);
+  const verificationMethod =
+    asTrimmedString(credential.verificationMethod) ||
+    asTrimmedString(metadata.verificationMethod) ||
+    null;
+  const issuerDid =
+    asTrimmedString(credential.issuerDid) ||
+    asTrimmedString(metadata.issuerDid) ||
+    asTrimmedString(credential.issuer) ||
+    null;
+  const credentialType =
+    asTrimmedString(credential.credentialType) ||
+    asTrimmedString(metadata.credentialType) ||
+    asTrimmedString(credential.type) ||
+    null;
+  const proofSchemaVersion =
+    asTrimmedString(credential.proofSchemaVersion) ||
+    asTrimmedString(metadata.proofSchemaVersion) ||
+    DEFAULT_PROOF_SCHEMA_VERSION;
+
+  return {
+    verificationMethod,
+    issuerDid,
+    credentialType,
+    proofSchemaVersion,
+  };
+}
+
 async function logAuditEntry({
   action,
   actorUid,
@@ -36,6 +74,10 @@ async function logAuditEntry({
   targetId,
   companyId,
   metadata,
+  verificationMethod,
+  issuerDid,
+  credentialType,
+  proofSchemaVersion,
 }: {
   action: string;
   actorUid: string;
@@ -44,6 +86,10 @@ async function logAuditEntry({
   targetId: string;
   companyId?: string | null;
   metadata: JsonRecord;
+  verificationMethod?: string | null;
+  issuerDid?: string | null;
+  credentialType?: string | null;
+  proofSchemaVersion?: string | null;
 }): Promise<void> {
   await admin.firestore().collection("auditLogs").add({
     action,
@@ -52,6 +98,10 @@ async function logAuditEntry({
     targetType,
     targetId,
     companyId: companyId ?? null,
+    verificationMethod: verificationMethod ?? null,
+    issuerDid: issuerDid ?? null,
+    credentialType: credentialType ?? null,
+    proofSchemaVersion: proofSchemaVersion ?? null,
     metadata,
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   });
@@ -74,8 +124,7 @@ async function resolveCompanyUidFromApplication({
   }
   const app = asRecord(appDoc.data());
   const appCandidateUid =
-    asTrimmedString(app.candidate_uid) ||
-    asTrimmedString(app.candidateId);
+    asTrimmedString(app.candidate_uid) || asTrimmedString(app.candidateId);
   if (!appCandidateUid || appCandidateUid !== candidateUid) {
     throw new functions.https.HttpsError(
       "permission-denied",
@@ -175,6 +224,7 @@ export const createSelectiveDisclosureProof = functions
     }
     const credential = asRecord(credentialDoc.data());
     const metadata = asRecord(credential.metadata);
+    const trace = resolveCredentialTrace(credential);
 
     const claimValue =
       asTrimmedString(credential[claimKey]) ||
@@ -229,6 +279,10 @@ export const createSelectiveDisclosureProof = functions
         proofTokenHash,
         statement: statementText,
         disclosureMode: "zkp_selective",
+        proofSchemaVersion: trace.proofSchemaVersion,
+        verificationMethod: trace.verificationMethod,
+        issuerDid: trace.issuerDid,
+        credentialType: trace.credentialType,
         status: "active",
         verificationCount: 0,
         expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
@@ -246,6 +300,10 @@ export const createSelectiveDisclosureProof = functions
         claimKey,
         statement: statementText,
         disclosureMode: "zkp_selective",
+        proofSchemaVersion: trace.proofSchemaVersion,
+        verificationMethod: trace.verificationMethod,
+        issuerDid: trace.issuerDid,
+        credentialType: trace.credentialType,
         status: "active",
         expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
         createdAt: now,
@@ -258,6 +316,10 @@ export const createSelectiveDisclosureProof = functions
         targetType: "credential_proof",
         targetId: proofId,
         companyId: companyUid,
+        verificationMethod: trace.verificationMethod,
+        issuerDid: trace.issuerDid,
+        credentialType: trace.credentialType,
+        proofSchemaVersion: trace.proofSchemaVersion,
         metadata: {
           applicationId: applicationId || null,
           credentialId,
@@ -275,6 +337,10 @@ export const createSelectiveDisclosureProof = functions
       applicationId: applicationId || null,
       disclosureMode: "zkp_selective",
       statement: statementText,
+      proofSchemaVersion: trace.proofSchemaVersion,
+      verificationMethod: trace.verificationMethod,
+      issuerDid: trace.issuerDid,
+      credentialType: trace.credentialType,
       expiresAt: expiresAt.toISOString(),
     };
   });
@@ -353,6 +419,14 @@ export const verifySelectiveDisclosureProof = functions
         ? verificationCountRaw
         : Number(verificationCountRaw) || 0;
 
+    const trace = {
+      proofSchemaVersion:
+        asTrimmedString(proof.proofSchemaVersion) || DEFAULT_PROOF_SCHEMA_VERSION,
+      verificationMethod: asTrimmedString(proof.verificationMethod) || null,
+      issuerDid: asTrimmedString(proof.issuerDid) || null,
+      credentialType: asTrimmedString(proof.credentialType) || null,
+    };
+
     const now = admin.firestore.FieldValue.serverTimestamp();
     await Promise.all([
       db.collection("credentialProofs").doc(proofId).set(
@@ -380,6 +454,10 @@ export const verifySelectiveDisclosureProof = functions
         targetType: "credential_proof",
         targetId: proofId,
         companyId: companyUid,
+        verificationMethod: trace.verificationMethod,
+        issuerDid: trace.issuerDid,
+        credentialType: trace.credentialType,
+        proofSchemaVersion: trace.proofSchemaVersion,
         metadata: {
           disclosureMode: asTrimmedString(proof.disclosureMode) || "zkp_selective",
           applicationId: asTrimmedString(proof.applicationId) || null,
@@ -396,6 +474,10 @@ export const verifySelectiveDisclosureProof = functions
       statement,
       claimKey,
       disclosureMode: asTrimmedString(proof.disclosureMode) || "zkp_selective",
+      proofSchemaVersion: trace.proofSchemaVersion,
+      verificationMethod: trace.verificationMethod,
+      issuerDid: trace.issuerDid,
+      credentialType: trace.credentialType,
       candidateUid: asTrimmedString(proof.candidateUid) || null,
       applicationId: asTrimmedString(proof.applicationId) || null,
       jobOfferId: asTrimmedString(proof.jobOfferId) || null,
@@ -444,6 +526,14 @@ export const revokeSelectiveDisclosureProof = functions
 
     const revokedAtIso = new Date().toISOString();
     const now = admin.firestore.FieldValue.serverTimestamp();
+    const trace = {
+      proofSchemaVersion:
+        asTrimmedString(proof.proofSchemaVersion) || DEFAULT_PROOF_SCHEMA_VERSION,
+      verificationMethod: asTrimmedString(proof.verificationMethod) || null,
+      issuerDid: asTrimmedString(proof.issuerDid) || null,
+      credentialType: asTrimmedString(proof.credentialType) || null,
+    };
+
     await Promise.all([
       proofRef.set(
         {
@@ -470,6 +560,10 @@ export const revokeSelectiveDisclosureProof = functions
         targetType: "credential_proof",
         targetId: proofId,
         companyId: asTrimmedString(proof.companyUid) || null,
+        verificationMethod: trace.verificationMethod,
+        issuerDid: trace.issuerDid,
+        credentialType: trace.credentialType,
+        proofSchemaVersion: trace.proofSchemaVersion,
         metadata: {
           revokedAtIso,
           applicationId: asTrimmedString(proof.applicationId) || null,
@@ -477,5 +571,10 @@ export const revokeSelectiveDisclosureProof = functions
       }),
     ]);
 
-    return { success: true, proofId, revokedAt: revokedAtIso };
+    return {
+      success: true,
+      proofId,
+      revokedAt: revokedAtIso,
+      proofSchemaVersion: trace.proofSchemaVersion,
+    };
   });

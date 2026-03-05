@@ -27,7 +27,7 @@ function normalizeApprovers(raw: unknown): Array<{ uid: string; name: string }> 
     .filter((entry): entry is { uid: string; name: string } => entry !== null);
 }
 
-export const requestApproval = functions.https.onCall(async (data, context) => {
+export const requestApproval = functions.region("europe-west1").https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",

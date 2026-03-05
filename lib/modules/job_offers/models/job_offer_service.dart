@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/data/mappers/job_offer_mapper.dart';
@@ -24,10 +25,18 @@ class JobOffersPage {
 class JobOfferService {
   static const int _defaultPageSize = 20;
 
-  JobOfferService({required FirebaseFirestore firestore})
-    : _firestore = firestore;
+  JobOfferService({
+    required FirebaseFirestore firestore,
+    FirebaseFunctions? functions,
+    FirebaseFunctions? fallbackFunctions,
+  }) : _firestore = firestore,
+       _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('jobOffers');
@@ -229,27 +238,35 @@ class JobOfferService {
   }
 
   Future<JobOffer> createJobOffer(JobOfferPayload payload) async {
-    final docRef = _collection.doc();
-    final offerId = docRef.id;
     final payloadData = payload.toJson();
-    final offerData = <String, dynamic>{
-      ...payloadData,
-      'id': offerId,
-      'created_at': FieldValue.serverTimestamp(),
-    };
+    final offerId = await _createOfferSecure(payloadData);
+    return fetchJobOffer(offerId);
+  }
 
-    await docRef.set(offerData);
+  Future<String> _createOfferSecure(Map<String, dynamic> payload) async {
+    try {
+      final result = await _functions
+          .httpsCallable('createJobOfferSecure')
+          .call(payload);
+      return _extractOfferIdFromResult(result);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      final fallbackResult = await _fallbackFunctions
+          .httpsCallable('createJobOfferSecure')
+          .call(payload);
+      return _extractOfferIdFromResult(fallbackResult);
+    }
+  }
 
-    // Look up what we just wrote to return complete object including server timestamp
-    final storedDoc = await docRef.get();
-    final storedData =
-        storedDoc.data() ??
-        {
-          ...payloadData,
-          'id': offerId,
-          'created_at': DateTime.now().toIso8601String(),
-        };
-    return JobOfferMapper.fromFirestore(storedData);
+  String _extractOfferIdFromResult(HttpsCallableResult<dynamic> result) {
+    final data = result.data;
+    if (data is Map) {
+      final id = data['offerId']?.toString().trim();
+      if (id != null && id.isNotEmpty) return id;
+    }
+    throw StateError('createJobOfferSecure did not return a valid offerId.');
   }
 }
 

@@ -5,16 +5,20 @@ import 'package:opti_job_app/modules/compliance/models/consent_record.dart';
 import 'package:opti_job_app/modules/compliance/models/data_request.dart';
 import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
 
-class FirebaseComplianceRepository implements AuditRepository, DataRequestRepository, ConsentRepository {
+class FirebaseComplianceRepository
+    implements AuditRepository, DataRequestRepository, ConsentRepository {
   FirebaseComplianceRepository({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
+    FirebaseFunctions? fallbackFunctions,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
        _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   // --- Audit ---
   @override
@@ -26,15 +30,31 @@ class FirebaseComplianceRepository implements AuditRepository, DataRequestReposi
   }
 
   @override
-  Stream<List<AuditLog>> getLogs({String? actorUid, String? targetId, String? companyId}) {
+  Stream<List<AuditLog>> getLogs({
+    String? actorUid,
+    String? targetId,
+    String? companyId,
+  }) {
     Query query = _firestore.collection('auditLogs');
     if (actorUid != null) query = query.where('actorUid', isEqualTo: actorUid);
     if (targetId != null) query = query.where('targetId', isEqualTo: targetId);
-    if (companyId != null) query = query.where('companyId', isEqualTo: companyId);
-    
-    return query.orderBy('timestamp', descending: true).snapshots().map(
-      (s) => s.docs.map((d) => AuditLog.fromJson(d.data() as Map<String, dynamic>, id: d.id)).toList()
-    );
+    if (companyId != null) {
+      query = query.where('companyId', isEqualTo: companyId);
+    }
+
+    return query
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (s) => s.docs
+              .map(
+                (d) => AuditLog.fromJson(
+                  d.data() as Map<String, dynamic>,
+                  id: d.id,
+                ),
+              )
+              .toList(),
+        );
   }
 
   // --- Data Requests ---
@@ -61,23 +81,38 @@ class FirebaseComplianceRepository implements AuditRepository, DataRequestReposi
 
   @override
   Stream<List<DataRequest>> getRequests(String candidateUid) {
-    return _firestore.collection('dataRequests')
-      .where('candidateUid', isEqualTo: candidateUid)
-      .orderBy('createdAt', descending: true)
-      .snapshots()
-      .map((s) => s.docs.map((d) => DataRequest.fromJson(d.data(), id: d.id)).toList());
+    return _firestore
+        .collection('dataRequests')
+        .where('candidateUid', isEqualTo: candidateUid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (s) => s.docs
+              .map((d) => DataRequest.fromJson(d.data(), id: d.id))
+              .toList(),
+        );
   }
 
   @override
   Stream<List<DataRequest>> getAllRequests() {
-    return _firestore.collection('dataRequests')
-      .orderBy('createdAt', descending: true)
-      .snapshots()
-      .map((s) => s.docs.map((d) => DataRequest.fromJson(d.data(), id: d.id)).toList());
+    return _firestore
+        .collection('dataRequests')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (s) => s.docs
+              .map((d) => DataRequest.fromJson(d.data(), id: d.id))
+              .toList(),
+        );
   }
 
   @override
-  Future<void> updateRequestStatus(String requestId, DataRequestStatus status, {String? response, String? processedBy}) async {
+  Future<void> updateRequestStatus(
+    String requestId,
+    DataRequestStatus status, {
+    String? response,
+    String? processedBy,
+  }) async {
     final callable = _functions.httpsCallable('processDataRequest');
     await callable.call({
       'requestId': requestId,
@@ -91,35 +126,99 @@ class FirebaseComplianceRepository implements AuditRepository, DataRequestReposi
   // --- Consents ---
   @override
   Future<ConsentRecord> saveConsent(ConsentRecord record) async {
-    final docRef = _firestore.collection('consentRecords').doc();
-    final data = {
-      ...record.toJson(),
-      'grantedAt': FieldValue.serverTimestamp(),
-      'expiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(days: 365 * 3))),
+    const defaultVersion = '2026.04';
+    const defaultText =
+        'Acepto el uso de IA en procesos de evaluación de candidatura.';
+
+    final scopes = record.scope.isEmpty
+        ? const <String>['ai_interview']
+        : record.scope;
+    final payload = <String, dynamic>{
+      'companyId': record.companyId,
+      'type': record.type.isEmpty ? 'ai_granular' : record.type,
+      'scope': scopes,
+      'consentTextVersion': record.consentTextVersion.isEmpty
+          ? (record.informationNoticeVersion.isEmpty
+                ? defaultVersion
+                : record.informationNoticeVersion)
+          : record.consentTextVersion,
+      'consentText': record.consentTextSnapshot?.trim().isNotEmpty == true
+          ? record.consentTextSnapshot!.trim()
+          : defaultText,
     };
-    await docRef.set(data);
-    return ConsentRecord.fromJson(record.toJson(), id: docRef.id);
+
+    final response = await _callCallableWithFallback(
+      name: 'grantAiConsent',
+      payload: payload,
+    );
+    final id = response['id']?.toString().trim();
+    if (id == null || id.isEmpty) {
+      throw StateError('grantAiConsent did not return a valid id.');
+    }
+
+    final snapshot = await _firestore
+        .collection('consentRecords')
+        .doc(id)
+        .get();
+    final data =
+        snapshot.data() ?? <String, dynamic>{...record.toJson(), ...response};
+    return ConsentRecord.fromJson(data, id: id);
   }
 
   @override
-  Future<ConsentRecord?> getConsent(String candidateUid, String companyId, String type) async {
-    final snapshot = await _firestore.collection('consentRecords')
-      .where('candidateUid', isEqualTo: candidateUid)
-      .where('companyId', isEqualTo: companyId)
-      .where('type', isEqualTo: type)
-      .limit(1)
-      .get();
-    
+  Future<ConsentRecord?> getConsent(
+    String candidateUid,
+    String companyId,
+    String type,
+  ) async {
+    final snapshot = await _firestore
+        .collection('consentRecords')
+        .where('candidateUid', isEqualTo: candidateUid)
+        .where('companyId', isEqualTo: companyId)
+        .where('type', isEqualTo: type)
+        .limit(1)
+        .get();
+
     if (snapshot.docs.isEmpty) return null;
-    return ConsentRecord.fromJson(snapshot.docs.first.data(), id: snapshot.docs.first.id);
+    return ConsentRecord.fromJson(
+      snapshot.docs.first.data(),
+      id: snapshot.docs.first.id,
+    );
   }
 
   @override
   Stream<List<ConsentRecord>> getConsents(String candidateUid) {
-    return _firestore.collection('consentRecords')
-      .where('candidateUid', isEqualTo: candidateUid)
-      .orderBy('grantedAt', descending: true)
-      .snapshots()
-      .map((s) => s.docs.map((d) => ConsentRecord.fromJson(d.data(), id: d.id)).toList());
+    return _firestore
+        .collection('consentRecords')
+        .where('candidateUid', isEqualTo: candidateUid)
+        .orderBy('grantedAt', descending: true)
+        .snapshots()
+        .map(
+          (s) => s.docs
+              .map((d) => ConsentRecord.fromJson(d.data(), id: d.id))
+              .toList(),
+        );
+  }
+
+  Future<Map<String, dynamic>> _callCallableWithFallback({
+    required String name,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final result = await _functions.httpsCallable(name).call(payload);
+      final data = result.data;
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+      return const <String, dynamic>{};
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      final result = await _fallbackFunctions.httpsCallable(name).call(payload);
+      final data = result.data;
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+      return const <String, dynamic>{};
+    }
   }
 }

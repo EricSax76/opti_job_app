@@ -150,6 +150,10 @@ class RecruiterDashboardScreen extends StatelessWidget {
         return 'Hiring Manager';
       case 'externalEvaluator':
         return 'Evaluador Externo';
+      case 'legal':
+        return 'Legal';
+      case 'auditor':
+        return 'Auditoría';
       default:
         return recruiter.role.name;
     }

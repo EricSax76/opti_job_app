@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:opti_job_app/auth/models/eudi_wallet_models.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
-import 'package:opti_job_app/auth/ui/widgets/eudi_wallet_dialogs.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 
@@ -97,12 +96,10 @@ class _CandidateSettingsScreenState extends State<CandidateSettingsScreen> {
     if (_isImportingCredential) return;
     final repository = context.read<AuthRepository>();
     final messenger = ScaffoldMessenger.maybeOf(context);
-    final credential = await showEudiCredentialImportDialog(context);
-    if (credential == null || !context.mounted) return;
 
     setState(() => _isImportingCredential = true);
     try {
-      await repository.importEudiCredential(credential: credential);
+      await repository.importEudiCredentialFromNativeWallet();
       messenger
         ?..hideCurrentSnackBar()
         ..showSnackBar(

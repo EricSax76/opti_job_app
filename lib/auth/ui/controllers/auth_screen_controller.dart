@@ -8,7 +8,7 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_cubit.dart';
 import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_state.dart';
-import 'package:opti_job_app/auth/ui/widgets/eudi_wallet_dialogs.dart';
+import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 
 class AuthScreenController {
   const AuthScreenController._();
@@ -118,9 +118,16 @@ class AuthScreenController {
   }
 
   static Future<void> submitCandidateWalletSignIn(BuildContext context) async {
-    final input = await showEudiWalletSignInDialog(context);
-    if (input == null || !context.mounted) return;
-    context.read<CandidateAuthCubit>().signInWithEudiWallet(input: input);
+    final repository = context.read<AuthRepository>();
+    try {
+      final input = await repository.buildEudiWalletSignInInputFromNative();
+      if (!context.mounted) return;
+      context.read<CandidateAuthCubit>().signInWithEudiWallet(input: input);
+    } catch (error) {
+      if (!context.mounted) return;
+      final message = repository.mapException(error).message;
+      _showErrorMessage(context, message);
+    }
   }
 
   static void submitCompanyLogin(

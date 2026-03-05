@@ -1,12 +1,47 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { Application, JobOffer, KnockoutQuestion } from "../../types/models";
+import {
+  grantedAtMillis,
+  hasValidAiConsentRecord,
+} from "../../utils/aiConsent";
+
+async function hasValidAiTestConsent({
+  transaction,
+  db,
+  candidateUid,
+  companyId,
+}: {
+  transaction: FirebaseFirestore.Transaction;
+  db: FirebaseFirestore.Firestore;
+  candidateUid: string;
+  companyId: string;
+}): Promise<boolean> {
+  const snapshot = await transaction.get(
+    db.collection("consentRecords").where("candidateUid", "==", candidateUid).limit(50),
+  );
+  if (snapshot.empty) return false;
+
+  const now = new Date();
+  const records = snapshot.docs
+    .map((doc) => doc.data() as Record<string, unknown>)
+    .sort((a, b) => grantedAtMillis(b) - grantedAtMillis(a));
+
+  return records.some((record) =>
+    hasValidAiConsentRecord({
+      record,
+      companyId,
+      requiredScope: "ai_test",
+      now,
+    }),
+  );
+}
 
 /**
  * Evalúa respuestas de knockout sin realizar rechazo totalmente automatizado.
  * Si falla un criterio, la candidatura queda marcada para revisión humana.
  */
-export const evaluateKnockoutQuestions = onCall(async (request) => {
+export const evaluateKnockoutQuestions = onCall({ region: "europe-west1" }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Debes iniciar sesión para postularte.");
   }
@@ -42,6 +77,41 @@ export const evaluateKnockoutQuestions = onCall(async (request) => {
       }
 
       const offerData = offerDoc.data() as JobOffer;
+      const offerCompanyUid = String(
+        (offerData as unknown as Record<string, unknown>).company_uid ??
+          (offerData as unknown as Record<string, unknown>).companyUid ??
+          (offerData as unknown as Record<string, unknown>).owner_uid ??
+          "",
+      ).trim();
+      if (!offerCompanyUid) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Job offer does not include company owner.",
+        );
+      }
+
+      const hasConsent = await hasValidAiTestConsent({
+        transaction,
+        db,
+        candidateUid: appData.candidate_uid,
+        companyId: offerCompanyUid,
+      });
+      if (!hasConsent) {
+        transaction.update(applicationRef, {
+          aiConsentRequired: true,
+          aiConsentScopeRequired: "ai_test",
+          aiConsentStatus: "missing_or_invalid",
+          aiConsentBlockedAt: FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
+        });
+        return {
+          success: false,
+          consentRequired: true,
+          requiredScope: "ai_test",
+          message: "No AI test consent found for this application.",
+        };
+      }
+
       const questions: KnockoutQuestion[] = offerData.knockoutQuestions || [];
 
       let failedKnockout = false;

@@ -3,7 +3,7 @@ import * as functions from 'firebase-functions';
 /**
  * Trigger to track status changes and calculate metrics like Time-to-Hire.
  */
-export const onApplicationStatusChange = functions.firestore
+export const onApplicationStatusChange = functions.region("europe-west1").firestore
   .document('applications/{applicationId}')
   .onUpdate(async (change, context) => {
     const before = change.before.data();

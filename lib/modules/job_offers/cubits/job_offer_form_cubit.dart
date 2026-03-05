@@ -28,7 +28,8 @@ class JobOfferFormState {
 }
 
 class JobOfferFormCubit extends Cubit<JobOfferFormState> {
-  JobOfferFormCubit(this._repository, this._aiService) : super(const JobOfferFormState());
+  JobOfferFormCubit(this._repository, this._aiService)
+    : super(const JobOfferFormState());
 
   final JobOfferRepository _repository;
   final AiService _aiService;
@@ -76,11 +77,16 @@ class JobOfferFormCubit extends Cubit<JobOfferFormState> {
         languageCheckResult: biasCheckResult,
       );
 
-      await _repository.create(compliancePayload);
+      final createdOffer = await _repository.create(compliancePayload);
+      final isSalaryBlocked =
+          createdOffer.status == 'blocked_pending_salary_validation';
+      final successMessage = isSalaryBlocked
+          ? 'Oferta bloqueada por validación salarial. Revisa rango, moneda y periodo.'
+          : 'Oferta publicada con éxito.';
       emit(
         state.copyWith(
           status: JobOfferFormStatus.success,
-          message: 'Oferta publicada con éxito.',
+          message: successMessage,
         ),
       );
       // Do not reset to idle immediately; let UI handle navigation or reset.

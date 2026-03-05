@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 
-export const expireTalentPoolConsent = functions.pubsub
+export const expireTalentPoolConsent = functions.region("europe-west1").pubsub
   .schedule('every 24 hours')
   .onRun(async (context) => {
     const db = admin.firestore();

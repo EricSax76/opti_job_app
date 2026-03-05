@@ -27,6 +27,155 @@ class EudiWalletCredentialInput {
   }
 }
 
+class EudiPresentationRequest {
+  const EudiPresentationRequest({
+    required this.purpose,
+    required this.audience,
+    required this.requestedCredentialTypes,
+    required this.proofSchemaVersion,
+    this.nonce,
+    this.constraints = const {},
+  });
+
+  final String purpose;
+  final String audience;
+  final List<String> requestedCredentialTypes;
+  final String proofSchemaVersion;
+  final String? nonce;
+  final Map<String, dynamic> constraints;
+
+  factory EudiPresentationRequest.forSignIn({
+    String audience = 'opti-job-app:eudi-signin',
+    String proofSchemaVersion = '2026.1',
+    String? nonce,
+  }) {
+    return EudiPresentationRequest(
+      purpose: 'signin',
+      audience: audience,
+      requestedCredentialTypes: const ['IdentityCredential'],
+      proofSchemaVersion: proofSchemaVersion,
+      nonce: nonce,
+      constraints: const {'requireIdentityClaims': true},
+    );
+  }
+
+  factory EudiPresentationRequest.forCredentialImport({
+    String audience = 'opti-job-app:eudi-import',
+    String proofSchemaVersion = '2026.1',
+    String? nonce,
+  }) {
+    return EudiPresentationRequest(
+      purpose: 'credential_import',
+      audience: audience,
+      requestedCredentialTypes: const [
+        'EducationCredential',
+        'ProfessionalCertification',
+        'EmploymentCredential',
+      ],
+      proofSchemaVersion: proofSchemaVersion,
+      nonce: nonce,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'purpose': purpose,
+      'audience': audience,
+      'requestedCredentialTypes': requestedCredentialTypes,
+      'proofSchemaVersion': proofSchemaVersion,
+      if (nonce != null && nonce!.trim().isNotEmpty) 'nonce': nonce!.trim(),
+      if (constraints.isNotEmpty) 'constraints': constraints,
+    };
+  }
+}
+
+class EudiWalletPresentationResponse {
+  const EudiWalletPresentationResponse({
+    required this.walletSubject,
+    required this.verifiablePresentation,
+    required this.verificationMethod,
+    required this.issuerDid,
+    required this.credentialType,
+    required this.proofSchemaVersion,
+    this.email,
+    this.fullName,
+    this.countryCode = 'ES',
+    this.assuranceLevel = 'substantial',
+    this.credential,
+  });
+
+  final String walletSubject;
+  final String verifiablePresentation;
+  final String verificationMethod;
+  final String issuerDid;
+  final String credentialType;
+  final String proofSchemaVersion;
+  final String? email;
+  final String? fullName;
+  final String countryCode;
+  final String assuranceLevel;
+  final EudiWalletCredentialInput? credential;
+
+  factory EudiWalletPresentationResponse.fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
+    final credentialRaw = json['credential'];
+    EudiWalletCredentialInput? credential;
+    if (credentialRaw is Map) {
+      final credentialMap = Map<String, dynamic>.from(credentialRaw);
+      final type = credentialMap['type']?.toString().trim() ?? '';
+      final title = credentialMap['title']?.toString().trim() ?? '';
+      final issuer = credentialMap['issuer']?.toString().trim() ?? '';
+      if (type.isNotEmpty && title.isNotEmpty && issuer.isNotEmpty) {
+        credential = EudiWalletCredentialInput(
+          type: type,
+          title: title,
+          issuer: issuer,
+          issuedAt: parseDate(credentialMap['issuedAt']),
+          expiresAt: parseDate(credentialMap['expiresAt']),
+          metadata: Map<String, dynamic>.from(
+            (credentialMap['metadata'] as Map?) ?? const <String, dynamic>{},
+          ),
+        );
+      }
+    }
+
+    return EudiWalletPresentationResponse(
+      walletSubject: json['walletSubject']?.toString().trim() ?? '',
+      email: json['email']?.toString(),
+      fullName: json['fullName']?.toString(),
+      countryCode: json['countryCode']?.toString().trim().isNotEmpty == true
+          ? json['countryCode'].toString().trim().toUpperCase()
+          : 'ES',
+      assuranceLevel:
+          json['assuranceLevel']?.toString().trim().isNotEmpty == true
+          ? json['assuranceLevel'].toString().trim()
+          : 'substantial',
+      verifiablePresentation:
+          json['verifiablePresentation']?.toString().trim() ?? '',
+      verificationMethod:
+          json['verificationMethod']?.toString().trim().isNotEmpty == true
+          ? json['verificationMethod'].toString().trim()
+          : 'jws:unknown',
+      issuerDid: json['issuerDid']?.toString().trim() ?? '',
+      credentialType:
+          json['credentialType']?.toString().trim().isNotEmpty == true
+          ? json['credentialType'].toString().trim()
+          : 'verifiable_credential',
+      proofSchemaVersion:
+          json['proofSchemaVersion']?.toString().trim().isNotEmpty == true
+          ? json['proofSchemaVersion'].toString().trim()
+          : '2026.1',
+      credential: credential,
+    );
+  }
+}
+
 class EudiWalletSignInInput {
   const EudiWalletSignInInput({
     required this.walletSubject,
@@ -35,6 +184,12 @@ class EudiWalletSignInInput {
     this.countryCode = 'ES',
     this.assuranceLevel = 'substantial',
     this.credential,
+    this.verifiablePresentation,
+    this.expectedAudience,
+    this.proofSchemaVersion = '2026.1',
+    this.verificationMethod,
+    this.issuerDid,
+    this.credentialType,
   });
 
   final String walletSubject;
@@ -43,6 +198,12 @@ class EudiWalletSignInInput {
   final String countryCode;
   final String assuranceLevel;
   final EudiWalletCredentialInput? credential;
+  final String? verifiablePresentation;
+  final String? expectedAudience;
+  final String proofSchemaVersion;
+  final String? verificationMethod;
+  final String? issuerDid;
+  final String? credentialType;
 
   Map<String, dynamic> toJson() {
     return {
@@ -52,6 +213,39 @@ class EudiWalletSignInInput {
       'countryCode': countryCode,
       'assuranceLevel': assuranceLevel,
       if (credential != null) 'credential': credential!.toJson(),
+      if (verifiablePresentation != null &&
+          verifiablePresentation!.trim().isNotEmpty)
+        'verifiablePresentation': verifiablePresentation!.trim(),
+      if (expectedAudience != null && expectedAudience!.trim().isNotEmpty)
+        'expectedAudience': expectedAudience!.trim(),
+      if (proofSchemaVersion.trim().isNotEmpty)
+        'proofSchemaVersion': proofSchemaVersion.trim(),
+      if (verificationMethod != null && verificationMethod!.trim().isNotEmpty)
+        'verificationMethod': verificationMethod!.trim(),
+      if (issuerDid != null && issuerDid!.trim().isNotEmpty)
+        'issuerDid': issuerDid!.trim(),
+      if (credentialType != null && credentialType!.trim().isNotEmpty)
+        'credentialType': credentialType!.trim(),
+    };
+  }
+}
+
+class EudiCredentialImportInput {
+  const EudiCredentialImportInput({
+    required this.verifiablePresentation,
+    this.expectedAudience = 'opti-job-app:eudi-import',
+    this.proofSchemaVersion = '2026.1',
+  });
+
+  final String verifiablePresentation;
+  final String expectedAudience;
+  final String proofSchemaVersion;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'verifiablePresentation': verifiablePresentation,
+      'expectedAudience': expectedAudience,
+      'proofSchemaVersion': proofSchemaVersion,
     };
   }
 }
@@ -79,6 +273,10 @@ class VerifiedCredential {
     this.issuedAt,
     this.expiresAt,
     this.metadata = const {},
+    this.verificationMethod,
+    this.issuerDid,
+    this.credentialType,
+    this.proofSchemaVersion,
   });
 
   final String id;
@@ -90,6 +288,10 @@ class VerifiedCredential {
   final DateTime? issuedAt;
   final DateTime? expiresAt;
   final Map<String, dynamic> metadata;
+  final String? verificationMethod;
+  final String? issuerDid;
+  final String? credentialType;
+  final String? proofSchemaVersion;
 
   factory VerifiedCredential.fromJson(Map<String, dynamic> json, {String? id}) {
     DateTime? parseDate(dynamic value) {
@@ -108,6 +310,10 @@ class VerifiedCredential {
       source: json['source'] as String?,
       issuedAt: parseDate(json['issuedAt']),
       expiresAt: parseDate(json['expiresAt']),
+      verificationMethod: json['verificationMethod']?.toString(),
+      issuerDid: json['issuerDid']?.toString(),
+      credentialType: json['credentialType']?.toString(),
+      proofSchemaVersion: json['proofSchemaVersion']?.toString(),
       metadata: Map<String, dynamic>.from(
         (json['metadata'] as Map?) ?? const <String, dynamic>{},
       ),
@@ -156,6 +362,10 @@ class SelectiveDisclosureProofResult {
     this.companyUid,
     this.applicationId,
     this.expiresAt,
+    this.proofSchemaVersion,
+    this.verificationMethod,
+    this.issuerDid,
+    this.credentialType,
   });
 
   final String proofId;
@@ -165,6 +375,10 @@ class SelectiveDisclosureProofResult {
   final String? companyUid;
   final String? applicationId;
   final DateTime? expiresAt;
+  final String? proofSchemaVersion;
+  final String? verificationMethod;
+  final String? issuerDid;
+  final String? credentialType;
 
   factory SelectiveDisclosureProofResult.fromJson(Map<String, dynamic> json) {
     DateTime? parseDate(dynamic value) {
@@ -185,6 +399,10 @@ class SelectiveDisclosureProofResult {
       companyUid: json['companyUid']?.toString(),
       applicationId: json['applicationId']?.toString(),
       expiresAt: parseDate(json['expiresAt']),
+      proofSchemaVersion: json['proofSchemaVersion']?.toString(),
+      verificationMethod: json['verificationMethod']?.toString(),
+      issuerDid: json['issuerDid']?.toString(),
+      credentialType: json['credentialType']?.toString(),
     );
   }
 }
@@ -202,6 +420,10 @@ class SelectiveDisclosureVerificationResult {
     this.claimKey,
     this.expiresAt,
     this.verifiedAt,
+    this.proofSchemaVersion,
+    this.verificationMethod,
+    this.issuerDid,
+    this.credentialType,
   });
 
   final bool verified;
@@ -215,6 +437,10 @@ class SelectiveDisclosureVerificationResult {
   final String? claimKey;
   final DateTime? expiresAt;
   final DateTime? verifiedAt;
+  final String? proofSchemaVersion;
+  final String? verificationMethod;
+  final String? issuerDid;
+  final String? credentialType;
 
   factory SelectiveDisclosureVerificationResult.fromJson(
     Map<String, dynamic> json,
@@ -241,6 +467,10 @@ class SelectiveDisclosureVerificationResult {
       claimKey: json['claimKey']?.toString(),
       expiresAt: parseDate(json['expiresAt']),
       verifiedAt: parseDate(json['verifiedAt']),
+      proofSchemaVersion: json['proofSchemaVersion']?.toString(),
+      verificationMethod: json['verificationMethod']?.toString(),
+      issuerDid: json['issuerDid']?.toString(),
+      credentialType: json['credentialType']?.toString(),
     );
   }
 }

@@ -13,7 +13,13 @@ enum RecruiterRole {
   externalEvaluator,
 
   /// Solo puede ver información; sin capacidad de edición.
-  viewer;
+  viewer,
+
+  /// Perfil legal para consultas de cumplimiento y archivo bloqueado.
+  legal,
+
+  /// Perfil de auditoría para revisiones de cumplimiento.
+  auditor;
 
   /// Convierte la cadena de Firestore al enum.
   static RecruiterRole fromString(String value) {
@@ -25,6 +31,8 @@ enum RecruiterRole {
       'external_evaluator' => RecruiterRole.externalEvaluator,
       'externalevaluator' => RecruiterRole.externalEvaluator,
       'viewer' => RecruiterRole.viewer,
+      'legal' => RecruiterRole.legal,
+      'auditor' => RecruiterRole.auditor,
       _ => RecruiterRole.viewer, // valor por defecto seguro
     };
   }
@@ -37,6 +45,8 @@ enum RecruiterRole {
       RecruiterRole.hiringManager => 'hiring_manager',
       RecruiterRole.externalEvaluator => 'external_evaluator',
       RecruiterRole.viewer => 'viewer',
+      RecruiterRole.legal => 'legal',
+      RecruiterRole.auditor => 'auditor',
     };
   }
 }

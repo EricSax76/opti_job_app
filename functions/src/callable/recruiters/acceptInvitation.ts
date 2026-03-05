@@ -14,6 +14,8 @@ import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { Recruiter, Invitation } from "../../types/models";
+import { requireSecondFactor } from "../../utils/mfa";
+import { syncRecruiterClaimsFromFirestore } from "../../utils/recruiterClaims";
 
 const logger = createLogger({ function: "acceptInvitation" });
 
@@ -31,8 +33,10 @@ export const acceptInvitation = functions
         "Debes iniciar sesión para aceptar una invitación."
       );
     }
+    requireSecondFactor(context);
+    const payload = (data ?? {}) as AcceptInvitationRequest;
 
-    if (!data.code || typeof data.code !== "string") {
+    if (!payload.code || typeof payload.code !== "string") {
       throw new functions.https.HttpsError(
         "invalid-argument",
         "Código de invitación requerido."
@@ -41,7 +45,7 @@ export const acceptInvitation = functions
 
     const uid = context.auth.uid;
     const email = context.auth.token.email || "";
-    const code = data.code.toUpperCase().trim();
+    const code = payload.code.toUpperCase().trim();
     const db = admin.firestore();
     const now = admin.firestore.Timestamp.now();
 
@@ -87,7 +91,7 @@ export const acceptInvitation = functions
         uid,
         companyId: invitation.companyId,
         email,
-        name: data.name || email.split("@")[0],
+        name: payload.name || email.split("@")[0],
         role: invitation.role,
         status: "active",
         invitedBy: invitation.createdBy,
@@ -104,7 +108,14 @@ export const acceptInvitation = functions
       });
     });
 
+    const syncResult = await syncRecruiterClaimsFromFirestore(uid, {
+      source: "acceptInvitation",
+    });
+
     logger.info("Invitation accepted", { uid, code });
 
-    return { success: true };
+    return {
+      success: true,
+      claimsUpdated: syncResult.updated,
+    };
   });

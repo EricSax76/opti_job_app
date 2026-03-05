@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/modules/ats/models/knockout_question.dart';
 import 'package:opti_job_app/modules/applications/logic/application_service.dart';
 import 'package:opti_job_app/modules/applications/models/qualified_signature_models.dart';
+import 'package:opti_job_app/modules/compliance/models/consent_record.dart';
+import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_detail_logic.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
@@ -15,6 +17,11 @@ import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_pre_apply_v
 
 class JobOfferDetailController {
   const JobOfferDetailController._();
+
+  static const String _aiConsentTextVersion = '2026.04';
+  static const String _aiConsentText =
+      'Autorizo el uso de sistemas de IA para test y entrevistas de esta candidatura. '
+      'Entiendo que puedo solicitar revisión humana y revocar en el portal de privacidad.';
 
   static void handleDetailMessages(
     BuildContext context,
@@ -108,6 +115,9 @@ class JobOfferDetailController {
     final shouldProceed = await _confirmApplyWithOutcome(context, outcome);
     if (shouldProceed != true || !context.mounted) return;
 
+    final consentGranted = await _requestAiConsent(context, request);
+    if (!context.mounted || !consentGranted) return;
+
     final knockoutResponses = await _collectKnockoutResponses(
       context,
       request.offer,
@@ -118,6 +128,132 @@ class JobOfferDetailController {
       candidate: request.candidate,
       offer: request.offer,
       knockoutResponses: knockoutResponses,
+    );
+  }
+
+  static Future<bool> _requestAiConsent(
+    BuildContext context,
+    JobOfferApplyRequest request,
+  ) async {
+    final companyUid = request.offer.companyUid?.trim() ?? '';
+    if (companyUid.isEmpty) {
+      _showSnackBar(
+        context,
+        message:
+            'No se pudo registrar consentimiento IA porque falta la empresa propietaria.',
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+      return false;
+    }
+
+    final scopes = _requiredAiConsentScopes(request.offer);
+    final accepted = await _showAiConsentDialog(
+      context,
+      scopes: scopes,
+      consentTextVersion: _aiConsentTextVersion,
+      consentText: _aiConsentText,
+    );
+    if (accepted != true || !context.mounted) return false;
+
+    try {
+      await _withLoadingDialog<void>(
+        context: context,
+        title: 'Registrando consentimiento IA',
+        message: 'Guardando evidencia auditable del consentimiento...',
+        action: () => context.read<ConsentRepository>().saveConsent(
+          ConsentRecord(
+            id: '',
+            candidateUid: request.candidate.uid,
+            companyId: companyUid,
+            type: 'ai_granular',
+            granted: true,
+            legalBasis: LegalBasis.consent,
+            informationNoticeVersion: _aiConsentTextVersion,
+            consentTextVersion: _aiConsentTextVersion,
+            consentTextSnapshot: _aiConsentText,
+            scope: scopes,
+            immutable: true,
+          ),
+        ),
+      );
+      return true;
+    } on FirebaseFunctionsException catch (error) {
+      final message = error.message?.trim().isNotEmpty == true
+          ? error.message!.trim()
+          : 'No se pudo registrar el consentimiento IA.';
+      if (!context.mounted) return false;
+      _showSnackBar(
+        context,
+        message: '$message (${error.code})',
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+      return false;
+    } catch (_) {
+      if (!context.mounted) return false;
+      _showSnackBar(
+        context,
+        message: 'No se pudo registrar el consentimiento IA.',
+        backgroundColor: Theme.of(context).colorScheme.error,
+      );
+      return false;
+    }
+  }
+
+  static List<String> _requiredAiConsentScopes(JobOffer offer) {
+    final scopes = <String>{'ai_interview'};
+    final hasKnockout = (offer.knockoutQuestions?.isNotEmpty ?? false);
+    if (hasKnockout) {
+      scopes.add('ai_test');
+    }
+    return scopes.toList(growable: false)..sort();
+  }
+
+  static String _scopeLabel(String scope) {
+    return switch (scope) {
+      'ai_interview' => 'Entrevista IA',
+      'ai_test' => 'Test IA',
+      _ => scope,
+    };
+  }
+
+  static Future<bool?> _showAiConsentDialog(
+    BuildContext context, {
+    required List<String> scopes,
+    required String consentTextVersion,
+    required String consentText,
+  }) {
+    final scopeLabels = scopes.map(_scopeLabel).join(', ');
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Consentimiento IA'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Ámbito: $scopeLabels'),
+                const SizedBox(height: 8),
+                Text('Versión del texto: $consentTextVersion'),
+                const SizedBox(height: 12),
+                Text(consentText),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('No acepto'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Acepto y continuar'),
+            ),
+          ],
+        );
+      },
     );
   }
 

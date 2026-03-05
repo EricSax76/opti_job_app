@@ -37,10 +37,28 @@ class AuthRepository {
     return _service.signInCandidateWithEudiWallet(input: input);
   }
 
-  Future<void> importEudiCredential({
-    required EudiWalletCredentialInput credential,
+  Future<EudiWalletSignInInput> buildEudiWalletSignInInputFromNative({
+    String? initialName,
+    String? initialEmail,
+    String audience = 'opti-job-app:eudi-signin',
+    String proofSchemaVersion = '2026.1',
   }) {
-    return _service.importEudiCredential(credential: credential);
+    return _service.buildEudiWalletSignInInputFromNative(
+      initialName: initialName,
+      initialEmail: initialEmail,
+      audience: audience,
+      proofSchemaVersion: proofSchemaVersion,
+    );
+  }
+
+  Future<void> importEudiCredentialFromNativeWallet({
+    String audience = 'opti-job-app:eudi-import',
+    String proofSchemaVersion = '2026.1',
+  }) {
+    return _service.importEudiCredentialFromNativeWallet(
+      audience: audience,
+      proofSchemaVersion: proofSchemaVersion,
+    );
   }
 
   Future<SelectiveDisclosureProofResult> createSelectiveDisclosureProof({

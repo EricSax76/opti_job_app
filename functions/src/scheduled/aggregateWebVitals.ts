@@ -47,7 +47,7 @@ function ensureMetricBucket(
   return created;
 }
 
-export const aggregateWebVitalsP75 = functions.pubsub
+export const aggregateWebVitalsP75 = functions.region("europe-west1").pubsub
   .schedule("every 30 minutes")
   .onRun(async () => {
     const db = admin.firestore();

@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:opti_job_app/auth/models/auth_service.dart';
+import 'package:opti_job_app/auth/services/eudi_wallet_native_channel.dart';
 import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
 import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
@@ -66,19 +67,27 @@ void setupGetIt({
   getIt.registerSingleton<FirebaseAI>(firebaseAIInstance);
 
   // Auth
+  getIt.registerLazySingleton<EudiWalletNativeChannel>(
+    () => MethodChannelEudiWalletNativeChannel(),
+  );
   getIt.registerLazySingleton(
     () => AuthService(
       firebaseAuth: getIt<FirebaseAuth>(),
       firestore: getIt<FirebaseFirestore>(),
       functions: functionsInstance,
       fallbackFunctions: fallbackFunctionsInstance,
+      eudiWalletNativeChannel: getIt<EudiWalletNativeChannel>(),
     ),
   );
   getIt.registerLazySingleton(() => AuthRepository(getIt<AuthService>()));
 
   // Job Offers
   getIt.registerLazySingleton(
-    () => JobOfferService(firestore: getIt<FirebaseFirestore>()),
+    () => JobOfferService(
+      firestore: getIt<FirebaseFirestore>(),
+      functions: functionsInstance,
+      fallbackFunctions: fallbackFunctionsInstance,
+    ),
   );
   getIt.registerLazySingleton(
     () => JobOfferRepository(getIt<JobOfferService>()),
@@ -182,7 +191,11 @@ void setupGetIt({
 
   // Compliance
   getIt.registerLazySingleton<FirebaseComplianceRepository>(
-    () => FirebaseComplianceRepository(firestore: getIt<FirebaseFirestore>()),
+    () => FirebaseComplianceRepository(
+      firestore: getIt<FirebaseFirestore>(),
+      functions: functionsInstance,
+      fallbackFunctions: fallbackFunctionsInstance,
+    ),
   );
   getIt.registerLazySingleton<AuditRepository>(
     () => getIt<FirebaseComplianceRepository>(),

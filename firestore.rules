@@ -18,20 +18,44 @@ service cloud.firestore {
 
     // ─── Fase 0 RBAC helpers ──────────────────────────────────────────
 
+    function hasSecondFactor() {
+      return isSignedIn()
+        && request.auth.token.firebase.sign_in_second_factor is string
+        && request.auth.token.firebase.sign_in_second_factor.size() > 0;
+    }
+
+    function tokenIsActiveRecruiter() {
+      return isSignedIn()
+        && request.auth.token.isRecruiter == true
+        && request.auth.token.recruiterStatus == 'active'
+        && hasSecondFactor();
+    }
+
+    function docIsActiveRecruiter() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/recruiters/$(request.auth.uid))
+        && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.status == 'active'
+        && hasSecondFactor();
+    }
+
     function isRecruiter() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/recruiters/$(request.auth.uid));
+      return tokenIsActiveRecruiter() || docIsActiveRecruiter();
     }
 
     function recruiterBelongsToCompany(companyId) {
-      return isRecruiter() &&
-        get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId;
+      return (tokenIsActiveRecruiter()
+        && request.auth.token.companyId == companyId)
+        || (docIsActiveRecruiter()
+          && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId);
     }
 
     function recruiterHasRole(companyId, roles) {
-      return recruiterBelongsToCompany(companyId) &&
-        get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.role in roles &&
-        get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.status == 'active';
+      return (tokenIsActiveRecruiter()
+        && request.auth.token.companyId == companyId
+        && request.auth.token.recruiterRole in roles)
+        || (docIsActiveRecruiter()
+          && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId
+          && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.role in roles);
     }
 
     function recruiterCanManageOffers(companyId) {
@@ -48,6 +72,12 @@ service cloud.firestore {
 
     function recruiterCanAccessCompanyData(companyId) {
       return recruiterHasRole(companyId, ['admin', 'recruiter', 'viewer', 'hiring_manager', 'external_evaluator']);
+    }
+
+    function recruiterCanAccessBlockedArchive(companyId) {
+      return companyId is string
+        && companyId.size() > 0
+        && recruiterHasRole(companyId, ['legal', 'auditor']);
     }
 
     function isCompanyOrRecruiterForCompany(companyId) {
@@ -90,8 +120,9 @@ service cloud.firestore {
       }
 
       match /verifiedCredentials/{credentialId} {
-        allow create, update, delete: if isSignedIn()
-          && request.auth.uid == candidateId;
+        // Solo Cloud Functions puede escribir credenciales verificadas EUDI
+        // tras validación criptográfica (firma/issuer/exp/audience).
+        allow create, update, delete: if false;
         allow read: if isSignedIn()
           && request.auth.uid == candidateId;
       }
@@ -123,8 +154,8 @@ service cloud.firestore {
 
     match /jobOffers/{offerId} {
       allow read: if isSignedIn();
-      allow create: if (isCompany() && request.auth.uid == offerCompanyUid(request.resource.data))
-                     || recruiterCanManageOffers(offerCompanyUid(request.resource.data));
+      // Offer creation is enforced via Cloud Functions (createJobOfferSecure).
+      allow create: if false;
       allow update, delete: if (isCompany() && request.auth.uid == offerCompanyUid(resource.data))
                             || recruiterCanManageOffers(offerCompanyUid(resource.data));
     }
@@ -267,9 +298,16 @@ service cloud.firestore {
     // ─── Fase 6: Compliance ───────────────────────────────────────────
 
     match /auditLogs/{logId} {
-      // Solo lectura para admins o la propia empresa auditada (según lógica de negocio)
-      allow read: if isCompany() && resource.data.companyId == request.auth.uid;
+      // Solo lectura para la empresa auditada o perfiles legales/auditoría.
+      allow read: if (isCompany() && resource.data.companyId == request.auth.uid)
+        || recruiterCanAccessBlockedArchive(resource.data.companyId);
       allow write: if false; // Solo por Cloud Functions o internamente
+    }
+
+    match /blockedArchive/{archiveId} {
+      // Archivo bloqueado: acceso exclusivo para rol legal/auditoría.
+      allow read: if recruiterCanAccessBlockedArchive(resource.data.companyId);
+      allow write: if false;
     }
 
     match /dataRequests/{requestId} {
@@ -284,7 +322,8 @@ service cloud.firestore {
           || isCompany()
           || recruiterCanViewReports(resource.data.companyId)
         );
-      allow write: if isCandidate() && request.auth.uid == request.resource.data.candidateUid;
+      // Immutable consent records are written only by backend callables.
+      allow create, update, delete: if false;
     }
 
     match /salaryBenchmarks/{benchmarkId} {

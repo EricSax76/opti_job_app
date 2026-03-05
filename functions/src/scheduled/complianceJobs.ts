@@ -6,6 +6,38 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 const CONSENT_RENEWAL_WINDOW_DAYS = 30;
 const MAX_DOCS_PER_QUERY = 250;
 const BATCH_WRITE_LIMIT = 450;
+const BLOCKED_ARCHIVE_RETENTION_DAYS = 3 * 365;
+
+type JsonRecord = Record<string, unknown>;
+
+interface StorageMoveResult {
+  sourcePath: string;
+  archivePath: string;
+}
+
+interface ArchiveTransferRecord {
+  sourceRef: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>;
+  sourceCollection: string;
+  sourceDocumentId: string;
+  sourcePath: string;
+  companyId: string | null;
+  candidateUid: string | null;
+  payload: FirebaseFirestore.DocumentData;
+  reason: string;
+  movedStorage: StorageMoveResult[];
+}
+
+interface ArchiveTransferStats {
+  archivedCount: number;
+  skippedLegalHoldCount: number;
+}
+
+interface VideoInterviewTtlStats {
+  ttlAssignedCount: number;
+  expiredStillPresentCount: number;
+  skippedLegalHoldCount: number;
+  scannedCount: number;
+}
 
 function toTimestamp(value: unknown): admin.firestore.Timestamp | null {
   if (value instanceof admin.firestore.Timestamp) return value;
@@ -17,6 +49,46 @@ function toTimestamp(value: unknown): admin.firestore.Timestamp | null {
     }
   }
   return null;
+}
+
+function asTrimmedString(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
+}
+
+function asRecord(value: unknown): JsonRecord | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as JsonRecord;
+}
+
+function toNullableString(value: unknown): string | null {
+  const normalized = asTrimmedString(value);
+  return normalized.length > 0 ? normalized : null;
+}
+
+function readCompanyId(data: JsonRecord): string | null {
+  return toNullableString(data.company_uid ?? data.companyUid ?? data.companyId ?? data.owner_uid);
+}
+
+function readCandidateUid(data: JsonRecord): string | null {
+  return toNullableString(data.candidate_uid ?? data.candidateUid ?? data.uid);
+}
+
+function archiveBlockedUntil(now: admin.firestore.Timestamp): admin.firestore.Timestamp {
+  return admin.firestore.Timestamp.fromMillis(
+    now.toMillis() + (BLOCKED_ARCHIVE_RETENTION_DAYS * 24 * 60 * 60 * 1000),
+  );
+}
+
+function isLegalHoldActive(value: unknown): boolean {
+  if (value === true) return true;
+  if (value === false || value == null) return false;
+  const legalHold = asRecord(value);
+  if (legalHold == null) return false;
+  if (legalHold.active === true) return true;
+  const status = asTrimmedString(legalHold.status).toLowerCase();
+  return ['active', 'on', 'enabled', 'legal_hold'].includes(status);
 }
 
 function extractStoragePath(raw: unknown): string | null {
@@ -47,6 +119,36 @@ function extractStoragePath(raw: unknown): string | null {
   }
 }
 
+async function moveStorageObjectToBlockedArchive(
+  path: string,
+  archivePrefix: string,
+): Promise<StorageMoveResult | null> {
+  const normalizedPath = extractStoragePath(path);
+  if (normalizedPath == null) return null;
+
+  const sourcePath = normalizedPath;
+  const sanitizedSourcePath = normalizedPath.replace(/\//g, '__');
+  const archivePath = `blockedArchive/storage/${archivePrefix}/${Date.now()}_${sanitizedSourcePath}`;
+  const bucket = admin.storage().bucket();
+  const sourceFile = bucket.file(sourcePath);
+  const archiveFile = bucket.file(archivePath);
+
+  try {
+    const [exists] = await sourceFile.exists();
+    if (!exists) return null;
+
+    await sourceFile.copy(archiveFile);
+    await sourceFile.delete();
+    return { sourcePath, archivePath };
+  } catch (error) {
+    const err = error as { code?: number; message?: string };
+    if (err?.code === 404 || err?.message?.toLowerCase().includes('no such object')) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 async function deleteStorageObjectIfExists(path: string): Promise<void> {
   if (!path.trim()) return;
 
@@ -60,6 +162,71 @@ async function deleteStorageObjectIfExists(path: string): Promise<void> {
     }
     throw error;
   }
+}
+
+async function commitArchiveTransfers(
+  transfers: ArchiveTransferRecord[],
+  now: admin.firestore.Timestamp,
+): Promise<number> {
+  if (transfers.length === 0) return 0;
+  const db = admin.firestore();
+  let batch = db.batch();
+  let pendingWrites = 0;
+  let archived = 0;
+
+  for (const transfer of transfers) {
+    const archiveRef = db.collection('blockedArchive').doc();
+    const auditRef = db.collection('auditLogs').doc();
+
+    batch.set(archiveRef, {
+      id: archiveRef.id,
+      sourceCollection: transfer.sourceCollection,
+      sourceDocumentId: transfer.sourceDocumentId,
+      sourcePath: transfer.sourcePath,
+      companyId: transfer.companyId,
+      candidateUid: transfer.candidateUid,
+      reason: transfer.reason,
+      legalHold: false,
+      blockedUntil: archiveBlockedUntil(now),
+      archivedAt: now,
+      archivedBy: 'system:blockExpiredData',
+      movedStorage: transfer.movedStorage,
+      payload: transfer.payload,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    batch.delete(transfer.sourceRef);
+    batch.set(auditRef, {
+      action: 'blocked_archive_transfer',
+      actorUid: 'system',
+      actorRole: 'system',
+      targetType: transfer.sourceCollection,
+      targetId: transfer.sourceDocumentId,
+      companyId: transfer.companyId,
+      metadata: {
+        reason: transfer.reason,
+        sourcePath: transfer.sourcePath,
+        archiveId: archiveRef.id,
+        movedStorageCount: transfer.movedStorage.length,
+        movedStorage: transfer.movedStorage,
+      },
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    pendingWrites += 3;
+    archived += 1;
+    if (pendingWrites >= BATCH_WRITE_LIMIT - 3) {
+      await batch.commit();
+      batch = db.batch();
+      pendingWrites = 0;
+    }
+  }
+
+  if (pendingWrites > 0) {
+    await batch.commit();
+  }
+
+  return archived;
 }
 
 async function queryOldDocsByTimestampFields(
@@ -87,33 +254,10 @@ async function queryOldDocsByTimestampFields(
   return [...byId.values()];
 }
 
-async function commitDeletes(
-  refs: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>[],
-): Promise<void> {
-  if (refs.length === 0) return;
-
-  let batch = admin.firestore().batch();
-  let pending = 0;
-
-  for (const ref of refs) {
-    batch.delete(ref);
-    pending += 1;
-
-    if (pending >= BATCH_WRITE_LIMIT) {
-      await batch.commit();
-      batch = admin.firestore().batch();
-      pending = 0;
-    }
-  }
-
-  if (pending > 0) {
-    await batch.commit();
-  }
-}
-
 async function purgeExpiredApplications(
   threshold: admin.firestore.Timestamp,
-): Promise<number> {
+  now: admin.firestore.Timestamp,
+): Promise<ArchiveTransferStats> {
   const db = admin.firestore();
   const oldDocs = await queryOldDocsByTimestampFields(
     db.collection('applications'),
@@ -122,12 +266,20 @@ async function purgeExpiredApplications(
     'applications',
   );
 
-  if (oldDocs.length === 0) return 0;
+  if (oldDocs.length === 0) {
+    return { archivedCount: 0, skippedLegalHoldCount: 0 };
+  }
 
-  const refsToDelete: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>[] = [];
+  const transfers: ArchiveTransferRecord[] = [];
+  let skippedLegalHoldCount = 0;
 
   for (const doc of oldDocs) {
-    const data = doc.data();
+    const data = doc.data() as JsonRecord;
+    if (isLegalHoldActive(data.legalHold)) {
+      skippedLegalHoldCount += 1;
+      continue;
+    }
+
     const status = String(data.status ?? '').toLowerCase();
     if (status === 'hired') {
       continue;
@@ -138,22 +290,40 @@ async function purgeExpiredApplications(
       ? rawAdditionalDocuments
       : [];
 
+    const movedStorage: StorageMoveResult[] = [];
     for (const rawPath of additionalDocuments) {
       const path = extractStoragePath(rawPath);
       if (path == null) continue;
-      await deleteStorageObjectIfExists(path);
+      const moved = await moveStorageObjectToBlockedArchive(
+        path,
+        `applications/${doc.id}`,
+      );
+      if (moved != null) {
+        movedStorage.push(moved);
+      }
     }
 
-    refsToDelete.push(doc.ref);
+    transfers.push({
+      sourceRef: doc.ref,
+      sourceCollection: 'applications',
+      sourceDocumentId: doc.id,
+      sourcePath: doc.ref.path,
+      companyId: readCompanyId(data),
+      candidateUid: readCandidateUid(data),
+      payload: data,
+      reason: 'retention_expired_3y_application',
+      movedStorage,
+    });
   }
 
-  await commitDeletes(refsToDelete);
-  return refsToDelete.length;
+  const archivedCount = await commitArchiveTransfers(transfers, now);
+  return { archivedCount, skippedLegalHoldCount };
 }
 
 async function purgeExpiredCurriculums(
   threshold: admin.firestore.Timestamp,
-): Promise<number> {
+  now: admin.firestore.Timestamp,
+): Promise<ArchiveTransferStats> {
   const db = admin.firestore();
   const oldDocs = await queryOldDocsByTimestampFields(
     db.collectionGroup('curriculum'),
@@ -162,9 +332,12 @@ async function purgeExpiredCurriculums(
     'collectionGroup(curriculum)',
   );
 
-  if (oldDocs.length === 0) return 0;
+  if (oldDocs.length === 0) {
+    return { archivedCount: 0, skippedLegalHoldCount: 0 };
+  }
 
-  const refsToDelete: FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>[] = [];
+  const transfers: ArchiveTransferRecord[] = [];
+  let skippedLegalHoldCount = 0;
 
   for (const doc of oldDocs) {
     // El CV principal vive en candidates/{uid}/curriculum/main
@@ -176,18 +349,43 @@ async function purgeExpiredCurriculums(
     ) {
       continue;
     }
-    const data = doc.data();
+    const data = doc.data() as JsonRecord;
+    if (isLegalHoldActive(data.legalHold)) {
+      skippedLegalHoldCount += 1;
+      continue;
+    }
+
+    const movedStorage: StorageMoveResult[] = [];
+    const attachment = asRecord(data.attachment);
     const storagePath = extractStoragePath(
-      data.attachment?.storage_path ?? data.attachment?.storagePath,
+      attachment?.storage_path ?? attachment?.storagePath,
     );
     if (storagePath != null) {
-      await deleteStorageObjectIfExists(storagePath);
+      const moved = await moveStorageObjectToBlockedArchive(
+        storagePath,
+        `curriculum/${doc.id}`,
+      );
+      if (moved != null) {
+        movedStorage.push(moved);
+      }
     }
-    refsToDelete.push(doc.ref);
+
+    const candidateUid = pathSegments.length >= 2 ? pathSegments[1] : null;
+    transfers.push({
+      sourceRef: doc.ref,
+      sourceCollection: 'curriculum',
+      sourceDocumentId: doc.id,
+      sourcePath: doc.ref.path,
+      companyId: readCompanyId(data),
+      candidateUid,
+      payload: data,
+      reason: 'retention_expired_3y_curriculum',
+      movedStorage,
+    });
   }
 
-  await commitDeletes(refsToDelete);
-  return refsToDelete.length;
+  const archivedCount = await commitArchiveTransfers(transfers, now);
+  return { archivedCount, skippedLegalHoldCount };
 }
 
 async function purgeExpiredCandidateVideos(
@@ -208,9 +406,15 @@ async function purgeExpiredCandidateVideos(
   let purgedVideos = 0;
 
   for (const doc of oldDocs) {
-    const data = doc.data();
+    const data = doc.data() as JsonRecord;
+    if (isLegalHoldActive(data.legalHold)) {
+      continue;
+    }
     const videoData = data.video_curriculum;
     if (videoData == null || typeof videoData !== 'object') {
+      continue;
+    }
+    if (isLegalHoldActive((videoData as JsonRecord).legalHold)) {
       continue;
     }
 
@@ -249,6 +453,96 @@ async function purgeExpiredCandidateVideos(
   }
 
   return purgedVideos;
+}
+
+async function prepareVideoInterviewRecordingsTtl(
+  now: admin.firestore.Timestamp,
+): Promise<VideoInterviewTtlStats> {
+  const db = admin.firestore();
+  let snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>;
+  try {
+    snapshot = await db
+      .collection('videoInterviewRecordings')
+      .orderBy('createdAt', 'desc')
+      .limit(MAX_DOCS_PER_QUERY)
+      .get();
+  } catch (_) {
+    snapshot = await db
+      .collection('videoInterviewRecordings')
+      .limit(MAX_DOCS_PER_QUERY)
+      .get();
+  }
+
+  if (snapshot.empty) {
+    return {
+      ttlAssignedCount: 0,
+      expiredStillPresentCount: 0,
+      skippedLegalHoldCount: 0,
+      scannedCount: 0,
+    };
+  }
+
+  let batch = db.batch();
+  let pending = 0;
+  let ttlAssignedCount = 0;
+  let expiredStillPresentCount = 0;
+  let skippedLegalHoldCount = 0;
+
+  for (const doc of snapshot.docs) {
+    const data = doc.data() as JsonRecord;
+    if (isLegalHoldActive(data.legalHold)) {
+      skippedLegalHoldCount += 1;
+      continue;
+    }
+
+    const ttlDeleteAt = toTimestamp(data.ttlDeleteAt);
+    if (ttlDeleteAt != null && ttlDeleteAt.toMillis() <= now.toMillis()) {
+      expiredStillPresentCount += 1;
+    }
+
+    if (ttlDeleteAt != null) {
+      continue;
+    }
+
+    const baseTimestamp = toTimestamp(
+      data.recordedAt ?? data.createdAt ?? data.uploadedAt,
+    );
+    if (baseTimestamp == null) {
+      continue;
+    }
+
+    const computedTtlDeleteAt = admin.firestore.Timestamp.fromMillis(
+      baseTimestamp.toMillis() + THIRTY_DAYS_MS,
+    );
+    batch.set(doc.ref, {
+      ttlDeleteAt: computedTtlDeleteAt,
+      ttlPolicy: {
+        version: 'videoInterviewRecordings.v1',
+        retentionDays: 30,
+        assignedAt: now,
+      },
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    pending += 1;
+    ttlAssignedCount += 1;
+
+    if (pending >= BATCH_WRITE_LIMIT) {
+      await batch.commit();
+      batch = db.batch();
+      pending = 0;
+    }
+  }
+
+  if (pending > 0) {
+    await batch.commit();
+  }
+
+  return {
+    ttlAssignedCount,
+    expiredStillPresentCount,
+    skippedLegalHoldCount,
+    scannedCount: snapshot.size,
+  };
 }
 
 async function flagConsentsForRenewal(
@@ -309,7 +603,7 @@ async function flagConsentsForRenewal(
  * - Vídeos con más de 30 días.
  * - Marcado de consentimientos próximos a expirar para renovación.
  */
-export const blockExpiredData = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+export const blockExpiredData = functions.region("europe-west1").pubsub.schedule('every 24 hours').onRun(async (context) => {
   const db = admin.firestore();
   const now = admin.firestore.Timestamp.now();
   const threeYearThreshold = admin.firestore.Timestamp.fromMillis(
@@ -319,27 +613,50 @@ export const blockExpiredData = functions.pubsub.schedule('every 24 hours').onRu
     now.toMillis() - THIRTY_DAYS_MS,
   );
 
-  const [purgedApplications, purgedCurriculums, purgedVideos, flaggedConsents] =
+  const [applicationsArchiveStats, curriculumsArchiveStats, purgedVideos, flaggedConsents, videoInterviewTtlStats] =
     await Promise.all([
-      purgeExpiredApplications(threeYearThreshold),
-      purgeExpiredCurriculums(threeYearThreshold),
+      purgeExpiredApplications(threeYearThreshold, now),
+      purgeExpiredCurriculums(threeYearThreshold, now),
       purgeExpiredCandidateVideos(videoThreshold),
       flagConsentsForRenewal(now),
+      prepareVideoInterviewRecordingsTtl(now),
     ]);
+
+  const blockedArchiveMoves = applicationsArchiveStats.archivedCount +
+    curriculumsArchiveStats.archivedCount;
+  const legalHoldSkips = applicationsArchiveStats.skippedLegalHoldCount +
+    curriculumsArchiveStats.skippedLegalHoldCount;
 
   const reportDate = now.toDate().toISOString().slice(0, 10);
   await db.collection('complianceDailyReports').doc(reportDate).set(
     {
       reportDate,
       generatedAt: now,
-      applicationsPurged: purgedApplications,
-      curriculumsPurged: purgedCurriculums,
+      applicationsPurged: 0,
+      curriculumsPurged: 0,
+      applicationsArchivedBlocked: applicationsArchiveStats.archivedCount,
+      curriculumsArchivedBlocked: curriculumsArchiveStats.archivedCount,
+      blockedArchiveMoves,
+      legalHoldSkips,
       candidateVideosPurged: purgedVideos,
       consentsFlaggedForRenewal: flaggedConsents,
       retention: {
-        applicationsPurged: purgedApplications,
-        curriculumsPurged: purgedCurriculums,
+        applicationsPurged: 0,
+        curriculumsPurged: 0,
+        applicationsArchivedBlocked: applicationsArchiveStats.archivedCount,
+        curriculumsArchivedBlocked: curriculumsArchiveStats.archivedCount,
+        blockedArchiveMoves,
+        legalHoldSkips,
         candidateVideosPurged: purgedVideos,
+      },
+      videoInterviewTtl: {
+        collection: 'videoInterviewRecordings',
+        ttlField: 'ttlDeleteAt',
+        retentionDays: 30,
+        ttlAssignedCount: videoInterviewTtlStats.ttlAssignedCount,
+        expiredStillPresentCount: videoInterviewTtlStats.expiredStillPresentCount,
+        skippedLegalHoldCount: videoInterviewTtlStats.skippedLegalHoldCount,
+        scannedCount: videoInterviewTtlStats.scannedCount,
       },
       consent: {
         consentsFlaggedForRenewal: flaggedConsents,
@@ -358,9 +675,13 @@ export const blockExpiredData = functions.pubsub.schedule('every 24 hours').onRu
   console.log(
     [
       `Compliance daily job completed.`,
-      `applications=${purgedApplications}`,
-      `curriculums=${purgedCurriculums}`,
+      `applicationsArchived=${applicationsArchiveStats.archivedCount}`,
+      `curriculumsArchived=${curriculumsArchiveStats.archivedCount}`,
+      `archiveMoves=${blockedArchiveMoves}`,
+      `legalHoldSkips=${legalHoldSkips}`,
       `videos=${purgedVideos}`,
+      `ttlAssigned=${videoInterviewTtlStats.ttlAssignedCount}`,
+      `ttlExpiredStillPresent=${videoInterviewTtlStats.expiredStillPresentCount}`,
       `consentsFlagged=${flaggedConsents}`,
     ].join(' '),
   );
@@ -370,7 +691,12 @@ export const blockExpiredData = functions.pubsub.schedule('every 24 hours').onRu
 /**
  * Periodically archives audit logs older than 1 year.
  */
-export const auditLogCleanup = functions.pubsub.schedule('every month').onRun(async (context) => {
+export const auditLogCleanup = functions
+  .region("europe-west1")
+  .pubsub
+  .schedule("0 2 1 * *")
+  .timeZone("Europe/Madrid")
+  .onRun(async () => {
   const db = admin.firestore();
   const threshold = admin.firestore.Timestamp.fromMillis(Date.now() - (365 * 24 * 60 * 60 * 1000));
 
