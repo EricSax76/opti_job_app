@@ -7,17 +7,9 @@ import {
   normalizeConsentText,
   normalizeConsentTextVersion,
 } from "../../utils/aiConsent";
+import { asTrimmedString, ttlDate } from "./utils/complianceUtils";
 
 const CONSENT_TTL_DAYS = 365 * 3;
-
-function asTrimmedString(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  return String(value).trim();
-}
-
-function ttlDate(days: number): Date {
-  return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-}
 
 export const grantAiConsent = onCall({ region: "europe-west1" }, async (request) => {
   if (!request.auth) {

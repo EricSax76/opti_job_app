@@ -1,135 +1,17 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
-
-const REQUEST_TYPES = [
-  "access",
-  "rectification",
-  "deletion",
-  "limitation",
-  "portability",
-  "opposition",
-  "aiExplanation",
-  "salaryComparison",
-] as const;
-const REQUEST_TYPES_SET = new Set<string>(REQUEST_TYPES);
-
-const PROCESS_STATUSES = [
-  "pending",
-  "processing",
-  "completed",
-  "denied",
-] as const;
-const PROCESS_STATUSES_SET = new Set<string>(PROCESS_STATUSES);
-
-const FINALIST_STATUSES = new Set([
-  "offered",
-  "hired",
-  "interviewing",
-  "finalist",
-]);
-
-const MANAGER_ROLES = new Set(["admin", "recruiter", "hiring_manager"]);
-
-function asTrimmedString(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  return String(value).trim();
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-  if (value == null || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-  return value as Record<string, unknown>;
-}
-
-function normalizeRequestType(value: unknown): string {
-  const raw = asTrimmedString(value);
-  if (!raw) return "";
-  const compact = raw.replace(/[_-\s]/g, "").toLowerCase();
-  if (compact === "aiexplanation") return "aiExplanation";
-  if (compact === "salarycomparison") return "salaryComparison";
-  if (compact === "access") return "access";
-  if (compact === "rectification") return "rectification";
-  if (compact === "deletion") return "deletion";
-  if (compact === "limitation") return "limitation";
-  if (compact === "portability") return "portability";
-  if (compact === "opposition") return "opposition";
-  return raw;
-}
-
-function normalizeProcessStatus(value: unknown): string {
-  const raw = asTrimmedString(value).toLowerCase();
-  if (raw === "process" || raw === "in_progress") return "processing";
-  if (raw === "done") return "completed";
-  return raw;
-}
-
-function normalizeCandidateStatus(value: unknown): string {
-  return asTrimmedString(value).toLowerCase();
-}
-
-async function logAuditEntry({
-  action,
-  actorUid,
-  actorRole,
-  targetType,
-  targetId,
-  companyId,
-  metadata = {},
-}: {
-  action: string;
-  actorUid: string;
-  actorRole: string;
-  targetType: string;
-  targetId: string;
-  companyId?: string | null;
-  metadata?: Record<string, unknown>;
-}): Promise<void> {
-  await admin.firestore().collection("auditLogs").add({
-    action,
-    actorUid,
-    actorRole,
-    targetType,
-    targetId,
-    companyId: companyId ?? null,
-    metadata,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-  });
-}
-
-async function resolveCompanyAccess({
-  actorUid,
-  companyId,
-}: {
-  actorUid: string;
-  companyId: string;
-}): Promise<"company" | "recruiter"> {
-  const db = admin.firestore();
-  if (actorUid === companyId) return "company";
-
-  const recruiterDoc = await db.collection("recruiters").doc(actorUid).get();
-  if (!recruiterDoc.exists) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Solo la empresa propietaria o reclutadores autorizados pueden procesar esta solicitud.",
-    );
-  }
-  const recruiter = asRecord(recruiterDoc.data());
-  const recruiterCompanyId = asTrimmedString(recruiter.companyId);
-  const recruiterStatus = asTrimmedString(recruiter.status);
-  const recruiterRole = asTrimmedString(recruiter.role);
-  if (
-    recruiterCompanyId !== companyId ||
-    recruiterStatus !== "active" ||
-    !MANAGER_ROLES.has(recruiterRole)
-  ) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Tu rol no puede gestionar solicitudes ARSULIPO/AI Act para esta empresa.",
-    );
-  }
-  return "recruiter";
-}
+import {
+  REQUEST_TYPES_SET,
+  PROCESS_STATUSES_SET,
+  FINALIST_STATUSES,
+  asTrimmedString,
+  asRecord,
+  normalizeRequestType,
+  normalizeProcessStatus,
+  normalizeCandidateStatus,
+} from "./utils/complianceUtils";
+import { logAuditEntry } from "./utils/complianceAudit";
+import { resolveCompanyAccess } from "./utils/complianceAccess";
 
 /**
  * Submit a request to exercise ARSULIPO rights (GDPR) and AI Act rights.

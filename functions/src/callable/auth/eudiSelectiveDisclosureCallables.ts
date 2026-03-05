@@ -1,181 +1,19 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
-import * as crypto from "crypto";
-
-type JsonRecord = Record<string, unknown>;
-
-const DEFAULT_PROOF_SCHEMA_VERSION = "2026.1";
-
-function asTrimmedString(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  return String(value).trim();
-}
-
-function asRecord(value: unknown): JsonRecord {
-  if (value == null || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-  return value as JsonRecord;
-}
-
-function sha256Hex(value: string): string {
-  return crypto.createHash("sha256").update(value).digest("hex");
-}
-
-function randomHex(bytes = 24): string {
-  return crypto.randomBytes(bytes).toString("hex");
-}
-
-function nowPlusMinutes(minutes: number): Date {
-  return new Date(Date.now() + minutes * 60 * 1000);
-}
-
-function resolveCredentialTrace(
-  credential: JsonRecord,
-): {
-  verificationMethod: string | null;
-  issuerDid: string | null;
-  credentialType: string | null;
-  proofSchemaVersion: string;
-} {
-  const metadata = asRecord(credential.metadata);
-  const verificationMethod =
-    asTrimmedString(credential.verificationMethod) ||
-    asTrimmedString(metadata.verificationMethod) ||
-    null;
-  const issuerDid =
-    asTrimmedString(credential.issuerDid) ||
-    asTrimmedString(metadata.issuerDid) ||
-    asTrimmedString(credential.issuer) ||
-    null;
-  const credentialType =
-    asTrimmedString(credential.credentialType) ||
-    asTrimmedString(metadata.credentialType) ||
-    asTrimmedString(credential.type) ||
-    null;
-  const proofSchemaVersion =
-    asTrimmedString(credential.proofSchemaVersion) ||
-    asTrimmedString(metadata.proofSchemaVersion) ||
-    DEFAULT_PROOF_SCHEMA_VERSION;
-
-  return {
-    verificationMethod,
-    issuerDid,
-    credentialType,
-    proofSchemaVersion,
-  };
-}
-
-async function logAuditEntry({
-  action,
-  actorUid,
-  actorRole,
-  targetType,
-  targetId,
-  companyId,
-  metadata,
-  verificationMethod,
-  issuerDid,
-  credentialType,
-  proofSchemaVersion,
-}: {
-  action: string;
-  actorUid: string;
-  actorRole: string;
-  targetType: string;
-  targetId: string;
-  companyId?: string | null;
-  metadata: JsonRecord;
-  verificationMethod?: string | null;
-  issuerDid?: string | null;
-  credentialType?: string | null;
-  proofSchemaVersion?: string | null;
-}): Promise<void> {
-  await admin.firestore().collection("auditLogs").add({
-    action,
-    actorUid,
-    actorRole,
-    targetType,
-    targetId,
-    companyId: companyId ?? null,
-    verificationMethod: verificationMethod ?? null,
-    issuerDid: issuerDid ?? null,
-    credentialType: credentialType ?? null,
-    proofSchemaVersion: proofSchemaVersion ?? null,
-    metadata,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-  });
-}
-
-async function resolveCompanyUidFromApplication({
-  candidateUid,
-  applicationId,
-}: {
-  candidateUid: string;
-  applicationId: string;
-}): Promise<{ companyUid: string; jobOfferId: string }> {
-  const db = admin.firestore();
-  const appDoc = await db.collection("applications").doc(applicationId).get();
-  if (!appDoc.exists) {
-    throw new functions.https.HttpsError(
-      "not-found",
-      "La candidatura indicada no existe.",
-    );
-  }
-  const app = asRecord(appDoc.data());
-  const appCandidateUid =
-    asTrimmedString(app.candidate_uid) || asTrimmedString(app.candidateId);
-  if (!appCandidateUid || appCandidateUid !== candidateUid) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Solo puedes compartir pruebas sobre tus candidaturas.",
-    );
-  }
-  const companyUid =
-    asTrimmedString(app.company_uid) || asTrimmedString(app.companyUid);
-  const jobOfferId =
-    asTrimmedString(app.job_offer_id) || asTrimmedString(app.jobOfferId);
-
-  if (!companyUid) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "No se pudo resolver la empresa destinataria de la prueba.",
-    );
-  }
-  return { companyUid, jobOfferId };
-}
-
-async function assertCompanyOrRecruiterAccess({
-  actorUid,
-  companyUid,
-}: {
-  actorUid: string;
-  companyUid: string;
-}): Promise<"company" | "recruiter"> {
-  if (actorUid === companyUid) return "company";
-
-  const recruiterDoc = await admin
-    .firestore()
-    .collection("recruiters")
-    .doc(actorUid)
-    .get();
-  if (!recruiterDoc.exists) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "No tienes acceso a esta prueba.",
-    );
-  }
-  const recruiter = asRecord(recruiterDoc.data());
-  const recruiterCompany = asTrimmedString(recruiter.companyId);
-  const recruiterStatus = asTrimmedString(recruiter.status);
-  if (recruiterCompany !== companyUid || recruiterStatus !== "active") {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "No tienes acceso a esta prueba.",
-    );
-  }
-  return "recruiter";
-}
+import {
+  asTrimmedString,
+  asRecord,
+  sha256Hex,
+  randomHex,
+  nowPlusMinutes,
+  DEFAULT_PROOF_SCHEMA_VERSION,
+} from "./utils/eudiUtils";
+import {
+  resolveCompanyUidFromApplication,
+  assertCompanyOrRecruiterAccess,
+} from "./utils/eudiAccess";
+import { logAuditEntry } from "./utils/eudiAudit";
+import { resolveCredentialTrace } from "./utils/eudiCredentials";
 
 /**
  * Candidate creates a selective disclosure proof (ZKP-style) for a verified credential.
