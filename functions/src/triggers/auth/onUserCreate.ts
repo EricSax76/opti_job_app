@@ -44,6 +44,35 @@ export const onUserCreate = functions
         role = user.customClaims.role;
       }
 
+      const usersRef = db.collection("users").doc(uid);
+      const resolvedName = displayName || email?.split("@")[0] || "Usuario";
+      const usersPayload: Record<string, unknown> = {
+        uid,
+        email: email || "",
+        name: resolvedName,
+        display_name: resolvedName,
+        updated_at: now,
+      };
+      if (role === "candidate" || role === "company") {
+        usersPayload.primary_role = role;
+        usersPayload.roles = [role];
+      }
+      if (!role) {
+        usersPayload.primary_role = "unknown";
+        usersPayload.roles = [];
+      }
+      await usersRef.set(
+        {
+          ...usersPayload,
+          created_at: now,
+        },
+        { merge: true }
+      );
+      logger.info("Root users doc upserted", {
+        uid,
+        role: role ?? "unknown",
+      });
+
       if (role === null) {
         logger.warn("Role unresolved on auth create. Skipping bootstrap", {
           uid,

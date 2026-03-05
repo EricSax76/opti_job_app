@@ -60,6 +60,8 @@ export const onUserDelete = functions
       // Delete user stats
       const statsRef = db.collection("user_stats").doc(uid);
       batch.delete(statsRef);
+      const userRef = db.collection("users").doc(uid);
+      batch.delete(userRef);
 
       // Archive applications instead of deleting (for audit trail)
       const applicationsSnapshot = await db

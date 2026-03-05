@@ -93,6 +93,19 @@ service cloud.firestore {
       return data.get('company_uid', data.get('companyUid', ''));
     }
 
+    match /users/{userId} {
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn()
+        && request.auth.uid == userId;
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
     match /candidates/{candidateId} {
       allow create: if isSignedIn()
         && request.auth.uid == candidateId

@@ -124,6 +124,29 @@ class CandidateAuthCubit extends AuthCubit<CandidateAuthState> {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    emit(state.copyWith(status: AuthStatus.authenticating, clearError: true));
+    try {
+      final candidate = await _repository.signInCandidateWithGoogle();
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          candidate: candidate,
+          needsOnboarding: _needsOnboarding(candidate),
+        ),
+      );
+    } catch (error) {
+      final authException = _repository.mapException(error);
+      emit(
+        state.copyWith(
+          status: AuthStatus.failure,
+          errorMessage: authException.message,
+          clearCandidate: true,
+        ),
+      );
+    }
+  }
+
   Future<void> signInWithEudiWallet({
     required EudiWalletSignInInput input,
   }) async {

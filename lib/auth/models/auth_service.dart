@@ -62,6 +62,72 @@ class AuthService {
       throw StateError('No existe un perfil de candidato asociado.');
     }
     final data = doc.data()!;
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'candidate',
+      email: (data['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (data['name'] as String? ?? user.displayName ?? 'Candidato').trim(),
+    );
+    final token = await user.getIdToken();
+    return CandidateMapper.fromFirestore({...data, 'token': token});
+  }
+
+  Future<Candidate> signInCandidateWithGoogle() async {
+    final googleProvider = GoogleAuthProvider()
+      ..addScope('email')
+      ..setCustomParameters(<String, String>{'prompt': 'select_account'});
+
+    final credential = kIsWeb
+        ? await _auth.signInWithPopup(googleProvider)
+        : await _auth.signInWithProvider(googleProvider);
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'No se encontró el usuario solicitado.',
+      );
+    }
+
+    final docRef = _candidatesCollection.doc(user.uid);
+    final doc = await docRef.get();
+
+    Map<String, dynamic> data;
+    if (!doc.exists || doc.data() == null) {
+      final normalizedEmail = (user.email ?? '').trim().toLowerCase();
+      if (normalizedEmail.isEmpty) {
+        await _auth.signOut();
+        throw StateError(
+          'La cuenta de Google no incluye un correo válido para crear el perfil.',
+        );
+      }
+
+      final normalizedName = (user.displayName ?? '').trim();
+      data = <String, dynamic>{
+        'id': DateTime.now().millisecondsSinceEpoch,
+        'name': normalizedName.isEmpty ? 'Candidato' : normalizedName,
+        'last_name': '',
+        'email': normalizedEmail,
+        'role': 'candidate',
+        'uid': user.uid,
+        'onboarding_completed': false,
+        'auth_provider': 'google',
+        'created_at': FieldValue.serverTimestamp(),
+      };
+      await docRef.set(data, SetOptions(merge: true));
+    } else {
+      data = doc.data()!;
+    }
+
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'candidate',
+      email: (data['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (data['name'] as String? ?? user.displayName ?? 'Candidato').trim(),
+    );
     final token = await user.getIdToken();
     return CandidateMapper.fromFirestore({...data, 'token': token});
   }
@@ -94,10 +160,25 @@ class AuthService {
       'onboarding_completed': false,
     };
 
-    await _candidatesCollection.doc(user.uid).set({
+    final usersRef = _firestore.collection('users').doc(user.uid);
+    final now = FieldValue.serverTimestamp();
+    final batch = _firestore.batch();
+    batch.set(_candidatesCollection.doc(user.uid), {
       ...candidateData,
-      'created_at': FieldValue.serverTimestamp(),
-    });
+      'created_at': now,
+      'updated_at': now,
+    }, SetOptions(merge: true));
+    batch.set(usersRef, {
+      'uid': user.uid,
+      'email': candidateData['email'],
+      'name': candidateData['name'],
+      'display_name': candidateData['name'],
+      'primary_role': 'candidate',
+      'roles': const ['candidate'],
+      'created_at': now,
+      'updated_at': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
 
     final token = await user.getIdToken();
     return CandidateMapper.fromFirestore({...candidateData, 'token': token});
@@ -131,6 +212,15 @@ class AuthService {
       throw StateError('No existe un perfil de candidato asociado.');
     }
 
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'candidate',
+      email: (doc.data()?['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (doc.data()?['name'] as String? ?? user.displayName ?? 'Candidato')
+          .trim(),
+    );
     final token = await user.getIdToken();
     return CandidateMapper.fromFirestore({...doc.data()!, 'token': token});
   }
@@ -294,6 +384,14 @@ class AuthService {
       throw StateError('No existe un perfil de empresa asociado.');
     }
     final data = doc.data()!;
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'company',
+      email: (data['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (data['name'] as String? ?? user.displayName ?? 'Empresa').trim(),
+    );
     final token = await user.getIdToken();
     return Company.fromJson({...data, 'token': token});
   }
@@ -325,10 +423,25 @@ class AuthService {
       'onboarding_completed': false,
     };
 
-    await _companiesCollection.doc(user.uid).set({
+    final usersRef = _firestore.collection('users').doc(user.uid);
+    final now = FieldValue.serverTimestamp();
+    final batch = _firestore.batch();
+    batch.set(_companiesCollection.doc(user.uid), {
       ...companyData,
-      'created_at': FieldValue.serverTimestamp(),
-    });
+      'created_at': now,
+      'updated_at': now,
+    }, SetOptions(merge: true));
+    batch.set(usersRef, {
+      'uid': user.uid,
+      'email': companyData['email'],
+      'name': companyData['name'],
+      'display_name': companyData['name'],
+      'primary_role': 'company',
+      'roles': const ['company'],
+      'created_at': now,
+      'updated_at': now,
+    }, SetOptions(merge: true));
+    await batch.commit();
 
     final token = await user.getIdToken();
     return Company.fromJson({...companyData, 'token': token});
@@ -430,6 +543,14 @@ class AuthService {
     final data = doc.data();
     if (data == null) return null;
 
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'candidate',
+      email: (data['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (data['name'] as String? ?? user.displayName ?? 'Candidato').trim(),
+    );
     final token = await user.getIdToken();
     return CandidateMapper.fromFirestore({...data, 'token': token});
   }
@@ -444,8 +565,55 @@ class AuthService {
     final data = doc.data();
     if (data == null) return null;
 
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'company',
+      email: (data['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (data['name'] as String? ?? user.displayName ?? 'Empresa').trim(),
+    );
     final token = await user.getIdToken();
     return Company.fromJson({...data, 'token': token});
+  }
+
+  Future<void> _upsertRootUserDocument({
+    required String uid,
+    required String role,
+    required String email,
+    required String name,
+  }) async {
+    final normalizedRole = role.trim().toLowerCase();
+    final normalizedEmail = email.trim().toLowerCase();
+    final normalizedName = name.trim().isEmpty ? 'Usuario' : name.trim();
+    final usersRef = _firestore.collection('users').doc(uid);
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(usersRef);
+      final data = snapshot.data() ?? const <String, dynamic>{};
+      final roles = <String>{};
+      final existingRolesRaw = data['roles'];
+      if (existingRolesRaw is List) {
+        for (final value in existingRolesRaw) {
+          final parsed = value.toString().trim().toLowerCase();
+          if (parsed.isNotEmpty) roles.add(parsed);
+        }
+      }
+      roles.add(normalizedRole);
+      final sortedRoles = roles.toList()..sort();
+      final now = FieldValue.serverTimestamp();
+
+      transaction.set(usersRef, {
+        'uid': uid,
+        'email': normalizedEmail,
+        'name': normalizedName,
+        'display_name': normalizedName,
+        'primary_role': normalizedRole,
+        'roles': sortedRoles,
+        'updated_at': now,
+        if (!snapshot.exists) 'created_at': now,
+      }, SetOptions(merge: true));
+    });
   }
 
   AuthException mapFirebaseException(Object e) {
@@ -480,6 +648,17 @@ class AuthService {
         case 'app-not-authorized':
           return AuthException(
             'La configuración de Firebase de esta app no es válida para este entorno.',
+          );
+        case 'account-exists-with-different-credential':
+          return AuthException(
+            'Ya existe una cuenta con ese correo usando otro método de acceso.',
+          );
+        case 'popup-closed-by-user':
+        case 'cancelled-popup-request':
+          return AuthException('Has cancelado el acceso con Google.');
+        case 'popup-blocked':
+          return AuthException(
+            'El navegador ha bloqueado la ventana de acceso con Google.',
           );
         case 'firebase-app-check-token-is-invalid':
         case 'app-check-token-is-invalid':

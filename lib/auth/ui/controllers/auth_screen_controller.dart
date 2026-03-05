@@ -104,6 +104,10 @@ class AuthScreenController {
     );
   }
 
+  static Future<void> submitCandidateGoogleSignIn(BuildContext context) async {
+    await context.read<CandidateAuthCubit>().signInWithGoogle();
+  }
+
   static void submitCandidateRegister(
     BuildContext context, {
     required String name,

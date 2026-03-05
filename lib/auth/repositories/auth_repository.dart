@@ -31,6 +31,10 @@ class AuthRepository {
     );
   }
 
+  Future<Candidate> signInCandidateWithGoogle() {
+    return _service.signInCandidateWithGoogle();
+  }
+
   Future<Candidate> signInCandidateWithEudiWallet({
     required EudiWalletSignInInput input,
   }) {

@@ -16,6 +16,9 @@ class AuthLoginForm extends StatefulWidget {
     this.secondaryActionLabel,
     this.secondaryActionIcon,
     this.onSecondaryAction,
+    this.tertiaryActionLabel,
+    this.tertiaryActionIcon,
+    this.onTertiaryAction,
   });
 
   final String tagline;
@@ -29,6 +32,9 @@ class AuthLoginForm extends StatefulWidget {
   final String? secondaryActionLabel;
   final IconData? secondaryActionIcon;
   final VoidCallback? onSecondaryAction;
+  final String? tertiaryActionLabel;
+  final IconData? tertiaryActionIcon;
+  final VoidCallback? onTertiaryAction;
 
   @override
   State<AuthLoginForm> createState() => _AuthLoginFormState();
@@ -170,6 +176,20 @@ class _AuthLoginFormState extends State<AuthLoginForm> {
                           Icons.account_balance_wallet_outlined,
                     ),
                     label: Text(widget.secondaryActionLabel!),
+                  ),
+                ],
+                if (widget.onTertiaryAction != null &&
+                    widget.tertiaryActionLabel != null) ...[
+                  const SizedBox(height: uiSpacing8),
+                  OutlinedButton.icon(
+                    onPressed: widget.isLoading
+                        ? null
+                        : widget.onTertiaryAction,
+                    icon: Icon(
+                      widget.tertiaryActionIcon ??
+                          Icons.account_balance_wallet_outlined,
+                    ),
+                    label: Text(widget.tertiaryActionLabel!),
                   ),
                 ],
               ],

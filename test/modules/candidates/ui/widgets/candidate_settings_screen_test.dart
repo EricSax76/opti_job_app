@@ -36,6 +36,9 @@ class _StubCandidateAuthCubit extends Cubit<CandidateAuthState>
   }) async {}
 
   @override
+  Future<void> signInWithGoogle() async {}
+
+  @override
   Future<void> signInWithEudiWallet({
     required EudiWalletSignInInput input,
   }) async {}

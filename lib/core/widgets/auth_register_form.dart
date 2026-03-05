@@ -50,6 +50,8 @@ class _AuthRegisterFormState extends State<AuthRegisterForm> {
   final _confirmPasswordFocusNode = FocusNode(debugLabel: 'register_confirm');
   var _obscurePassword = true;
   var _obscureConfirm = true;
+  var _acceptedPrivacyPolicy = false;
+  var _acceptedCookiesPolicy = false;
 
   @override
   void dispose() {
@@ -200,6 +202,17 @@ class _AuthRegisterFormState extends State<AuthRegisterForm> {
                   },
                   onFieldSubmitted: (_) => _submit(),
                 ),
+                const SizedBox(height: uiSpacing16),
+                _LegalNoticesSection(
+                  acceptedPrivacyPolicy: _acceptedPrivacyPolicy,
+                  acceptedCookiesPolicy: _acceptedCookiesPolicy,
+                  onPrivacyPolicyChanged: (value) =>
+                      setState(() => _acceptedPrivacyPolicy = value ?? false),
+                  onCookiesPolicyChanged: (value) =>
+                      setState(() => _acceptedCookiesPolicy = value ?? false),
+                  onOpenPrivacyPolicy: _showPrivacyPolicyDialog,
+                  onOpenCookiesPolicy: _showCookiesPolicyDialog,
+                ),
                 const SizedBox(height: uiSpacing24),
                 Semantics(
                   button: true,
@@ -256,11 +269,146 @@ class _AuthRegisterFormState extends State<AuthRegisterForm> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_acceptedPrivacyPolicy || !_acceptedCookiesPolicy) {
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Debes aceptar la Política de Privacidad y la Política de Cookies para crear la cuenta.',
+            ),
+          ),
+        );
+      return;
+    }
 
     widget.onSubmit(
       _nameController.text.trim(),
       _emailController.text.trim(),
       _passwordController.text,
+    );
+  }
+
+  Future<void> _showPrivacyPolicyDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Política de Privacidad'),
+          content: const SingleChildScrollView(
+            child: Text(
+              'Tratamos tus datos para gestionar tu cuenta y procesos de selección. '
+              'Podrás ejercer tus derechos de acceso, rectificación, supresión, '
+              'portabilidad, limitación y oposición desde el Portal de Privacidad.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showCookiesPolicyDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Política de Cookies'),
+          content: const SingleChildScrollView(
+            child: Text(
+              'Usamos cookies técnicas para funcionamiento y seguridad. '
+              'También podemos usar cookies de analítica para mejorar el servicio, '
+              'según la configuración de consentimiento aplicable en tu entorno.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _LegalNoticesSection extends StatelessWidget {
+  const _LegalNoticesSection({
+    required this.acceptedPrivacyPolicy,
+    required this.acceptedCookiesPolicy,
+    required this.onPrivacyPolicyChanged,
+    required this.onCookiesPolicyChanged,
+    required this.onOpenPrivacyPolicy,
+    required this.onOpenCookiesPolicy,
+  });
+
+  final bool acceptedPrivacyPolicy;
+  final bool acceptedCookiesPolicy;
+  final ValueChanged<bool?> onPrivacyPolicyChanged;
+  final ValueChanged<bool?> onCookiesPolicyChanged;
+  final VoidCallback onOpenPrivacyPolicy;
+  final VoidCallback onOpenCookiesPolicy;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(uiSpacing12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(uiTileRadius),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Avisos legales',
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: uiSpacing8),
+          Wrap(
+            spacing: uiSpacing8,
+            runSpacing: uiSpacing8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onOpenPrivacyPolicy,
+                icon: const Icon(Icons.privacy_tip_outlined),
+                label: const Text('Ver privacidad'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onOpenCookiesPolicy,
+                icon: const Icon(Icons.cookie_outlined),
+                label: const Text('Ver cookies'),
+              ),
+            ],
+          ),
+          const SizedBox(height: uiSpacing8),
+          CheckboxListTile.adaptive(
+            value: acceptedPrivacyPolicy,
+            onChanged: onPrivacyPolicyChanged,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('He leído y acepto la Política de Privacidad.'),
+          ),
+          CheckboxListTile.adaptive(
+            value: acceptedCookiesPolicy,
+            onChanged: onCookiesPolicyChanged,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            title: const Text('He leído y acepto la Política de Cookies.'),
+          ),
+        ],
+      ),
     );
   }
 }
