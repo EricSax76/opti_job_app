@@ -17,6 +17,9 @@ Objetivo: cerrar brechas para cumplimiento tecnico/legal en Espana 2026 (AI Act,
 ### Objetivo
 Blindar identidad y autorizacion para perfiles de empresa/recruiting.
 
+Checklist operativo (Console vs codigo):
+- `docs/sprint_1_checklist_console_vs_codigo.md`
+
 ### Entregables
 1. Firebase Auth:
 - Politica MFA obligatoria para `admin`, `recruiter`, `hiring_manager`.
@@ -214,4 +217,3 @@ Cerrar cumplimiento UX legal (WCAG 2.1 AA, neurodiversidad, etiquetado IA) y har
 
 4. Bloqueo legal por interpretacion normativa
 - Mitigacion: validacion legal quincenal de textos/flujo y versionado de politicas.
-
