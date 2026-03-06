@@ -1,12 +1,14 @@
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer_payload.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
+import 'package:opti_job_app/modules/job_offers/data/services/job_offer_read_service.dart';
+import 'package:opti_job_app/modules/job_offers/data/services/job_offer_write_service.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offers_page.dart';
 
 class JobOfferRepository {
-  JobOfferRepository(this._service);
+  JobOfferRepository(this._readService, this._writeService);
 
-  final JobOfferService _service;
+  final JobOfferReadService _readService;
+  final JobOfferWriteService _writeService;
 
   Future<JobOffersPage> fetchPage({
     String? jobType,
@@ -15,7 +17,7 @@ class JobOfferRepository {
     int limit = 20,
     JobOffersPageCursor? startAfter,
   }) {
-    return _service.fetchJobOffersPage(
+    return _readService.fetchJobOffersPage(
       jobType: jobType,
       provinceId: provinceId,
       municipalityId: municipalityId,
@@ -31,7 +33,7 @@ class JobOfferRepository {
     int limit = 20,
     JobOffersPageCursor? startAfter,
   }) {
-    return _service.fetchJobOffers(
+    return _readService.fetchJobOffers(
       jobType: jobType,
       provinceId: provinceId,
       municipalityId: municipalityId,
@@ -45,7 +47,7 @@ class JobOfferRepository {
     int limit = 20,
     JobOffersPageCursor? startAfter,
   }) {
-    return _service.fetchJobOffersByCompanyUidPage(
+    return _readService.fetchJobOffersByCompanyUidPage(
       companyUid,
       limit: limit,
       startAfter: startAfter,
@@ -57,7 +59,7 @@ class JobOfferRepository {
     int limit = 20,
     JobOffersPageCursor? startAfter,
   }) {
-    return _service.fetchJobOffersByCompanyUid(
+    return _readService.fetchJobOffersByCompanyUid(
       companyUid,
       limit: limit,
       startAfter: startAfter,
@@ -65,10 +67,11 @@ class JobOfferRepository {
   }
 
   Future<JobOffer> fetchById(String id) {
-    return _service.fetchJobOffer(id);
+    return _readService.fetchJobOffer(id);
   }
 
-  Future<JobOffer> create(JobOfferPayload payload) {
-    return _service.createJobOffer(payload);
+  Future<JobOffer> create(JobOfferPayload payload) async {
+    final offerId = await _writeService.createJobOffer(payload);
+    return _readService.fetchJobOffer(offerId);
   }
 }

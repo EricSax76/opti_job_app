@@ -1,26 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 
-import 'package:opti_job_app/modules/job_offers/models/job_offer_payload.dart';
+import 'package:opti_job_app/modules/job_offers/data/mappers/job_offer_mapper.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offers_page.dart';
-import 'package:opti_job_app/modules/job_offers/data/mappers/job_offer_mapper.dart';
 
-class JobOfferService {
+class JobOfferReadService {
   static const int _defaultPageSize = 20;
 
-  JobOfferService({
-    required FirebaseFirestore firestore,
-    FirebaseFunctions? functions,
-    FirebaseFunctions? fallbackFunctions,
-  }) : _firestore = firestore,
-       _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
-       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
+  JobOfferReadService({required FirebaseFirestore firestore})
+    : _firestore = firestore;
 
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('jobOffers');
@@ -66,32 +56,18 @@ class JobOfferService {
     int limit = _defaultPageSize,
     JobOffersPageCursor? startAfter,
   }) async {
-    final firstPage = await fetchJobOffersPage(
-      jobType: jobType,
-      provinceId: provinceId,
-      municipalityId: municipalityId,
-      limit: limit,
+    return _fetchAllPages(
       startAfter: startAfter,
+      fetchPage: (cursor) {
+        return fetchJobOffersPage(
+          jobType: jobType,
+          provinceId: provinceId,
+          municipalityId: municipalityId,
+          limit: limit,
+          startAfter: cursor,
+        );
+      },
     );
-    if (startAfter != null || !firstPage.hasMore) {
-      return firstPage.offers;
-    }
-
-    final offers = <JobOffer>[...firstPage.offers];
-    var cursor = firstPage.nextPageCursor;
-    while (cursor != null) {
-      final page = await fetchJobOffersPage(
-        jobType: jobType,
-        provinceId: provinceId,
-        municipalityId: municipalityId,
-        limit: limit,
-        startAfter: cursor,
-      );
-      offers.addAll(page.offers);
-      if (!page.hasMore) break;
-      cursor = page.nextPageCursor;
-    }
-    return offers;
   }
 
   Future<JobOffersPage> fetchJobOffersByCompanyUidPage(
@@ -130,11 +106,24 @@ class JobOfferService {
     int limit = _defaultPageSize,
     JobOffersPageCursor? startAfter,
   }) async {
-    final firstPage = await fetchJobOffersByCompanyUidPage(
-      companyUid,
-      limit: limit,
+    return _fetchAllPages(
       startAfter: startAfter,
+      fetchPage: (cursor) {
+        return fetchJobOffersByCompanyUidPage(
+          companyUid,
+          limit: limit,
+          startAfter: cursor,
+        );
+      },
     );
+  }
+
+  Future<List<JobOffer>> _fetchAllPages({
+    required JobOffersPageCursor? startAfter,
+    required Future<JobOffersPage> Function(JobOffersPageCursor? startAfter)
+    fetchPage,
+  }) async {
+    final firstPage = await fetchPage(startAfter);
     if (startAfter != null || !firstPage.hasMore) {
       return firstPage.offers;
     }
@@ -142,45 +131,12 @@ class JobOfferService {
     final offers = <JobOffer>[...firstPage.offers];
     var cursor = firstPage.nextPageCursor;
     while (cursor != null) {
-      final page = await fetchJobOffersByCompanyUidPage(
-        companyUid,
-        limit: limit,
-        startAfter: cursor,
-      );
+      final page = await fetchPage(cursor);
       offers.addAll(page.offers);
       if (!page.hasMore) break;
       cursor = page.nextPageCursor;
     }
     return offers;
-  }
-
-  JobOffersPage _toPage(
-    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
-    int limit,
-  ) {
-    final offers = docs.map(_mapOfferDoc).toList(growable: false);
-    final hasMore = docs.length == limit;
-    return JobOffersPage(
-      offers: offers,
-      hasMore: hasMore,
-      nextPageCursor: hasMore && docs.isNotEmpty
-          ? JobOffersPageCursor(docs.last)
-          : null,
-    );
-  }
-
-  JobOffer _mapOfferDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data();
-    final rawId = data['id']?.toString().trim();
-    if (rawId == null || rawId.isEmpty) {
-      return JobOfferMapper.fromFirestore({...data, 'id': doc.id});
-    }
-    return JobOfferMapper.fromFirestore(data);
-  }
-
-  bool _isMissingIndexError(FirebaseException error) {
-    return error.code == 'failed-precondition' &&
-        (error.message?.toLowerCase().contains('index') ?? false);
   }
 
   Future<JobOffer> fetchJobOffer(String id) async {
@@ -221,36 +177,33 @@ class JobOfferService {
     return _mapOfferDoc(snapshot.docs.first);
   }
 
-  Future<JobOffer> createJobOffer(JobOfferPayload payload) async {
-    final payloadData = payload.toJson();
-    final offerId = await _createOfferSecure(payloadData);
-    return fetchJobOffer(offerId);
+  JobOffersPage _toPage(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    int limit,
+  ) {
+    final offers = docs.map(_mapOfferDoc).toList(growable: false);
+    final hasMore = docs.length == limit;
+    return JobOffersPage(
+      offers: offers,
+      hasMore: hasMore,
+      nextPageCursor: hasMore && docs.isNotEmpty
+          ? JobOffersPageCursor(docs.last)
+          : null,
+    );
   }
 
-  Future<String> _createOfferSecure(Map<String, dynamic> payload) async {
-    try {
-      final result = await _functions
-          .httpsCallable('createJobOfferSecure')
-          .call(payload);
-      return _extractOfferIdFromResult(result);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      final fallbackResult = await _fallbackFunctions
-          .httpsCallable('createJobOfferSecure')
-          .call(payload);
-      return _extractOfferIdFromResult(fallbackResult);
+  JobOffer _mapOfferDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    final rawId = data['id']?.toString().trim();
+    if (rawId == null || rawId.isEmpty) {
+      return JobOfferMapper.fromFirestore({...data, 'id': doc.id});
     }
+    return JobOfferMapper.fromFirestore(data);
   }
 
-  String _extractOfferIdFromResult(HttpsCallableResult<dynamic> result) {
-    final data = result.data;
-    if (data is Map) {
-      final id = data['offerId']?.toString().trim();
-      if (id != null && id.isNotEmpty) return id;
-    }
-    throw StateError('createJobOfferSecure did not return a valid offerId.');
+  bool _isMissingIndexError(FirebaseException error) {
+    return error.code == 'failed-precondition' &&
+        (error.message?.toLowerCase().contains('index') ?? false);
   }
 }
 

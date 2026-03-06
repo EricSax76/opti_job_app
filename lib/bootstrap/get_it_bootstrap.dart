@@ -31,7 +31,8 @@ import 'package:opti_job_app/modules/curriculum/repositories/curriculum_reposito
 import 'package:opti_job_app/modules/curriculum/services/curriculum_service.dart';
 import 'package:opti_job_app/modules/interviews/repositories/firebase_interview_repository.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
+import 'package:opti_job_app/modules/job_offers/data/services/job_offer_read_service.dart';
+import 'package:opti_job_app/modules/job_offers/data/services/job_offer_write_service.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
@@ -83,14 +84,19 @@ void setupGetIt({
 
   // Job Offers
   getIt.registerLazySingleton(
-    () => JobOfferService(
-      firestore: getIt<FirebaseFirestore>(),
+    () => JobOfferReadService(firestore: getIt<FirebaseFirestore>()),
+  );
+  getIt.registerLazySingleton(
+    () => JobOfferWriteService(
       functions: functionsInstance,
       fallbackFunctions: fallbackFunctionsInstance,
     ),
   );
   getIt.registerLazySingleton(
-    () => JobOfferRepository(getIt<JobOfferService>()),
+    () => JobOfferRepository(
+      getIt<JobOfferReadService>(),
+      getIt<JobOfferWriteService>(),
+    ),
   );
 
   // Profiles

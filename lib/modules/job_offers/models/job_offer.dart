@@ -158,7 +158,9 @@ class JobOffer {
       pipelineId: json['pipelineId'] as String?,
       pipelineStages: json['pipelineStages'] as List<dynamic>?,
       knockoutQuestions: json['knockoutQuestions'] as List<dynamic>?,
-      languageCheckResult: json['languageCheckResult'] as Map<String, dynamic>?,
+      languageCheckResult:
+          (json['language_check_result'] ?? json['languageCheckResult'])
+              as Map<String, dynamic>?,
       salaryGapJustificationRequired:
           json['salary_gap_justification_required'] as bool? ??
           json['salaryGapJustificationRequired'] as bool? ??
