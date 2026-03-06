@@ -16,6 +16,7 @@ class LandingScreen extends StatelessWidget {
       body: LandingContent(
         onCandidateLogin: () => context.go('/CandidateLogin'),
         onCompanyLogin: () => context.go('/CompanyLogin'),
+        onRecruiterLogin: () => context.go('/recruiter-login'),
         onCompanyRegister: () => context.go('/companyregister'),
         onCandidateRegister: () => context.go('/candidateregister'),
         onSeeOffers: () => context.go('/job-offer'),

@@ -61,6 +61,13 @@ export const acceptInvitation = functions
       }
 
       const invitation = invitationDoc.data() as Invitation;
+      const invitationCompanyId = String(invitation.companyId ?? "").trim();
+      if (!invitationCompanyId) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "La invitación no tiene una empresa válida."
+        );
+      }
 
       if (invitation.status !== "pending") {
         throw new functions.https.HttpsError(
@@ -77,31 +84,59 @@ export const acceptInvitation = functions
         );
       }
 
-      // Verificar que no existe ya un doc recruiter para este uid
+      // Verificar/actualizar recruiter existente.
       const recruiterRef = db.collection("recruiters").doc(uid);
       const existingRecruiter = await transaction.get(recruiterRef);
       if (existingRecruiter.exists) {
-        throw new functions.https.HttpsError(
-          "already-exists",
-          "Ya eres miembro de una empresa."
+        const recruiter = existingRecruiter.data() as Recruiter;
+        const existingCompanyId = String(recruiter.companyId ?? "").trim();
+
+        if (existingCompanyId && existingCompanyId !== invitationCompanyId) {
+          throw new functions.https.HttpsError(
+            "already-exists",
+            "Ya eres miembro de otra empresa."
+          );
+        }
+
+        if (existingCompanyId && recruiter.status === "active") {
+          throw new functions.https.HttpsError(
+            "already-exists",
+            "Ya eres miembro activo de esta empresa."
+          );
+        }
+
+        transaction.set(
+          recruiterRef,
+          {
+            companyId: invitationCompanyId,
+            email,
+            name: payload.name || recruiter.name || email.split("@")[0],
+            role: invitation.role,
+            status: "active",
+            invitedBy: invitation.createdBy,
+            invitedAt: invitation.createdAt,
+            acceptedAt: now,
+            updatedAt: now,
+          },
+          { merge: true }
         );
+      } else {
+        const recruiter: Recruiter = {
+          uid,
+          companyId: invitationCompanyId,
+          email,
+          name: payload.name || email.split("@")[0],
+          role: invitation.role,
+          status: "active",
+          invitedBy: invitation.createdBy,
+          invitedAt: invitation.createdAt,
+          acceptedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        transaction.set(recruiterRef, recruiter);
       }
-
-      const recruiter: Recruiter = {
-        uid,
-        companyId: invitation.companyId,
-        email,
-        name: payload.name || email.split("@")[0],
-        role: invitation.role,
-        status: "active",
-        invitedBy: invitation.createdBy,
-        invitedAt: invitation.createdAt,
-        acceptedAt: now,
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      transaction.set(recruiterRef, recruiter);
       transaction.update(invitationRef, {
         status: "accepted",
         usedBy: uid,

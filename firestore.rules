@@ -43,19 +43,23 @@ service cloud.firestore {
     }
 
     function recruiterBelongsToCompany(companyId) {
-      return (tokenIsActiveRecruiter()
-        && request.auth.token.companyId == companyId)
-        || (docIsActiveRecruiter()
-          && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId);
+      return companyId is string
+        && companyId.size() > 0
+        && ((tokenIsActiveRecruiter()
+          && request.auth.token.companyId == companyId)
+          || (docIsActiveRecruiter()
+            && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId));
     }
 
     function recruiterHasRole(companyId, roles) {
-      return (tokenIsActiveRecruiter()
-        && request.auth.token.companyId == companyId
-        && request.auth.token.recruiterRole in roles)
-        || (docIsActiveRecruiter()
-          && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId
-          && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.role in roles);
+      return companyId is string
+        && companyId.size() > 0
+        && ((tokenIsActiveRecruiter()
+          && request.auth.token.companyId == companyId
+          && request.auth.token.recruiterRole in roles)
+          || (docIsActiveRecruiter()
+            && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.companyId == companyId
+            && get(/databases/$(database)/documents/recruiters/$(request.auth.uid)).data.role in roles));
     }
 
     function recruiterCanManageOffers(companyId) {
@@ -281,13 +285,15 @@ service cloud.firestore {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
       allow create: if isCompany() || recruiterCanScore(request.resource.data.companyId);
       allow update: if (isCompany() && request.auth.uid == resource.data.companyId) || 
-                      (isRecruiter() && request.auth.uid == resource.data.evaluatorUid);
+                      (isRecruiter()
+                        && request.auth.uid == resource.data.evaluatorUid
+                        && recruiterBelongsToCompany(resource.data.companyId));
     }
 
     match /approvals/{approvalId} {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
       allow create: if isCompany() || recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter', 'hiring_manager']);
-      allow update: if isCompany() || isRecruiter();
+      allow update: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
     }
 
     // ─── Fase 4: Skills ───────────────────────────────────────────────
@@ -301,7 +307,8 @@ service cloud.firestore {
 
     match /talentPools/{poolId} {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
-      allow create: if isCompany() || isRecruiter();
+      allow create: if (isCompany() && request.resource.data.companyId == request.auth.uid)
+        || recruiterCanManageOffers(request.resource.data.companyId);
       allow update, delete: if (isCompany() && request.auth.uid == poolId) || 
                               recruiterHasRole(resource.data.companyId, ['admin', 'recruiter']);
 
@@ -314,7 +321,10 @@ service cloud.firestore {
 
     match /candidateNotes/{noteId} {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
-      allow create: if isCompany() || isRecruiter();
+      allow create: if (isCompany() && request.resource.data.companyId == request.auth.uid)
+        || (isRecruiter()
+          && request.auth.uid == request.resource.data.recruiterUid
+          && recruiterBelongsToCompany(request.resource.data.companyId));
       allow update, delete: if (isCompany() && request.auth.uid == resource.data.companyId) || 
                               (isRecruiter() && request.auth.uid == resource.data.recruiterUid);
     }

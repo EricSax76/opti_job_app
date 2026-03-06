@@ -1,4 +1,3 @@
-
 class FeatureFlags {
   // Prevent instantiation
   const FeatureFlags._();
@@ -7,10 +6,10 @@ class FeatureFlags {
 
   /// Activa el módulo de multi-usuario y RBAC para reclutadores.
   ///
-  /// Para activarlo: `--dart-define=RECRUITER_MODULE=true`
+  /// Para desactivarlo puntualmente: `--dart-define=RECRUITER_MODULE=false`
   static const bool recruiterModule = bool.fromEnvironment(
     'RECRUITER_MODULE',
-    defaultValue: false,
+    defaultValue: true,
   );
 
   // Placeholder for future Remote Config integration

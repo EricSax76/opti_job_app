@@ -10,8 +10,7 @@ import 'package:opti_job_app/modules/recruiters/cubits/recruiter_auth_state.dart
 /// Escucha el stream de UID de Firebase Auth para detectar cierres de sesión
 /// externos (ej. token revocado), igual que [CompanyAuthCubit].
 class RecruiterAuthCubit extends AuthCubit<RecruiterAuthState> {
-  RecruiterAuthCubit(this._repository)
-      : super(const RecruiterAuthState()) {
+  RecruiterAuthCubit(this._repository) : super(const RecruiterAuthState()) {
     _authSubscription = _repository.uidStream.listen((uid) {
       final currentUid = state.recruiter?.uid;
       if (!state.isAuthenticated || currentUid == null) return;
@@ -75,6 +74,39 @@ class RecruiterAuthCubit extends AuthCubit<RecruiterAuthState> {
     emit(state.copyWith(status: AuthStatus.authenticating, clearError: true));
     try {
       final recruiter = await _repository.loginRecruiter(
+        email: email,
+        password: password,
+      );
+      emit(
+        state.copyWith(
+          status: AuthStatus.authenticated,
+          recruiter: recruiter,
+          clearError: true,
+        ),
+      );
+    } catch (error) {
+      final authException = _repository.mapException(error);
+      emit(
+        state.copyWith(
+          status: AuthStatus.failure,
+          errorMessage: authException.message,
+          clearRecruiter: true,
+        ),
+      );
+    }
+  }
+
+  // ─── Registro libre ─────────────────────────────────────────────────────
+
+  Future<void> registerRecruiter({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    emit(state.copyWith(status: AuthStatus.authenticating, clearError: true));
+    try {
+      final recruiter = await _repository.registerRecruiter(
+        name: name,
         email: email,
         password: password,
       );

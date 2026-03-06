@@ -9,11 +9,13 @@ class HeroSection extends StatelessWidget {
     super.key,
     required this.onCandidateLogin,
     required this.onCompanyLogin,
+    required this.onRecruiterLogin,
     required this.onSeeOffers,
   });
 
   final VoidCallback onCandidateLogin;
   final VoidCallback onCompanyLogin;
+  final VoidCallback onRecruiterLogin;
   final VoidCallback onSeeOffers;
   static final ButtonStyle _filledButtonStyle = FilledButton.styleFrom(
     backgroundColor: uiInk,
@@ -64,6 +66,11 @@ class HeroSection extends StatelessWidget {
                 style: _outlinedButtonStyle,
                 onPressed: onCompanyLogin,
                 child: Text(l10n.heroCompanyCta),
+              ),
+              OutlinedButton(
+                style: _outlinedButtonStyle,
+                onPressed: onRecruiterLogin,
+                child: const Text('Acceso Recruiters'),
               ),
               TextButton(
                 style: _textButtonStyle,

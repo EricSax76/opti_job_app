@@ -35,6 +35,7 @@ class RecruiterDashboardScreen extends StatelessWidget {
     }
 
     final rbac = context.read<RbacService>();
+    final hasCompanyAssociation = recruiter.hasCompanyAssociation;
     final canManageOffers = rbac.canManageOffers(recruiter);
     final canScore = rbac.canScore(recruiter);
     final canViewReports = rbac.canViewReports(recruiter);
@@ -69,9 +70,18 @@ class RecruiterDashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Empresa: ${recruiter.companyId}',
+            hasCompanyAssociation
+                ? 'Empresa: ${recruiter.companyId}'
+                : 'Empresa: sin vinculación (freelance)',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
+          if (!hasCompanyAssociation) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Tu cuenta está activa como recruiter autónomo. Cuando una empresa te invite y aceptes el código, aquí verás tus permisos RBAC.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
           const SizedBox(height: 20),
           Wrap(
             spacing: 8,
@@ -110,7 +120,7 @@ class RecruiterDashboardScreen extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       OutlinedButton.icon(
-                        onPressed: canViewReports
+                        onPressed: canViewReports && hasCompanyAssociation
                             ? () => context.go(
                                 '/company/${recruiter.companyId}/analytics',
                               )
@@ -119,7 +129,7 @@ class RecruiterDashboardScreen extends StatelessWidget {
                         label: const Text('Analytics'),
                       ),
                       OutlinedButton.icon(
-                        onPressed: canViewReports
+                        onPressed: canViewReports && hasCompanyAssociation
                             ? () => context.go(
                                 '/company/${recruiter.companyId}/consents',
                               )

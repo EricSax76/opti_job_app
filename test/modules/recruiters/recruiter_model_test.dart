@@ -88,6 +88,17 @@ void main() {
         final data = {...baseData(), 'status': 'disabled'};
         expect(Recruiter.fromFirestore(data).isActive, isFalse);
       });
+      test('hasCompanyAssociation true when companyId is set', () {
+        expect(
+          Recruiter.fromFirestore(baseData()).hasCompanyAssociation,
+          isTrue,
+        );
+      });
+      test('hasCompanyAssociation false when companyId is empty', () {
+        final data = {...baseData(), 'companyId': ''};
+        expect(Recruiter.fromFirestore(data).hasCompanyAssociation, isFalse);
+        expect(Recruiter.fromFirestore(data).isFreelance, isTrue);
+      });
     });
   });
 }

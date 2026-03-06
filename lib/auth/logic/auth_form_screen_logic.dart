@@ -57,6 +57,14 @@ class AuthFormScreenLogic {
         previous.status != current.status;
   }
 
+  static bool shouldListenRecruiterRegister(
+    RecruiterAuthState previous,
+    RecruiterAuthState current,
+  ) {
+    return previous.errorMessage != current.errorMessage ||
+        previous.status != current.status;
+  }
+
   static String? resolveErrorMessage(String? errorMessage) {
     return _normalizeText(errorMessage);
   }
@@ -103,6 +111,10 @@ class AuthFormScreenLogic {
     final uid = _normalizeText(state.recruiter?.uid);
     if (uid == null) return null;
     return '/recruiter/$uid/dashboard';
+  }
+
+  static String? recruiterRegisterNavigation(RecruiterAuthState state) {
+    return recruiterLoginNavigation(state);
   }
 
   static String? _normalizeText(String? value) {

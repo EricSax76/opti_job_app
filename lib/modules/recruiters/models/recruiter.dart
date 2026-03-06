@@ -63,6 +63,8 @@ class Recruiter extends Equatable {
 
   bool get isAdmin => role == RecruiterRole.admin;
   bool get isActive => status == RecruiterStatus.active;
+  bool get hasCompanyAssociation => companyId.trim().isNotEmpty;
+  bool get isFreelance => !hasCompanyAssociation;
 
   // ─── Serialización ────────────────────────────────────────────────────────
 

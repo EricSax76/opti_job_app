@@ -10,6 +10,7 @@ export interface UserProfile {
 
 export interface Recruiter {
   uid: string;
+  // Empty string means freelance recruiter not yet linked to a company.
   companyId: string;
   email: string;
   name: string;

@@ -93,6 +93,22 @@ class AuthScreenController {
     if (route != null) context.go(route);
   }
 
+  static void handleRecruiterRegisterState(
+    BuildContext context,
+    RecruiterAuthState state,
+  ) {
+    final errorMessage = AuthFormScreenLogic.resolveErrorMessage(
+      state.errorMessage,
+    );
+    if (errorMessage != null) {
+      _showErrorMessage(context, errorMessage);
+      return;
+    }
+
+    final route = AuthFormScreenLogic.recruiterRegisterNavigation(state);
+    if (route != null) context.go(route);
+  }
+
   static void submitCandidateLogin(
     BuildContext context, {
     required String email,
@@ -164,6 +180,19 @@ class AuthScreenController {
     required String password,
   }) {
     context.read<RecruiterAuthCubit>().loginRecruiter(
+      email: email,
+      password: password,
+    );
+  }
+
+  static void submitRecruiterRegister(
+    BuildContext context, {
+    required String name,
+    required String email,
+    required String password,
+  }) {
+    context.read<RecruiterAuthCubit>().registerRecruiter(
+      name: name,
       email: email,
       password: password,
     );

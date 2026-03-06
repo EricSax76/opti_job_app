@@ -137,6 +137,18 @@ class AuthRepository {
     return _service.loginRecruiter(email: email, password: password);
   }
 
+  Future<Recruiter> registerRecruiter({
+    required String name,
+    required String email,
+    required String password,
+  }) {
+    return _service.registerRecruiter(
+      name: name,
+      email: email,
+      password: password,
+    );
+  }
+
   Future<Recruiter?> restoreRecruiterSession() {
     return _service.restoreRecruiterSession();
   }

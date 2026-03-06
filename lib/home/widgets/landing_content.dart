@@ -12,6 +12,7 @@ class LandingContent extends StatelessWidget {
     super.key,
     required this.onCandidateLogin,
     required this.onCompanyLogin,
+    required this.onRecruiterLogin,
     required this.onCompanyRegister,
     required this.onCandidateRegister,
     required this.onSeeOffers,
@@ -19,6 +20,7 @@ class LandingContent extends StatelessWidget {
 
   final VoidCallback onCandidateLogin;
   final VoidCallback onCompanyLogin;
+  final VoidCallback onRecruiterLogin;
   final VoidCallback onCompanyRegister;
   final VoidCallback onCandidateRegister;
   final VoidCallback onSeeOffers;
@@ -36,6 +38,7 @@ class LandingContent extends StatelessWidget {
         HeroSection(
           onCandidateLogin: onCandidateLogin,
           onCompanyLogin: onCompanyLogin,
+          onRecruiterLogin: onRecruiterLogin,
           onSeeOffers: onSeeOffers,
         ),
         const SizedBox(height: uiSpacing32),

@@ -52,6 +52,7 @@ class RbacService {
 
   bool _has(Recruiter? recruiter, Set<RecruiterRole> allowed) {
     if (recruiter == null || !recruiter.isActive) return false;
+    if (!recruiter.hasCompanyAssociation) return false;
     return allowed.contains(recruiter.role);
   }
 }

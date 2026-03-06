@@ -75,6 +75,13 @@ export const createInvitation = functions
         "Solo los administradores activos pueden crear invitaciones."
       );
     }
+    const companyId = String(recruiter.companyId ?? "").trim();
+    if (!companyId) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "No tienes una empresa asociada para generar invitaciones."
+      );
+    }
 
     // Validar rol
     const validRoles = [
@@ -101,7 +108,7 @@ export const createInvitation = functions
 
     const invitation: Invitation = {
       code,
-      companyId: recruiter.companyId,
+      companyId,
       role: payload.role,
       email: payload.email,
       createdBy: callerUid,
@@ -112,7 +119,7 @@ export const createInvitation = functions
 
     await db.collection("invitations").doc(code).set(invitation);
 
-    logger.info("Invitation created", { code, companyId: recruiter.companyId, role: payload.role });
+    logger.info("Invitation created", { code, companyId, role: payload.role });
 
     return { code, expiresAt: expiresAt.toDate().toISOString() };
   });

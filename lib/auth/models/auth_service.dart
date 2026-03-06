@@ -516,7 +516,69 @@ class AuthService {
       await _auth.signOut();
       throw StateError('No existe un perfil de reclutador asociado.');
     }
-    return Recruiter.fromFirestore({...doc.data()!, 'uid': user.uid});
+    final data = doc.data()!;
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'recruiter',
+      email: (data['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (data['name'] as String? ?? user.displayName ?? 'Recruiter').trim(),
+    );
+    return Recruiter.fromFirestore({...data, 'uid': user.uid});
+  }
+
+  /// Registra un recruiter autónomo (sin empresa) usando email/contraseña.
+  ///
+  /// El perfil recruiter se crea en backend mediante la callable
+  /// `registerRecruiterFreelance`, que también sincroniza claims RBAC.
+  Future<Recruiter> registerRecruiter({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    final user = credential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-creation-failed',
+        message: 'No se pudo crear el usuario.',
+      );
+    }
+
+    final normalizedName = name.trim().isEmpty ? 'Recruiter' : name.trim();
+    final normalizedEmail = email.trim().toLowerCase();
+
+    try {
+      await _callCallableWithFallback(
+        name: 'registerRecruiterFreelance',
+        payload: <String, dynamic>{'name': normalizedName},
+      );
+      final doc = await _recruitersCollection.doc(user.uid).get();
+      if (!doc.exists || doc.data() == null) {
+        throw StateError('No se pudo crear el perfil de reclutador.');
+      }
+
+      await _upsertRootUserDocument(
+        uid: user.uid,
+        role: 'recruiter',
+        email: normalizedEmail,
+        name: normalizedName,
+      );
+
+      return Recruiter.fromFirestore({...doc.data()!, 'uid': user.uid});
+    } catch (error) {
+      try {
+        await user.delete();
+      } catch (_) {
+        // Si no puede eliminarse, al menos cerramos sesión local.
+      }
+      await _auth.signOut();
+      rethrow;
+    }
   }
 
   /// Restaura la sesión de un reclutador si hay un usuario activo en Auth.
@@ -526,8 +588,16 @@ class AuthService {
 
     final doc = await _recruitersCollection.doc(user.uid).get();
     if (!doc.exists || doc.data() == null) return null;
-
-    return Recruiter.fromFirestore({...doc.data()!, 'uid': user.uid});
+    final data = doc.data()!;
+    await _upsertRootUserDocument(
+      uid: user.uid,
+      role: 'recruiter',
+      email: (data['email'] as String? ?? user.email ?? '')
+          .trim()
+          .toLowerCase(),
+      name: (data['name'] as String? ?? user.displayName ?? 'Recruiter').trim(),
+    );
+    return Recruiter.fromFirestore({...data, 'uid': user.uid});
   }
 
   Future<void> completeCandidateOnboarding(String uid) async {
