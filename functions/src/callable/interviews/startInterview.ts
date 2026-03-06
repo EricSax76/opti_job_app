@@ -66,7 +66,7 @@ async function hasValidAiConsent({
   );
 }
 
-export const startInterview = functions.region("europe-west1").https.onCall(
+export const startInterview = functions.region("europe-west1").runWith({ memory: "256MB" }).https.onCall(
   async (
     data: { applicationId: string },
     context: functions.https.CallableContext

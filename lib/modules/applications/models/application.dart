@@ -17,6 +17,7 @@ class Application {
     this.pipelineStageName,
     this.pipelineHistory,
     this.knockoutResponses,
+    this.knockoutPassed,
     this.assignedTo,
     this.matchScore,
     this.sourceChannel,
@@ -29,6 +30,14 @@ class Application {
     this.createdAt,
     this.updatedAt,
     this.submittedAt,
+    // Blind review (LGPD)
+    this.anonymizedLabel,
+    this.identityRevealed = false,
+    this.skillsMatched = const [],
+    this.experienceYears,
+    this.province,
+    this.hasCoverLetter = false,
+    this.hasCurriculum = false,
   });
 
   final String? id;
@@ -48,6 +57,7 @@ class Application {
   final String? pipelineStageName;
   final List<dynamic>? pipelineHistory;
   final Map<String, dynamic>? knockoutResponses;
+  final bool? knockoutPassed;
   final String? assignedTo;
   final double? matchScore;
   final String? sourceChannel;
@@ -60,6 +70,14 @@ class Application {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? submittedAt;
+  // Blind review — LGPD progressive reveal
+  final String? anonymizedLabel;
+  final bool identityRevealed;
+  final List<String> skillsMatched;
+  final double? experienceYears;
+  final String? province;
+  final bool hasCoverLetter;
+  final bool hasCurriculum;
 
   factory Application.fromJson(Map<String, dynamic> json, {String? id}) {
     DateTime? parseDate(dynamic value) {
@@ -135,6 +153,16 @@ class Application {
       createdAt: parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: parseDate(json['updatedAt'] ?? json['updated_at']),
       submittedAt: parseDate(json['submitted_at'] ?? json['submittedAt']),
+      // Blind review (LGPD)
+      anonymizedLabel: json['anonymizedLabel'] as String?,
+      identityRevealed: json['identityRevealed'] as bool? ?? false,
+      skillsMatched:
+          (json['skillsMatched'] as List<dynamic>?)?.cast<String>() ?? const [],
+      experienceYears: (json['experienceYears'] as num?)?.toDouble(),
+      province: json['province'] as String?,
+      hasCoverLetter: json['hasCoverLetter'] as bool? ?? false,
+      hasCurriculum: json['hasCurriculum'] as bool? ?? false,
+      knockoutPassed: json['knockoutPassed'] as bool?,
     );
   }
 
@@ -176,6 +204,15 @@ class Application {
       if (createdAt != null) 'createdAt': createdAt?.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt?.toIso8601String(),
       if (submittedAt != null) 'submitted_at': submittedAt?.toIso8601String(),
+      // Blind review (LGPD)
+      if (anonymizedLabel != null) 'anonymizedLabel': anonymizedLabel,
+      'identityRevealed': identityRevealed,
+      if (skillsMatched.isNotEmpty) 'skillsMatched': skillsMatched,
+      if (experienceYears != null) 'experienceYears': experienceYears,
+      if (province != null) 'province': province,
+      'hasCoverLetter': hasCoverLetter,
+      'hasCurriculum': hasCurriculum,
+      if (knockoutPassed != null) 'knockoutPassed': knockoutPassed,
     };
   }
 
@@ -197,6 +234,7 @@ class Application {
     String? pipelineStageName,
     List<dynamic>? pipelineHistory,
     Map<String, dynamic>? knockoutResponses,
+    bool? knockoutPassed,
     String? assignedTo,
     double? matchScore,
     String? sourceChannel,
@@ -209,6 +247,13 @@ class Application {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? submittedAt,
+    String? anonymizedLabel,
+    bool? identityRevealed,
+    List<String>? skillsMatched,
+    double? experienceYears,
+    String? province,
+    bool? hasCoverLetter,
+    bool? hasCurriculum,
   }) {
     return Application(
       id: id ?? this.id,
@@ -228,6 +273,7 @@ class Application {
       pipelineStageName: pipelineStageName ?? this.pipelineStageName,
       pipelineHistory: pipelineHistory ?? this.pipelineHistory,
       knockoutResponses: knockoutResponses ?? this.knockoutResponses,
+      knockoutPassed: knockoutPassed ?? this.knockoutPassed,
       assignedTo: assignedTo ?? this.assignedTo,
       matchScore: matchScore ?? this.matchScore,
       sourceChannel: sourceChannel ?? this.sourceChannel,
@@ -240,6 +286,13 @@ class Application {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       submittedAt: submittedAt ?? this.submittedAt,
+      anonymizedLabel: anonymizedLabel ?? this.anonymizedLabel,
+      identityRevealed: identityRevealed ?? this.identityRevealed,
+      skillsMatched: skillsMatched ?? this.skillsMatched,
+      experienceYears: experienceYears ?? this.experienceYears,
+      province: province ?? this.province,
+      hasCoverLetter: hasCoverLetter ?? this.hasCoverLetter,
+      hasCurriculum: hasCurriculum ?? this.hasCurriculum,
     );
   }
 }

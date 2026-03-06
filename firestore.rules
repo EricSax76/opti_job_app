@@ -202,32 +202,27 @@ service cloud.firestore {
       );
     }
 
+    // ── LGPD Blind Review ─────────────────────────────────────────
+    // Direct reads restricted to candidates (own application only).
+    // Company owners, recruiters, and hiring managers access
+    // applications through the getApplicationsForReview callable,
+    // which uses Admin SDK (bypasses rules) and projects fields
+    // according to the pipeline stage (blind → partial → full).
     match /applications/{applicationId} {
       allow create: if isCandidate()
         && (request.auth.uid == request.resource.data.candidateId
             || request.auth.uid == request.resource.data.candidate_uid);
 
-      allow read: if (isCandidate()
+      allow read: if isCandidate()
           && (request.auth.uid == resource.data.candidateId
-              || request.auth.uid == resource.data.candidate_uid))
-        || (request.auth.uid == resource.data.companyUid)
-        || (request.auth.uid == resource.data.company_uid)
-        || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')))
-        || recruiterCanViewReports(applicationCompanyUid(resource.data))
-        || recruiterHasRole(applicationCompanyUid(resource.data), ['hiring_manager'])
-        || (recruiterHasRole(applicationCompanyUid(resource.data), ['external_evaluator'])
-            && (
-              resource.data.get('assignedTo', '') == request.auth.uid
-              || resource.data.get('assignedEvaluatorUid', '') == request.auth.uid
-              || request.auth.uid in resource.data.get('externalEvaluatorUids', [])
-            ));
+              || request.auth.uid == resource.data.candidate_uid);
 
       allow update: if request.auth.uid == resource.data.companyUid
             || request.auth.uid == resource.data.company_uid
             || isOfferOwner(resource.data.get('jobOfferId', resource.data.get('job_offer_id', '')))
             || recruiterCanManageOffers(applicationCompanyUid(resource.data));
 
-      allow delete: if false; // Deletion is not allowed for now.
+      allow delete: if false;
     }
 
     match /calendarEvents/{eventId} {

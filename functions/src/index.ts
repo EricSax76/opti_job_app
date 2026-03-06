@@ -75,6 +75,7 @@ export { completeInterview } from "./callable/interviews/completeInterview";
 
 // ats
 export { moveApplicationStage } from "./callable/ats/moveApplicationStage";
+export { getApplicationsForReview } from "./callable/ats/getApplicationsForReview";
 export { evaluateKnockoutQuestions } from "./callable/ats/evaluateKnockoutQuestions";
 export { publishOfferMultiposting } from "./callable/ats/publishOfferMultiposting";
 export { createJobOfferSecure } from "./callable/ats/createJobOfferSecure";

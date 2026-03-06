@@ -7,9 +7,10 @@ export const expireTalentPoolConsent = functions.region("europe-west1").pubsub
     const db = admin.firestore();
     const now = admin.firestore.Timestamp.now();
 
-    const expiredMembersSnapshot = await db.collectionGroup('members')
+    let expiredMembersSnapshot = await db.collectionGroup('members')
       .where('consentGiven', '==', true)
       .where('consentExpiresAt', '<=', now)
+      .limit(500)
       .get();
 
     if (expiredMembersSnapshot.empty) {
@@ -17,16 +18,28 @@ export const expireTalentPoolConsent = functions.region("europe-west1").pubsub
       return null;
     }
 
-    const batch = db.batch();
-    expiredMembersSnapshot.docs.forEach((doc) => {
-      // Mark as expired or remove
-      batch.update(doc.ref, {
-        consentGiven: false,
-        expiredAt: admin.firestore.FieldValue.serverTimestamp(),
+    let totalProcessed = 0;
+    while (!expiredMembersSnapshot.empty) {
+      const batch = db.batch();
+      expiredMembersSnapshot.docs.forEach((doc) => {
+        // Mark as expired or remove
+        batch.update(doc.ref, {
+          consentGiven: false,
+          expiredAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
       });
-    });
 
-    await batch.commit();
-    console.log(`Processed ${expiredMembersSnapshot.size} expired consents.`);
+      await batch.commit();
+      totalProcessed += expiredMembersSnapshot.size;
+
+      // Fetch next batch
+      expiredMembersSnapshot = await db.collectionGroup('members')
+        .where('consentGiven', '==', true)
+        .where('consentExpiresAt', '<=', now)
+        .limit(500)
+        .get();
+    }
+
+    console.log(`Processed ${totalProcessed} expired consents.`);
     return null;
   });

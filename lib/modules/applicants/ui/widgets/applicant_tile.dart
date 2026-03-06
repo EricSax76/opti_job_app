@@ -30,7 +30,10 @@ class ApplicantTile extends StatelessWidget {
     final avatarFg = colorScheme.onPrimary;
     final isAnonymousScreening = shouldAnonymizeApplication(application);
     final displayName = isAnonymousScreening
-        ? buildAnonymizedCandidateLabel(application.candidateUid)
+        ? buildAnonymizedCandidateLabel(
+            application.candidateUid,
+            anonymizedLabel: application.anonymizedLabel,
+          )
         : (application.candidateName ??
               application.candidateEmail ??
               application.candidateUid);

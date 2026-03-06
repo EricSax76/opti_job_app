@@ -84,19 +84,25 @@ List<CandidateGroup> groupCandidates({
                     return bDate.compareTo(aDate);
                   });
 
-            final isAnonymousScreening = entries.every((entry) {
-              return shouldAnonymizeCandidateByStage(
-                status: entry.status,
-                pipelineStageId: entry.pipelineStageId,
-                pipelineStageName: entry.pipelineStageName,
-              );
-            });
+            // With the backend-driven blind review, anonymization is
+            // determined by whether *any* application returned a name.
+            final isAnonymousScreening = accumulator.latestByOffer.values
+                .every((app) => shouldAnonymizeApplication(app));
+
+            // Prefer the server-generated label from any of the applications.
+            final serverLabel = accumulator.latestByOffer.values
+                .map((app) => app.anonymizedLabel)
+                .firstWhere(
+                  (label) => label != null && label.isNotEmpty,
+                  orElse: () => null,
+                );
 
             return CandidateGroup(
               candidateUid: accumulator.candidateUid,
               displayName: accumulator.displayName,
               anonymizedLabel: buildAnonymizedCandidateLabel(
                 accumulator.candidateUid,
+                anonymizedLabel: serverLabel,
               ),
               isAnonymousScreening: isAnonymousScreening,
               entries: entries,

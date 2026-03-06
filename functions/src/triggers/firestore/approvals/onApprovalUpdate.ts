@@ -5,7 +5,17 @@ export const onApprovalUpdate = functions.region("europe-west1").firestore
   .document("approvals/{approvalId}")
   .onUpdate(async (change, context) => {
     const data = change.after.data();
-    if (!data || data.status !== "pending") return;
+    if (!data) return;
+
+    // Prevent infinite loops by checking if the document is already processed
+    // or if the status hasn't actually changed.
+    const beforeData = change.before.data() || {};
+    if (data.status !== "pending" && data.status === beforeData.status) {
+      return; 
+    }
+    
+    // Only process if it is currently pending
+    if (data.status !== "pending") return;
 
     const approvers = data.approvers as any[];
     const allDecided = approvers.every((a) => a.status !== "pending");

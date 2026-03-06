@@ -29,8 +29,16 @@ export const computeMonthlyAnalytics = functions.region("europe-west1").pubsub.s
   const { start, end, period } = monthBounds(targetMonth);
 
   const companies = await db.collection("companies").get();
-  for (const companyDoc of companies.docs) {
-    const companyId = companyDoc.id;
+  
+  // Process companies in batches to avoid OOM or timeout issues
+  const BATCH_SIZE = 50;
+  const companyDocs = companies.docs;
+  
+  for (let i = 0; i < companyDocs.length; i += BATCH_SIZE) {
+    const batchDocs = companyDocs.slice(i, i + BATCH_SIZE);
+    
+    await Promise.all(batchDocs.map(async (companyDoc) => {
+      const companyId = companyDoc.id;
 
     const [offersSnake, offersCamel, appsSnake, appsCamel, evaluations, multipostingPublications] = await Promise.all([
       db.collection("jobOffers").where("company_uid", "==", companyId).get(),
@@ -208,6 +216,7 @@ export const computeMonthlyAnalytics = functions.region("europe-west1").pubsub.s
         { merge: true },
       ),
     ]);
+    }));
   }
 
   console.log(`Computed monthly analytics for ${companies.size} companies (${period}).`);

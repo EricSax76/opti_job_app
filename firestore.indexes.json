@@ -66,6 +66,22 @@
       ]
     },
     {
+      "collectionGroup": "applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "candidate_uid", "order": "ASCENDING" },
+        { "fieldPath": "job_offer_id", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "candidate_uid", "order": "ASCENDING" },
+        { "fieldPath": "submitted_at", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "interviews",
       "queryScope": "COLLECTION",
       "fields": [

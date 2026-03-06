@@ -41,7 +41,7 @@ async function hasValidAiTestConsent({
  * Evalúa respuestas de knockout sin realizar rechazo totalmente automatizado.
  * Si falla un criterio, la candidatura queda marcada para revisión humana.
  */
-export const evaluateKnockoutQuestions = onCall({ region: "europe-west1" }, async (request) => {
+export const evaluateKnockoutQuestions = onCall({ region: "europe-west1", memory: "256MiB" }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Debes iniciar sesión para postularte.");
   }

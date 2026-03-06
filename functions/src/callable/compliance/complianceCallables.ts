@@ -111,7 +111,8 @@ export const submitDataRequest = functions
 
     const docRef = await db.collection("dataRequests").add(request);
 
-    await logAuditEntry({
+    // Run audit logging asynchronously
+    logAuditEntry({
       action: "data_request_submitted",
       actorUid: candidateUid,
       actorRole: "candidate",
@@ -122,7 +123,7 @@ export const submitDataRequest = functions
         type,
         applicationId: applicationId || null,
       },
-    });
+    }).catch(err => console.error("Audit log failed", err));
 
     return {
       id: docRef.id,
@@ -194,7 +195,8 @@ export const processDataRequest = functions
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    await logAuditEntry({
+    // Run audit logging asynchronously
+    logAuditEntry({
       action: "data_request_processed",
       actorUid,
       actorRole: actorScope === "company" ? "company" : "recruiter",
@@ -205,7 +207,7 @@ export const processDataRequest = functions
         status,
         responseIncluded: response.length > 0,
       },
-    });
+    }).catch(err => console.error("Audit log failed", err));
 
     return { success: true };
   });
@@ -225,12 +227,12 @@ export const exportCandidateData = functions
 
     const [curriculum, appsByCamel, appsBySnake, consents, notes, requests] =
       await Promise.all([
-        db.collection("candidates").doc(candidateUid).collection("curriculum").get(),
-        db.collection("applications").where("candidateId", "==", candidateUid).get(),
-        db.collection("applications").where("candidate_uid", "==", candidateUid).get(),
-        db.collection("consentRecords").where("candidateUid", "==", candidateUid).get(),
-        db.collection("candidateNotes").where("candidateUid", "==", candidateUid).get(),
-        db.collection("dataRequests").where("candidateUid", "==", candidateUid).get(),
+        db.collection("candidates").doc(candidateUid).collection("curriculum").limit(200).get(),
+        db.collection("applications").where("candidateId", "==", candidateUid).limit(200).get(),
+        db.collection("applications").where("candidate_uid", "==", candidateUid).limit(200).get(),
+        db.collection("consentRecords").where("candidateUid", "==", candidateUid).limit(200).get(),
+        db.collection("candidateNotes").where("candidateUid", "==", candidateUid).limit(200).get(),
+        db.collection("dataRequests").where("candidateUid", "==", candidateUid).limit(200).get(),
       ]);
 
     const dedupedApplications = new Map<string, Record<string, unknown>>();
@@ -268,7 +270,8 @@ export const exportCandidateData = functions
       legal_basis: "RGPD Art. 20 (Portability Rights)",
     };
 
-    await logAuditEntry({
+    // Run audit logging asynchronously
+    logAuditEntry({
       action: "candidate_data_exported",
       actorUid: candidateUid,
       actorRole: "candidate",
@@ -279,7 +282,7 @@ export const exportCandidateData = functions
         notes: notes.size,
         requests: requests.size,
       },
-    });
+    }).catch(err => console.error("Audit log failed", err));
 
     return exportPackage;
   });

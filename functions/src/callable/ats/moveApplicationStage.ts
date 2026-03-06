@@ -1,7 +1,11 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { PipelineStage } from "../../types/pipeline";
 
-export const moveApplicationStage = onCall({ region: "europe-west1" }, async (request) => {
+/** Stage types that trigger identity reveal (LGPD blind review). */
+const REVEAL_STAGE_TYPES = new Set<string>(["interview", "offer", "hired"]);
+
+export const moveApplicationStage = onCall({ region: "europe-west1", memory: "256MiB" }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
   }
@@ -26,12 +30,14 @@ export const moveApplicationStage = onCall({ region: "europe-west1" }, async (re
         throw new HttpsError("not-found", "Postulación no encontrada.");
       }
 
-      const data = doc.data();
-      const companyUid = data?.company_uid;
-      const currentStageId = data?.pipelineStageId;
+      const data = doc.data()!;
+      const companyUid = data.company_uid;
+      const currentStageId = data.pipelineStageId;
+      const jobOfferId = String(
+        data.job_offer_id ?? data.jobOfferId ?? ""
+      ).trim();
 
       // Verificación de acceso
-      // Quien mueve la oferta debe ser la empresa o un reclutador con permisos de su empresa (rol admin / recruiter)
       const isCompanyMainAccount = request.auth?.uid === companyUid;
 
       if (!isCompanyMainAccount) {
@@ -44,7 +50,6 @@ export const moveApplicationStage = onCall({ region: "europe-west1" }, async (re
         if (recruiterData?.companyId !== companyUid || recruiterData?.status !== "active") {
           throw new HttpsError("permission-denied", "No tienes acceso a esta postulación.");
         }
-        // Solo admin/recruiter pueden mover etapas del pipeline.
         if (!["admin", "recruiter"].includes(String(recruiterData?.role ?? ""))) {
           throw new HttpsError("permission-denied", "Tu rol no tiene permiso para cambiar etapas.");
         }
@@ -63,12 +68,32 @@ export const moveApplicationStage = onCall({ region: "europe-west1" }, async (re
         movedAt: now,
       };
 
-      transaction.update(applicationRef, {
+      const updateData: Record<string, unknown> = {
         pipelineStageId: newStageId,
         pipelineStageName: newStageName,
         updated_at: FieldValue.serverTimestamp(),
         pipelineHistory: FieldValue.arrayUnion(historyEntry),
-      });
+      };
+
+      // ── LGPD blind review: resolve stage type and mark reveal ───
+      if (jobOfferId && data.identityRevealed !== true) {
+        const offerDoc = await transaction.get(
+          db.collection("jobOffers").doc(jobOfferId)
+        );
+        const stages =
+          (offerDoc.data()?.pipelineStages as PipelineStage[] | undefined) ??
+          [];
+        const newStage = stages.find((s) => s.id === newStageId);
+        const newStageType = newStage?.type ?? "";
+
+        if (REVEAL_STAGE_TYPES.has(newStageType)) {
+          updateData.identityRevealed = true;
+          updateData.identityRevealedAt = FieldValue.serverTimestamp();
+          updateData.identityRevealedBy = request.auth?.uid;
+        }
+      }
+
+      transaction.update(applicationRef, updateData);
 
       return { success: true };
     });
@@ -79,6 +104,6 @@ export const moveApplicationStage = onCall({ region: "europe-west1" }, async (re
       throw error;
     }
     console.error("Error moviendo candidato:", error);
-    throw new HttpsError("internal", "Error interno al mover candadito de etapa.", error);
+    throw new HttpsError("internal", "Error interno al mover candidato de etapa.");
   }
 });

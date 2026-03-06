@@ -28,8 +28,15 @@ export interface Application {
     movedAt: string; // ISO String mapping string in TypeScript interfaces handling dates
   }>;
   knockoutResponses?: Record<string, string | boolean>;
+  knockoutPassed?: boolean;
+  requiresHumanReview?: boolean;
   assignedTo?: string; // UID del reclutador asignado
   match_score?: number;
+  aiMatchResult?: Record<string, unknown>;
+  // Blind review — LGPD progressive reveal
+  identityRevealed?: boolean;
+  identityRevealedAt?: FirebaseFirestore.Timestamp;
+  identityRevealedBy?: string;
   submitted_at: FirebaseFirestore.Timestamp;
   updated_at: FirebaseFirestore.Timestamp;
 }

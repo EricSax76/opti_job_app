@@ -64,12 +64,13 @@ export const onUserDelete = functions
       batch.delete(userRef);
 
       // Archive applications instead of deleting (for audit trail)
-      const applicationsSnapshot = await db
+      let applicationsSnapshot = await db
         .collection("applications")
         .where("candidate_uid", "==", uid)
+        .limit(100)
         .get();
 
-      if (!applicationsSnapshot.empty) {
+      while (!applicationsSnapshot.empty) {
         const archiveBatch = db.batch();
         applicationsSnapshot.docs.forEach((doc) => {
           const archiveRef = db.collection("archived_applications").doc(doc.id);
@@ -81,38 +82,55 @@ export const onUserDelete = functions
           archiveBatch.delete(doc.ref);
         });
         await archiveBatch.commit();
-        logger.info("Applications archived", {
+        logger.info("Applications archived chunk", {
           uid,
           count: applicationsSnapshot.size,
         });
+
+        // Get next chunk
+        applicationsSnapshot = await db
+          .collection("applications")
+          .where("candidate_uid", "==", uid)
+          .limit(100)
+          .get();
       }
 
       // Delete curriculum documents
-      const curriculumSnapshot = await db
+      let curriculumSnapshot = await db
         .collection("curriculum")
         .where("uid", "==", uid)
+        .limit(100)
         .get();
 
-      if (!curriculumSnapshot.empty) {
+      while (!curriculumSnapshot.empty) {
         const cvBatch = db.batch();
         curriculumSnapshot.docs.forEach((doc) => {
           cvBatch.delete(doc.ref);
         });
         await cvBatch.commit();
-        logger.info("Curriculum documents deleted", {
+        logger.info("Curriculum documents deleted chunk", {
           uid,
           count: curriculumSnapshot.size,
         });
+
+        // Get next chunk
+        curriculumSnapshot = await db
+          .collection("curriculum")
+          .where("uid", "==", uid)
+          .limit(100)
+          .get();
       }
 
       // If company, handle job offers
       if (companyDoc.exists) {
-        const offersSnapshot = await db
+        let offersSnapshot = await db
           .collection("jobOffers")
           .where("company_uid", "==", uid)
+          .where("status", "!=", "deleted")
+          .limit(100)
           .get();
 
-        if (!offersSnapshot.empty) {
+        while (!offersSnapshot.empty) {
           const offersBatch = db.batch();
           offersSnapshot.docs.forEach((doc) => {
             // Mark as deleted instead of removing (preserve application history)
@@ -122,10 +140,18 @@ export const onUserDelete = functions
             });
           });
           await offersBatch.commit();
-          logger.info("Job offers marked as deleted", {
+          logger.info("Job offers marked as deleted chunk", {
             uid,
             count: offersSnapshot.size,
           });
+
+          // Get next chunk
+          offersSnapshot = await db
+            .collection("jobOffers")
+            .where("company_uid", "==", uid)
+            .where("status", "!=", "deleted")
+            .limit(100)
+            .get();
         }
       }
 

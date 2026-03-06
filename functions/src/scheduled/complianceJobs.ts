@@ -21,7 +21,7 @@ import {
  * - Vídeos con más de 30 días.
  * - Marcado de consentimientos próximos a expirar para renovación.
  */
-export const blockExpiredData = functions.region("europe-west1").pubsub.schedule('every 24 hours').onRun(async (context) => {
+export const blockExpiredData = functions.region("europe-west1").runWith({ timeoutSeconds: 540, memory: '512MB' }).pubsub.schedule('every 24 hours').onRun(async (context) => {
   const db = admin.firestore();
   const now = admin.firestore.Timestamp.now();
   const threeYearThreshold = admin.firestore.Timestamp.fromMillis(

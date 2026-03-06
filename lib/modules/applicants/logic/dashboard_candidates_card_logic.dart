@@ -15,7 +15,10 @@ class DashboardCandidatesCardLogic {
         if (uid.isEmpty || byUid.containsKey(uid)) continue;
 
         final displayName = shouldAnonymizeApplication(application)
-            ? buildAnonymizedCandidateLabel(uid)
+            ? buildAnonymizedCandidateLabel(
+                uid,
+                anonymizedLabel: application.anonymizedLabel,
+              )
             : (application.candidateName?.trim().isNotEmpty == true)
             ? application.candidateName!.trim()
             : (application.candidateEmail?.trim().isNotEmpty == true)

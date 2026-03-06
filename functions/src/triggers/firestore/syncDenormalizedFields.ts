@@ -127,10 +127,18 @@ export const syncCandidateProfileToApplications = functions
     }
 
     const db = admin.firestore();
+
+    // Use query combination if exact match is required for candidate UID fields
+    // Because Firestore allows max 10 array items for `in`, and we query across 3 fields, 
+    // it's better to keep `Promise.all` but check for overlaps in the same field if there were any.
+    // In this specific case, to reduce the 3 queries into 1, we can use an `or` query logic
+    // but Firestore Node.js module supports `Filter.or(...)` 
     const snapshots = await Promise.all([
-      db.collection("applications").where("candidate_uid", "==", candidateUid).get(),
-      db.collection("applications").where("candidateId", "==", candidateUid).get(),
-      db.collection("applications").where("candidate_id", "==", candidateUid).get(),
+      db.collection("applications").where(admin.firestore.Filter.or(
+        admin.firestore.Filter.where("candidate_uid", "==", candidateUid),
+        admin.firestore.Filter.where("candidateId", "==", candidateUid),
+        admin.firestore.Filter.where("candidate_id", "==", candidateUid)
+      )).get()
     ]);
     const docs = await dedupeDocs(snapshots);
     const updated = await batchUpdateDocs(docs, updates);
@@ -181,9 +189,11 @@ export const syncCompanyProfileToOffers = functions
 
     const db = admin.firestore();
     const snapshots = await Promise.all([
-      db.collection("jobOffers").where("company_uid", "==", companyUid).get(),
-      db.collection("jobOffers").where("companyUid", "==", companyUid).get(),
-      db.collection("jobOffers").where("owner_uid", "==", companyUid).get(),
+      db.collection("jobOffers").where(admin.firestore.Filter.or(
+        admin.firestore.Filter.where("company_uid", "==", companyUid),
+        admin.firestore.Filter.where("companyUid", "==", companyUid),
+        admin.firestore.Filter.where("owner_uid", "==", companyUid)
+      )).get()
     ]);
     const docs = await dedupeDocs(snapshots);
     const updated = await batchUpdateDocs(docs, updates);
@@ -229,16 +239,19 @@ export const syncJobOfferTitleToApplications = functions
     }
 
     const db = admin.firestore();
+    const validIdentifiers = [...offerIdentifiers].filter(Boolean);
     const queries: Array<
       Promise<FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>>
     > = [];
-    for (const identifier of offerIdentifiers) {
-      if (!identifier) continue;
+    
+    // Chunk validIdentifiers into chunks of 10 for 'in' operator limits
+    for (let i = 0; i < validIdentifiers.length; i += 10) {
+      const chunk = validIdentifiers.slice(i, i + 10);
       queries.push(
-        db.collection("applications").where("job_offer_id", "==", identifier).get(),
-      );
-      queries.push(
-        db.collection("applications").where("jobOfferId", "==", identifier).get(),
+        db.collection("applications").where(admin.firestore.Filter.or(
+          admin.firestore.Filter.where("job_offer_id", "in", chunk),
+          admin.firestore.Filter.where("jobOfferId", "in", chunk)
+        )).get()
       );
     }
 

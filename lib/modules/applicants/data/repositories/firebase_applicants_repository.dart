@@ -1,14 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
-import 'package:opti_job_app/modules/applications/data/mappers/application_mapper.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 
 class FirebaseApplicantsRepository implements ApplicantsRepository {
-  FirebaseApplicantsRepository({required FirebaseFirestore firestore})
-    : _firestore = firestore;
+  FirebaseApplicantsRepository({
+    required FirebaseFirestore firestore,
+    FirebaseFunctions? functions,
+  })  : _firestore = firestore,
+        _functions = functions ??
+            FirebaseFunctions.instanceFor(region: 'europe-west1');
 
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
+  /// Fetches applications for a single offer via the blind-review callable.
+  ///
+  /// The Cloud Function [getApplicationsForReview] projects fields based on
+  /// each application's pipeline stage (LGPD blind review), so the frontend
+  /// never receives PII that should be hidden at the current stage.
   @override
   Future<List<Application>> getApplicationsForOffer({
     required String jobOfferId,
@@ -17,13 +27,30 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     final normalizedOfferId = jobOfferId.trim();
     if (normalizedOfferId.isEmpty) return const [];
 
-    final byOffer = await getApplicationsForOffers(
-      jobOfferIds: [normalizedOfferId],
-      companyUid: companyUid,
-    );
-    return byOffer[normalizedOfferId] ?? const <Application>[];
+    final callable = _functions.httpsCallable('getApplicationsForReview');
+    final result = await callable.call<Map<String, dynamic>>({
+      'jobOfferId': normalizedOfferId,
+    });
+
+    final data = result.data;
+    final rawList = (data['applications'] as List<dynamic>?) ?? [];
+
+    final applications = rawList
+        .cast<Map<String, dynamic>>()
+        .map((json) => Application.fromJson(
+              json,
+              id: json['applicationId'] as String?,
+            ))
+        .toList();
+
+    applications.sort(_sortByMostRecent);
+    return applications;
   }
 
+  /// Fetches applications for multiple offers.
+  ///
+  /// Calls the blind-review callable once per offer. Each call returns only
+  /// the fields the recruiter is allowed to see at that pipeline stage.
   @override
   Future<Map<String, List<Application>>> getApplicationsForOffers({
     required Iterable<String> jobOfferIds,
@@ -39,28 +66,37 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     final applicationsByOffer = <String, List<Application>>{
       for (final offerId in normalizedOfferIds) offerId: <Application>[],
     };
-    for (final chunk in _chunk(normalizedOfferIds, 10)) {
-      Query<Map<String, dynamic>> query = _firestore
-          .collection('applications')
-          .where('jobOfferId', whereIn: chunk);
-      if (companyUid.isNotEmpty) {
-        query = query.where('companyUid', isEqualTo: companyUid);
-      }
 
-      final snapshot = await query.get();
-      for (final doc in snapshot.docs) {
-        final app = ApplicationMapper.fromFirestore(doc.data(), id: doc.id);
-        final normalizedOfferId = app.jobOfferId.trim();
-        if (normalizedOfferId.isEmpty) continue;
-        final bucket = applicationsByOffer[normalizedOfferId];
-        if (bucket == null) continue;
-        bucket.add(app);
+    // Fire all callable requests in parallel
+    final futures = <String, Future<HttpsCallableResult<Map<String, dynamic>>>>{
+      for (final offerId in normalizedOfferIds)
+        offerId: _functions
+            .httpsCallable('getApplicationsForReview')
+            .call<Map<String, dynamic>>({'jobOfferId': offerId}),
+    };
+
+    for (final entry in futures.entries) {
+      try {
+        final result = await entry.value;
+        final rawList =
+            (result.data['applications'] as List<dynamic>?) ?? [];
+
+        final apps = rawList
+            .cast<Map<String, dynamic>>()
+            .map((json) => Application.fromJson(
+                  json,
+                  id: json['applicationId'] as String?,
+                ))
+            .toList();
+
+        apps.sort(_sortByMostRecent);
+        applicationsByOffer[entry.key] = apps;
+      } catch (_) {
+        // Individual offer failure — keep empty list for that offer
+        applicationsByOffer[entry.key] = const [];
       }
     }
 
-    for (final applications in applicationsByOffer.values) {
-      applications.sort(_sortByMostRecent);
-    }
     return applicationsByOffer;
   }
 
@@ -73,16 +109,6 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-  }
-
-  List<List<T>> _chunk<T>(List<T> items, int size) {
-    if (items.isEmpty) return const [];
-    final chunks = <List<T>>[];
-    for (var i = 0; i < items.length; i += size) {
-      final end = i + size > items.length ? items.length : i + size;
-      chunks.add(items.sublist(i, end));
-    }
-    return chunks;
   }
 
   static int _sortByMostRecent(Application a, Application b) {

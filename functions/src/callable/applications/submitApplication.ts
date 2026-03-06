@@ -69,341 +69,292 @@ function parseDate(value: unknown): Date | null {
   return null;
 }
 
-export const submitApplication = functions.region("europe-west1").https.onCall(
-  async (
-    data: SubmitApplicationRequest,
-    context: functions.https.CallableContext
-  ): Promise<SubmitApplicationResponse> => {
-    const requestId = Math.random().toString(36).substring(7);
-    const funcLogger = logger.withContext({ requestId });
+export const submitApplication = functions
+  .runWith({ memory: "512MB", timeoutSeconds: 120, minInstances: 1 })
+  .region("europe-west1")
+  .https.onCall(
+    async (
+      data: SubmitApplicationRequest,
+      context: functions.https.CallableContext
+    ): Promise<SubmitApplicationResponse> => {
+      const funcLogger = logger.withContext({
+        requestId: Math.random().toString(36).substring(7),
+      });
 
-    // Verify authentication
-    if (!context.auth) {
-      funcLogger.warn("Unauthenticated request");
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "Must be authenticated to submit applications"
-      );
-    }
-
-    const candidateUid = context.auth.uid;
-    const { jobOfferId, coverLetter, curriculumId, sourceChannel } = data;
-    const requestedJobOfferId = normalizeString(jobOfferId);
-    const normalizedSource = normalizeLower(sourceChannel) || "platform";
-    const normalizedCurriculumId = normalizeString(curriculumId || "main") || "main";
-
-    funcLogger.info("Application submission started", {
-      candidateUid,
-      requestedJobOfferId,
-    });
-
-    try {
-      const db = admin.firestore();
-
-      // Validate input
-      if (!requestedJobOfferId) {
-        throw new ValidationError("jobOfferId is required");
+      // ── Auth ──────────────────────────────────────────────────────
+      if (!context.auth) {
+        funcLogger.warn("Unauthenticated request");
+        throw new functions.https.HttpsError(
+          "unauthenticated",
+          "Must be authenticated to submit applications"
+        );
       }
 
-      // Resolve offer first by document ID and then by legacy "id" field.
-      let resolvedJobOfferId = requestedJobOfferId;
-      let offerDoc = await db.collection("jobOffers").doc(resolvedJobOfferId).get();
-      if (!offerDoc.exists) {
-        const offerIdCandidates: unknown[] = [requestedJobOfferId];
-        const numericRequestedId = Number.parseInt(requestedJobOfferId, 10);
-        if (Number.isFinite(numericRequestedId)) {
-          offerIdCandidates.push(numericRequestedId);
+      const candidateUid = context.auth.uid;
+      const { jobOfferId, coverLetter, curriculumId, sourceChannel } = data;
+      const requestedJobOfferId = normalizeString(jobOfferId);
+      const normalizedSource = normalizeLower(sourceChannel) || "platform";
+      const normalizedCurriculumId =
+        normalizeString(curriculumId || "main") || "main";
+
+      funcLogger.info("Application submission started", {
+        candidateUid,
+        requestedJobOfferId,
+      });
+
+      try {
+        const db = admin.firestore();
+
+        if (!requestedJobOfferId) {
+          throw new ValidationError("jobOfferId is required");
         }
 
-        const legacyOfferSnapshot = await db
-          .collection("jobOffers")
-          .where("id", "in", offerIdCandidates)
-          .limit(1)
-          .get();
-        if (legacyOfferSnapshot.empty) {
+        // ── Phase 1: parallel reads (offer + curriculum + candidate) ──
+        const [offerDocResult, curriculumDocResult, candidateDoc] =
+          await Promise.all([
+            db.collection("jobOffers").doc(requestedJobOfferId).get(),
+            db
+              .collection("candidates")
+              .doc(candidateUid)
+              .collection("curriculum")
+              .doc(normalizedCurriculumId)
+              .get(),
+            db.collection("candidates").doc(candidateUid).get(),
+          ]);
+
+        // Resolve offer — fallback to legacy "id" field if doc ID miss
+        let offerDoc = offerDocResult;
+        let resolvedJobOfferId = requestedJobOfferId;
+
+        if (!offerDoc.exists) {
+          const offerIdCandidates: unknown[] = [requestedJobOfferId];
+          const numericRequestedId = Number.parseInt(requestedJobOfferId, 10);
+          if (Number.isFinite(numericRequestedId)) {
+            offerIdCandidates.push(numericRequestedId);
+          }
+
+          const legacyOfferSnapshot = await db
+            .collection("jobOffers")
+            .where("id", "in", offerIdCandidates)
+            .limit(1)
+            .get();
+          if (legacyOfferSnapshot.empty) {
+            throw new ValidationError("Job offer not found");
+          }
+          offerDoc = legacyOfferSnapshot.docs[0];
+          resolvedJobOfferId = offerDoc.id;
+        }
+
+        const jobOffer = offerDoc.data();
+        if (!jobOffer) {
           throw new ValidationError("Job offer not found");
         }
 
-        offerDoc = legacyOfferSnapshot.docs[0];
-        resolvedJobOfferId = offerDoc.id;
-      }
-
-      const jobOffer = offerDoc.data();
-      if (!jobOffer) {
-        throw new ValidationError("Job offer not found");
-      }
-      const offerStatus = String(jobOffer?.status ?? "").trim().toLowerCase();
-      const isOfferOpenForApplications =
-        offerStatus.length === 0 ||
-        offerStatus === "active" ||
-        offerStatus === "published";
-      if (!isOfferOpenForApplications) {
-        throw new ValidationError(
-          `Job offer is not active (status: ${jobOffer?.status ?? "undefined"})`
-        );
-      }
-
-      // Check if offer is expired
-      if (jobOffer.expires_at) {
-        const expiresAt = jobOffer.expires_at.toDate();
-        if (expiresAt < new Date()) {
-          throw new ValidationError("Job offer has expired");
-        }
-      }
-
-      // Check if curriculum exists and belongs to user at canonical path:
-      // candidates/{uid}/curriculum/{id}. Fallback to "main".
-      let resolvedCurriculumId = normalizedCurriculumId;
-      let curriculumDoc = await db
-        .collection("candidates")
-        .doc(candidateUid)
-        .collection("curriculum")
-        .doc(resolvedCurriculumId)
-        .get();
-
-      if (!curriculumDoc.exists && resolvedCurriculumId !== "main") {
-        resolvedCurriculumId = "main";
-        curriculumDoc = await db
-          .collection("candidates")
-          .doc(candidateUid)
-          .collection("curriculum")
-          .doc(resolvedCurriculumId)
-          .get();
-      }
-
-      if (!curriculumDoc.exists) {
-        throw new ValidationError("Curriculum not found");
-      }
-
-      const [applicationsByCandidateUid, applicationsByCandidateId] = await Promise.all([
-        db.collection("applications").where("candidate_uid", "==", candidateUid).get(),
-        db.collection("applications").where("candidateId", "==", candidateUid).get(),
-      ]);
-
-      const offerIdAliases = new Set<string>(
-        [requestedJobOfferId, resolvedJobOfferId]
-          .map((value) => normalizeString(value))
-          .filter((value) => value.length > 0)
-      );
-      let duplicateApplicationId: string | null = null;
-      const visitedForDuplicate = new Set<string>();
-
-      const detectDuplicate = (
-        snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>
-      ): void => {
-        for (const doc of snapshot.docs) {
-          if (visitedForDuplicate.has(doc.id)) continue;
-          visitedForDuplicate.add(doc.id);
-          const row = doc.data();
-          const status = normalizeLower(row.status);
-          if (!BLOCKING_APPLICATION_STATUSES.has(status)) continue;
-
-          const appOfferId = normalizeString(row.job_offer_id ?? row.jobOfferId);
-          if (!appOfferId || !offerIdAliases.has(appOfferId)) continue;
-          duplicateApplicationId = doc.id;
-          break;
-        }
-      };
-
-      detectDuplicate(applicationsByCandidateUid);
-      if (duplicateApplicationId == null) {
-        detectDuplicate(applicationsByCandidateId);
-      }
-
-      if (duplicateApplicationId != null) {
-        funcLogger.warn("Duplicate application attempt", {
-          candidateUid,
-          requestedJobOfferId,
-          resolvedJobOfferId,
-          existingApplicationId: duplicateApplicationId,
-        });
-        throw new ValidationError(
-          "You have already applied to this job offer"
-        );
-      }
-
-      // Rate limiting without composite indexes: count candidate applications
-      // in the last 24h from either snake_case or camelCase timestamps.
-      const rateLimitCutoff = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
-      const visitedForRateLimit = new Set<string>();
-      let recentApplicationsCount = 0;
-      const countRecentApplications = (
-        snapshot: FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>
-      ): void => {
-        for (const doc of snapshot.docs) {
-          if (visitedForRateLimit.has(doc.id)) continue;
-          visitedForRateLimit.add(doc.id);
-          const row = doc.data();
-          const submittedAt = parseDate(
-            row.submitted_at ??
-              row.submittedAt ??
-              row.created_at ??
-              row.createdAt
+        // Validate offer status
+        const offerStatus = String(jobOffer?.status ?? "")
+          .trim()
+          .toLowerCase();
+        const isOfferOpenForApplications =
+          offerStatus.length === 0 ||
+          offerStatus === "active" ||
+          offerStatus === "published";
+        if (!isOfferOpenForApplications) {
+          throw new ValidationError(
+            `Job offer is not active (status: ${jobOffer?.status ?? "undefined"})`
           );
-          if (submittedAt != null && submittedAt >= rateLimitCutoff) {
-            recentApplicationsCount += 1;
+        }
+
+        // Check offer expiry
+        if (jobOffer.expires_at) {
+          const expiresAt = parseDate(jobOffer.expires_at);
+          if (expiresAt && expiresAt < new Date()) {
+            throw new ValidationError("Job offer has expired");
           }
         }
-      };
 
-      countRecentApplications(applicationsByCandidateUid);
-      countRecentApplications(applicationsByCandidateId);
+        // Resolve curriculum — fallback to "main"
+        let curriculumDoc = curriculumDocResult;
+        let resolvedCurriculumId = normalizedCurriculumId;
+        if (!curriculumDoc.exists && resolvedCurriculumId !== "main") {
+          resolvedCurriculumId = "main";
+          curriculumDoc = await db
+            .collection("candidates")
+            .doc(candidateUid)
+            .collection("curriculum")
+            .doc(resolvedCurriculumId)
+            .get();
+        }
+        if (!curriculumDoc.exists) {
+          throw new ValidationError("Curriculum not found");
+        }
 
-      if (recentApplicationsCount >= MAX_APPLICATIONS_PER_DAY) {
-        funcLogger.warn("Rate limit exceeded", {
-          candidateUid,
-          applicationsCount: recentApplicationsCount,
-        });
-        throw new ValidationError(
-          `Daily application limit exceeded (${MAX_APPLICATIONS_PER_DAY})`
+        // Validate candidate
+        const candidate = candidateDoc.data();
+        if (!candidate) {
+          throw new ValidationError("Candidate profile not found");
+        }
+
+        // ── Phase 2: targeted duplicate check + rate limit (parallel) ──
+        const offerIdAliases = [
+          ...new Set(
+            [requestedJobOfferId, resolvedJobOfferId]
+              .map(normalizeString)
+              .filter((v) => v.length > 0)
+          ),
+        ];
+        const rateLimitCutoff = admin.firestore.Timestamp.fromDate(
+          new Date(Date.now() - RATE_LIMIT_WINDOW_MS)
         );
-      }
 
-      // Get candidate info
-      const candidateDoc = await db.collection("candidates").doc(candidateUid).get();
-      const candidate = candidateDoc.data();
+        // Build targeted duplicate queries using compound filters + limit
+        const dupQueries: Promise<
+          FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>
+        >[] = [];
+        for (const offerId of offerIdAliases) {
+          dupQueries.push(
+            db
+              .collection("applications")
+              .where("candidate_uid", "==", candidateUid)
+              .where("job_offer_id", "==", offerId)
+              .limit(5)
+              .get(),
+            db
+              .collection("applications")
+              .where("candidateId", "==", candidateUid)
+              .where("jobOfferId", "==", offerId)
+              .limit(5)
+              .get()
+          );
+        }
 
-      if (!candidate) {
-        throw new ValidationError("Candidate profile not found");
-      }
+        const [rateLimitSnapshot, ...dupSnapshots] = await Promise.all([
+          // Server-side count — no document downloads
+          db
+            .collection("applications")
+            .where("candidate_uid", "==", candidateUid)
+            .where("submitted_at", ">=", rateLimitCutoff)
+            .count()
+            .get(),
+          ...dupQueries,
+        ]);
 
-      // Create application
-      const now = admin.firestore.FieldValue.serverTimestamp();
-      const companyUid =
-        jobOffer?.company_uid ?? jobOffer?.companyUid ?? jobOffer?.owner_uid;
-      const application: Record<string, unknown> = {
-        job_offer_id: resolvedJobOfferId,
-        jobOfferId: resolvedJobOfferId,
-        candidate_uid: candidateUid,
-        candidateId: candidateUid,
-        candidate_name: candidate.name,
-        candidateName: candidate.name,
-        candidate_email: candidate.email,
-        candidateEmail: candidate.email,
-        curriculum_id: resolvedCurriculumId,
-        curriculumId: resolvedCurriculumId,
-        source_channel: normalizedSource,
-        sourceChannel: normalizedSource,
-        source: normalizedSource,
-        status: "pending",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        submitted_at: now as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        updated_at: now as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        submittedAt: now as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        updatedAt: now as any,
-      };
+        // Check duplicates across snapshots (deduped by doc id)
+        const visitedDup = new Set<string>();
+        let duplicateApplicationId: string | null = null;
+        for (const snap of dupSnapshots) {
+          if (duplicateApplicationId) break;
+          for (const doc of snap.docs) {
+            if (visitedDup.has(doc.id)) continue;
+            visitedDup.add(doc.id);
+            const status = normalizeLower(doc.data().status);
+            if (BLOCKING_APPLICATION_STATUSES.has(status)) {
+              duplicateApplicationId = doc.id;
+              break;
+            }
+          }
+        }
 
-      if (coverLetter !== undefined) {
-        application.cover_letter = coverLetter;
-        application.coverLetter = coverLetter;
-      }
-
-      if (companyUid !== undefined && companyUid !== null) {
-        application.company_uid = companyUid;
-        application.companyUid = companyUid;
-      }
-
-      // Validate application data
-      validateApplication(application);
-
-      // Create application document
-      const applicationRef = await db.collection("applications").add(application);
-      const applicationId = applicationRef.id;
-
-      const legalInfoClause =
-        "Tus datos se tratarán para gestionar la candidatura y evaluar tu encaje con la vacante. " +
-        "Base jurídica: ejecución de medidas precontractuales y, en su caso, consentimiento. " +
-        "Puedes ejercer ARSULIPO y solicitar explicación humana de decisiones de IA desde el portal de privacidad.";
-      const legalAckSubject = "Hemos recibido tu candidatura";
-      const legalAckBody = [
-        `Solicitud: ${requestId}`,
-        `Oferta: ${jobOffer?.title ?? resolvedJobOfferId}`,
-        "Acuse de recibo legal de candidatura:",
-        legalInfoClause,
-      ].join("\n");
-
-      await Promise.all([
-        db.collection("notifications").add({
-          type: "application_received_legal_ack",
-          channel: "in_app",
-          audience: "candidate",
-          userUid: candidateUid,
-          companyUid: companyUid ?? null,
-          applicationId,
-          jobOfferId: resolvedJobOfferId,
-          title: legalAckSubject,
-          message: legalAckBody,
-          legalInfoClause,
-          read: false,
-          createdAt: now,
-          updatedAt: now,
-        }),
-        db.collection("emailQueue").add({
-          to: candidate.email,
-          template: "application_received_legal_ack",
-          subject: legalAckSubject,
-          text: legalAckBody,
-          candidateUid,
-          companyUid: companyUid ?? null,
-          applicationId,
-          jobOfferId: resolvedJobOfferId,
-          legalInfoClause,
-          status: "queued",
-          createdAt: now,
-          updatedAt: now,
-        }),
-        db.collection("auditLogs").add({
-          action: "application_legal_ack_sent",
-          actorUid: "system",
-          actorRole: "system",
-          targetType: "application",
-          targetId: applicationId,
-          companyId: companyUid ?? null,
-          metadata: {
-            requestId,
+        if (duplicateApplicationId) {
+          funcLogger.warn("Duplicate application attempt", {
             candidateUid,
             requestedJobOfferId,
             resolvedJobOfferId,
-            notificationChannel: "in_app",
-            emailQueued: true,
-            legalInfoClauseVersion: "2026-03",
-          },
-          timestamp: now,
-        }),
-      ]);
+            existingApplicationId: duplicateApplicationId,
+          });
+          throw new ValidationError(
+            "You have already applied to this job offer"
+          );
+        }
 
-      funcLogger.info("Application created successfully", {
-        applicationId,
-        candidateUid,
-        requestedJobOfferId,
-        resolvedJobOfferId,
-      });
+        // Check rate limit (server-side aggregation — no docs downloaded)
+        const recentApplicationsCount = rateLimitSnapshot.data().count;
+        if (recentApplicationsCount >= MAX_APPLICATIONS_PER_DAY) {
+          funcLogger.warn("Rate limit exceeded", {
+            candidateUid,
+            applicationsCount: recentApplicationsCount,
+          });
+          throw new ValidationError(
+            `Daily application limit exceeded (${MAX_APPLICATIONS_PER_DAY})`
+          );
+        }
 
-      // Return response
-      const response: SubmitApplicationResponse = {
-        applicationId,
-        status: "pending",
-        submittedAt: admin.firestore.Timestamp.now() as FirebaseFirestore.Timestamp,
-      };
+        // ── Phase 3: create application ─────────────────────────────
+        const now = admin.firestore.FieldValue.serverTimestamp();
+        const companyUid =
+          jobOffer?.company_uid ?? jobOffer?.companyUid ?? jobOffer?.owner_uid;
 
-      // TODO: Calculate match score asynchronously
-      // This could be done by another function or background task
+        const application: Record<string, unknown> = {
+          job_offer_id: resolvedJobOfferId,
+          jobOfferId: resolvedJobOfferId,
+          candidate_uid: candidateUid,
+          candidateId: candidateUid,
+          candidate_name: candidate.name,
+          candidateName: candidate.name,
+          candidate_email: candidate.email,
+          candidateEmail: candidate.email,
+          curriculum_id: resolvedCurriculumId,
+          curriculumId: resolvedCurriculumId,
+          source_channel: normalizedSource,
+          sourceChannel: normalizedSource,
+          source: normalizedSource,
+          status: "pending",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          submitted_at: now as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          updated_at: now as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          submittedAt: now as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          updatedAt: now as any,
+        };
 
-      return response;
-    } catch (error) {
-      funcLogger.error("Error submitting application", error);
+        if (coverLetter !== undefined) {
+          application.cover_letter = coverLetter;
+          application.coverLetter = coverLetter;
+        }
 
-      if (error instanceof ValidationError) {
-        throw new functions.https.HttpsError("invalid-argument", error.message);
+        if (companyUid !== undefined && companyUid !== null) {
+          application.company_uid = companyUid;
+          application.companyUid = companyUid;
+        }
+
+        validateApplication(application);
+
+        const applicationRef = await db
+          .collection("applications")
+          .add(application);
+
+        // Legal ack (notification + emailQueue + auditLog) is handled
+        // asynchronously by the onApplicationCreate trigger to reduce
+        // user-facing latency.
+
+        funcLogger.info("Application created successfully", {
+          applicationId: applicationRef.id,
+          candidateUid,
+          requestedJobOfferId,
+          resolvedJobOfferId,
+        });
+
+        return {
+          applicationId: applicationRef.id,
+          status: "pending",
+          submittedAt:
+            admin.firestore.Timestamp.now() as FirebaseFirestore.Timestamp,
+        };
+      } catch (error) {
+        funcLogger.error("Error submitting application", error);
+
+        if (error instanceof ValidationError) {
+          throw new functions.https.HttpsError(
+            "invalid-argument",
+            error.message
+          );
+        }
+
+        throw new functions.https.HttpsError(
+          "internal",
+          "Failed to submit application"
+        );
       }
-
-      throw new functions.https.HttpsError(
-        "internal",
-        "Failed to submit application"
-      );
     }
-  }
-);
+  );

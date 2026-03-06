@@ -46,7 +46,10 @@ class _CardContent extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isAnonymousScreening = shouldAnonymizeApplication(application);
     final displayName = isAnonymousScreening
-        ? buildAnonymizedCandidateLabel(application.candidateUid)
+        ? buildAnonymizedCandidateLabel(
+            application.candidateUid,
+            anonymizedLabel: application.anonymizedLabel,
+          )
         : (application.candidateName ?? 'Desconocido');
     final displayEmail = isAnonymousScreening
         ? 'Identidad oculta en criba inicial'
