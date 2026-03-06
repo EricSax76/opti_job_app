@@ -28,6 +28,7 @@ class DashboardCandidatesCardLogic {
         byUid[uid] = DashboardCandidateSummaryViewModel(
           candidateUid: uid,
           displayName: displayName,
+          offerId: application.jobOfferId,
         );
       }
     }

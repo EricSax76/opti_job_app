@@ -115,6 +115,7 @@ class _CandidateOfferCardBaseState extends State<CandidateOfferCardBase> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Header Row: Avatar, Info, Badge
                     Row(

@@ -31,8 +31,10 @@ const FULL_REVEAL_STAGE_TYPES = new Set<string>(["offer", "hired"]);
 
 type RevealLevel = "blind" | "partial" | "full";
 
-interface BlindApplication {
+export interface BaseApplication {
   applicationId: string;
+  candidateId: string;
+  jobOfferId: string;
   anonymizedLabel: string;
   status: string;
   pipelineStageId: string | null;
@@ -48,15 +50,39 @@ interface BlindApplication {
   province: string | null;
   hasCoverLetter: boolean;
   hasCurriculum: boolean;
-  // Progressive reveal fields
-  candidateName: string | null;
-  candidateEmail: string | null;
-  coverLetter: string | null;
-  candidateAvatarUrl: string | null;
   // Audit
   identityRevealed: boolean;
   assignedTo: string | null;
 }
+
+export interface BlindRevealApplication extends BaseApplication {
+  revealLevel: "blind";
+  candidateName: null;
+  candidateEmail: null;
+  coverLetter: null;
+  candidateAvatarUrl: null;
+}
+
+export interface PartialRevealApplication extends BaseApplication {
+  revealLevel: "partial";
+  candidateName: string | null;
+  candidateEmail: string | null;
+  coverLetter: string | null;
+  candidateAvatarUrl: null;
+}
+
+export interface FullRevealApplication extends BaseApplication {
+  revealLevel: "full";
+  candidateName: string | null;
+  candidateEmail: string | null;
+  coverLetter: string | null;
+  candidateAvatarUrl: string | null;
+}
+
+export type BlindApplication =
+  | BlindRevealApplication
+  | PartialRevealApplication
+  | FullRevealApplication;
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -159,6 +185,7 @@ function timestampToIso(value: unknown): string | null {
 
 function projectApplication(
   docId: string,
+  offerId: string,
   data: Record<string, unknown>,
   stages: PipelineStage[]
 ): BlindApplication {
@@ -179,8 +206,10 @@ function projectApplication(
     | undefined;
 
   // Base — always visible
-  const result: BlindApplication = {
+  const base: BaseApplication = {
     applicationId: docId,
+    candidateId: candidateUid,
+    jobOfferId: offerId,
     anonymizedLabel: buildAnonymizedLabel(candidateUid),
     status: asTrimmedString(data.status) || "pending",
     pipelineStageId: asTrimmedString(data.pipelineStageId) || null,
@@ -198,33 +227,41 @@ function projectApplication(
     province: extractProvince(aiMatch),
     hasCoverLetter: Boolean(data.cover_letter ?? data.coverLetter),
     hasCurriculum: Boolean(data.curriculum_id ?? data.curriculumId),
-    // PII — default hidden
-    candidateName: null,
-    candidateEmail: null,
-    coverLetter: null,
-    candidateAvatarUrl: null,
     identityRevealed: data.identityRevealed === true,
     assignedTo: asTrimmedString(data.assignedTo) || null,
   };
 
-  // Progressive reveal
-  if (level === "partial" || level === "full") {
-    result.candidateName =
-      asTrimmedString(data.candidate_name ?? data.candidateName) || null;
-    result.candidateEmail =
-      asTrimmedString(data.candidate_email ?? data.candidateEmail) || null;
-    result.coverLetter =
-      asTrimmedString(data.cover_letter ?? data.coverLetter) || null;
-  }
-
   if (level === "full") {
-    result.candidateAvatarUrl =
-      asTrimmedString(
-        data.candidate_avatar_url ?? data.candidateAvatarUrl
-      ) || null;
+    return {
+      ...base,
+      revealLevel: "full",
+      candidateName: asTrimmedString(data.candidate_name ?? data.candidateName) || null,
+      candidateEmail: asTrimmedString(data.candidate_email ?? data.candidateEmail) || null,
+      coverLetter: asTrimmedString(data.cover_letter ?? data.coverLetter) || null,
+      candidateAvatarUrl: asTrimmedString(data.candidate_avatar_url ?? data.candidateAvatarUrl) || null,
+    } satisfies FullRevealApplication;
   }
 
-  return result;
+  if (level === "partial") {
+    return {
+      ...base,
+      revealLevel: "partial",
+      candidateName: asTrimmedString(data.candidate_name ?? data.candidateName) || null,
+      candidateEmail: asTrimmedString(data.candidate_email ?? data.candidateEmail) || null,
+      coverLetter: asTrimmedString(data.cover_letter ?? data.coverLetter) || null,
+      candidateAvatarUrl: null,
+    } satisfies PartialRevealApplication;
+  }
+
+  // level === "blind"
+  return {
+    ...base,
+    revealLevel: "blind",
+    candidateName: null,
+    candidateEmail: null,
+    coverLetter: null,
+    candidateAvatarUrl: null,
+  } satisfies BlindRevealApplication;
 }
 
 // ── Callable ───────────────────────────────────────────────────────
@@ -341,7 +378,7 @@ export const getApplicationsForReview = onCall(
         }
       }
 
-      results.push(projectApplication(doc.id, data, pipelineStages));
+      results.push(projectApplication(doc.id, normalizedOfferId, data, pipelineStages));
     }
 
     return { applications: results };

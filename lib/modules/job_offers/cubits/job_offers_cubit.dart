@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/modules/candidates/models/job_offer_filters.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offers_page.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 

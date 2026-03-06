@@ -4,6 +4,8 @@ import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/ai_generated_label.dart';
 import 'package:opti_job_app/modules/curriculum/cubits/curriculum_form_cubit.dart';
 import 'package:opti_job_app/modules/curriculum/ui/controllers/curriculum_summary_actions_controller.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_cubit.dart';
+import 'package:opti_job_app/modules/profiles/cubits/profile_state.dart';
 
 class CurriculumPersonalInfoForm extends StatefulWidget {
   const CurriculumPersonalInfoForm({super.key, required this.state});
@@ -35,17 +37,35 @@ class _CurriculumPersonalInfoFormState
   @override
   Widget build(BuildContext context) {
     final formCubit = context.read<CurriculumFormCubit>();
+    final candidateProfile = context.select(
+      (ProfileCubit cubit) =>
+          cubit.state.status == ProfileStatus.loaded
+              ? cubit.state.candidate
+              : null,
+    );
+    final avatarUrl = candidateProfile?.avatarUrl;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Perfil Profesional',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+        Row(
+          children: [
+            if (avatarUrl != null && avatarUrl.isNotEmpty) ...[
+              CircleAvatar(
+                radius: 28,
+                backgroundImage: NetworkImage(avatarUrl),
+              ),
+              const SizedBox(width: uiSpacing12),
+            ],
+            Text(
+              'Perfil Profesional',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: uiSpacing16),
         TextFormField(

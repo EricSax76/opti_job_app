@@ -56,8 +56,19 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
     emit(state.copyWith(status: ApplicantCurriculumStatus.loading));
     try {
       final results = await Future.wait([
-        profileRepository.fetchCandidateProfile(candidateUid),
-        curriculumRepository.fetchCurriculum(candidateUid),
+        profileRepository.fetchCandidateProfile(candidateUid).catchError(
+              (_) => Candidate(
+                id: 0,
+                uid: candidateUid,
+                name: 'Anónimo',
+                lastName: '',
+                email: '',
+                role: 'candidate',
+              ),
+            ),
+        curriculumRepository
+            .fetchCurriculum(candidateUid)
+            .catchError((_) => Curriculum.empty()),
         jobOfferRepository.fetchById(offerId),
       ]);
 
@@ -73,7 +84,7 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
       emit(
         state.copyWith(
           status: ApplicantCurriculumStatus.failure,
-          errorMessage: 'No se pudo cargar el CV del aplicante.',
+          errorMessage: 'No se pudo cargar la oferta del aplicante.',
         ),
       );
     }

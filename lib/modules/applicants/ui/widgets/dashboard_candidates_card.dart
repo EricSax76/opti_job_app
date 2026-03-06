@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/applicants/logic/dashboard_candidates_card_logic.dart';
 import 'package:opti_job_app/modules/applicants/ui/models/dashboard_candidates_card_view_model.dart';
@@ -94,27 +95,42 @@ class _CandidateRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 14,
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          child: Text(candidate.displayName.substring(0, 1).toUpperCase()),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            candidate.displayName,
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
+    return InkWell(
+      onTap: () {
+        context.pushNamed(
+          'company-applicant-cv',
+          pathParameters: {
+            'offerId': candidate.offerId,
+            'candidateUid': candidate.candidateUid,
+          },
+        );
+      },
+      borderRadius: BorderRadius.circular(uiTileRadius),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              child: Text(candidate.displayName.substring(0, 1).toUpperCase()),
             ),
-          ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                candidate.displayName,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+          ],
         ),
-        const SizedBox(width: 10),
-        Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-      ],
+      ),
     );
   }
 }

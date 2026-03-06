@@ -3,7 +3,7 @@ import 'package:opti_job_app/modules/companies/controllers/offer_form_controller
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/companies/models/company_offer_creation_view_model.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_payload.dart';
 
 class CompanyOfferCreationLogic {
   const CompanyOfferCreationLogic._();

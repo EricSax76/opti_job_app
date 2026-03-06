@@ -10,7 +10,7 @@ import 'package:opti_job_app/modules/companies/cubits/company_auth_state.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_payload.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_state.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';

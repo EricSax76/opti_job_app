@@ -90,7 +90,7 @@ class ApplicationsList extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            mainAxisExtent: 190,
+            mainAxisExtent: 240,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
           ),

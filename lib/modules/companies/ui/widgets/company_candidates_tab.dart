@@ -15,6 +15,7 @@ class CompanyCandidatesTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      lazy: false,
       create: (context) => CompanyCandidatesCubit(
         profileRepository: context.read<ProfileRepository>(),
         offerApplicantsCubit: context.read<OfferApplicantsCubit>(),

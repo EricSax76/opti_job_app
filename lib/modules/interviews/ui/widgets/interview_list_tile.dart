@@ -117,12 +117,18 @@ class _InterviewListTrailing extends StatelessWidget {
         InterviewStatusBadge(viewModel: status),
         if (scheduledLabel != null) ...[
           const SizedBox(height: 4),
-          Text(
-            scheduledLabel!,
-            style: TextStyle(
-              fontSize: 11,
-              color: scheduledColor,
-              fontWeight: FontWeight.bold,
+          Container(
+            constraints: const BoxConstraints(maxWidth: 120),
+            child: Text(
+              scheduledLabel!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 11,
+                color: scheduledColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

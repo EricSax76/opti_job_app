@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offers_page.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 

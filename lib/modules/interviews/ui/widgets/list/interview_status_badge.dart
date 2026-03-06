@@ -11,6 +11,7 @@ class InterviewStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(maxWidth: 120),
       padding: const EdgeInsets.symmetric(
         horizontal: uiSpacing8,
         vertical: uiSpacing4,
@@ -22,10 +23,14 @@ class InterviewStatusBadge extends StatelessWidget {
       ),
       child: Text(
         viewModel.label,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: viewModel.color,
           fontSize: uiSpacing8 + 3,
           fontWeight: FontWeight.bold,
+          height: 1.1,
         ),
       ),
     );

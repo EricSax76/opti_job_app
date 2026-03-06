@@ -140,7 +140,7 @@ class CandidateCard extends StatelessWidget {
   }) {
     context.pushNamed(
       'company-applicant-cv',
-      pathParameters: {'offerId': offerId, 'uid': candidateUid},
+      pathParameters: {'offerId': offerId, 'candidateUid': candidateUid},
     );
   }
 }

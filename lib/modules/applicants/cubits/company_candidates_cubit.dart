@@ -88,7 +88,7 @@ class CompanyCandidatesCubit extends Cubit<CompanyCandidatesState> {
     if (_companyJobOffersCubit.state.offers.isEmpty) return;
 
     _hasRequestedInitialLoad = true;
-    unawaited(loadApplicantsForAllOffers(force: false));
+    unawaited(loadApplicantsForAllOffers(force: true));
   }
 
   String? _resolveCompanyUid() {

@@ -2,10 +2,12 @@ class DashboardCandidateSummaryViewModel {
   const DashboardCandidateSummaryViewModel({
     required this.candidateUid,
     required this.displayName,
+    required this.offerId,
   });
 
   final String candidateUid;
   final String displayName;
+  final String offerId;
 }
 
 class DashboardCandidatesCardViewModel {

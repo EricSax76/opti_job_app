@@ -91,8 +91,9 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
 
         apps.sort(_sortByMostRecent);
         applicationsByOffer[entry.key] = apps;
-      } catch (_) {
+      } catch (e, st) {
         // Individual offer failure — keep empty list for that offer
+        print('ERROR in getApplicationsForOffers for offer ${entry.key}: $e\n$st');
         applicationsByOffer[entry.key] = const [];
       }
     }

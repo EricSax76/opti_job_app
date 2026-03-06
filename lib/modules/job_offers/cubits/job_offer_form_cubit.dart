@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:opti_job_app/features/ai/models/ai_service.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_payload.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
-import 'package:opti_job_app/modules/job_offers/models/job_offer_service.dart';
 
 enum JobOfferFormStatus { idle, submitting, success, failure }
 

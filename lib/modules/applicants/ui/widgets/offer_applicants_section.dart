@@ -97,7 +97,7 @@ class OfferApplicantsSection extends StatelessWidget {
                           'company-applicant-cv',
                           pathParameters: {
                             'offerId': offer.id,
-                            'uid': application.candidateUid,
+                            'candidateUid': application.candidateUid,
                           },
                         ),
                   onStatusChanged: application.id == null

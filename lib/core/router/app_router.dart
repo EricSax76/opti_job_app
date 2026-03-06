@@ -599,10 +599,10 @@ class AppRouter {
 
         // ... (existing imports)
         GoRoute(
-          path: '/company/offers/:offerId/applicants/:uid/cv',
+          path: '/company/offers/:offerId/applicants/:candidateUid/cv',
           name: 'company-applicant-cv',
           builder: (context, state) {
-            final uid = state.pathParameters['uid'] ?? '';
+            final uid = state.pathParameters['candidateUid'] ?? '';
             final offerId = state.pathParameters['offerId'] ?? '';
 
             final cubit = ApplicantCurriculumCubit(
@@ -729,7 +729,7 @@ class AppRouter {
     final interviewListCubit = InterviewListCubit(
       repository: context.read<InterviewRepository>(),
       uid: uid,
-    );
+    )..start();
 
     final pipelineTemplateCubit = PipelineTemplateCubit(
       pipelineRepository: context.read<PipelineRepository>(),

@@ -1,26 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
+import 'package:opti_job_app/modules/job_offers/models/job_offer_payload.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offers_page.dart';
 import 'package:opti_job_app/modules/job_offers/data/mappers/job_offer_mapper.dart';
-
-class JobOffersPageCursor {
-  const JobOffersPageCursor._(this._snapshot);
-
-  final QueryDocumentSnapshot<Map<String, dynamic>> _snapshot;
-}
-
-class JobOffersPage {
-  const JobOffersPage({
-    required this.offers,
-    required this.hasMore,
-    required this.nextPageCursor,
-  });
-
-  final List<JobOffer> offers;
-  final bool hasMore;
-  final JobOffersPageCursor? nextPageCursor;
-}
 
 class JobOfferService {
   static const int _defaultPageSize = 20;
@@ -68,7 +52,7 @@ class JobOfferService {
       );
     }
     if (startAfter != null) {
-      query = query.startAfterDocument(startAfter._snapshot);
+      query = query.startAfterDocument(startAfter.snapshot);
     }
     final safeLimit = limit > 0 ? limit : _defaultPageSize;
     final snapshot = await query.limit(safeLimit).get();
@@ -125,7 +109,7 @@ class JobOfferService {
           .where('company_uid', isEqualTo: normalizedCompanyUid)
           .orderBy('created_at', descending: true);
       if (startAfter != null) {
-        query = query.startAfterDocument(startAfter._snapshot);
+        query = query.startAfterDocument(startAfter.snapshot);
       }
       final safeLimit = limit > 0 ? limit : _defaultPageSize;
       final snapshot = await query.limit(safeLimit).get();
@@ -180,7 +164,7 @@ class JobOfferService {
       offers: offers,
       hasMore: hasMore,
       nextPageCursor: hasMore && docs.isNotEmpty
-          ? JobOffersPageCursor._(docs.last)
+          ? JobOffersPageCursor(docs.last)
           : null,
     );
   }
@@ -267,92 +251,6 @@ class JobOfferService {
       if (id != null && id.isNotEmpty) return id;
     }
     throw StateError('createJobOfferSecure did not return a valid offerId.');
-  }
-}
-
-class JobOfferPayload {
-  const JobOfferPayload({
-    required this.title,
-    required this.description,
-    required this.location,
-    this.provinceId,
-    this.provinceName,
-    this.municipalityId,
-    this.municipalityName,
-    required this.companyId,
-    required this.companyUid,
-    required this.companyName,
-    this.companyAvatarUrl,
-    required this.salaryMin,
-    required this.salaryMax,
-    required this.salaryCurrency,
-    required this.salaryPeriod,
-    this.education,
-    this.jobCategory,
-    this.workSchedule,
-    this.contractType,
-    this.jobType,
-    this.keyIndicators,
-    this.pipelineId,
-    this.pipelineStages,
-    this.knockoutQuestions,
-    this.languageCheckResult,
-  });
-
-  final String title;
-  final String description;
-  final String location;
-  final String? provinceId;
-  final String? provinceName;
-  final String? municipalityId;
-  final String? municipalityName;
-  final int companyId;
-  final String companyUid;
-  final String companyName;
-  final String? companyAvatarUrl;
-  final String salaryMin;
-  final String salaryMax;
-  final String salaryCurrency;
-  final String salaryPeriod;
-  final String? education;
-  final String? jobCategory;
-  final String? workSchedule;
-  final String? contractType;
-  final String? jobType;
-  final String? keyIndicators;
-  final String? pipelineId;
-  final List<dynamic>? pipelineStages;
-  final List<dynamic>? knockoutQuestions;
-  final Map<String, dynamic>? languageCheckResult;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'description': description,
-      'location': location,
-      'province_id': _normalizeNullableString(provinceId),
-      'province_name': _normalizeNullableString(provinceName),
-      'municipality_id': _normalizeNullableString(municipalityId),
-      'municipality_name': _normalizeNullableString(municipalityName),
-      'company_id': companyId,
-      'company_uid': companyUid,
-      'company_name': companyName,
-      'company_avatar_url': companyAvatarUrl,
-      'salary_min': salaryMin,
-      'salary_max': salaryMax,
-      'salary_currency': salaryCurrency,
-      'salary_period': salaryPeriod,
-      'education': education,
-      'job_category': jobCategory,
-      'work_schedule': workSchedule,
-      'contract_type': contractType,
-      'job_type': jobType,
-      'key_indicators': keyIndicators,
-      if (pipelineId != null) 'pipelineId': pipelineId,
-      if (pipelineStages != null) 'pipelineStages': pipelineStages,
-      if (knockoutQuestions != null) 'knockoutQuestions': knockoutQuestions,
-      'language_check_result': languageCheckResult,
-    };
   }
 }
 
