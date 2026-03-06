@@ -4,7 +4,7 @@ import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_list_logic.dart';
-import 'package:opti_job_app/modules/job_offers/ui/models/job_offer_list_view_model.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_list_view_model.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_summary_card.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/list/job_offer_type_filter.dart';
 

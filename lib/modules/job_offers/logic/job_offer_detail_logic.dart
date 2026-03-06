@@ -2,7 +2,7 @@ import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/companies/models/company.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/ui/models/job_offer_detail_view_model.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_detail_view_model.dart';
 
 class JobOfferDetailLogic {
   const JobOfferDetailLogic._();

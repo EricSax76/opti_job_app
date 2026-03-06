@@ -11,7 +11,7 @@ import 'package:opti_job_app/modules/job_offers/cubits/job_offer_detail_cubit.da
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_detail_logic.dart';
 import 'package:opti_job_app/modules/job_offers/logic/job_offer_match_logic.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
-import 'package:opti_job_app/modules/job_offers/ui/models/job_offer_detail_view_model.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer_detail_view_model.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_match_dialog.dart';
 import 'package:opti_job_app/modules/job_offers/ui/widgets/job_offer_pre_apply_verdict_dialog.dart';
 
