@@ -50,6 +50,14 @@ class ApplicantTile extends StatelessWidget {
       'Estado: ${ApplicationStatus.fromString(application.status).label}',
     );
 
+    final stageName = application.pipelineStageName?.trim();
+    final matchScore = application.matchScore;
+    final knockoutPassed = application.knockoutPassed;
+    final hasAtsMeta =
+        (stageName != null && stageName.isNotEmpty) ||
+        matchScore != null ||
+        knockoutPassed != null;
+
     final canChangeStatus = onStatusChanged != null && onStartInterview != null;
 
     return Container(
@@ -71,9 +79,52 @@ class ApplicantTile extends StatelessWidget {
           displayName,
           style: TextStyle(color: ink, fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(
-          subtitleParts.join(' • '),
-          style: TextStyle(color: muted, height: 1.35),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              subtitleParts.join(' • '),
+              style: TextStyle(color: muted, height: 1.35),
+            ),
+            if (hasAtsMeta) ...[
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (stageName != null && stageName.isNotEmpty)
+                    _ApplicantMetaBadge(
+                      icon: Icons.view_kanban_outlined,
+                      label: 'Etapa: $stageName',
+                      color: muted,
+                      borderColor: border,
+                    ),
+                  if (matchScore != null)
+                    _ApplicantMetaBadge(
+                      icon: Icons.auto_graph_outlined,
+                      label: 'Match: ${matchScore.toStringAsFixed(0)}%',
+                      color: colorScheme.primary,
+                      borderColor: colorScheme.primary.withValues(alpha: 0.35),
+                    ),
+                  if (knockoutPassed != null)
+                    _ApplicantMetaBadge(
+                      icon: knockoutPassed
+                          ? Icons.task_alt_outlined
+                          : Icons.warning_amber_rounded,
+                      label: knockoutPassed
+                          ? 'Knockout: Aprobado'
+                          : 'Knockout: Revisar',
+                      color: knockoutPassed
+                          ? colorScheme.tertiary
+                          : colorScheme.error,
+                      borderColor: knockoutPassed
+                          ? colorScheme.tertiary.withValues(alpha: 0.35)
+                          : colorScheme.error.withValues(alpha: 0.35),
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
         trailing: !canChangeStatus
             ? null
@@ -113,6 +164,44 @@ class ApplicantTile extends StatelessWidget {
                 },
                 child: ApplicationStatusBadge.fromString(application.status),
               ),
+      ),
+    );
+  }
+}
+
+class _ApplicantMetaBadge extends StatelessWidget {
+  const _ApplicantMetaBadge({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.borderColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: color, height: 1.1),
+          ),
+        ],
       ),
     );
   }

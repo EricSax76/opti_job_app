@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:opti_job_app/features/ai/models/ai_service.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
+import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/analytics/cubits/analytics_dashboard_cubit.dart';
 import 'package:opti_job_app/modules/analytics/repositories/analytics_repository.dart';
 import 'package:opti_job_app/modules/analytics/ui/pages/analytics_dashboard_screen.dart';
@@ -11,8 +12,10 @@ import 'package:opti_job_app/modules/applicants/cubits/applicant_curriculum_cubi
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/applicants/ui/pages/applicant_curriculum_screen.dart';
 import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
+import 'package:opti_job_app/modules/ats/cubits/pipeline_board_cubit.dart';
 import 'package:opti_job_app/modules/ats/cubits/pipeline_template_cubit.dart';
 import 'package:opti_job_app/modules/ats/repositories/pipeline_repository.dart';
+import 'package:opti_job_app/modules/ats/ui/pages/pipeline_board_screen.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_dashboard_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
@@ -27,6 +30,7 @@ import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart';
+import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
@@ -77,6 +81,21 @@ List<RouteBase> buildCompanyRoutes() {
           context: context,
           uid: uid,
           initialIndex: 2,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/company/:uid/offers/:offerId/pipeline',
+      name: 'company-offer-pipeline',
+      builder: (context, state) {
+        final uid = state.pathParameters['uid'] ?? '';
+        final offerId = state.pathParameters['offerId'] ?? '';
+        return _CompanyOfferPipelineRoute(
+          companyUid: uid,
+          offerId: offerId,
+          jobOfferRepository: context.read<JobOfferRepository>(),
+          pipelineRepository: context.read<PipelineRepository>(),
+          applicantsRepository: context.read<ApplicantsRepository>(),
         );
       },
     ),
@@ -222,4 +241,85 @@ Widget _buildCompanyDashboardRoute({
       interviewsCubit: interviewListCubit,
     ),
   );
+}
+
+class _CompanyOfferPipelineRoute extends StatefulWidget {
+  const _CompanyOfferPipelineRoute({
+    required this.companyUid,
+    required this.offerId,
+    required this.jobOfferRepository,
+    required this.pipelineRepository,
+    required this.applicantsRepository,
+  });
+
+  final String companyUid;
+  final String offerId;
+  final JobOfferRepository jobOfferRepository;
+  final PipelineRepository pipelineRepository;
+  final ApplicantsRepository applicantsRepository;
+
+  @override
+  State<_CompanyOfferPipelineRoute> createState() =>
+      _CompanyOfferPipelineRouteState();
+}
+
+class _CompanyOfferPipelineRouteState
+    extends State<_CompanyOfferPipelineRoute> {
+  late final Future<JobOffer> _offerFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _offerFuture = widget.jobOfferRepository.fetchById(widget.offerId.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<JobOffer>(
+      future: _offerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Pipeline ATS')),
+            body: StateMessage(
+              title: 'No se pudo abrir el pipeline',
+              message: 'No se encontró la oferta solicitada.',
+            ),
+          );
+        }
+
+        final offer = snapshot.data!;
+        final routeCompanyUid = widget.companyUid.trim();
+        final offerCompanyUid = (offer.companyUid ?? '').trim();
+        final companyMismatch =
+            routeCompanyUid.isNotEmpty &&
+            offerCompanyUid.isNotEmpty &&
+            routeCompanyUid != offerCompanyUid;
+        if (companyMismatch) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Pipeline ATS')),
+            body: const StateMessage(
+              title: 'Acceso inválido',
+              message: 'La oferta no pertenece a la empresa de la ruta.',
+            ),
+          );
+        }
+
+        return BlocProvider(
+          create: (_) => PipelineBoardCubit(
+            pipelineRepository: widget.pipelineRepository,
+            applicantsRepository: widget.applicantsRepository,
+            jobOffer: offer,
+          )..loadBoard(),
+          child: const PipelineBoardScreen(),
+        );
+      },
+    );
+  }
 }

@@ -95,6 +95,13 @@ class Application {
       return null;
     }
 
+    double? parseNullableDouble(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value);
+      return null;
+    }
+
     Map<String, dynamic> parseMap(dynamic value) {
       if (value is Map<String, dynamic>) return value;
       if (value is Map) {
@@ -137,7 +144,9 @@ class Application {
       pipelineHistory: json['pipelineHistory'] as List<dynamic>?,
       knockoutResponses: parseMap(json['knockoutResponses']),
       assignedTo: json['assignedTo'] as String?,
-      matchScore: (json['match_score'] as num?)?.toDouble(),
+      matchScore: parseNullableDouble(
+        json['match_score'] ?? json['matchScore'],
+      ),
       sourceChannel:
           json['sourceChannel'] as String? ??
           json['source_channel'] as String? ??
@@ -158,7 +167,7 @@ class Application {
       identityRevealed: json['identityRevealed'] as bool? ?? false,
       skillsMatched:
           (json['skillsMatched'] as List<dynamic>?)?.cast<String>() ?? const [],
-      experienceYears: (json['experienceYears'] as num?)?.toDouble(),
+      experienceYears: parseNullableDouble(json['experienceYears']),
       province: json['province'] as String?,
       hasCoverLetter: json['hasCoverLetter'] as bool? ?? false,
       hasCurriculum: json['hasCurriculum'] as bool? ?? false,

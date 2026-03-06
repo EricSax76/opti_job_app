@@ -7,6 +7,7 @@ import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/models/company_multiposting_settings.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/offer_applicants_section.dart';
+import 'package:opti_job_app/modules/applications/cubits/offer_applicants_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
 import 'package:opti_job_app/modules/job_offers/logic/offer_card_logic.dart';
 
@@ -22,6 +23,8 @@ class OfferCard extends StatelessWidget {
   bool get _salaryGapBlocked =>
       offer.status == 'blocked_pending_salary_justification' ||
       offer.salaryGapJustificationRequired;
+  bool get _hasPipelineConfigured =>
+      offer.pipelineId?.trim().isNotEmpty == true;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +107,13 @@ class OfferCard extends StatelessWidget {
                   onPressed: () => context.push('/job-offer/${offer.id}'),
                   icon: const Icon(Icons.open_in_new, size: 18),
                   label: const Text('Ver detalle'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _hasPipelineConfigured
+                      ? () => _openPipelineBoard(context)
+                      : null,
+                  icon: const Icon(Icons.view_kanban_outlined, size: 18),
+                  label: const Text('Pipeline ATS'),
                 ),
                 FilledButton.icon(
                   onPressed: _salaryGapBlocked
@@ -189,6 +199,43 @@ class OfferCard extends StatelessWidget {
         const SnackBar(content: Text('No se pudo enviar la justificación.')),
       );
     }
+  }
+
+  Future<void> _openPipelineBoard(BuildContext context) async {
+    final pipelineId = offer.pipelineId?.trim();
+    if (pipelineId == null || pipelineId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Esta oferta no tiene un pipeline asignado.'),
+        ),
+      );
+      return;
+    }
+
+    final companyUid = OfferCardLogic.normalizeCompanyUid(
+      offer.companyUid ?? context.read<CompanyAuthCubit>().state.company?.uid,
+    );
+    if (companyUid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No se pudo resolver la empresa para abrir el pipeline.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await context.pushNamed(
+      'company-offer-pipeline',
+      pathParameters: {'uid': companyUid, 'offerId': offer.id},
+    );
+
+    if (!context.mounted) return;
+    await context.read<OfferApplicantsCubit>().loadApplicants(
+      offerId: offer.id,
+      companyUid: companyUid,
+    );
   }
 
   Future<void> _publishToExternalChannels(BuildContext context) async {
