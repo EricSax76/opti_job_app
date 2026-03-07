@@ -5,8 +5,10 @@
   "scripts": {
     "lint": "echo \"No lint configured\"",
     "build": "tsc -p tsconfig.json",
+    "validate:contracts": "node scripts/validate-callable-contracts.js",
     "test": "npm run build && node --test tests/**/*.test.js",
     "test:e2e": "npm run build && firebase emulators:exec --config ../firebase.json --project demo-opti-job --only firestore,auth \"node --test e2e/*.test.js\"",
+    "test:e2e:critical": "npm run build && firebase emulators:exec --config ../firebase.json --project demo-opti-job --only firestore,auth \"node --test e2e/p2_candidate_company_flows.test.js e2e/p3_ats_knockout_hardening.test.js e2e/p3_interviews_actions_callables.test.js e2e/p3_interviews_start_meeting_callable.test.js e2e/p3_compliance_observability.test.js e2e/p3_compliance_salary_benchmark.test.js\"",
     "migrate:applications": "node scripts/migrate-applications-schema.js",
     "backfill:recruiter-claims": "npm run build && node lib/scripts/backfillRecruiterClaims.js"
   },

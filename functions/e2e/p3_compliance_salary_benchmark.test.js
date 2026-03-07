@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { after, before, test } = require("node:test");
 const admin = require("firebase-admin");
+const { assertCamelCaseResponse } = require("./helpers/contractAssertions.js");
 
 const { upsertSalaryBenchmark } = require("../lib/index.js");
 
@@ -69,6 +70,7 @@ test(
       },
       authContext(companyId),
     );
+    assertCamelCaseResponse(result, { path: "upsertSalaryBenchmark.company" });
 
     assert.equal(result.ok, true);
     assert.equal(result.companyId, companyId);
@@ -109,6 +111,7 @@ test(
       },
       authContext(recruiterUid),
     );
+    assertCamelCaseResponse(result, { path: "upsertSalaryBenchmark.recruiter" });
 
     assert.equal(result.ok, true);
     assert.equal(result.updatedRows, 1);

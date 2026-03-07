@@ -391,6 +391,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /complianceOpsDaily/{docId} {
+      allow read: if (
+          isCompany() && resource.data.companyId == request.auth.uid
+        ) || recruiterCanViewReports(resource.data.companyId);
+      allow write: if false;
+    }
+
     match /multipostingPublications/{publicationId} {
       allow read: if (isCompany() && request.auth.uid == resource.data.companyId)
                     || recruiterCanViewReports(resource.data.companyId)

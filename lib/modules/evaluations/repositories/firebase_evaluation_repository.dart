@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/evaluations/models/approval.dart';
 import 'package:opti_job_app/modules/evaluations/models/evaluation.dart';
 import 'package:opti_job_app/modules/evaluations/models/scorecard_template.dart';
@@ -11,13 +12,14 @@ class FirebaseEvaluationRepository implements EvaluationRepository {
     FirebaseFunctions? functions,
     FirebaseFunctions? fallbackFunctions,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
-       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
+       _callables = CallableWithFallback(
+         functions:
+             functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+         fallbackFunctions: fallbackFunctions ?? FirebaseFunctions.instance,
+       );
 
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
 
   @override
   Future<List<ScorecardTemplate>> getScorecardTemplates(
@@ -133,13 +135,6 @@ class FirebaseEvaluationRepository implements EvaluationRepository {
     required String functionName,
     required Map<String, dynamic> payload,
   }) async {
-    try {
-      await _functions.httpsCallable(functionName).call(payload);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      await _fallbackFunctions.httpsCallable(functionName).call(payload);
-    }
+    await _callables.callVoid(name: functionName, payload: payload);
   }
 }

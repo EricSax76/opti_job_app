@@ -130,11 +130,7 @@ void main() {
       final semanticsHandle = tester.ensureSemantics();
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: AiGeneratedLabel(),
-            ),
-          ),
+          home: Scaffold(body: Center(child: AiGeneratedLabel())),
         ),
       );
 
@@ -153,6 +149,9 @@ class _FakeDataRequestRepository implements DataRequestRepository {
   @override
   Stream<List<DataRequest>> getRequests(String candidateUid) =>
       Stream.value(const []);
+
+  @override
+  Future<Map<String, dynamic>> exportCandidateData() async => const {};
 
   @override
   Future<DataRequest> submitRequest(DataRequest request) async => request;

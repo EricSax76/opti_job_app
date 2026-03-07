@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { after, before, test } = require("node:test");
 const admin = require("firebase-admin");
+const { assertAuditLogContract } = require("./helpers/contractAssertions.js");
 
 const { startMeeting } = require("../lib/index.js");
 
@@ -103,6 +104,7 @@ test(
       .get();
     assert.equal(auditSnap.empty, false);
     const audit = auditSnap.docs[0].data();
+    assertAuditLogContract(audit);
     assert.equal(audit.actorRole, "company");
     assert.equal(audit.targetType, "interview");
     assert.equal(audit.companyId, companyUid);

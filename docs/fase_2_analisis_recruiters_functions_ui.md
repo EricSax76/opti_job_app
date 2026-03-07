@@ -90,3 +90,16 @@ Cerrar evidencia tecnica de conexion backend->UI para la carpeta `recruiters`.
 
 ## Siguiente carpeta recomendada
 Continuar con `evaluations`.
+
+## Actualizacion BL-010 (2026-03-07)
+- Decisión aplicada: `keep_internal` para `syncRecruiterClaims`.
+- Acción técnica:
+  - se retiró el export de `syncRecruiterClaims` en `functions/src/index.ts`,
+    por lo que deja de desplegarse como callable pública.
+- Ruta interna documentada para sincronizar claims:
+  - trigger `onRecruiterWrite`,
+  - utilidades `syncRecruiterClaims` / `syncRecruiterClaimsFromFirestore`,
+  - script operativo `functions/src/scripts/backfillRecruiterClaims.ts`.
+- Resultado:
+  - sin callable huérfana expuesta,
+  - sincronización de claims preservada en caminos internos de plataforma.

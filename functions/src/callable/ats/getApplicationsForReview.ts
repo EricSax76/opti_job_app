@@ -30,6 +30,7 @@ const PARTIAL_REVEAL_STAGE_TYPES = new Set<string>(["interview"]);
 const FULL_REVEAL_STAGE_TYPES = new Set<string>(["offer", "hired"]);
 
 type RevealLevel = "blind" | "partial" | "full";
+type KnockoutEvaluationStatus = "completed" | "blocked_consent" | "failed";
 
 export interface BaseApplication {
   applicationId: string;
@@ -45,6 +46,8 @@ export interface BaseApplication {
   matchScore: number | null;
   knockoutPassed: boolean | null;
   knockoutResponses: Record<string, unknown> | null;
+  knockoutEvaluationStatus: KnockoutEvaluationStatus | null;
+  knockoutEvaluationNeedsAttention: boolean;
   skillsMatched: string[];
   experienceYears: number | null;
   province: string | null;
@@ -166,6 +169,16 @@ function extractProvince(
   return null;
 }
 
+function extractKnockoutEvaluationStatus(
+  value: unknown
+): KnockoutEvaluationStatus | null {
+  const normalized = asTrimmedString(value).toLowerCase();
+  if (normalized === "completed") return "completed";
+  if (normalized === "blocked_consent") return "blocked_consent";
+  if (normalized === "failed") return "failed";
+  return null;
+}
+
 function timestampToIso(value: unknown): string | null {
   if (value == null) return null;
   if (typeof value === "object" && value !== null) {
@@ -222,6 +235,12 @@ function projectApplication(
       typeof data.knockoutPassed === "boolean" ? data.knockoutPassed : null,
     knockoutResponses:
       (data.knockoutResponses as Record<string, unknown>) ?? null,
+    knockoutEvaluationStatus: extractKnockoutEvaluationStatus(
+      data.knockoutEvaluationStatus ?? data.knockout_evaluation_status
+    ),
+    knockoutEvaluationNeedsAttention:
+      data.knockoutEvaluationNeedsAttention === true ||
+      data.knockout_evaluation_needs_attention === true,
     skillsMatched: extractSkillsMatched(aiMatch),
     experienceYears: extractExperienceYears(aiMatch),
     province: extractProvince(aiMatch),

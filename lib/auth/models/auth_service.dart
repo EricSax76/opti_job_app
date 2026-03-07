@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/candidates/data/mappers/candidate_mapper.dart';
 import 'package:opti_job_app/core/utils/firestore_utils.dart';
@@ -23,14 +24,15 @@ class AuthService {
     required EudiWalletNativeChannel eudiWalletNativeChannel,
   }) : _auth = firebaseAuth,
        _firestore = firestore,
-       _functions = functions,
-       _fallbackFunctions = fallbackFunctions,
+       _callables = CallableWithFallback(
+         functions: functions,
+         fallbackFunctions: fallbackFunctions,
+       ),
        _eudiWalletNativeChannel = eudiWalletNativeChannel;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
   final EudiWalletNativeChannel _eudiWalletNativeChannel;
 
   Stream<String?> get uidStream =>
@@ -466,28 +468,7 @@ class AuthService {
     required String name,
     Map<String, dynamic> payload = const {},
   }) async {
-    try {
-      final result = await _functions.httpsCallable(name).call(payload);
-      final data = result.data;
-      if (data is Map<String, dynamic>) return data;
-      if (data is Map) {
-        return Map<String, dynamic>.from(data);
-      }
-      return const <String, dynamic>{};
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      final fallback = await _fallbackFunctions
-          .httpsCallable(name)
-          .call(payload);
-      final data = fallback.data;
-      if (data is Map<String, dynamic>) return data;
-      if (data is Map) {
-        return Map<String, dynamic>.from(data);
-      }
-      return const <String, dynamic>{};
-    }
+    return _callables.callMap(name: name, payload: payload);
   }
 
   // ─── Recruiter auth ──────────────────────────────────────────────────────

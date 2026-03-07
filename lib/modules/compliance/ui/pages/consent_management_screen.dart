@@ -398,14 +398,8 @@ class _DataRequestsTab extends StatelessWidget {
                 .toList(growable: false) ??
             const <DataRequest>[];
 
-        if (requests.isEmpty) {
-          return const StateMessage(
-            title: 'Sin solicitudes',
-            message: 'No hay solicitudes ARSULIPO/AI Act para esta empresa.',
-          );
-        }
-
         final overdueCount = requests.where(screen._isOverdue).length;
+        final hasRequests = requests.isNotEmpty;
 
         return Padding(
           padding: const EdgeInsets.all(uiSpacing16),
@@ -419,12 +413,205 @@ class _DataRequestsTab extends StatelessWidget {
                 titleFontSize: 22,
               ),
               const SizedBox(height: uiSpacing16),
-              Expanded(child: screen._buildRequestsTable(requests)),
+              _ComplianceOpsSummaryCard(
+                companyId: screen.widget.companyId,
+                overdueOpenCount: overdueCount,
+              ),
+              const SizedBox(height: uiSpacing16),
+              Expanded(
+                child: hasRequests
+                    ? screen._buildRequestsTable(requests)
+                    : const StateMessage(
+                        title: 'Sin solicitudes',
+                        message:
+                            'No hay solicitudes ARSULIPO/AI Act para esta empresa.',
+                      ),
+              ),
             ],
           ),
         );
       },
     );
+  }
+}
+
+class _ComplianceOpsSummaryCard extends StatelessWidget {
+  const _ComplianceOpsSummaryCard({
+    required this.companyId,
+    required this.overdueOpenCount,
+  });
+
+  final String companyId;
+  final int overdueOpenCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final dateKey = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc());
+    final docId = '${companyId.trim()}:$dateKey';
+    final scheme = Theme.of(context).colorScheme;
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('complianceOpsDaily')
+          .doc(docId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppCard(
+            child: Text(
+              'No se pudo cargar el dashboard operativo de compliance.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          );
+        }
+
+        final data = snapshot.data?.data() ?? const <String, dynamic>{};
+        final operations = _asMap(data['operations']);
+        final processStats = _asMap(operations['processDataRequest']);
+        final sla = _asMap(data['sla']);
+        final alerts = _asMap(data['alerts']);
+
+        final invocations = _asInt(processStats['invocations']);
+        final successes = _asInt(processStats['successCount']);
+        final errors = _asInt(processStats['errorCount']);
+        final totalLatencyMs = _asInt(processStats['totalLatencyMs']);
+        final avgLatencyMs = invocations > 0
+            ? (totalLatencyMs / invocations).round()
+            : null;
+
+        final completedCount = _asInt(sla['completedCount']);
+        final completedWithinCount = _asInt(sla['completedWithinCount']);
+        final completedOutsideCount = _asInt(sla['completedOutsideCount']);
+        final slaRate = completedCount > 0
+            ? (completedWithinCount / completedCount) * 100
+            : null;
+
+        final hasErrors = _asBool(alerts['hasErrors']) || errors > 0;
+        final hasSlaBreaches =
+            _asBool(alerts['hasSlaBreaches']) || completedOutsideCount > 0;
+        final hasOpenOverdue = overdueOpenCount > 0;
+        final hasAlert = hasErrors || hasSlaBreaches || hasOpenOverdue;
+
+        return AppCard(
+          padding: const EdgeInsets.all(uiSpacing12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Observabilidad operativa (UTC $dateKey)',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: uiSpacing8),
+              Wrap(
+                spacing: uiSpacing8,
+                runSpacing: uiSpacing8,
+                children: [
+                  InfoPill(
+                    label: 'Procesadas: $invocations',
+                    backgroundColor: scheme.primary.withValues(alpha: 0.1),
+                    borderColor: scheme.primary.withValues(alpha: 0.25),
+                    textColor: scheme.primary,
+                  ),
+                  InfoPill(
+                    label: 'Éxitos: $successes',
+                    backgroundColor: scheme.tertiary.withValues(alpha: 0.1),
+                    borderColor: scheme.tertiary.withValues(alpha: 0.25),
+                    textColor: scheme.tertiary,
+                  ),
+                  InfoPill(
+                    label: 'Errores: $errors',
+                    backgroundColor: (hasErrors ? scheme.error : scheme.outline)
+                        .withValues(alpha: 0.1),
+                    borderColor: (hasErrors ? scheme.error : scheme.outline)
+                        .withValues(alpha: 0.25),
+                    textColor: hasErrors
+                        ? scheme.error
+                        : scheme.onSurfaceVariant,
+                  ),
+                  InfoPill(
+                    label: avgLatencyMs == null
+                        ? 'Latencia media: N/D'
+                        : 'Latencia media: ${avgLatencyMs}ms',
+                  ),
+                  InfoPill(
+                    label: completedCount == 0
+                        ? 'SLA resuelto: N/D'
+                        : 'SLA resuelto: ${slaRate!.toStringAsFixed(1)}%',
+                    backgroundColor: completedOutsideCount > 0
+                        ? scheme.error.withValues(alpha: 0.1)
+                        : scheme.secondary.withValues(alpha: 0.1),
+                    borderColor: completedOutsideCount > 0
+                        ? scheme.error.withValues(alpha: 0.25)
+                        : scheme.secondary.withValues(alpha: 0.25),
+                    textColor: completedOutsideCount > 0
+                        ? scheme.error
+                        : scheme.secondary,
+                  ),
+                  InfoPill(
+                    label: 'Vencidas abiertas: $overdueOpenCount',
+                    backgroundColor: hasOpenOverdue
+                        ? scheme.error.withValues(alpha: 0.1)
+                        : scheme.outline.withValues(alpha: 0.1),
+                    borderColor: hasOpenOverdue
+                        ? scheme.error.withValues(alpha: 0.25)
+                        : scheme.outline.withValues(alpha: 0.25),
+                    textColor: hasOpenOverdue
+                        ? scheme.error
+                        : scheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+              if (hasAlert) ...[
+                const SizedBox(height: uiSpacing8),
+                Text(
+                  'Alertas activas: ${_alertsLabel(hasErrors: hasErrors, hasSlaBreaches: hasSlaBreaches, hasOpenOverdue: hasOpenOverdue)}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static String _alertsLabel({
+    required bool hasErrors,
+    required bool hasSlaBreaches,
+    required bool hasOpenOverdue,
+  }) {
+    final labels = <String>[];
+    if (hasErrors) labels.add('errores de proceso');
+    if (hasSlaBreaches) labels.add('incumplimientos SLA');
+    if (hasOpenOverdue) labels.add('solicitudes vencidas abiertas');
+    if (labels.isEmpty) return 'ninguna';
+    return labels.join(' · ');
+  }
+
+  static int _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  static bool _asBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    return false;
+  }
+
+  static Map<String, dynamic> _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return const <String, dynamic>{};
   }
 }
 

@@ -1,5 +1,5 @@
-import * as admin from "firebase-admin";
 import { JsonRecord } from "./eudiUtils";
+import { writeAuditLog } from "../../../utils/auditLog";
 
 export async function logAuditEntry({
   action,
@@ -26,18 +26,19 @@ export async function logAuditEntry({
   credentialType?: string | null;
   proofSchemaVersion?: string | null;
 }): Promise<void> {
-  await admin.firestore().collection("auditLogs").add({
+  await writeAuditLog({
     action,
     actorUid,
     actorRole,
     targetType,
     targetId,
     companyId: companyId ?? null,
-    verificationMethod: verificationMethod ?? null,
-    issuerDid: issuerDid ?? null,
-    credentialType: credentialType ?? null,
-    proofSchemaVersion: proofSchemaVersion ?? null,
     metadata,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    extraFields: {
+      verificationMethod: verificationMethod ?? null,
+      issuerDid: issuerDid ?? null,
+      credentialType: credentialType ?? null,
+      proofSchemaVersion: proofSchemaVersion ?? null,
+    },
   });
 }

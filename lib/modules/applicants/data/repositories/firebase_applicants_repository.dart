@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/applicants/models/ai_decision_review.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
@@ -10,13 +11,14 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     FirebaseFunctions? functions,
     FirebaseFunctions? fallbackFunctions,
   }) : _firestore = firestore,
-       _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
-       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
+       _callables = CallableWithFallback(
+         functions:
+             functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+         fallbackFunctions: fallbackFunctions ?? FirebaseFunctions.instance,
+       );
 
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
 
   /// Fetches applications for a single offer via the blind-review callable.
   ///
@@ -31,12 +33,10 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     final normalizedOfferId = jobOfferId.trim();
     if (normalizedOfferId.isEmpty) return const [];
 
-    final callable = _functions.httpsCallable('getApplicationsForReview');
-    final result = await callable.call<Map<String, dynamic>>({
-      'jobOfferId': normalizedOfferId,
-    });
-
-    final data = result.data;
+    final data = await _callables.callMap(
+      name: 'getApplicationsForReview',
+      payload: {'jobOfferId': normalizedOfferId},
+    );
     final rawList = (data['applications'] as List<dynamic>?) ?? [];
 
     final applications = rawList
@@ -72,17 +72,18 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     };
 
     // Fire all callable requests in parallel
-    final futures = <String, Future<HttpsCallableResult<Map<String, dynamic>>>>{
+    final futures = <String, Future<Map<String, dynamic>>>{
       for (final offerId in normalizedOfferIds)
-        offerId: _functions
-            .httpsCallable('getApplicationsForReview')
-            .call<Map<String, dynamic>>({'jobOfferId': offerId}),
+        offerId: _callables.callMap(
+          name: 'getApplicationsForReview',
+          payload: {'jobOfferId': offerId},
+        ),
     };
 
     for (final entry in futures.entries) {
       try {
-        final result = await entry.value;
-        final rawList = (result.data['applications'] as List<dynamic>?) ?? [];
+        final payload = await entry.value;
+        final rawList = (payload['applications'] as List<dynamic>?) ?? [];
 
         final apps = rawList
             .cast<Map<String, dynamic>>()
@@ -125,7 +126,7 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
       'getAiDecisionReview',
       <String, dynamic>{'applicationId': applicationId, 'limit': limit},
     );
-    final data = _extractResultMap(result);
+    final data = CallableWithFallback.asMap(result.data);
     return AiDecisionReview.fromJson(data);
   }
 
@@ -147,7 +148,7 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
           : <String, dynamic>{'originalAiScore': originalAiScore},
     };
     final result = await _callWithRegionFallback('overrideAiDecision', payload);
-    final data = _extractResultMap(result);
+    final data = CallableWithFallback.asMap(result.data);
     return AiDecisionOverrideResult.fromJson(data);
   }
 
@@ -177,19 +178,7 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     String functionName,
     Map<String, dynamic> payload,
   ) async {
-    try {
-      return await _functions.httpsCallable(functionName).call(payload);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') rethrow;
-      return _fallbackFunctions.httpsCallable(functionName).call(payload);
-    }
-  }
-
-  Map<String, dynamic> _extractResultMap(HttpsCallableResult<dynamic> result) {
-    final data = result.data;
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return const <String, dynamic>{};
+    return _callables.call<dynamic>(name: functionName, payload: payload);
   }
 
   static int _sortByMostRecent(Application a, Application b) {

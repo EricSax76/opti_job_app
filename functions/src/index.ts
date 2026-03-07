@@ -86,7 +86,6 @@ export { acceptInvitation } from "./callable/recruiters/acceptInvitation";
 export { registerRecruiterFreelance } from "./callable/recruiters/registerRecruiterFreelance";
 export { updateRecruiterRole } from "./callable/recruiters/updateRecruiterRole";
 export { removeRecruiter } from "./callable/recruiters/removeRecruiter";
-export { syncRecruiterClaims } from "./callable/recruiters/syncRecruiterClaims";
 
 // evaluations
 export { submitEvaluation } from "./callable/evaluations/submitEvaluation";

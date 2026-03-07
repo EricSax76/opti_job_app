@@ -5,6 +5,8 @@ import {
   grantedAtMillis,
   hasValidAiConsentRecord,
 } from "../../utils/aiConsent";
+import { writeAuditLog } from "../../utils/auditLog";
+import { ensureCallableResponseContract } from "../../utils/contractConventions";
 
 async function hasValidAiTestConsent({
   transaction,
@@ -35,6 +37,77 @@ async function hasValidAiTestConsent({
       now,
     }),
   );
+}
+
+function resolveErrorCode(error: unknown): string {
+  if (error instanceof HttpsError) return error.code;
+  return "internal";
+}
+
+function resolveErrorMessage(error: unknown): string {
+  if (error instanceof HttpsError) return String(error.message ?? "Unknown error");
+  if (error instanceof Error) return error.message;
+  return String(error ?? "Unknown error");
+}
+
+async function recordKnockoutEvaluationFailure({
+  db,
+  applicationId,
+  actorUid,
+  error,
+  responses,
+}: {
+  db: FirebaseFirestore.Firestore;
+  applicationId: string;
+  actorUid: string;
+  error: unknown;
+  responses: Record<string, string | boolean> | undefined;
+}): Promise<void> {
+  if (!applicationId) return;
+
+  const errorCode = resolveErrorCode(error);
+  const errorMessage = resolveErrorMessage(error);
+  const now = FieldValue.serverTimestamp();
+  const appRef = db.collection("applications").doc(applicationId);
+  let applicationSignalWritten = false;
+
+  try {
+    const appSnap = await appRef.get();
+    if (appSnap.exists) {
+      const appData = appSnap.data() as Application;
+      const candidateUid = String(appData.candidate_uid ?? "").trim();
+      if (candidateUid && candidateUid === actorUid) {
+        await appRef.update({
+          knockoutEvaluationStatus: "failed",
+          knockoutEvaluationNeedsAttention: true,
+          knockoutEvaluationLastErrorCode: errorCode,
+          knockoutEvaluationLastErrorMessage: errorMessage,
+          knockoutEvaluationLastAttemptAt: now,
+          knockoutEvaluationAttempts: FieldValue.increment(1),
+          requiresHumanReview: true,
+          updated_at: now,
+          updatedAt: now,
+        });
+        applicationSignalWritten = true;
+      }
+    }
+
+    await writeAuditLog({
+      action: "knockout_evaluation_failed",
+      actorUid,
+      actorRole: "candidate",
+      targetType: "application",
+      targetId: applicationId,
+      metadata: {
+        errorCode,
+        errorMessage,
+        responsesCount: Object.keys(responses ?? {}).length,
+        applicationSignalWritten,
+      },
+    });
+  } catch (persistError) {
+    console.error("Failed to persist knockout failure signal:", persistError);
+  }
 }
 
 /**
@@ -102,14 +175,25 @@ export const evaluateKnockoutQuestions = onCall({ region: "europe-west1", memory
           aiConsentScopeRequired: "ai_test",
           aiConsentStatus: "missing_or_invalid",
           aiConsentBlockedAt: FieldValue.serverTimestamp(),
+          requiresHumanReview: true,
+          knockoutEvaluationStatus: "blocked_consent",
+          knockoutEvaluationNeedsAttention: true,
+          knockoutEvaluationLastErrorCode: null,
+          knockoutEvaluationLastErrorMessage: null,
+          knockoutEvaluationLastAttemptAt: FieldValue.serverTimestamp(),
+          knockoutEvaluationAttempts: FieldValue.increment(1),
           updated_at: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         });
-        return {
-          success: false,
-          consentRequired: true,
-          requiredScope: "ai_test",
-          message: "No AI test consent found for this application.",
-        };
+        return ensureCallableResponseContract(
+          {
+            success: false,
+            consentRequired: true,
+            requiredScope: "ai_test",
+            message: "No AI test consent found for this application.",
+          },
+          { callableName: "evaluateKnockoutQuestions" },
+        );
       }
 
       const questions: KnockoutQuestion[] = offerData.knockoutQuestions || [];
@@ -143,7 +227,17 @@ export const evaluateKnockoutQuestions = onCall({ region: "europe-west1", memory
         knockoutResponses: responses,
         knockoutPassed: !failedKnockout,
         requiresHumanReview: failedKnockout,
+        aiConsentRequired: false,
+        aiConsentStatus: "granted",
+        aiConsentBlockedAt: null,
+        knockoutEvaluationStatus: "completed",
+        knockoutEvaluationNeedsAttention: false,
+        knockoutEvaluationLastErrorCode: null,
+        knockoutEvaluationLastErrorMessage: null,
+        knockoutEvaluationLastAttemptAt: FieldValue.serverTimestamp(),
+        knockoutEvaluationAttempts: FieldValue.increment(1),
         updated_at: FieldValue.serverTimestamp() as unknown as Application["updated_at"],
+        updatedAt: FieldValue.serverTimestamp() as unknown as Application["updated_at"],
       };
 
       let statusMsg = "Knockout questions evaluated successfully.";
@@ -171,15 +265,28 @@ export const evaluateKnockoutQuestions = onCall({ region: "europe-west1", memory
 
       transaction.update(applicationRef, updateData);
 
-      return {
-        success: true,
-        knockoutPassed: !failedKnockout,
-        message: statusMsg,
-      };
+      return ensureCallableResponseContract(
+        {
+          success: true,
+          knockoutPassed: !failedKnockout,
+          message: statusMsg,
+        },
+        { callableName: "evaluateKnockoutQuestions" },
+      );
     });
 
-    return result;
+    return ensureCallableResponseContract(result, {
+      callableName: "evaluateKnockoutQuestions",
+    });
   } catch (error) {
+    await recordKnockoutEvaluationFailure({
+      db,
+      applicationId: applicationId || "",
+      actorUid: request.auth?.uid ?? "unknown",
+      error,
+      responses,
+    });
+
     if (error instanceof HttpsError) {
       throw error;
     }

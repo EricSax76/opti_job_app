@@ -14,6 +14,7 @@ import {
 } from "./utils/eudiAccess";
 import { logAuditEntry } from "./utils/eudiAudit";
 import { resolveCredentialTrace } from "./utils/eudiCredentials";
+import { ensureCallableResponseContract } from "../../utils/contractConventions";
 
 /**
  * Candidate creates a selective disclosure proof (ZKP-style) for a verified credential.
@@ -168,19 +169,22 @@ export const createSelectiveDisclosureProof = functions
       }),
     ]);
 
-    return {
-      proofId,
-      proofToken,
-      companyUid,
-      applicationId: applicationId || null,
-      disclosureMode: "zkp_selective",
-      statement: statementText,
-      proofSchemaVersion: trace.proofSchemaVersion,
-      verificationMethod: trace.verificationMethod,
-      issuerDid: trace.issuerDid,
-      credentialType: trace.credentialType,
-      expiresAt: expiresAt.toISOString(),
-    };
+    return ensureCallableResponseContract(
+      {
+        proofId,
+        proofToken,
+        companyUid,
+        applicationId: applicationId || null,
+        disclosureMode: "zkp_selective",
+        statement: statementText,
+        proofSchemaVersion: trace.proofSchemaVersion,
+        verificationMethod: trace.verificationMethod,
+        issuerDid: trace.issuerDid,
+        credentialType: trace.credentialType,
+        expiresAt: expiresAt.toISOString(),
+      },
+      { callableName: "createSelectiveDisclosureProof" },
+    );
   });
 
 /**
@@ -306,23 +310,26 @@ export const verifySelectiveDisclosureProof = functions
 
     const statement = asTrimmedString(proof.statement);
     const claimKey = asTrimmedString(proof.claimKey);
-    return {
-      verified: true,
-      proofId,
-      statement,
-      claimKey,
-      disclosureMode: asTrimmedString(proof.disclosureMode) || "zkp_selective",
-      proofSchemaVersion: trace.proofSchemaVersion,
-      verificationMethod: trace.verificationMethod,
-      issuerDid: trace.issuerDid,
-      credentialType: trace.credentialType,
-      candidateUid: asTrimmedString(proof.candidateUid) || null,
-      applicationId: asTrimmedString(proof.applicationId) || null,
-      jobOfferId: asTrimmedString(proof.jobOfferId) || null,
-      companyUid: asTrimmedString(proof.companyUid) || null,
-      expiresAt: expiresAt?.toDate().toISOString() ?? null,
-      verifiedAt: new Date().toISOString(),
-    };
+    return ensureCallableResponseContract(
+      {
+        verified: true,
+        proofId,
+        statement,
+        claimKey,
+        disclosureMode: asTrimmedString(proof.disclosureMode) || "zkp_selective",
+        proofSchemaVersion: trace.proofSchemaVersion,
+        verificationMethod: trace.verificationMethod,
+        issuerDid: trace.issuerDid,
+        credentialType: trace.credentialType,
+        candidateUid: asTrimmedString(proof.candidateUid) || null,
+        applicationId: asTrimmedString(proof.applicationId) || null,
+        jobOfferId: asTrimmedString(proof.jobOfferId) || null,
+        companyUid: asTrimmedString(proof.companyUid) || null,
+        expiresAt: expiresAt?.toDate().toISOString() ?? null,
+        verifiedAt: new Date().toISOString(),
+      },
+      { callableName: "verifySelectiveDisclosureProof" },
+    );
   });
 
 /**
@@ -409,10 +416,13 @@ export const revokeSelectiveDisclosureProof = functions
       }),
     ]);
 
-    return {
-      success: true,
-      proofId,
-      revokedAt: revokedAtIso,
-      proofSchemaVersion: trace.proofSchemaVersion,
-    };
+    return ensureCallableResponseContract(
+      {
+        success: true,
+        proofId,
+        revokedAt: revokedAtIso,
+        proofSchemaVersion: trace.proofSchemaVersion,
+      },
+      { callableName: "revokeSelectiveDisclosureProof" },
+    );
   });

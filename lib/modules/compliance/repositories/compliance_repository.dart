@@ -15,6 +15,7 @@ abstract class DataRequestRepository {
   Future<DataRequest> submitRequest(DataRequest request);
   Stream<List<DataRequest>> getRequests(String candidateUid);
   Stream<List<DataRequest>> getAllRequests(); // For Admins
+  Future<Map<String, dynamic>> exportCandidateData();
   Future<void> updateRequestStatus(
     String requestId,
     DataRequestStatus status, {

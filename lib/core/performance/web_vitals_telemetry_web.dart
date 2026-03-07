@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:web/web.dart' as web;
 
 final _webVitalsTelemetry = _WebVitalsTelemetry();
@@ -13,10 +14,10 @@ void startWebVitalsTelemetryImpl() {
 
 class _WebVitalsTelemetry {
   static const String _storageKey = 'opti_web_vitals_queue';
-  final FirebaseFunctions _regionalFunctions = FirebaseFunctions.instanceFor(
-    region: 'europe-west1',
+  late final CallableWithFallback _callables = CallableWithFallback(
+    functions: FirebaseFunctions.instanceFor(region: 'europe-west1'),
+    fallbackFunctions: FirebaseFunctions.instance,
   );
-  final FirebaseFunctions _fallbackFunctions = FirebaseFunctions.instance;
 
   bool _started = false;
   bool _isSending = false;
@@ -96,17 +97,14 @@ class _WebVitalsTelemetry {
     required String name,
     required Map<String, dynamic> payload,
   }) async {
-    try {
-      await _regionalFunctions.httpsCallable(name).call(payload);
-    } on FirebaseFunctionsException catch (error) {
-      if (!_isRecoverable(error.code)) rethrow;
-      await _fallbackFunctions.httpsCallable(name).call(payload);
-    }
-  }
-
-  bool _isRecoverable(String code) {
-    return code == 'not-found' ||
-        code == 'unimplemented' ||
-        code == 'unavailable';
+    await _callables.callVoid(
+      name: name,
+      payload: payload,
+      recoverableCodes: const <String>{
+        'not-found',
+        'unimplemented',
+        'unavailable',
+      },
+    );
   }
 }

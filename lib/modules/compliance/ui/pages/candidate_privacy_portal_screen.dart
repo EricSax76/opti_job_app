@@ -14,6 +14,7 @@ import 'package:opti_job_app/core/widgets/inline_state_message.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/modules/compliance/cubits/data_requests_cubit.dart';
 import 'package:opti_job_app/modules/compliance/models/data_request.dart';
+import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
 import 'package:opti_job_app/modules/compliance/ui/widgets/privacy_notice_dialog.dart';
 
 class CandidatePrivacyPortalScreen extends StatefulWidget {
@@ -182,7 +183,9 @@ class _CandidatePrivacyPortalScreenState
   Future<void> _exportCandidateData() async {
     setState(() => _isExporting = true);
     try {
-      final payload = await _callExportCandidateData();
+      final payload = await context
+          .read<DataRequestRepository>()
+          .exportCandidateData();
       final summary = _ExportSummary.fromPayload(payload);
       if (!mounted) return;
 
@@ -251,37 +254,6 @@ class _CandidatePrivacyPortalScreenState
         setState(() => _isExporting = false);
       }
     }
-  }
-
-  Future<Map<String, dynamic>> _callExportCandidateData() async {
-    final regional = FirebaseFunctions.instanceFor(region: 'europe-west1');
-    final fallback = FirebaseFunctions.instance;
-    try {
-      final response = await regional
-          .httpsCallable('exportCandidateData')
-          .call();
-      return _asStringDynamicMap(response.data);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      final response = await fallback
-          .httpsCallable('exportCandidateData')
-          .call();
-      return _asStringDynamicMap(response.data);
-    }
-  }
-
-  Map<String, dynamic> _asStringDynamicMap(dynamic value) {
-    if (value is Map<String, dynamic>) return value;
-    if (value is Map) {
-      final result = <String, dynamic>{};
-      for (final entry in value.entries) {
-        result[entry.key.toString()] = entry.value;
-      }
-      return result;
-    }
-    return const {};
   }
 
   void _showRequestDialog(BuildContext context, DataRequestType type) {

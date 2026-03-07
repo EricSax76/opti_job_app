@@ -55,10 +55,26 @@ class ApplicantTile extends StatelessWidget {
     final stageName = application.pipelineStageName?.trim();
     final matchScore = application.matchScore;
     final knockoutPassed = application.knockoutPassed;
+    final knockoutEvaluationStatus = application.knockoutEvaluationStatus
+        ?.trim()
+        .toLowerCase();
+    final knockoutNeedsAttention =
+        application.knockoutEvaluationNeedsAttention == true;
+    final hasKnockoutOperationalAlert =
+        knockoutNeedsAttention &&
+        (knockoutEvaluationStatus == 'failed' ||
+            knockoutEvaluationStatus == 'blocked_consent');
+    final knockoutOperationalLabel = knockoutEvaluationStatus == 'failed'
+        ? 'Knockout: Error técnico'
+        : 'Knockout: Consentimiento pendiente';
+    final knockoutOperationalColor = knockoutEvaluationStatus == 'failed'
+        ? colorScheme.error
+        : colorScheme.secondary;
     final hasAtsMeta =
         (stageName != null && stageName.isNotEmpty) ||
         matchScore != null ||
-        knockoutPassed != null;
+        knockoutPassed != null ||
+        hasKnockoutOperationalAlert;
 
     final canChangeStatus = onStatusChanged != null && onStartInterview != null;
     final canOpenAiReview = onOpenAiReview != null;
@@ -124,6 +140,17 @@ class ApplicantTile extends StatelessWidget {
                       borderColor: knockoutPassed
                           ? colorScheme.tertiary.withValues(alpha: 0.35)
                           : colorScheme.error.withValues(alpha: 0.35),
+                    ),
+                  if (hasKnockoutOperationalAlert)
+                    _ApplicantMetaBadge(
+                      icon: knockoutEvaluationStatus == 'failed'
+                          ? Icons.error_outline
+                          : Icons.lock_clock_outlined,
+                      label: knockoutOperationalLabel,
+                      color: knockoutOperationalColor,
+                      borderColor: knockoutOperationalColor.withValues(
+                        alpha: 0.35,
+                      ),
                     ),
                 ],
               ),

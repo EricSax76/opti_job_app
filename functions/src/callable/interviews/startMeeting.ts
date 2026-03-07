@@ -14,6 +14,7 @@ import * as admin from "firebase-admin";
 import { createLogger } from "../../utils/logger";
 import { ValidationError } from "../../utils/validation";
 import { Interview, Message } from "../../types/models";
+import { buildAuditLogRecord } from "../../utils/auditLog";
 
 const logger = createLogger({ function: "startMeeting" });
 
@@ -150,20 +151,25 @@ export const startMeeting = functions.region("europe-west1").https.onCall(
         });
 
         const auditRef = db.collection("auditLogs").doc();
-        transaction.set(auditRef, {
-          action: "interview.startMeeting",
-          actorUid,
-          actorRole: resolveActorRole(interview, actorUid),
-          targetType: "interview",
-          targetId: interviewId,
-          companyId: interview.companyUid ?? null,
-          metadata: {
-            messageId: messageRef.id,
-            meetingHost: extractMeetingHost(meetingLink),
-            statusBefore: interview.status,
-          },
-          timestamp: now,
-        });
+        transaction.set(
+          auditRef,
+          buildAuditLogRecord(
+            {
+              action: "interview.startMeeting",
+              actorUid,
+              actorRole: resolveActorRole(interview, actorUid),
+              targetType: "interview",
+              targetId: interviewId,
+              companyId: interview.companyUid ?? null,
+              metadata: {
+                messageId: messageRef.id,
+                meetingHost: extractMeetingHost(meetingLink),
+                statusBefore: interview.status,
+              },
+            },
+            now,
+          ),
+        );
       });
 
       logger.info("Meeting started successfully", loggerCtx);

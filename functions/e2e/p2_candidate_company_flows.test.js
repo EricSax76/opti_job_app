@@ -1,6 +1,10 @@
 const assert = require("node:assert/strict");
 const { after, before, test } = require("node:test");
 const admin = require("firebase-admin");
+const {
+  assertCamelCaseResponse,
+  assertAuditLogContract,
+} = require("./helpers/contractAssertions.js");
 
 const {
   createSelectiveDisclosureProof,
@@ -92,6 +96,7 @@ test(
       },
       authContext(candidateUid),
     );
+    assertCamelCaseResponse(createResult, { path: "createSelectiveDisclosureProof" });
 
     assert.ok(createResult.proofId);
     assert.ok(createResult.proofToken);
@@ -114,6 +119,7 @@ test(
       },
       authContext(companyUid),
     );
+    assertCamelCaseResponse(verificationResult, { path: "verifySelectiveDisclosureProof" });
 
     assert.equal(verificationResult.verified, true);
     assert.equal(verificationResult.proofId, proofId);
@@ -132,6 +138,7 @@ test(
       { proofId },
       authContext(candidateUid),
     );
+    assertCamelCaseResponse(revokeResult, { path: "revokeSelectiveDisclosureProof" });
     assert.equal(revokeResult.success, true);
 
     const revokedProofSnap = await db
@@ -148,6 +155,72 @@ test(
         ),
       (error) => {
         assert.equal(error?.code, "failed-precondition");
+        return true;
+      },
+    );
+  },
+);
+
+test(
+  "E2E ZKP: actor sin acceso de empresa/recruiter no puede verificar prueba",
+  { timeout: 30_000 },
+  async () => {
+    const candidateUid = id("cand");
+    const companyUid = id("comp");
+    const outsiderUid = id("outsider");
+    const applicationId = id("app");
+    const jobOfferId = id("offer");
+    const credentialId = id("cred");
+
+    await Promise.all([
+      db.collection("candidates").doc(candidateUid).set({
+        uid: candidateUid,
+        role: "candidate",
+      }),
+      db.collection("applications").doc(applicationId).set({
+        candidate_uid: candidateUid,
+        company_uid: companyUid,
+        job_offer_id: jobOfferId,
+        status: "pending",
+      }),
+      db
+        .collection("candidates")
+        .doc(candidateUid)
+        .collection("verifiedCredentials")
+        .doc(credentialId)
+        .set({
+          id: credentialId,
+          type: "degree",
+          title: "Ingeniería Informática",
+          issuer: "UPM",
+          verified: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+    ]);
+
+    const createResult = await createSelectiveDisclosureProof.run(
+      {
+        credentialId,
+        claimKey: "type",
+        statement: "Prueba para permisos",
+        applicationId,
+      },
+      authContext(candidateUid),
+    );
+    assertCamelCaseResponse(createResult, { path: "createSelectiveDisclosureProof.permissions" });
+
+    await assert.rejects(
+      () =>
+        verifySelectiveDisclosureProof.run(
+          {
+            proofId: String(createResult.proofId),
+            proofToken: String(createResult.proofToken),
+          },
+          authContext(outsiderUid),
+        ),
+      (error) => {
+        assert.equal(error?.code, "permission-denied");
         return true;
       },
     );
@@ -200,6 +273,7 @@ test(
       },
       authContext(candidateUid),
     );
+    assertCamelCaseResponse(startResult, { path: "startQualifiedOfferSignature" });
 
     assert.ok(startResult.requestId);
     assert.equal(startResult.applicationId, applicationId);
@@ -230,6 +304,10 @@ test(
       { applicationId },
       authContext(companyUid),
     );
+    assertCamelCaseResponse(companyPendingStatus, {
+      path: "getQualifiedOfferSignatureStatus.pending",
+      deep: false,
+    });
     assert.equal(companyPendingStatus.status, "accepted_pending_signature");
     assert.equal(
       companyPendingStatus.contractSignature.status,
@@ -245,6 +323,7 @@ test(
       },
       authContext(candidateUid),
     );
+    assertCamelCaseResponse(confirmResult, { path: "confirmQualifiedOfferSignature" });
 
     assert.equal(confirmResult.success, true);
     assert.equal(confirmResult.applicationId, applicationId);
@@ -280,7 +359,87 @@ test(
       { applicationId },
       authContext(companyUid),
     );
+    assertCamelCaseResponse(companyFinalStatus, {
+      path: "getQualifiedOfferSignatureStatus.final",
+      deep: false,
+    });
     assert.equal(companyFinalStatus.status, "accepted");
     assert.equal(companyFinalStatus.contractSignature.status, "signed");
+
+    const startedAudit = await db
+      .collection("auditLogs")
+      .where("targetId", "==", requestId)
+      .where("action", "==", "qualified_signature_started")
+      .limit(1)
+      .get();
+    assert.equal(startedAudit.empty, false);
+    assertAuditLogContract(startedAudit.docs[0].data());
+  },
+);
+
+test(
+  "E2E Firma cualificada: candidato no propietario no puede iniciar firma",
+  { timeout: 30_000 },
+  async () => {
+    const ownerCandidateUid = id("cand_owner");
+    const outsiderCandidateUid = id("cand_outsider");
+    const companyUid = id("comp");
+    const jobOfferId = id("offer");
+    const applicationId = id("app");
+
+    await db.collection("applications").doc(applicationId).set({
+      candidate_uid: ownerCandidateUid,
+      company_uid: companyUid,
+      job_offer_id: jobOfferId,
+      status: "offered",
+    });
+
+    await assert.rejects(
+      () =>
+        startQualifiedOfferSignature.run(
+          {
+            applicationId,
+            provider: "qualified_trust_service_eidas",
+          },
+          authContext(outsiderCandidateUid),
+        ),
+      (error) => {
+        assert.equal(error?.code, "permission-denied");
+        return true;
+      },
+    );
+  },
+);
+
+test(
+  "E2E Firma cualificada: estado no firmable devuelve failed-precondition",
+  { timeout: 30_000 },
+  async () => {
+    const candidateUid = id("cand");
+    const companyUid = id("comp");
+    const jobOfferId = id("offer");
+    const applicationId = id("app");
+
+    await db.collection("applications").doc(applicationId).set({
+      candidate_uid: candidateUid,
+      company_uid: companyUid,
+      job_offer_id: jobOfferId,
+      status: "pending",
+    });
+
+    await assert.rejects(
+      () =>
+        startQualifiedOfferSignature.run(
+          {
+            applicationId,
+            provider: "qualified_trust_service_eidas",
+          },
+          authContext(candidateUid),
+        ),
+      (error) => {
+        assert.equal(error?.code, "failed-precondition");
+        return true;
+      },
+    );
   },
 );

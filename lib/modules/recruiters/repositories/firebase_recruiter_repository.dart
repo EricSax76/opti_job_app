@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 
 import 'package:opti_job_app/modules/recruiters/models/invitation.dart';
 import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
@@ -13,12 +14,13 @@ class FirebaseRecruiterRepository implements RecruiterRepository {
     required FirebaseFunctions functions,
     required FirebaseFunctions fallbackFunctions,
   }) : _db = firestore,
-       _functions = functions,
-       _fallbackFunctions = fallbackFunctions;
+       _callables = CallableWithFallback(
+         functions: functions,
+         fallbackFunctions: fallbackFunctions,
+       );
 
   final FirebaseFirestore _db;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
 
   CollectionReference<Map<String, dynamic>> get _recruiters =>
       _db.collection('recruiters');
@@ -113,23 +115,6 @@ class FirebaseRecruiterRepository implements RecruiterRepository {
     required String functionName,
     required Map<String, dynamic> payload,
   }) async {
-    try {
-      final result = await _functions.httpsCallable(functionName).call(payload);
-      return _extractMap(result.data);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      final result = await _fallbackFunctions
-          .httpsCallable(functionName)
-          .call(payload);
-      return _extractMap(result.data);
-    }
-  }
-
-  Map<String, dynamic> _extractMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return const <String, dynamic>{};
+    return _callables.callMap(name: functionName, payload: payload);
   }
 }

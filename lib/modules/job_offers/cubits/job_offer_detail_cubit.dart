@@ -186,7 +186,7 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
       ),
     );
     try {
-      await _applicationService.createApplication(
+      final creationResult = await _applicationService.createApplication(
         candidate: candidate,
         jobOffer: offer,
         candidateProfileId: candidate.id,
@@ -202,7 +202,9 @@ class JobOfferDetailCubit extends Cubit<JobOfferDetailState> {
         state.copyWith(
           status: JobOfferDetailStatus.success,
           application: application,
-          successMessage: '¡Te has postulado a esta oferta!',
+          successMessage: creationResult.warningMessage == null
+              ? '¡Te has postulado a esta oferta!'
+              : '¡Te has postulado a esta oferta! ${creationResult.warningMessage}',
         ),
       );
     } on FirebaseFunctionsException catch (error) {

@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import { writeAuditLog } from "../../../utils/auditLog";
 
 export async function logAuditEntry({
   action,
@@ -17,7 +17,7 @@ export async function logAuditEntry({
   companyId?: string | null;
   metadata?: Record<string, unknown>;
 }): Promise<void> {
-  await admin.firestore().collection("auditLogs").add({
+  await writeAuditLog({
     action,
     actorUid,
     actorRole,
@@ -25,6 +25,5 @@ export async function logAuditEntry({
     targetId,
     companyId: companyId ?? null,
     metadata,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
   });
 }

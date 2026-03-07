@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/talent_pool/models/candidate_note.dart';
 import 'package:opti_job_app/modules/talent_pool/models/pool_member.dart';
 import 'package:opti_job_app/modules/talent_pool/models/talent_pool.dart';
@@ -11,13 +12,14 @@ class FirebaseTalentPoolRepository implements TalentPoolRepository {
     FirebaseFunctions? functions,
     FirebaseFunctions? fallbackFunctions,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
-       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
+       _callables = CallableWithFallback(
+         functions:
+             functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+         fallbackFunctions: fallbackFunctions ?? FirebaseFunctions.instance,
+       );
 
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
 
   @override
   Future<List<TalentPool>> getTalentPools(String companyId) async {
@@ -167,23 +169,6 @@ class FirebaseTalentPoolRepository implements TalentPoolRepository {
     required String functionName,
     required Map<String, dynamic> payload,
   }) async {
-    try {
-      final result = await _functions.httpsCallable(functionName).call(payload);
-      return _asMap(result.data);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      final fallback = await _fallbackFunctions
-          .httpsCallable(functionName)
-          .call(payload);
-      return _asMap(fallback.data);
-    }
-  }
-
-  Map<String, dynamic> _asMap(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return const <String, dynamic>{};
+    return _callables.callMap(name: functionName, payload: payload);
   }
 }

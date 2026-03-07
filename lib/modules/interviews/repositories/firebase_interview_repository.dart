@@ -1,21 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/interviews/models/interview.dart';
 import 'package:opti_job_app/modules/interviews/models/interview_message.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 
 class FirebaseInterviewRepository implements InterviewRepository {
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
 
   FirebaseInterviewRepository({
     required FirebaseFirestore firestore,
     required FirebaseFunctions functions,
     required FirebaseFunctions fallbackFunctions,
   }) : _firestore = firestore,
-       _functions = functions,
-       _fallbackFunctions = fallbackFunctions;
+       _callables = CallableWithFallback(
+         functions: functions,
+         fallbackFunctions: fallbackFunctions,
+       );
 
   CollectionReference<Map<String, dynamic>> get _interviewsRef =>
       _firestore.collection('interviews');
@@ -155,12 +157,11 @@ class FirebaseInterviewRepository implements InterviewRepository {
     String functionName,
     Map<String, dynamic> payload,
   ) async {
-    try {
-      return await _functions.httpsCallable(functionName).call(payload);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found') rethrow;
-      return _fallbackFunctions.httpsCallable(functionName).call(payload);
-    }
+    return _callables.call<dynamic>(
+      name: functionName,
+      payload: payload,
+      recoverableCodes: const <String>{'not-found'},
+    );
   }
 
   String _extractInterviewId(HttpsCallableResult<dynamic> result) {

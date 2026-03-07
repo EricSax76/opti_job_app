@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { writeAuditLog as writeUnifiedAuditLog } from "./auditLog";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -113,7 +114,7 @@ export async function writeAuditLog({
   companyId?: string | null;
   metadata?: JsonRecord;
 }): Promise<void> {
-  await admin.firestore().collection("auditLogs").add({
+  await writeUnifiedAuditLog({
     action,
     actorUid,
     actorRole,
@@ -121,7 +122,5 @@ export async function writeAuditLog({
     targetId,
     companyId: asNullableString(companyId),
     metadata: asRecord(metadata),
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
   });
 }
-

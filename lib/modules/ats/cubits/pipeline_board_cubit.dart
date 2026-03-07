@@ -1,5 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/ats/cubits/pipeline_board_state.dart';
 import 'package:opti_job_app/modules/ats/repositories/pipeline_repository.dart';
@@ -12,16 +13,17 @@ class PipelineBoardCubit extends Cubit<PipelineBoardState> {
     required this.jobOffer,
     FirebaseFunctions? functions,
     FirebaseFunctions? fallbackFunctions,
-  }) : _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
-       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance,
+  }) : _callables = CallableWithFallback(
+         functions:
+             functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+         fallbackFunctions: fallbackFunctions ?? FirebaseFunctions.instance,
+       ),
        super(const PipelineBoardLoading());
 
   final PipelineRepository pipelineRepository;
   final ApplicantsRepository applicantsRepository;
   final JobOffer jobOffer;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
 
   Future<void> loadBoard() async {
     emit(const PipelineBoardLoading());
@@ -119,15 +121,6 @@ class PipelineBoardCubit extends Cubit<PipelineBoardState> {
       'newStageName': newStageName,
     };
 
-    try {
-      await _functions.httpsCallable('moveApplicationStage').call(payload);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      await _fallbackFunctions
-          .httpsCallable('moveApplicationStage')
-          .call(payload);
-    }
+    await _callables.callVoid(name: 'moveApplicationStage', payload: payload);
   }
 }

@@ -18,6 +18,8 @@ class Application {
     this.pipelineHistory,
     this.knockoutResponses,
     this.knockoutPassed,
+    this.knockoutEvaluationStatus,
+    this.knockoutEvaluationNeedsAttention,
     this.assignedTo,
     this.matchScore,
     this.sourceChannel,
@@ -58,6 +60,8 @@ class Application {
   final List<dynamic>? pipelineHistory;
   final Map<String, dynamic>? knockoutResponses;
   final bool? knockoutPassed;
+  final String? knockoutEvaluationStatus;
+  final bool? knockoutEvaluationNeedsAttention;
   final String? assignedTo;
   final double? matchScore;
   final String? sourceChannel;
@@ -144,6 +148,13 @@ class Application {
       pipelineHistory: json['pipelineHistory'] as List<dynamic>?,
       knockoutResponses: parseMap(json['knockoutResponses']),
       assignedTo: json['assignedTo'] as String?,
+      knockoutEvaluationStatus:
+          (json['knockoutEvaluationStatus'] ??
+                  json['knockout_evaluation_status'])
+              ?.toString(),
+      knockoutEvaluationNeedsAttention:
+          json['knockoutEvaluationNeedsAttention'] as bool? ??
+          json['knockout_evaluation_needs_attention'] as bool?,
       matchScore: parseNullableDouble(
         json['match_score'] ?? json['matchScore'],
       ),
@@ -194,6 +205,14 @@ class Application {
       if (pipelineStageName != null) 'pipelineStageName': pipelineStageName,
       if (pipelineHistory != null) 'pipelineHistory': pipelineHistory,
       if (knockoutResponses != null) 'knockoutResponses': knockoutResponses,
+      if (knockoutEvaluationStatus != null) ...{
+        'knockoutEvaluationStatus': knockoutEvaluationStatus,
+        'knockout_evaluation_status': knockoutEvaluationStatus,
+      },
+      if (knockoutEvaluationNeedsAttention != null) ...{
+        'knockoutEvaluationNeedsAttention': knockoutEvaluationNeedsAttention,
+        'knockout_evaluation_needs_attention': knockoutEvaluationNeedsAttention,
+      },
       if (assignedTo != null) 'assignedTo': assignedTo,
       if (matchScore != null) 'match_score': matchScore,
       if (sourceChannel != null) ...{
@@ -244,6 +263,8 @@ class Application {
     List<dynamic>? pipelineHistory,
     Map<String, dynamic>? knockoutResponses,
     bool? knockoutPassed,
+    String? knockoutEvaluationStatus,
+    bool? knockoutEvaluationNeedsAttention,
     String? assignedTo,
     double? matchScore,
     String? sourceChannel,
@@ -283,6 +304,11 @@ class Application {
       pipelineHistory: pipelineHistory ?? this.pipelineHistory,
       knockoutResponses: knockoutResponses ?? this.knockoutResponses,
       knockoutPassed: knockoutPassed ?? this.knockoutPassed,
+      knockoutEvaluationStatus:
+          knockoutEvaluationStatus ?? this.knockoutEvaluationStatus,
+      knockoutEvaluationNeedsAttention:
+          knockoutEvaluationNeedsAttention ??
+          this.knockoutEvaluationNeedsAttention,
       assignedTo: assignedTo ?? this.assignedTo,
       matchScore: matchScore ?? this.matchScore,
       sourceChannel: sourceChannel ?? this.sourceChannel,

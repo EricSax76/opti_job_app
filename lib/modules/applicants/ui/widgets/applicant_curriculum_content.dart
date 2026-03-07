@@ -1,5 +1,6 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/inline_state_message.dart';
@@ -189,17 +190,26 @@ class _SelectiveDisclosureVerificationPanelState
       _successMessage = null;
     });
 
+    final repository = context.read<AuthRepository>();
     try {
-      final response = await _callCallableWithFallback(
-        name: 'verifySelectiveDisclosureProof',
-        payload: {'proofId': proofId, 'proofToken': proofToken},
+      final response = await repository.verifySelectiveDisclosureProof(
+        proofId: proofId,
+        proofToken: proofToken,
       );
 
-      final responseCandidateUid =
-          (response['candidateUid'] as String?)?.trim() ?? '';
-      final responseOfferId = (response['jobOfferId'] as String?)?.trim() ?? '';
-      final statement = (response['statement'] as String?)?.trim() ?? '';
-      final claimKey = (response['claimKey'] as String?)?.trim() ?? '';
+      if (!response.verified) {
+        setState(() {
+          _errorMessage = 'La prueba no pudo verificarse correctamente.';
+          _successMessage = null;
+          _isVerifying = false;
+        });
+        return;
+      }
+
+      final responseCandidateUid = response.candidateUid?.trim() ?? '';
+      final responseOfferId = response.jobOfferId?.trim() ?? '';
+      final statement = response.statement.trim();
+      final claimKey = response.claimKey?.trim() ?? '';
 
       if (responseCandidateUid.isNotEmpty &&
           responseCandidateUid != widget.candidateUid) {
@@ -225,45 +235,17 @@ class _SelectiveDisclosureVerificationPanelState
             ? 'Prueba válida: $statement${claimKey.isNotEmpty ? ' (claim: $claimKey)' : ''}.'
             : 'Prueba válida y verificada correctamente.';
       });
-    } on FirebaseFunctionsException catch (error) {
-      final message = (error.message ?? '').trim();
+    } catch (error) {
+      final message = repository.mapException(error).message.trim();
       setState(() {
         _errorMessage = message.isEmpty
-            ? 'No se pudo verificar la prueba (${error.code}).'
-            : '$message (${error.code})';
-      });
-    } catch (_) {
-      setState(() {
-        _errorMessage = 'No se pudo verificar la prueba en este momento.';
+            ? 'No se pudo verificar la prueba en este momento.'
+            : message;
       });
     } finally {
       if (mounted) {
         setState(() => _isVerifying = false);
       }
-    }
-  }
-
-  Future<Map<String, dynamic>> _callCallableWithFallback({
-    required String name,
-    required Map<String, dynamic> payload,
-  }) async {
-    final regional = FirebaseFunctions.instanceFor(region: 'europe-west1');
-    final fallback = FirebaseFunctions.instance;
-    try {
-      final result = await regional.httpsCallable(name).call(payload);
-      final data = result.data;
-      if (data is Map<String, dynamic>) return data;
-      if (data is Map) return Map<String, dynamic>.from(data);
-      return const <String, dynamic>{};
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      final result = await fallback.httpsCallable(name).call(payload);
-      final data = result.data;
-      if (data is Map<String, dynamic>) return data;
-      if (data is Map) return Map<String, dynamic>.from(data);
-      return const <String, dynamic>{};
     }
   }
 

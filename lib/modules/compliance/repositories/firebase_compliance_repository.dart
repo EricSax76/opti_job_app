@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/compliance/models/audit_log.dart';
 import 'package:opti_job_app/modules/compliance/models/consent_record.dart';
 import 'package:opti_job_app/modules/compliance/models/data_request.dart';
@@ -16,13 +17,14 @@ class FirebaseComplianceRepository
     FirebaseFunctions? functions,
     FirebaseFunctions? fallbackFunctions,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
-       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
+       _callables = CallableWithFallback(
+         functions:
+             functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+         fallbackFunctions: fallbackFunctions ?? FirebaseFunctions.instance,
+       );
 
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-  final FirebaseFunctions _fallbackFunctions;
+  final CallableWithFallback _callables;
 
   // --- Audit ---
   @override
@@ -64,23 +66,25 @@ class FirebaseComplianceRepository
   // --- Data Requests ---
   @override
   Future<DataRequest> submitRequest(DataRequest request) async {
-    final callable = _functions.httpsCallable('submitDataRequest');
-    final response = await callable.call({
-      'type': request.type.name,
-      'description': request.description,
-      if (request.companyId != null) 'companyId': request.companyId,
-      if (request.applicationId != null) 'applicationId': request.applicationId,
-      if (request.metadata.isNotEmpty) 'metadata': request.metadata,
-    });
-    final data = response.data as Map<Object?, Object?>?;
-    final id = data?['id']?.toString().trim();
+    final payload = await _callCallableWithFallback(
+      name: 'submitDataRequest',
+      payload: {
+        'type': request.type.name,
+        'description': request.description,
+        if (request.companyId != null) 'companyId': request.companyId,
+        if (request.applicationId != null)
+          'applicationId': request.applicationId,
+        if (request.metadata.isNotEmpty) 'metadata': request.metadata,
+      },
+    );
+    final id = payload['id']?.toString().trim();
     if (id == null || id.isEmpty) {
       throw StateError('submitDataRequest did not return a valid id.');
     }
 
     final doc = await _firestore.collection('dataRequests').doc(id).get();
-    final payload = doc.data() ?? request.toJson();
-    return DataRequest.fromJson(payload, id: id);
+    final data = doc.data() ?? request.toJson();
+    return DataRequest.fromJson(data, id: id);
   }
 
   @override
@@ -117,14 +121,25 @@ class FirebaseComplianceRepository
     String? response,
     String? processedBy,
   }) async {
-    final callable = _functions.httpsCallable('processDataRequest');
-    await callable.call({
-      'requestId': requestId,
-      'status': status.name,
-      if (response != null && response.trim().isNotEmpty) 'response': response,
-      if (processedBy != null && processedBy.trim().isNotEmpty)
-        'processedBy': processedBy,
-    });
+    await _callCallableWithFallback(
+      name: 'processDataRequest',
+      payload: {
+        'requestId': requestId,
+        'status': status.name,
+        if (response != null && response.trim().isNotEmpty)
+          'response': response,
+        if (processedBy != null && processedBy.trim().isNotEmpty)
+          'processedBy': processedBy,
+      },
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> exportCandidateData() {
+    return _callCallableWithFallback(
+      name: 'exportCandidateData',
+      payload: const <String, dynamic>{},
+    );
   }
 
   // --- Consents ---
@@ -230,21 +245,6 @@ class FirebaseComplianceRepository
     required String name,
     required Map<String, dynamic> payload,
   }) async {
-    try {
-      final result = await _functions.httpsCallable(name).call(payload);
-      final data = result.data;
-      if (data is Map<String, dynamic>) return data;
-      if (data is Map) return Map<String, dynamic>.from(data);
-      return const <String, dynamic>{};
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'not-found' && error.code != 'unimplemented') {
-        rethrow;
-      }
-      final result = await _fallbackFunctions.httpsCallable(name).call(payload);
-      final data = result.data;
-      if (data is Map<String, dynamic>) return data;
-      if (data is Map) return Map<String, dynamic>.from(data);
-      return const <String, dynamic>{};
-    }
+    return _callables.callMap(name: name, payload: payload);
   }
 }

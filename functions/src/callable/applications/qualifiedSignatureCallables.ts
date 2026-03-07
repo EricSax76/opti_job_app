@@ -10,6 +10,7 @@ import {
   SIGNATURE_REQUEST_TTL_DAYS,
 } from "./utils/signatureUtils";
 import { resolveApplicationForCandidate } from "./utils/signatureAccess";
+import { ensureCallableResponseContract } from "../../utils/contractConventions";
 
 /**
  * Candidate starts qualified signature flow for an offered application.
@@ -125,16 +126,19 @@ export const startQualifiedOfferSignature = functions
       }),
     ]);
 
-    return {
-      requestId,
-      applicationId,
-      provider,
-      legalFramework: "eIDAS_qualified_signature",
-      documentHash,
-      expiresAt: expiresAt.toISOString(),
-      signingChallengeHint:
-        "Introduce OTP y huella del certificado cualificado para cerrar la firma.",
-    };
+    return ensureCallableResponseContract(
+      {
+        requestId,
+        applicationId,
+        provider,
+        legalFramework: "eIDAS_qualified_signature",
+        documentHash,
+        expiresAt: expiresAt.toISOString(),
+        signingChallengeHint:
+          "Introduce OTP y huella del certificado cualificado para cerrar la firma.",
+      },
+      { callableName: "startQualifiedOfferSignature" },
+    );
   });
 
 /**
@@ -299,15 +303,18 @@ export const confirmQualifiedOfferSignature = functions
       }),
     ]);
 
-    return {
-      success: true,
-      requestId,
-      signatureId,
-      applicationId,
-      status: "accepted",
-      signedAt: signedAtIso,
-      legalValidity: "qualified_electronic_signature_with_eidas_equivalence",
-    };
+    return ensureCallableResponseContract(
+      {
+        success: true,
+        requestId,
+        signatureId,
+        applicationId,
+        status: "accepted",
+        signedAt: signedAtIso,
+        legalValidity: "qualified_electronic_signature_with_eidas_equivalence",
+      },
+      { callableName: "confirmQualifiedOfferSignature" },
+    );
   });
 
 /**
@@ -372,9 +379,15 @@ export const getQualifiedOfferSignatureStatus = functions
     const contractSignature = asRecord(
       app.contractSignature || app.contract_signature,
     );
-    return {
-      applicationId,
-      status: asTrimmedString(app.status),
-      contractSignature,
-    };
+    return ensureCallableResponseContract(
+      {
+        applicationId,
+        status: asTrimmedString(app.status),
+        contractSignature,
+      },
+      {
+        callableName: "getQualifiedOfferSignatureStatus",
+        deep: false,
+      },
+    );
   });

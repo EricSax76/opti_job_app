@@ -30,6 +30,16 @@ export interface Application {
   knockoutResponses?: Record<string, string | boolean>;
   knockoutPassed?: boolean;
   requiresHumanReview?: boolean;
+  aiConsentRequired?: boolean;
+  aiConsentScopeRequired?: string;
+  aiConsentStatus?: "missing_or_invalid" | "granted";
+  aiConsentBlockedAt?: FirebaseFirestore.Timestamp | null;
+  knockoutEvaluationStatus?: "completed" | "blocked_consent" | "failed";
+  knockoutEvaluationNeedsAttention?: boolean;
+  knockoutEvaluationLastErrorCode?: string | null;
+  knockoutEvaluationLastErrorMessage?: string | null;
+  knockoutEvaluationLastAttemptAt?: FirebaseFirestore.Timestamp;
+  knockoutEvaluationAttempts?: number;
   assignedTo?: string; // UID del reclutador asignado
   match_score?: number;
   aiMatchResult?: Record<string, unknown>;
