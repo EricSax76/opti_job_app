@@ -95,6 +95,7 @@ class _TalentPoolListScreenState extends State<TalentPoolListScreen> {
 
   void _showCreatePoolDialog(BuildContext context) {
     final creatorUid = context.read<FirebaseAuth>().currentUser?.uid ?? '';
+    final listCubit = context.read<TalentPoolListCubit>();
     final nameController = TextEditingController();
     final descController = TextEditingController();
 
@@ -123,7 +124,7 @@ class _TalentPoolListScreenState extends State<TalentPoolListScreen> {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                context.read<TalentPoolListCubit>().createPool(
+                listCubit.createPool(
                   TalentPool(
                     id: '',
                     companyId: widget.companyId,

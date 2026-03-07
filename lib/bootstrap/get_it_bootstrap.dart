@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:opti_job_app/auth/models/auth_service.dart';
 import 'package:opti_job_app/auth/services/eudi_wallet_native_channel.dart';
+import 'package:opti_job_app/bootstrap/app_check_config.dart';
 import 'package:opti_job_app/features/ai/api/firebase_ai_client.dart';
 import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
 import 'package:opti_job_app/auth/repositories/auth_repository.dart';
@@ -256,10 +257,7 @@ FirebaseAI _createFirebaseAI(FirebaseAuth auth) {
     'FIREBASE_AI_BACKEND',
     defaultValue: 'vertex',
   ); // 'vertex' | 'google'
-  const useAppCheck = bool.fromEnvironment(
-    'USE_FIREBASE_APP_CHECK',
-    defaultValue: false,
-  );
+  final useAppCheck = isFirebaseAppCheckEnabled();
   final appCheck = useAppCheck ? FirebaseAppCheck.instance : null;
 
   if (backend == 'google') {

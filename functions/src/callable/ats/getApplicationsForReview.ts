@@ -17,6 +17,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import { PipelineStage } from "../../types/pipeline";
+import { resolveOfferPipelineStages } from "./utils/pipelineStages";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -53,6 +54,8 @@ export interface BaseApplication {
   province: string | null;
   hasCoverLetter: boolean;
   hasCurriculum: boolean;
+  hasVideoCurriculum: boolean;
+  canViewVideoCurriculum: boolean;
   // Audit
   identityRevealed: boolean;
   assignedTo: string | null;
@@ -246,6 +249,9 @@ function projectApplication(
     province: extractProvince(aiMatch),
     hasCoverLetter: Boolean(data.cover_letter ?? data.coverLetter),
     hasCurriculum: Boolean(data.curriculum_id ?? data.curriculumId),
+    hasVideoCurriculum:
+      data.hasVideoCurriculum === true || data.has_video_curriculum === true,
+    canViewVideoCurriculum: level !== "blind",
     identityRevealed: data.identityRevealed === true,
     assignedTo: asTrimmedString(data.assignedTo) || null,
   };
@@ -366,8 +372,11 @@ export const getApplicationsForReview = onCall(
       }
     }
 
-    // 3. Fetch applications for this offer (Admin SDK — bypasses rules)
-    const pipelineStages = (offerData.pipelineStages ?? []) as PipelineStage[];
+    // 3. Resolve pipeline stages from authoritative pipeline doc when possible.
+    const pipelineStages = await resolveOfferPipelineStages({
+      db,
+      offerData,
+    });
 
     const applicationsSnapshot = await db
       .collection("applications")

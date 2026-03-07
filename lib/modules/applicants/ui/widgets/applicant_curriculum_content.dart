@@ -15,6 +15,8 @@ class ApplicantCurriculumContent extends StatelessWidget {
     required this.candidate,
     required this.curriculum,
     required this.offerId,
+    required this.hasVideoCurriculum,
+    required this.canViewVideoCurriculum,
     required this.isExporting,
     required this.isMatching,
     required this.onExport,
@@ -24,6 +26,8 @@ class ApplicantCurriculumContent extends StatelessWidget {
   final Candidate candidate;
   final Curriculum curriculum;
   final String offerId;
+  final bool hasVideoCurriculum;
+  final bool canViewVideoCurriculum;
   final bool isExporting;
   final bool isMatching;
   final VoidCallback onExport;
@@ -34,7 +38,6 @@ class ApplicantCurriculumContent extends StatelessWidget {
     final hasCurriculum = curriculum.hasContent;
     final coverLetterText = candidate.coverLetter?.text.trim() ?? '';
     final hasCoverLetter = candidate.hasCoverLetter;
-    final hasVideoCurriculum = candidate.hasVideoCurriculum;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
     return SingleChildScrollView(
@@ -96,8 +99,10 @@ class ApplicantCurriculumContent extends StatelessWidget {
                       const SizedBox(width: uiSpacing12),
                       Expanded(
                         child: Text(
-                          hasVideoCurriculum
-                              ? 'Video cargado (privado)'
+                          !canViewVideoCurriculum
+                              ? 'Video no visible en esta etapa'
+                              : hasVideoCurriculum
+                              ? 'Video disponible para esta etapa'
                               : 'No adjuntó video curriculum',
                           style: TextStyle(color: muted, height: 1.3),
                         ),

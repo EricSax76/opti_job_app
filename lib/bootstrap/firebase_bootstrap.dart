@@ -5,6 +5,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:opti_job_app/bootstrap/app_check_config.dart';
 
 import 'package:opti_job_app/firebase_options.dart';
 
@@ -19,32 +20,26 @@ Future<void> initFirebase() async {
 }
 
 Future<void> maybeActivateFirebaseAppCheck() async {
-  const useAppCheck = bool.fromEnvironment(
-    'USE_FIREBASE_APP_CHECK',
-    defaultValue: false,
-  );
+  final useAppCheck = isFirebaseAppCheckEnabled();
   if (!useAppCheck) return;
 
   if (kDebugMode) debugPrint('[AppCheck] Activating providers');
 
   final webProvider = kIsWeb
       ? (() {
-          const siteKey = String.fromEnvironment(
-            'FIREBASE_APP_CHECK_WEB_SITE_KEY',
-            defaultValue: '',
-          );
+          final siteKey = resolveFirebaseAppCheckWebSiteKey();
           if (siteKey.trim().isEmpty) {
             throw StateError(
               'Missing FIREBASE_APP_CHECK_WEB_SITE_KEY. '
               'Set it with --dart-define=FIREBASE_APP_CHECK_WEB_SITE_KEY=... '
-              'or disable App Check with --dart-define=USE_FIREBASE_APP_CHECK=false.',
+              'or define <meta name="opti-firebase-app-check-web-site-key" ...> '
+              'in web/index.html. You can disable App Check with '
+              '--dart-define=USE_FIREBASE_APP_CHECK=false.',
             );
           }
 
-          const provider = String.fromEnvironment(
-            'FIREBASE_APP_CHECK_WEB_PROVIDER',
-            defaultValue: 'recaptcha_v3',
-          ); // 'recaptcha_v3' | 'recaptcha_enterprise'
+          final provider =
+              resolveFirebaseAppCheckWebProvider(); // 'recaptcha_v3' | 'recaptcha_enterprise'
 
           if (kDebugMode) {
             final maskedSiteKey = siteKey.length <= 8

@@ -525,6 +525,642 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Optijob App'**
   String get appTitle;
+
+  /// Badge del hero en la landing.
+  ///
+  /// In es, this message translates to:
+  /// **'Plataforma de talento con IA'**
+  String get heroBadge;
+
+  /// CTA para recruiters en el hero.
+  ///
+  /// In es, this message translates to:
+  /// **'Soy recruiter'**
+  String get heroRecruiterCta;
+
+  /// Nav link inicio.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio'**
+  String get navHome;
+
+  /// Nav link candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Candidatos'**
+  String get navCandidates;
+
+  /// Nav link empresas.
+  ///
+  /// In es, this message translates to:
+  /// **'Empresas'**
+  String get navCompanies;
+
+  /// Nav link recruiters.
+  ///
+  /// In es, this message translates to:
+  /// **'Recruiters'**
+  String get navRecruiters;
+
+  /// Nav link funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Funcionalidades'**
+  String get navFeatures;
+
+  /// CTA login en nav.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión'**
+  String get navLogin;
+
+  /// Título sección recruiter benefits.
+  ///
+  /// In es, this message translates to:
+  /// **'Para recruiters'**
+  String get recruiterBenefitsTitle;
+
+  /// Descripción sección recruiter benefits.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestiona talento de múltiples empresas con herramientas profesionales de selección.'**
+  String get recruiterBenefitsDescription;
+
+  /// Beneficio talent pool.
+  ///
+  /// In es, this message translates to:
+  /// **'Talent pool centralizado con búsqueda avanzada'**
+  String get recruiterBenefitTalentPool;
+
+  /// Beneficio ATS.
+  ///
+  /// In es, this message translates to:
+  /// **'Pipeline ATS visual con etapas personalizables'**
+  String get recruiterBenefitAts;
+
+  /// Beneficio multi-empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestión multi-empresa desde un solo panel'**
+  String get recruiterBenefitMultiCompany;
+
+  /// Beneficio RBAC.
+  ///
+  /// In es, this message translates to:
+  /// **'Control de acceso por roles para equipos'**
+  String get recruiterBenefitRbac;
+
+  /// Beneficio knockout.
+  ///
+  /// In es, this message translates to:
+  /// **'Preguntas knockout para filtrado automático'**
+  String get recruiterBenefitKnockout;
+
+  /// Beneficio evaluaciones.
+  ///
+  /// In es, this message translates to:
+  /// **'Scorecards de evaluación estandarizadas'**
+  String get recruiterBenefitEvaluations;
+
+  /// Título sección company benefits.
+  ///
+  /// In es, this message translates to:
+  /// **'Para empresas'**
+  String get companyBenefitsTitle;
+
+  /// Descripción sección company benefits.
+  ///
+  /// In es, this message translates to:
+  /// **'Publica ofertas, gestiona candidatos y cumple la normativa desde una sola plataforma.'**
+  String get companyBenefitsDescription;
+
+  /// Beneficio publicar ofertas.
+  ///
+  /// In es, this message translates to:
+  /// **'Publica y gestiona ofertas de empleo fácilmente'**
+  String get companyBenefitPublishOffers;
+
+  /// Beneficio gestión candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestión centralizada de candidaturas'**
+  String get companyBenefitApplicantManagement;
+
+  /// Beneficio analytics.
+  ///
+  /// In es, this message translates to:
+  /// **'Dashboards de analítica y rendimiento'**
+  String get companyBenefitAnalytics;
+
+  /// Beneficio compliance.
+  ///
+  /// In es, this message translates to:
+  /// **'Cumplimiento GDPR y normativa laboral integrado'**
+  String get companyBenefitCompliance;
+
+  /// Beneficio IA ofertas.
+  ///
+  /// In es, this message translates to:
+  /// **'Generación de ofertas asistida por IA'**
+  String get companyBenefitAiJobOffers;
+
+  /// Beneficio entrevistas.
+  ///
+  /// In es, this message translates to:
+  /// **'Programación y gestión de entrevistas integrada'**
+  String get companyBenefitInterviews;
+
+  /// Título sección trust.
+  ///
+  /// In es, this message translates to:
+  /// **'Confianza y cumplimiento normativo'**
+  String get trustSectionTitle;
+
+  /// Descripción sección trust.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu información protegida bajo los más altos estándares de seguridad y privacidad.'**
+  String get trustSectionDescription;
+
+  /// Item GDPR.
+  ///
+  /// In es, this message translates to:
+  /// **'Cumplimiento total del Reglamento General de Protección de Datos (GDPR)'**
+  String get trustGdpr;
+
+  /// Item consent.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestión de consentimientos explícita y auditable'**
+  String get trustConsent;
+
+  /// Item data privacy.
+  ///
+  /// In es, this message translates to:
+  /// **'Portal de privacidad para candidatos con control de datos'**
+  String get trustDataPrivacy;
+
+  /// Item audit trail.
+  ///
+  /// In es, this message translates to:
+  /// **'Trazabilidad completa con audit trail de todas las acciones'**
+  String get trustAuditTrail;
+
+  /// Item AI transparency.
+  ///
+  /// In es, this message translates to:
+  /// **'Transparencia en decisiones de IA con logs explicables'**
+  String get trustAiTransparency;
+
+  /// Título sección stats.
+  ///
+  /// In es, this message translates to:
+  /// **'OPTIJOB en cifras'**
+  String get statsTitle;
+
+  /// Label stat empresas.
+  ///
+  /// In es, this message translates to:
+  /// **'Empresas'**
+  String get statsCompaniesLabel;
+
+  /// Label stat candidatos.
+  ///
+  /// In es, this message translates to:
+  /// **'Candidatos'**
+  String get statsCandidatesLabel;
+
+  /// Label stat ofertas.
+  ///
+  /// In es, this message translates to:
+  /// **'Ofertas publicadas'**
+  String get statsOffersLabel;
+
+  /// Label stat entrevistas.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrevistas realizadas'**
+  String get statsInterviewsLabel;
+
+  /// Título sección partners.
+  ///
+  /// In es, this message translates to:
+  /// **'Confían en nosotros'**
+  String get partnersTitle;
+
+  /// Título columna producto footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Producto'**
+  String get footerProductTitle;
+
+  /// Link funcionalidades footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Funcionalidades'**
+  String get footerFeatures;
+
+  /// Link empresas footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Para empresas'**
+  String get footerForCompanies;
+
+  /// Link recruiters footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Para recruiters'**
+  String get footerForRecruiters;
+
+  /// Título columna legal footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Legal'**
+  String get footerLegalTitle;
+
+  /// Link privacidad footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de privacidad'**
+  String get footerPrivacy;
+
+  /// Link términos footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos de servicio'**
+  String get footerTerms;
+
+  /// Link cookies footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de cookies'**
+  String get footerCookies;
+
+  /// Título columna empresa footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Empresa'**
+  String get footerCompanyTitle;
+
+  /// Link about footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Sobre nosotros'**
+  String get footerAbout;
+
+  /// Link soporte footer.
+  ///
+  /// In es, this message translates to:
+  /// **'Soporte'**
+  String get footerSupport;
+
+  /// Feature cover letters.
+  ///
+  /// In es, this message translates to:
+  /// **'Generación automática de cartas de presentación'**
+  String get aiFeatureCoverLetters;
+
+  /// Feature video CV.
+  ///
+  /// In es, this message translates to:
+  /// **'Video currículum con grabación integrada'**
+  String get aiFeatureVideoCv;
+
+  /// Feature AI job offers.
+  ///
+  /// In es, this message translates to:
+  /// **'Creación de ofertas de empleo asistida por IA'**
+  String get aiFeatureJobOfferGeneration;
+
+  /// Feature smart matching.
+  ///
+  /// In es, this message translates to:
+  /// **'Matching inteligente entre talento y oportunidades'**
+  String get aiFeatureSmartMatching;
+
+  /// Título página empresas.
+  ///
+  /// In es, this message translates to:
+  /// **'La plataforma que tu empresa necesita'**
+  String get paraEmpresasTitle;
+
+  /// Subtítulo página empresas.
+  ///
+  /// In es, this message translates to:
+  /// **'Publica ofertas, gestiona candidatos y cumple la normativa desde un solo lugar.'**
+  String get paraEmpresasSubtitle;
+
+  /// Título sección ofertas empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación de ofertas'**
+  String get paraEmpresasOffersTitle;
+
+  /// Descripción sección ofertas empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea y publica ofertas de empleo con asistencia de IA. Define requisitos, salario y modalidad en minutos.'**
+  String get paraEmpresasOffersDesc;
+
+  /// Título sección candidatos empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestión de candidatos'**
+  String get paraEmpresasApplicantsTitle;
+
+  /// Descripción sección candidatos empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Visualiza, filtra y gestiona todas las candidaturas desde un panel centralizado con pipeline ATS.'**
+  String get paraEmpresasApplicantsDesc;
+
+  /// Título sección analytics empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Analítica y métricas'**
+  String get paraEmpresasAnalyticsTitle;
+
+  /// Descripción sección analytics empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Dashboards con métricas de rendimiento, tiempo de contratación y efectividad de tus procesos.'**
+  String get paraEmpresasAnalyticsDesc;
+
+  /// Título sección compliance empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Cumplimiento normativo'**
+  String get paraEmpresasComplianceTitle;
+
+  /// Descripción sección compliance empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'GDPR, gestión de consentimientos y portal de privacidad integrados de serie.'**
+  String get paraEmpresasComplianceDesc;
+
+  /// Título sección entrevistas empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrevistas integradas'**
+  String get paraEmpresasInterviewsTitle;
+
+  /// Descripción sección entrevistas empresa.
+  ///
+  /// In es, this message translates to:
+  /// **'Programa, gestiona y realiza entrevistas con chat integrado y herramientas de evaluación.'**
+  String get paraEmpresasInterviewsDesc;
+
+  /// CTA página empresas.
+  ///
+  /// In es, this message translates to:
+  /// **'Registra tu empresa'**
+  String get paraEmpresasCta;
+
+  /// Título página recruiters.
+  ///
+  /// In es, this message translates to:
+  /// **'Herramientas profesionales de selección'**
+  String get paraRecruitersTitle;
+
+  /// Subtítulo página recruiters.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestiona talento de múltiples empresas con un ecosistema completo de recruiting.'**
+  String get paraRecruitersSubtitle;
+
+  /// Título sección talent pool recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Talent Pool'**
+  String get paraRecruitersTalentPoolTitle;
+
+  /// Descripción sección talent pool recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Base de datos centralizada de candidatos con búsqueda avanzada, etiquetas y segmentación.'**
+  String get paraRecruitersTalentPoolDesc;
+
+  /// Título sección ATS recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Pipeline ATS'**
+  String get paraRecruitersAtsTitle;
+
+  /// Descripción sección ATS recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Pipeline visual de selección con etapas configurables, preguntas knockout y filtrado automático.'**
+  String get paraRecruitersAtsDesc;
+
+  /// Título sección RBAC recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestión de equipos'**
+  String get paraRecruitersRbacTitle;
+
+  /// Descripción sección RBAC recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Control de acceso por roles, permisos granulares y colaboración entre recruiters.'**
+  String get paraRecruitersRbacDesc;
+
+  /// Título sección evaluaciones recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Evaluaciones'**
+  String get paraRecruitersEvaluationsTitle;
+
+  /// Descripción sección evaluaciones recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Scorecards estandarizados para evaluaciones objetivas y comparables entre candidatos.'**
+  String get paraRecruitersEvaluationsDesc;
+
+  /// Título sección multi-empresa recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Multi-empresa'**
+  String get paraRecruitersMultiCompanyTitle;
+
+  /// Descripción sección multi-empresa recruiter.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestiona procesos de selección de múltiples empresas desde un único panel de control.'**
+  String get paraRecruitersMultiCompanyDesc;
+
+  /// CTA página recruiters.
+  ///
+  /// In es, this message translates to:
+  /// **'Accede como recruiter'**
+  String get paraRecruitersCta;
+
+  /// Título página funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo lo que necesitas en una plataforma'**
+  String get funcionalidadesTitle;
+
+  /// Subtítulo página funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Descubre todas las herramientas que OPTIJOB pone a tu disposición.'**
+  String get funcionalidadesSubtitle;
+
+  /// Categoría candidatos en funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Para candidatos'**
+  String get funcCategoryCandidates;
+
+  /// Categoría empresas en funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Para empresas'**
+  String get funcCategoryCompanies;
+
+  /// Categoría recruiters en funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Para recruiters'**
+  String get funcCategoryRecruiters;
+
+  /// Categoría IA en funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'IA y automatización'**
+  String get funcCategoryAi;
+
+  /// Categoría compliance en funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Compliance y seguridad'**
+  String get funcCategoryCompliance;
+
+  /// Funcionalidad búsqueda.
+  ///
+  /// In es, this message translates to:
+  /// **'Búsqueda inteligente de ofertas'**
+  String get funcSmartSearch;
+
+  /// Descripción búsqueda.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuentra oportunidades relevantes con filtros avanzados y recomendaciones personalizadas.'**
+  String get funcSmartSearchDesc;
+
+  /// Funcionalidad CV.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestión de currículum'**
+  String get funcCvManagement;
+
+  /// Descripción CV.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea y gestiona tu CV con secciones estructuradas y exportación profesional.'**
+  String get funcCvManagementDesc;
+
+  /// Funcionalidad tracking.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguimiento de candidaturas'**
+  String get funcApplicationTracking;
+
+  /// Descripción tracking.
+  ///
+  /// In es, this message translates to:
+  /// **'Monitoriza el estado de tus aplicaciones en tiempo real.'**
+  String get funcApplicationTrackingDesc;
+
+  /// Funcionalidad ofertas.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación de ofertas'**
+  String get funcOfferPublishing;
+
+  /// Descripción ofertas.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea ofertas detalladas con requisitos, salario y modalidad de trabajo.'**
+  String get funcOfferPublishingDesc;
+
+  /// Funcionalidad ATS.
+  ///
+  /// In es, this message translates to:
+  /// **'Pipeline ATS'**
+  String get funcAtsPipeline;
+
+  /// Descripción ATS.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestiona candidatos en un pipeline visual con etapas configurables.'**
+  String get funcAtsPipelineDesc;
+
+  /// Funcionalidad equipos.
+  ///
+  /// In es, this message translates to:
+  /// **'Gestión de equipos'**
+  String get funcTeamManagement;
+
+  /// Descripción equipos.
+  ///
+  /// In es, this message translates to:
+  /// **'Administra roles y permisos de tu equipo de recruiting.'**
+  String get funcTeamManagementDesc;
+
+  /// Funcionalidad talent pool.
+  ///
+  /// In es, this message translates to:
+  /// **'Talent Pool'**
+  String get funcTalentPool;
+
+  /// Descripción talent pool.
+  ///
+  /// In es, this message translates to:
+  /// **'Base de datos centralizada de candidatos con etiquetas y segmentación.'**
+  String get funcTalentPoolDesc;
+
+  /// Funcionalidad análisis perfiles.
+  ///
+  /// In es, this message translates to:
+  /// **'Análisis de perfiles con IA'**
+  String get funcProfileAnalysis;
+
+  /// Descripción análisis perfiles.
+  ///
+  /// In es, this message translates to:
+  /// **'Evaluación automática de candidatos basada en competencias y experiencia.'**
+  String get funcProfileAnalysisDesc;
+
+  /// Funcionalidad entrevistas.
+  ///
+  /// In es, this message translates to:
+  /// **'Programación de entrevistas'**
+  String get funcInterviewScheduling;
+
+  /// Descripción entrevistas.
+  ///
+  /// In es, this message translates to:
+  /// **'Agenda y gestiona entrevistas con herramientas automatizadas y chat integrado.'**
+  String get funcInterviewSchedulingDesc;
+
+  /// Funcionalidad GDPR.
+  ///
+  /// In es, this message translates to:
+  /// **'GDPR y protección de datos'**
+  String get funcGdprCompliance;
+
+  /// Descripción GDPR.
+  ///
+  /// In es, this message translates to:
+  /// **'Cumplimiento normativo integrado con gestión de consentimientos y auditoría.'**
+  String get funcGdprComplianceDesc;
+
+  /// CTA ver funcionalidades.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todas las funcionalidades'**
+  String get funcSeeAllFeatures;
 }
 
 class _AppLocalizationsDelegate

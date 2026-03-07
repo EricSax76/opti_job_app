@@ -4,17 +4,11 @@ import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/modules/applicants/logic/company_candidates_logic.dart';
-import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 
 class CandidateCard extends StatelessWidget {
-  const CandidateCard({
-    super.key,
-    required this.candidate,
-    this.candidateProfile,
-  });
+  const CandidateCard({super.key, required this.candidate});
 
   final CandidateGroup candidate;
-  final Candidate? candidateProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +23,18 @@ class CandidateCard extends StatelessWidget {
     final displayName = isAnonymousScreening
         ? candidate.anonymizedLabel
         : candidate.displayName;
-    final bool? hasCoverLetter = candidateProfile?.hasCoverLetter;
-    final bool? hasVideoCurriculum = candidateProfile?.hasVideoCurriculum;
+    final hasNavigableEntry = candidate.entries.any(
+      (entry) => (entry.applicationId ?? '').trim().isNotEmpty,
+    );
+    final hasCoverLetter = candidate.entries.any(
+      (entry) => entry.hasCoverLetter,
+    );
+    final hasVideoCurriculum = candidate.entries.any(
+      (entry) => entry.hasVideoCurriculum,
+    );
+    final canViewVideoCurriculum = candidate.entries.any(
+      (entry) => entry.canViewVideoCurriculum,
+    );
 
     Widget statusPill({
       required IconData icon,
@@ -63,7 +67,10 @@ class CandidateCard extends StatelessWidget {
       child: ListTile(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        onTap: candidate.entries.isEmpty || isAnonymousScreening
+        onTap:
+            candidate.entries.isEmpty ||
+                isAnonymousScreening ||
+                !hasNavigableEntry
             ? null
             : () => _openCvPicker(context, candidate),
         leading: CircleAvatar(
@@ -103,15 +110,18 @@ class CandidateCard extends StatelessWidget {
                 ),
                 statusPill(
                   icon: Icons.videocam_outlined,
-                  label: 'Video',
-                  value: hasVideoCurriculum,
+                  label: canViewVideoCurriculum ? 'Video' : 'Video (oculto)',
+                  value: canViewVideoCurriculum ? hasVideoCurriculum : null,
                 ),
               ],
             ),
           ],
         ),
         trailing: TextButton(
-          onPressed: candidate.entries.isEmpty || isAnonymousScreening
+          onPressed:
+              candidate.entries.isEmpty ||
+                  isAnonymousScreening ||
+                  !hasNavigableEntry
               ? null
               : () => _openCvPicker(context, candidate),
           child: Text(isAnonymousScreening ? 'Anónimo' : 'CV'),
@@ -125,11 +135,17 @@ class CandidateCard extends StatelessWidget {
 
     // By user request, we skip the intermediate offer selection step in the "Candidates" tab.
     // We just pick the first offer context to open the CV directly.
-    final entry = candidate.entries.first;
+    final entry = candidate.entries.firstWhere(
+      (item) => (item.applicationId ?? '').trim().isNotEmpty,
+      orElse: () => candidate.entries.first,
+    );
+    final applicationId = (entry.applicationId ?? '').trim();
+    if (applicationId.isEmpty) return;
     _openApplicantCv(
       context: context,
       offerId: entry.offerId,
       candidateUid: candidate.candidateUid,
+      applicationId: applicationId,
     );
   }
 
@@ -137,10 +153,12 @@ class CandidateCard extends StatelessWidget {
     required BuildContext context,
     required String offerId,
     required String candidateUid,
+    required String applicationId,
   }) {
     context.pushNamed(
       'company-applicant-cv',
       pathParameters: {'offerId': offerId, 'candidateUid': candidateUid},
+      queryParameters: {'applicationId': applicationId},
     );
   }
 }

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
+import 'package:opti_job_app/core/widgets/app_footer.dart';
 import 'package:opti_job_app/home/widgets/call_to_action_section.dart';
 import 'package:opti_job_app/home/widgets/candidate_benefits_section.dart';
+import 'package:opti_job_app/home/widgets/company_benefits_section.dart';
 import 'package:opti_job_app/home/widgets/feature_section.dart';
 import 'package:opti_job_app/home/widgets/hero_section.dart';
 import 'package:opti_job_app/home/widgets/how_it_works_section.dart';
+import 'package:opti_job_app/home/widgets/partners_section.dart';
+import 'package:opti_job_app/home/widgets/platform_stats_section.dart';
+import 'package:opti_job_app/home/widgets/recruiter_benefits_section.dart';
+import 'package:opti_job_app/home/widgets/trust_section.dart';
 
 class LandingContent extends StatelessWidget {
   const LandingContent({
@@ -28,31 +34,54 @@ class LandingContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        uiSpacing24,
-        uiSpacing24,
-        uiSpacing24,
-        uiSpacing32,
-      ),
+      padding: EdgeInsets.zero,
       children: [
-        HeroSection(
-          onCandidateLogin: onCandidateLogin,
-          onCompanyLogin: onCompanyLogin,
-          onRecruiterLogin: onRecruiterLogin,
-          onSeeOffers: onSeeOffers,
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: uiBreakpointDesktop),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                uiSpacing24,
+                uiSpacing24,
+                uiSpacing24,
+                uiSpacing32,
+              ),
+              child: Column(
+                children: [
+                  HeroSection(
+                    onCandidateLogin: onCandidateLogin,
+                    onCompanyLogin: onCompanyLogin,
+                    onRecruiterLogin: onRecruiterLogin,
+                    onSeeOffers: onSeeOffers,
+                  ),
+                  const SizedBox(height: uiSpacing32),
+                  const PlatformStatsSection(),
+                  const SizedBox(height: uiSpacing32),
+                  const FeatureSection(),
+                  const SizedBox(height: uiSpacing32),
+                  const CandidateBenefitsSection(),
+                  const SizedBox(height: uiSpacing32),
+                  const RecruiterBenefitsSection(),
+                  const SizedBox(height: uiSpacing32),
+                  const CompanyBenefitsSection(),
+                  const SizedBox(height: uiSpacing32),
+                  const HowItWorksSection(),
+                  const SizedBox(height: uiSpacing32),
+                  const TrustSection(),
+                  const SizedBox(height: uiSpacing32),
+                  const PartnersSection(),
+                  const SizedBox(height: uiSpacing32),
+                  CallToActionSection(
+                    onCompanyRegister: onCompanyRegister,
+                    onCandidateRegister: onCandidateRegister,
+                    onSeeOffers: onSeeOffers,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: uiSpacing32),
-        const FeatureSection(),
-        const SizedBox(height: uiSpacing32),
-        const CandidateBenefitsSection(),
-        const SizedBox(height: uiSpacing32),
-        const HowItWorksSection(),
-        const SizedBox(height: uiSpacing32),
-        CallToActionSection(
-          onCompanyRegister: onCompanyRegister,
-          onCandidateRegister: onCandidateRegister,
-          onSeeOffers: onSeeOffers,
-        ),
+        const AppFooter(),
       ],
     );
   }

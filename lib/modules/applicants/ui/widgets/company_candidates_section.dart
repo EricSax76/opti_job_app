@@ -92,13 +92,8 @@ class CompanyCandidatesSection extends StatelessWidget {
 
                 final groupIndex = index ~/ 2;
                 final candidate = grouped[groupIndex];
-                final profile =
-                    candidatesState.profiles[candidate.candidateUid.trim()];
 
-                return CandidateCard(
-                  candidate: candidate,
-                  candidateProfile: profile,
-                );
+                return CandidateCard(candidate: candidate);
               }, childCount: separatorAwareCount),
             );
           },

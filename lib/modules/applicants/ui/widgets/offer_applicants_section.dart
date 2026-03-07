@@ -92,7 +92,8 @@ class OfferApplicantsSection extends StatelessWidget {
                 return ApplicantTile(
                   application: application,
                   onTap:
-                      application.candidateUid.trim().isEmpty ||
+                      application.id == null ||
+                          application.candidateUid.trim().isEmpty ||
                           isAnonymousScreening
                       ? null
                       : () => context.pushNamed(
@@ -101,6 +102,7 @@ class OfferApplicantsSection extends StatelessWidget {
                             'offerId': offer.id,
                             'candidateUid': application.candidateUid,
                           },
+                          queryParameters: {'applicationId': application.id!},
                         ),
                   onStatusChanged: application.id == null
                       ? null

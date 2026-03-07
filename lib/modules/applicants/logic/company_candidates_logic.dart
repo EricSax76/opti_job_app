@@ -20,16 +20,24 @@ class CandidateGroup {
 
 class CandidateOfferEntry {
   const CandidateOfferEntry({
+    required this.applicationId,
     required this.offerId,
     required this.offerTitle,
     required this.status,
+    required this.hasCoverLetter,
+    required this.hasVideoCurriculum,
+    required this.canViewVideoCurriculum,
     this.pipelineStageId,
     this.pipelineStageName,
   });
 
+  final String? applicationId;
   final String offerId;
   final String offerTitle;
   final String status;
+  final bool hasCoverLetter;
+  final bool hasVideoCurriculum;
+  final bool canViewVideoCurriculum;
   final String? pipelineStageId;
   final String? pipelineStageName;
 }
@@ -63,9 +71,14 @@ List<CandidateGroup> groupCandidates({
                           application.jobOfferTitle ??
                           'Oferta #${application.jobOfferId}';
                       return CandidateOfferEntry(
+                        applicationId: application.id,
                         offerId: application.jobOfferId,
                         offerTitle: offerTitle,
                         status: application.status,
+                        hasCoverLetter: application.hasCoverLetter,
+                        hasVideoCurriculum: application.hasVideoCurriculum,
+                        canViewVideoCurriculum:
+                            application.canViewVideoCurriculum,
                         pipelineStageId: application.pipelineStageId,
                         pipelineStageName: application.pipelineStageName,
                       );
@@ -86,8 +99,9 @@ List<CandidateGroup> groupCandidates({
 
             // With the backend-driven blind review, anonymization is
             // determined by whether *any* application returned a name.
-            final isAnonymousScreening = accumulator.latestByOffer.values
-                .every((app) => shouldAnonymizeApplication(app));
+            final isAnonymousScreening = accumulator.latestByOffer.values.every(
+              (app) => shouldAnonymizeApplication(app),
+            );
 
             // Prefer the server-generated label from any of the applications.
             final serverLabel = accumulator.latestByOffer.values

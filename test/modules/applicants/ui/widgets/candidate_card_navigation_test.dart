@@ -15,14 +15,22 @@ void main() {
         isAnonymousScreening: false,
         entries: [
           CandidateOfferEntry(
+            applicationId: 'app-1',
             offerId: 'offer-1',
             offerTitle: 'Oferta Uno',
             status: 'pending',
+            hasCoverLetter: true,
+            hasVideoCurriculum: true,
+            canViewVideoCurriculum: true,
           ),
           CandidateOfferEntry(
+            applicationId: 'app-2',
             offerId: 'offer-2',
             offerTitle: 'Oferta Dos',
             status: 'pending',
+            hasCoverLetter: false,
+            hasVideoCurriculum: false,
+            canViewVideoCurriculum: true,
           ),
         ],
       );
@@ -37,7 +45,7 @@ void main() {
             ),
           ),
           GoRoute(
-            path: '/company/offers/:offerId/applicants/:uid/cv',
+            path: '/company/offers/:offerId/applicants/:candidateUid/cv',
             name: 'company-applicant-cv',
             builder: (context, state) => Scaffold(
               appBar: AppBar(title: const Text('CV screen')),

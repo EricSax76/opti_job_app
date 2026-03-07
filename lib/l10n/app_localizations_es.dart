@@ -266,4 +266,365 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appTitle => 'Optijob App';
+
+  @override
+  String get heroBadge => 'Plataforma de talento con IA';
+
+  @override
+  String get heroRecruiterCta => 'Soy recruiter';
+
+  @override
+  String get navHome => 'Inicio';
+
+  @override
+  String get navCandidates => 'Candidatos';
+
+  @override
+  String get navCompanies => 'Empresas';
+
+  @override
+  String get navRecruiters => 'Recruiters';
+
+  @override
+  String get navFeatures => 'Funcionalidades';
+
+  @override
+  String get navLogin => 'Iniciar sesión';
+
+  @override
+  String get recruiterBenefitsTitle => 'Para recruiters';
+
+  @override
+  String get recruiterBenefitsDescription =>
+      'Gestiona talento de múltiples empresas con herramientas profesionales de selección.';
+
+  @override
+  String get recruiterBenefitTalentPool =>
+      'Talent pool centralizado con búsqueda avanzada';
+
+  @override
+  String get recruiterBenefitAts =>
+      'Pipeline ATS visual con etapas personalizables';
+
+  @override
+  String get recruiterBenefitMultiCompany =>
+      'Gestión multi-empresa desde un solo panel';
+
+  @override
+  String get recruiterBenefitRbac => 'Control de acceso por roles para equipos';
+
+  @override
+  String get recruiterBenefitKnockout =>
+      'Preguntas knockout para filtrado automático';
+
+  @override
+  String get recruiterBenefitEvaluations =>
+      'Scorecards de evaluación estandarizadas';
+
+  @override
+  String get companyBenefitsTitle => 'Para empresas';
+
+  @override
+  String get companyBenefitsDescription =>
+      'Publica ofertas, gestiona candidatos y cumple la normativa desde una sola plataforma.';
+
+  @override
+  String get companyBenefitPublishOffers =>
+      'Publica y gestiona ofertas de empleo fácilmente';
+
+  @override
+  String get companyBenefitApplicantManagement =>
+      'Gestión centralizada de candidaturas';
+
+  @override
+  String get companyBenefitAnalytics => 'Dashboards de analítica y rendimiento';
+
+  @override
+  String get companyBenefitCompliance =>
+      'Cumplimiento GDPR y normativa laboral integrado';
+
+  @override
+  String get companyBenefitAiJobOffers =>
+      'Generación de ofertas asistida por IA';
+
+  @override
+  String get companyBenefitInterviews =>
+      'Programación y gestión de entrevistas integrada';
+
+  @override
+  String get trustSectionTitle => 'Confianza y cumplimiento normativo';
+
+  @override
+  String get trustSectionDescription =>
+      'Tu información protegida bajo los más altos estándares de seguridad y privacidad.';
+
+  @override
+  String get trustGdpr =>
+      'Cumplimiento total del Reglamento General de Protección de Datos (GDPR)';
+
+  @override
+  String get trustConsent => 'Gestión de consentimientos explícita y auditable';
+
+  @override
+  String get trustDataPrivacy =>
+      'Portal de privacidad para candidatos con control de datos';
+
+  @override
+  String get trustAuditTrail =>
+      'Trazabilidad completa con audit trail de todas las acciones';
+
+  @override
+  String get trustAiTransparency =>
+      'Transparencia en decisiones de IA con logs explicables';
+
+  @override
+  String get statsTitle => 'OPTIJOB en cifras';
+
+  @override
+  String get statsCompaniesLabel => 'Empresas';
+
+  @override
+  String get statsCandidatesLabel => 'Candidatos';
+
+  @override
+  String get statsOffersLabel => 'Ofertas publicadas';
+
+  @override
+  String get statsInterviewsLabel => 'Entrevistas realizadas';
+
+  @override
+  String get partnersTitle => 'Confían en nosotros';
+
+  @override
+  String get footerProductTitle => 'Producto';
+
+  @override
+  String get footerFeatures => 'Funcionalidades';
+
+  @override
+  String get footerForCompanies => 'Para empresas';
+
+  @override
+  String get footerForRecruiters => 'Para recruiters';
+
+  @override
+  String get footerLegalTitle => 'Legal';
+
+  @override
+  String get footerPrivacy => 'Política de privacidad';
+
+  @override
+  String get footerTerms => 'Términos de servicio';
+
+  @override
+  String get footerCookies => 'Política de cookies';
+
+  @override
+  String get footerCompanyTitle => 'Empresa';
+
+  @override
+  String get footerAbout => 'Sobre nosotros';
+
+  @override
+  String get footerSupport => 'Soporte';
+
+  @override
+  String get aiFeatureCoverLetters =>
+      'Generación automática de cartas de presentación';
+
+  @override
+  String get aiFeatureVideoCv => 'Video currículum con grabación integrada';
+
+  @override
+  String get aiFeatureJobOfferGeneration =>
+      'Creación de ofertas de empleo asistida por IA';
+
+  @override
+  String get aiFeatureSmartMatching =>
+      'Matching inteligente entre talento y oportunidades';
+
+  @override
+  String get paraEmpresasTitle => 'La plataforma que tu empresa necesita';
+
+  @override
+  String get paraEmpresasSubtitle =>
+      'Publica ofertas, gestiona candidatos y cumple la normativa desde un solo lugar.';
+
+  @override
+  String get paraEmpresasOffersTitle => 'Publicación de ofertas';
+
+  @override
+  String get paraEmpresasOffersDesc =>
+      'Crea y publica ofertas de empleo con asistencia de IA. Define requisitos, salario y modalidad en minutos.';
+
+  @override
+  String get paraEmpresasApplicantsTitle => 'Gestión de candidatos';
+
+  @override
+  String get paraEmpresasApplicantsDesc =>
+      'Visualiza, filtra y gestiona todas las candidaturas desde un panel centralizado con pipeline ATS.';
+
+  @override
+  String get paraEmpresasAnalyticsTitle => 'Analítica y métricas';
+
+  @override
+  String get paraEmpresasAnalyticsDesc =>
+      'Dashboards con métricas de rendimiento, tiempo de contratación y efectividad de tus procesos.';
+
+  @override
+  String get paraEmpresasComplianceTitle => 'Cumplimiento normativo';
+
+  @override
+  String get paraEmpresasComplianceDesc =>
+      'GDPR, gestión de consentimientos y portal de privacidad integrados de serie.';
+
+  @override
+  String get paraEmpresasInterviewsTitle => 'Entrevistas integradas';
+
+  @override
+  String get paraEmpresasInterviewsDesc =>
+      'Programa, gestiona y realiza entrevistas con chat integrado y herramientas de evaluación.';
+
+  @override
+  String get paraEmpresasCta => 'Registra tu empresa';
+
+  @override
+  String get paraRecruitersTitle => 'Herramientas profesionales de selección';
+
+  @override
+  String get paraRecruitersSubtitle =>
+      'Gestiona talento de múltiples empresas con un ecosistema completo de recruiting.';
+
+  @override
+  String get paraRecruitersTalentPoolTitle => 'Talent Pool';
+
+  @override
+  String get paraRecruitersTalentPoolDesc =>
+      'Base de datos centralizada de candidatos con búsqueda avanzada, etiquetas y segmentación.';
+
+  @override
+  String get paraRecruitersAtsTitle => 'Pipeline ATS';
+
+  @override
+  String get paraRecruitersAtsDesc =>
+      'Pipeline visual de selección con etapas configurables, preguntas knockout y filtrado automático.';
+
+  @override
+  String get paraRecruitersRbacTitle => 'Gestión de equipos';
+
+  @override
+  String get paraRecruitersRbacDesc =>
+      'Control de acceso por roles, permisos granulares y colaboración entre recruiters.';
+
+  @override
+  String get paraRecruitersEvaluationsTitle => 'Evaluaciones';
+
+  @override
+  String get paraRecruitersEvaluationsDesc =>
+      'Scorecards estandarizados para evaluaciones objetivas y comparables entre candidatos.';
+
+  @override
+  String get paraRecruitersMultiCompanyTitle => 'Multi-empresa';
+
+  @override
+  String get paraRecruitersMultiCompanyDesc =>
+      'Gestiona procesos de selección de múltiples empresas desde un único panel de control.';
+
+  @override
+  String get paraRecruitersCta => 'Accede como recruiter';
+
+  @override
+  String get funcionalidadesTitle => 'Todo lo que necesitas en una plataforma';
+
+  @override
+  String get funcionalidadesSubtitle =>
+      'Descubre todas las herramientas que OPTIJOB pone a tu disposición.';
+
+  @override
+  String get funcCategoryCandidates => 'Para candidatos';
+
+  @override
+  String get funcCategoryCompanies => 'Para empresas';
+
+  @override
+  String get funcCategoryRecruiters => 'Para recruiters';
+
+  @override
+  String get funcCategoryAi => 'IA y automatización';
+
+  @override
+  String get funcCategoryCompliance => 'Compliance y seguridad';
+
+  @override
+  String get funcSmartSearch => 'Búsqueda inteligente de ofertas';
+
+  @override
+  String get funcSmartSearchDesc =>
+      'Encuentra oportunidades relevantes con filtros avanzados y recomendaciones personalizadas.';
+
+  @override
+  String get funcCvManagement => 'Gestión de currículum';
+
+  @override
+  String get funcCvManagementDesc =>
+      'Crea y gestiona tu CV con secciones estructuradas y exportación profesional.';
+
+  @override
+  String get funcApplicationTracking => 'Seguimiento de candidaturas';
+
+  @override
+  String get funcApplicationTrackingDesc =>
+      'Monitoriza el estado de tus aplicaciones en tiempo real.';
+
+  @override
+  String get funcOfferPublishing => 'Publicación de ofertas';
+
+  @override
+  String get funcOfferPublishingDesc =>
+      'Crea ofertas detalladas con requisitos, salario y modalidad de trabajo.';
+
+  @override
+  String get funcAtsPipeline => 'Pipeline ATS';
+
+  @override
+  String get funcAtsPipelineDesc =>
+      'Gestiona candidatos en un pipeline visual con etapas configurables.';
+
+  @override
+  String get funcTeamManagement => 'Gestión de equipos';
+
+  @override
+  String get funcTeamManagementDesc =>
+      'Administra roles y permisos de tu equipo de recruiting.';
+
+  @override
+  String get funcTalentPool => 'Talent Pool';
+
+  @override
+  String get funcTalentPoolDesc =>
+      'Base de datos centralizada de candidatos con etiquetas y segmentación.';
+
+  @override
+  String get funcProfileAnalysis => 'Análisis de perfiles con IA';
+
+  @override
+  String get funcProfileAnalysisDesc =>
+      'Evaluación automática de candidatos basada en competencias y experiencia.';
+
+  @override
+  String get funcInterviewScheduling => 'Programación de entrevistas';
+
+  @override
+  String get funcInterviewSchedulingDesc =>
+      'Agenda y gestiona entrevistas con herramientas automatizadas y chat integrado.';
+
+  @override
+  String get funcGdprCompliance => 'GDPR y protección de datos';
+
+  @override
+  String get funcGdprComplianceDesc =>
+      'Cumplimiento normativo integrado con gestión de consentimientos y auditoría.';
+
+  @override
+  String get funcSeeAllFeatures => 'Ver todas las funcionalidades';
 }

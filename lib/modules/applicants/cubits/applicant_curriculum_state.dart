@@ -10,6 +10,8 @@ class ApplicantCurriculumState extends Equatable {
     this.offer,
     this.isExporting = false,
     this.isMatching = false,
+    this.hasVideoCurriculum = false,
+    this.canViewVideoCurriculum = false,
     this.matchResult,
     this.errorMessage,
     this.infoMessage,
@@ -21,6 +23,8 @@ class ApplicantCurriculumState extends Equatable {
   final JobOffer? offer;
   final bool isExporting;
   final bool isMatching;
+  final bool hasVideoCurriculum;
+  final bool canViewVideoCurriculum;
   final AiMatchResult? matchResult;
   final String? errorMessage;
   final String? infoMessage;
@@ -32,6 +36,8 @@ class ApplicantCurriculumState extends Equatable {
     JobOffer? offer,
     bool? isExporting,
     bool? isMatching,
+    bool? hasVideoCurriculum,
+    bool? canViewVideoCurriculum,
     AiMatchResult? matchResult,
     String? errorMessage,
     String? infoMessage,
@@ -45,6 +51,9 @@ class ApplicantCurriculumState extends Equatable {
       offer: offer ?? this.offer,
       isExporting: isExporting ?? this.isExporting,
       isMatching: isMatching ?? this.isMatching,
+      hasVideoCurriculum: hasVideoCurriculum ?? this.hasVideoCurriculum,
+      canViewVideoCurriculum:
+          canViewVideoCurriculum ?? this.canViewVideoCurriculum,
       matchResult: clearMatchResult ? null : matchResult ?? this.matchResult,
       errorMessage: errorMessage ?? this.errorMessage,
       infoMessage: clearInfoMessage ? null : infoMessage ?? this.infoMessage,
@@ -59,6 +68,8 @@ class ApplicantCurriculumState extends Equatable {
     offer,
     isExporting,
     isMatching,
+    hasVideoCurriculum,
+    canViewVideoCurriculum,
     matchResult,
     errorMessage,
     infoMessage,

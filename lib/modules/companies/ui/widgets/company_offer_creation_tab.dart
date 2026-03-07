@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
 import 'package:opti_job_app/modules/ats/models/knockout_question.dart';
+import 'package:opti_job_app/modules/ats/cubits/pipeline_template_cubit.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_auth_cubit.dart';
 import 'package:opti_job_app/modules/companies/controllers/offer_form_controllers.dart';
 import 'package:opti_job_app/modules/companies/cubits/company_offer_creation_cubit.dart';
@@ -32,6 +33,7 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
   final _formControllers = OfferFormControllers();
 
   String? _selectedPipelineId;
+  List<dynamic>? _selectedPipelineStages;
   List<KnockoutQuestion> _knockoutQuestions = [];
 
   @override
@@ -72,7 +74,15 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
         formKey: _formKey,
         formControllers: _formControllers,
         isGeneratingOffer: viewModel.isGeneratingOffer,
-        onPipelineSelected: (id) => setState(() => _selectedPipelineId = id),
+        onPipelineSelected: (id) {
+          setState(() {
+            _selectedPipelineId = id;
+            _selectedPipelineStages = _resolveSelectedPipelineStages(
+              context,
+              id,
+            );
+          });
+        },
         onKnockoutQuestionsChanged: (q) =>
             setState(() => _knockoutQuestions = q),
         onSubmit: () => CompanyOfferCreationController.submit(
@@ -80,6 +90,7 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
           formKey: _formKey,
           formControllers: _formControllers,
           pipelineId: _selectedPipelineId,
+          pipelineStages: _selectedPipelineStages,
           knockoutQuestions: _knockoutQuestions
               .map((q) => q.toFirestore())
               .toList(),
@@ -90,5 +101,24 @@ class _CompanyOfferCreationViewState extends State<_CompanyOfferCreationView> {
         ),
       ),
     );
+  }
+
+  List<dynamic>? _resolveSelectedPipelineStages(
+    BuildContext context,
+    String? pipelineId,
+  ) {
+    final normalizedId = pipelineId?.trim() ?? '';
+    if (normalizedId.isEmpty) return null;
+
+    final state = context.read<PipelineTemplateCubit>().state;
+    if (state is! PipelineTemplateLoaded) return null;
+
+    final allPipelines = [...state.companyPipelines, ...state.templates];
+    final selected = allPipelines.where(
+      (pipeline) => pipeline.id == normalizedId,
+    );
+    if (selected.isEmpty) return null;
+
+    return selected.first.stages.map((stage) => stage.toFirestore()).toList();
   }
 }

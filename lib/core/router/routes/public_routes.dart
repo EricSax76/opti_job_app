@@ -7,7 +7,10 @@ import 'package:opti_job_app/auth/ui/pages/candidate_register_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/company_login_screen.dart';
 import 'package:opti_job_app/auth/ui/pages/company_register_screen.dart';
 import 'package:opti_job_app/features/onboarding/view/pages/onboarding_screen.dart';
+import 'package:opti_job_app/home/pages/funcionalidades_screen.dart';
 import 'package:opti_job_app/home/pages/landing_screen.dart';
+import 'package:opti_job_app/home/pages/para_empresas_screen.dart';
+import 'package:opti_job_app/home/pages/para_recruiters_screen.dart';
 import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_session_cubit.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
@@ -33,6 +36,21 @@ List<RouteBase> buildPublicRoutes({required String authBootstrapPath}) {
       path: '/',
       name: 'landing',
       builder: (context, state) => const LandingScreen(),
+    ),
+    GoRoute(
+      path: '/para-empresas',
+      name: 'para-empresas',
+      builder: (context, state) => const ParaEmpresasScreen(),
+    ),
+    GoRoute(
+      path: '/para-recruiters',
+      name: 'para-recruiters',
+      builder: (context, state) => const ParaRecruitersScreen(),
+    ),
+    GoRoute(
+      path: '/funcionalidades',
+      name: 'funcionalidades',
+      builder: (context, state) => const FuncionalidadesScreen(),
     ),
     GoRoute(
       path: '/job-offer',

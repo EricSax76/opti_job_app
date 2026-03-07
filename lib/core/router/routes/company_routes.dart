@@ -25,7 +25,6 @@ import 'package:opti_job_app/modules/companies/ui/pages/company_profile_screen.d
 import 'package:opti_job_app/modules/compliance/ui/pages/consent_management_screen.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_pdf_service.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_share_service.dart';
-import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/cubits/company_job_offers_cubit.dart';
@@ -181,15 +180,20 @@ List<RouteBase> buildCompanyRoutes() {
       builder: (context, state) {
         final uid = state.pathParameters['candidateUid'] ?? '';
         final offerId = state.pathParameters['offerId'] ?? '';
+        final applicationId = state.uri.queryParameters['applicationId'];
 
-        final cubit = ApplicantCurriculumCubit(
-          profileRepository: context.read<ProfileRepository>(),
-          curriculumRepository: context.read<CurriculumRepository>(),
-          jobOfferRepository: context.read<JobOfferRepository>(),
-          aiRepository: context.read<AiRepository>(),
-          curriculumPdfService: CurriculumPdfService(),
-          curriculumShareService: CurriculumShareService(),
-        )..start(candidateUid: uid, offerId: offerId);
+        final cubit =
+            ApplicantCurriculumCubit(
+              applicantsRepository: context.read<ApplicantsRepository>(),
+              jobOfferRepository: context.read<JobOfferRepository>(),
+              aiRepository: context.read<AiRepository>(),
+              curriculumPdfService: CurriculumPdfService(),
+              curriculumShareService: CurriculumShareService(),
+            )..start(
+              candidateUid: uid,
+              offerId: offerId,
+              applicationId: applicationId,
+            );
 
         return BlocProvider(
           create: (_) => cubit,

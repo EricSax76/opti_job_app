@@ -7,6 +7,7 @@ import {
 } from "../../utils/aiConsent";
 import { writeAuditLog } from "../../utils/auditLog";
 import { ensureCallableResponseContract } from "../../utils/contractConventions";
+import { resolveOfferPipelineStages } from "./utils/pipelineStages";
 
 async function hasValidAiTestConsent({
   transaction,
@@ -150,6 +151,11 @@ export const evaluateKnockoutQuestions = onCall({ region: "europe-west1", memory
       }
 
       const offerData = offerDoc.data() as JobOffer;
+      const pipelineStages = await resolveOfferPipelineStages({
+        db,
+        transaction,
+        offerData: (offerDoc.data() ?? {}) as Record<string, unknown>,
+      });
       const offerCompanyUid = String(
         (offerData as unknown as Record<string, unknown>).company_uid ??
           (offerData as unknown as Record<string, unknown>).companyUid ??
@@ -245,7 +251,7 @@ export const evaluateKnockoutQuestions = onCall({ region: "europe-west1", memory
       // AI Act: no se permite rechazo totalmente automatizado sin validación humana.
       // Si falla el knockout, se marca para revisión y (si existe) se mueve a etapa screening.
       if (failedKnockout) {
-        const screeningStage = offerData.pipelineStages?.find(
+        const screeningStage = pipelineStages.find(
           (s) => s.type === "screening"
         );
         if (screeningStage) {

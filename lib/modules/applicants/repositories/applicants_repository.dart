@@ -1,5 +1,6 @@
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/models/ai_decision_review.dart';
+import 'package:opti_job_app/modules/applicants/models/applicant_review_profile.dart';
 
 abstract class ApplicantsRepository {
   Future<List<Application>> getApplicationsForOffer({
@@ -33,6 +34,12 @@ abstract class ApplicantsRepository {
 
   Future<void> runAiSkillMatch({
     required String applicationId,
+    required String jobOfferId,
+  });
+
+  Future<ApplicantReviewProfile> getApplicantProfileForReview({
+    String? applicationId,
+    required String candidateUid,
     required String jobOfferId,
   });
 }

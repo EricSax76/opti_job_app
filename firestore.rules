@@ -114,10 +114,9 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.auth.uid == candidateId
         && request.resource.data.uid == request.auth.uid;
-      allow read: if (isSignedIn()
+      allow read: if isSignedIn()
           && request.auth.uid == candidateId
-          && resource.data.uid == request.auth.uid)
-        || isCompany();
+          && resource.data.uid == request.auth.uid;
       allow update, delete: if isSignedIn()
         && request.auth.uid == candidateId
         && resource.data.uid == request.auth.uid;
@@ -125,15 +124,13 @@ service cloud.firestore {
       match /curriculum/{curriculumId} {
         allow create, update, delete: if isSignedIn()
           && request.auth.uid == candidateId;
-        allow read: if (isSignedIn() && request.auth.uid == candidateId)
-          || isCompany();
+        allow read: if isSignedIn() && request.auth.uid == candidateId;
       }
 
       match /cover_letter/{coverLetterId} {
         allow create, update, delete: if isSignedIn()
           && request.auth.uid == candidateId;
-        allow read: if (isSignedIn() && request.auth.uid == candidateId)
-          || isCompany();
+        allow read: if isSignedIn() && request.auth.uid == candidateId;
       }
 
       match /verifiedCredentials/{credentialId} {

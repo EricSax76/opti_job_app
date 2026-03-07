@@ -193,6 +193,13 @@ export const submitApplication = functions
         if (!candidate) {
           throw new ValidationError("Candidate profile not found");
         }
+        const candidateRecord = candidate as Record<string, unknown>;
+        const candidateVideo = candidateRecord.video_curriculum as
+          | Record<string, unknown>
+          | undefined;
+        const hasVideoCurriculum =
+          candidateVideo != null &&
+          normalizeString(candidateVideo.storage_path).length > 0;
 
         // ── Phase 2: targeted duplicate check + rate limit (parallel) ──
         const offerIdAliases = [
@@ -306,6 +313,8 @@ export const submitApplication = functions
           submittedAt: now as any,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           updatedAt: now as any,
+          has_video_curriculum: hasVideoCurriculum,
+          hasVideoCurriculum: hasVideoCurriculum,
         };
 
         if (coverLetter !== undefined) {

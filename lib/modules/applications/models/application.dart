@@ -40,6 +40,8 @@ class Application {
     this.province,
     this.hasCoverLetter = false,
     this.hasCurriculum = false,
+    this.hasVideoCurriculum = false,
+    this.canViewVideoCurriculum = false,
   });
 
   final String? id;
@@ -82,6 +84,8 @@ class Application {
   final String? province;
   final bool hasCoverLetter;
   final bool hasCurriculum;
+  final bool hasVideoCurriculum;
+  final bool canViewVideoCurriculum;
 
   factory Application.fromJson(Map<String, dynamic> json, {String? id}) {
     DateTime? parseDate(dynamic value) {
@@ -182,6 +186,14 @@ class Application {
       province: json['province'] as String?,
       hasCoverLetter: json['hasCoverLetter'] as bool? ?? false,
       hasCurriculum: json['hasCurriculum'] as bool? ?? false,
+      hasVideoCurriculum:
+          json['hasVideoCurriculum'] as bool? ??
+          json['has_video_curriculum'] as bool? ??
+          false,
+      canViewVideoCurriculum:
+          json['canViewVideoCurriculum'] as bool? ??
+          json['can_view_video_curriculum'] as bool? ??
+          false,
       knockoutPassed: json['knockoutPassed'] as bool?,
     );
   }
@@ -240,6 +252,8 @@ class Application {
       if (province != null) 'province': province,
       'hasCoverLetter': hasCoverLetter,
       'hasCurriculum': hasCurriculum,
+      'hasVideoCurriculum': hasVideoCurriculum,
+      'canViewVideoCurriculum': canViewVideoCurriculum,
       if (knockoutPassed != null) 'knockoutPassed': knockoutPassed,
     };
   }
@@ -284,6 +298,8 @@ class Application {
     String? province,
     bool? hasCoverLetter,
     bool? hasCurriculum,
+    bool? hasVideoCurriculum,
+    bool? canViewVideoCurriculum,
   }) {
     return Application(
       id: id ?? this.id,
@@ -328,6 +344,9 @@ class Application {
       province: province ?? this.province,
       hasCoverLetter: hasCoverLetter ?? this.hasCoverLetter,
       hasCurriculum: hasCurriculum ?? this.hasCurriculum,
+      hasVideoCurriculum: hasVideoCurriculum ?? this.hasVideoCurriculum,
+      canViewVideoCurriculum:
+          canViewVideoCurriculum ?? this.canViewVideoCurriculum,
     );
   }
 }

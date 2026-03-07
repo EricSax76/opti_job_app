@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:opti_job_app/core/shell/core_shell.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
-import 'package:opti_job_app/core/widgets/app_footer.dart';
+import 'package:opti_job_app/home/widgets/landing_app_bar.dart';
 import 'package:opti_job_app/home/widgets/landing_content.dart';
+import 'package:opti_job_app/home/widgets/landing_drawer.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -13,6 +14,8 @@ class LandingScreen extends StatelessWidget {
     return CoreShell(
       variant: CoreShellVariant.public,
       backgroundColor: uiBackground,
+      appBar: const LandingAppBar(),
+      drawer: const LandingDrawer(),
       body: LandingContent(
         onCandidateLogin: () => context.go('/CandidateLogin'),
         onCompanyLogin: () => context.go('/CompanyLogin'),
@@ -21,7 +24,6 @@ class LandingScreen extends StatelessWidget {
         onCandidateRegister: () => context.go('/candidateregister'),
         onSeeOffers: () => context.go('/job-offer'),
       ),
-      bottomNavigationBar: const AppFooter(),
     );
   }
 }

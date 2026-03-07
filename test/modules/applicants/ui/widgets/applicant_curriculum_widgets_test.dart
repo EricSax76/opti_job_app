@@ -96,6 +96,8 @@ void main() {
               candidate: candidate,
               curriculum: curriculum,
               offerId: 'offer-1',
+              hasVideoCurriculum: false,
+              canViewVideoCurriculum: false,
               isExporting: false,
               isMatching: false,
               onExport: () {},

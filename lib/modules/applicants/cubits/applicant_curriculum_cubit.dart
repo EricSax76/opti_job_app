@@ -3,29 +3,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
 import 'package:opti_job_app/features/ai/repositories/ai_repository.dart';
+import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_pdf_service.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum_share_service.dart';
-import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
-import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 
 part 'applicant_curriculum_state.dart';
 
 class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
   ApplicantCurriculumCubit({
-    required this.profileRepository,
-    required this.curriculumRepository,
+    required this.applicantsRepository,
     required this.jobOfferRepository,
     required this.aiRepository,
     required this.curriculumPdfService,
     required this.curriculumShareService,
   }) : super(const ApplicantCurriculumState());
 
-  final ProfileRepository profileRepository;
-  final CurriculumRepository curriculumRepository;
+  final ApplicantsRepository applicantsRepository;
   final JobOfferRepository jobOfferRepository;
   final AiRepository aiRepository;
   final CurriculumPdfService curriculumPdfService;
@@ -33,15 +30,23 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
 
   String? _candidateUid;
   String? _offerId;
+  String? _applicationId;
 
-  void start({required String candidateUid, required String offerId}) {
+  void start({
+    required String candidateUid,
+    required String offerId,
+    String? applicationId,
+  }) {
     _candidateUid = candidateUid;
     _offerId = offerId;
+    _applicationId = applicationId?.trim();
     loadData(candidateUid: candidateUid, offerId: offerId);
   }
 
   Future<void> refresh() async {
-    if (_candidateUid == null || _offerId == null) return;
+    if (_candidateUid == null || _offerId == null) {
+      return;
+    }
     await loadData(candidateUid: _candidateUid!, offerId: _offerId!);
   }
 
@@ -55,29 +60,22 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
   }) async {
     emit(state.copyWith(status: ApplicantCurriculumStatus.loading));
     try {
-      final results = await Future.wait([
-        profileRepository.fetchCandidateProfile(candidateUid).catchError(
-              (_) => Candidate(
-                id: 0,
-                uid: candidateUid,
-                name: 'Anónimo',
-                lastName: '',
-                email: '',
-                role: 'candidate',
-              ),
-            ),
-        curriculumRepository
-            .fetchCurriculum(candidateUid)
-            .catchError((_) => Curriculum.empty()),
-        jobOfferRepository.fetchById(offerId),
-      ]);
+      final applicantProfile = await applicantsRepository
+          .getApplicantProfileForReview(
+            applicationId: _applicationId,
+            candidateUid: candidateUid,
+            jobOfferId: offerId,
+          );
+      final offer = await jobOfferRepository.fetchById(offerId);
 
       emit(
         state.copyWith(
           status: ApplicantCurriculumStatus.success,
-          candidate: results[0] as Candidate,
-          curriculum: results[1] as Curriculum,
-          offer: results[2] as JobOffer,
+          candidate: applicantProfile.candidate,
+          curriculum: applicantProfile.curriculum,
+          offer: offer,
+          hasVideoCurriculum: applicantProfile.hasVideoCurriculum,
+          canViewVideoCurriculum: applicantProfile.canViewVideoCurriculum,
         ),
       );
     } catch (e) {

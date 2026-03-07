@@ -25,6 +25,11 @@ function sameValue(left: string | null, right: string | null): boolean {
   return left === right;
 }
 
+function extractVideoStoragePath(data: JsonRecord): string | null {
+  const video = asRecord(data.video_curriculum);
+  return normalizedString(video.storage_path);
+}
+
 function isDeleteSentinel(value: unknown): boolean {
   if (value == null || typeof value !== "object") {
     return false;
@@ -100,6 +105,8 @@ export const syncCandidateProfileToApplications = functions
     const afterEmail = normalizedString(after.email);
     const beforeAvatar = normalizedString(before.avatar_url);
     const afterAvatar = normalizedString(after.avatar_url);
+    const beforeVideoPath = extractVideoStoragePath(before);
+    const afterVideoPath = extractVideoStoragePath(after);
 
     const updates: JsonRecord = {};
     if (!sameValue(beforeName, afterName) && afterName !== null) {
@@ -120,6 +127,12 @@ export const syncCandidateProfileToApplications = functions
         updates.candidate_avatar_url = afterAvatar;
         updates.candidateAvatarUrl = afterAvatar;
       }
+    }
+
+    if (!sameValue(beforeVideoPath, afterVideoPath)) {
+      const hasVideoCurriculum = afterVideoPath !== null;
+      updates.has_video_curriculum = hasVideoCurriculum;
+      updates.hasVideoCurriculum = hasVideoCurriculum;
     }
 
     if (!hasRealUpdates(updates)) {

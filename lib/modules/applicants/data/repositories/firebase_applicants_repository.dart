@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/applicants/models/ai_decision_review.dart';
+import 'package:opti_job_app/modules/applicants/models/applicant_review_profile.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
+import 'package:opti_job_app/modules/candidates/models/candidate.dart';
+import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 
 class FirebaseApplicantsRepository implements ApplicantsRepository {
   FirebaseApplicantsRepository({
@@ -172,6 +175,36 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
       'applicationId': applicationId,
       'jobOfferId': jobOfferId,
     });
+  }
+
+  @override
+  Future<ApplicantReviewProfile> getApplicantProfileForReview({
+    String? applicationId,
+    required String candidateUid,
+    required String jobOfferId,
+  }) async {
+    final normalizedApplicationId = applicationId?.trim() ?? '';
+    final payload = await _callables.callMap(
+      name: 'getApplicantProfileForReview',
+      payload: {
+        if (normalizedApplicationId.isNotEmpty)
+          'applicationId': normalizedApplicationId,
+        'candidateUid': candidateUid.trim(),
+        'jobOfferId': jobOfferId.trim(),
+      },
+    );
+
+    final candidateJson = CallableWithFallback.asMap(payload['candidate']);
+    final curriculumJson = CallableWithFallback.asMap(payload['curriculum']);
+
+    return ApplicantReviewProfile(
+      candidate: Candidate.fromJson(candidateJson),
+      curriculum: Curriculum.fromJson(curriculumJson),
+      revealLevel: (payload['revealLevel'] as String?)?.trim() ?? 'blind',
+      hasVideoCurriculum: payload['hasVideoCurriculum'] as bool? ?? false,
+      canViewVideoCurriculum:
+          payload['canViewVideoCurriculum'] as bool? ?? false,
+    );
   }
 
   Future<HttpsCallableResult<dynamic>> _callWithRegionFallback(

@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { PipelineStage } from "../../types/pipeline";
+import { resolveOfferPipelineStages } from "./utils/pipelineStages";
 
 /** Stage types that trigger identity reveal (LGPD blind review). */
 const REVEAL_STAGE_TYPES = new Set<string>(["interview", "offer", "hired"]);
@@ -80,9 +80,11 @@ export const moveApplicationStage = onCall({ region: "europe-west1", memory: "25
         const offerDoc = await transaction.get(
           db.collection("jobOffers").doc(jobOfferId)
         );
-        const stages =
-          (offerDoc.data()?.pipelineStages as PipelineStage[] | undefined) ??
-          [];
+        const stages = await resolveOfferPipelineStages({
+          db,
+          transaction,
+          offerData: (offerDoc.data() ?? {}) as Record<string, unknown>,
+        });
         const newStage = stages.find((s) => s.id === newStageId);
         const newStageType = newStage?.type ?? "";
 
