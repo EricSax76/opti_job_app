@@ -48,4 +48,23 @@ class InterviewChatActionsController {
     if (link == null || !context.mounted) return;
     _sessionCubit.startMeeting(link);
   }
+
+  Future<void> completeInterview(BuildContext context) async {
+    final notes = await InterviewChatDialogsController.askForCompletionNotes(
+      context,
+    );
+    if (notes == null || !context.mounted) return;
+    _sessionCubit.completeInterview(
+      notes: notes.trim().isEmpty ? null : notes.trim(),
+    );
+  }
+
+  Future<void> cancelInterview(BuildContext context) async {
+    final reason =
+        await InterviewChatDialogsController.askForCancellationReason(context);
+    if (reason == null || !context.mounted) return;
+    _sessionCubit.cancelInterview(
+      reason: reason.trim().isEmpty ? null : reason.trim(),
+    );
+  }
 }

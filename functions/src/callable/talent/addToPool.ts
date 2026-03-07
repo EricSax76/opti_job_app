@@ -6,7 +6,13 @@ export const addToPool = functions.region("europe-west1").https.onCall(async (da
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated.');
   }
 
-  const { poolId, candidateUid, tags = [], source = 'manual', sourceApplicationId } = data;
+  const {
+    poolId,
+    candidateUid,
+    tags = [],
+    source = 'manual',
+    sourceApplicationId,
+  } = data;
 
   if (!poolId || !candidateUid) {
     throw new functions.https.HttpsError('invalid-argument', 'poolId and candidateUid are required.');
@@ -40,7 +46,7 @@ export const addToPool = functions.region("europe-west1").https.onCall(async (da
       addedAt: admin.firestore.FieldValue.serverTimestamp(),
       tags,
       source,
-      sourceApplicationId,
+      ...(sourceApplicationId ? { sourceApplicationId } : {}),
       consentGiven: consentGiven,
       consentAt: existingConsent?.consentAt || null,
       consentExpiresAt: existingConsent?.consentExpiresAt || null,

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum Recommendation {
   strongYes,
   yes,
@@ -69,7 +71,9 @@ class Evaluation {
           .map(EvaluationCriteria.fromFirestore)
           .toList(),
       overallScore: (data['overallScore'] as num?)?.toDouble() ?? 0.0,
-      recommendation: Recommendation.fromString(data['recommendation'] as String? ?? ''),
+      recommendation: Recommendation.fromString(
+        data['recommendation'] as String? ?? '',
+      ),
       comments: data['comments'] as String? ?? '',
       aiAssisted: data['aiAssisted'] as bool? ?? false,
       aiOverridden: data['aiOverridden'] as bool? ?? false,
@@ -101,10 +105,11 @@ class Evaluation {
 
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
     if (value is String) return DateTime.tryParse(value);
     if (value is Map && value['seconds'] != null) {
       return DateTime.fromMillisecondsSinceEpoch(
-        (value['seconds'] as int) * 1000,
+        (value['seconds'] as num).toInt() * 1000,
       );
     }
     return null;

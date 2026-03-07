@@ -283,7 +283,8 @@ service cloud.firestore {
 
     match /evaluations/{evaluationId} {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
-      allow create: if isCompany() || recruiterCanScore(request.resource.data.companyId);
+      // Creation is enforced via Cloud Functions (submitEvaluation).
+      allow create: if false;
       allow update: if (isCompany() && request.auth.uid == resource.data.companyId) || 
                       (isRecruiter()
                         && request.auth.uid == resource.data.evaluatorUid
@@ -292,7 +293,8 @@ service cloud.firestore {
 
     match /approvals/{approvalId} {
       allow read: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
-      allow create: if isCompany() || recruiterHasRole(request.resource.data.companyId, ['admin', 'recruiter', 'hiring_manager']);
+      // Creation is enforced via Cloud Functions (requestApproval).
+      allow create: if false;
       allow update: if isCompany() || recruiterBelongsToCompany(resource.data.companyId);
     }
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import 'package:opti_job_app/modules/recruiters/models/invitation.dart';
 import 'package:opti_job_app/modules/recruiters/models/recruiter.dart';
@@ -7,10 +8,17 @@ import 'package:opti_job_app/modules/recruiters/repositories/recruiter_repositor
 
 /// Implementación de [RecruiterRepository] sobre Firebase Firestore.
 class FirebaseRecruiterRepository implements RecruiterRepository {
-  FirebaseRecruiterRepository({required FirebaseFirestore firestore})
-      : _db = firestore;
+  FirebaseRecruiterRepository({
+    required FirebaseFirestore firestore,
+    required FirebaseFunctions functions,
+    required FirebaseFunctions fallbackFunctions,
+  }) : _db = firestore,
+       _functions = functions,
+       _fallbackFunctions = fallbackFunctions;
 
   final FirebaseFirestore _db;
+  final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   CollectionReference<Map<String, dynamic>> get _recruiters =>
       _db.collection('recruiters');
@@ -26,27 +34,56 @@ class FirebaseRecruiterRepository implements RecruiterRepository {
   }
 
   @override
-  Future<void> createRecruiter(Recruiter recruiter) async {
-    await _recruiters.doc(recruiter.uid).set(
-      recruiter.toFirestore(),
-      SetOptions(merge: true),
+  Future<String> createInvitation({
+    required RecruiterRole role,
+    String? email,
+  }) async {
+    final payload = <String, dynamic>{
+      'role': role.toFirestoreString(),
+      if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+    };
+    final data = await _callCallableWithFallback(
+      functionName: 'createInvitation',
+      payload: payload,
+    );
+    final code = data['code']?.toString().trim() ?? '';
+    if (code.isEmpty) {
+      throw StateError('createInvitation no devolvió un código válido.');
+    }
+    return code;
+  }
+
+  @override
+  Future<void> acceptInvitation({
+    required String code,
+    required String name,
+  }) async {
+    await _callCallableWithFallback(
+      functionName: 'acceptInvitation',
+      payload: <String, dynamic>{
+        'code': code.trim().toUpperCase(),
+        'name': name.trim(),
+      },
     );
   }
 
   @override
   Future<void> updateRecruiterRole(String uid, RecruiterRole role) async {
-    await _recruiters.doc(uid).update({
-      'role': role.toFirestoreString(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    await _callCallableWithFallback(
+      functionName: 'updateRecruiterRole',
+      payload: <String, dynamic>{
+        'targetUid': uid.trim(),
+        'newRole': role.toFirestoreString(),
+      },
+    );
   }
 
   @override
-  Future<void> disableRecruiter(String uid) async {
-    await _recruiters.doc(uid).update({
-      'status': 'disabled',
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+  Future<void> removeRecruiter(String uid) async {
+    await _callCallableWithFallback(
+      functionName: 'removeRecruiter',
+      payload: <String, dynamic>{'targetUid': uid.trim()},
+    );
   }
 
   @override
@@ -58,10 +95,8 @@ class FirebaseRecruiterRepository implements RecruiterRepository {
         .map(
           (snapshot) => snapshot.docs
               .map(
-                (doc) => Recruiter.fromFirestore({
-                  ...doc.data(),
-                  'uid': doc.id,
-                }),
+                (doc) =>
+                    Recruiter.fromFirestore({...doc.data(), 'uid': doc.id}),
               )
               .toList(),
         );
@@ -72,5 +107,29 @@ class FirebaseRecruiterRepository implements RecruiterRepository {
     final doc = await _invitations.doc(code.toUpperCase()).get();
     if (!doc.exists || doc.data() == null) return null;
     return Invitation.fromFirestore({...doc.data()!, 'code': doc.id});
+  }
+
+  Future<Map<String, dynamic>> _callCallableWithFallback({
+    required String functionName,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final result = await _functions.httpsCallable(functionName).call(payload);
+      return _extractMap(result.data);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      final result = await _fallbackFunctions
+          .httpsCallable(functionName)
+          .call(payload);
+      return _extractMap(result.data);
+    }
+  }
+
+  Map<String, dynamic> _extractMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return const <String, dynamic>{};
   }
 }

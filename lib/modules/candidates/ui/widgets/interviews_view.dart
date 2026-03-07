@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
+import 'package:opti_job_app/modules/candidates/cubits/candidate_auth_cubit.dart';
 import 'package:opti_job_app/modules/interviews/cubits/interview_list_cubit.dart';
 import 'package:opti_job_app/modules/interviews/ui/widgets/interview_list_tile.dart';
 
@@ -10,12 +11,17 @@ class InterviewsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _InterviewsList();
+    final candidateUid = context.select<CandidateAuthCubit, String>(
+      (cubit) => cubit.state.candidate?.uid ?? '',
+    );
+    return _InterviewsList(currentUid: candidateUid);
   }
 }
 
 class _InterviewsList extends StatelessWidget {
-  const _InterviewsList();
+  const _InterviewsList({required this.currentUid});
+
+  final String currentUid;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +58,7 @@ class _InterviewsList extends StatelessWidget {
                 return InterviewListTile(
                   interview: state.interviews[index],
                   isCompany: false,
+                  currentUid: currentUid,
                 );
               },
             ),

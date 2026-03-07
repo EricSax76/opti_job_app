@@ -145,35 +145,10 @@ class FirebaseInterviewRepository implements InterviewRepository {
     required String interviewId,
     required String meetingLink,
   }) async {
-    final batch = _firestore.batch();
-
-    // Update interview with meeting link
-    final interviewRef = _interviewsRef.doc(interviewId);
-    batch.update(interviewRef, {
+    await _callWithRegionFallback('startMeeting', {
+      'interviewId': interviewId,
       'meetingLink': meetingLink,
-      'updatedAt': FieldValue.serverTimestamp(),
     });
-
-    // Add system message
-    final messageRef = interviewRef.collection('messages').doc();
-    batch.set(messageRef, {
-      'id': messageRef.id,
-      'senderUid': 'system',
-      'content': 'Inició una videollamada. Únete aquí: $meetingLink',
-      'type': MessageType.system.value,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    // Update last message
-    batch.update(interviewRef, {
-      'lastMessage': {
-        'content': 'Videollamada iniciada',
-        'senderUid': 'system',
-        'createdAt': FieldValue.serverTimestamp(),
-      },
-    });
-
-    await batch.commit();
   }
 
   Future<HttpsCallableResult<dynamic>> _callWithRegionFallback(

@@ -33,6 +33,9 @@ import 'package:opti_job_app/modules/job_offers/cubits/job_offer_form_cubit.dart
 import 'package:opti_job_app/modules/job_offers/models/job_offer.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
+import 'package:opti_job_app/modules/talent_pool/cubits/talent_pool_list_cubit.dart';
+import 'package:opti_job_app/modules/talent_pool/repositories/talent_pool_repository.dart';
+import 'package:opti_job_app/modules/talent_pool/ui/pages/talent_pool_list_screen.dart';
 
 List<RouteBase> buildCompanyRoutes() {
   return [
@@ -108,6 +111,19 @@ List<RouteBase> buildCompanyRoutes() {
           context: context,
           uid: uid,
           initialIndex: 3,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/company/:uid/talent-pools',
+      name: 'company-talent-pools',
+      builder: (context, state) {
+        final uid = state.pathParameters['uid'] ?? '';
+        return BlocProvider(
+          create: (_) => TalentPoolListCubit(
+            repository: context.read<TalentPoolRepository>(),
+          ),
+          child: TalentPoolListScreen(companyId: uid),
         );
       },
     ),

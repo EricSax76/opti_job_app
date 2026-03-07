@@ -12,12 +12,14 @@ class ApplicantTile extends StatelessWidget {
     this.onTap,
     this.onStatusChanged,
     this.onStartInterview,
+    this.onOpenAiReview,
   });
 
   final Application application;
   final VoidCallback? onTap;
   final ValueChanged<String>? onStatusChanged;
   final VoidCallback? onStartInterview;
+  final VoidCallback? onOpenAiReview;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +61,8 @@ class ApplicantTile extends StatelessWidget {
         knockoutPassed != null;
 
     final canChangeStatus = onStatusChanged != null && onStartInterview != null;
+    final canOpenAiReview = onOpenAiReview != null;
+    final hasTrailingActions = canChangeStatus || canOpenAiReview;
 
     return Container(
       decoration: BoxDecoration(
@@ -126,43 +130,58 @@ class ApplicantTile extends StatelessWidget {
             ],
           ],
         ),
-        trailing: !canChangeStatus
+        trailing: !hasTrailingActions
             ? null
-            : PopupMenuButton<String>(
-                tooltip: 'Actualizar estado',
-                onSelected: (value) {
-                  if (value == ApplicationStatus.interview.name) {
-                    onStartInterview?.call();
-                  } else {
-                    onStatusChanged?.call(value);
-                  }
-                },
-                itemBuilder: (context) {
-                  return ApplicationStatus.values
-                      .where(
-                        (s) =>
-                            s != ApplicationStatus.pending &&
-                            s != ApplicationStatus.unknown &&
-                            s != ApplicationStatus.withdrawn,
-                      )
-                      .map((status) {
-                        final isSelected = status.name == application.status;
-                        return PopupMenuItem<String>(
-                          value: status.name,
-                          child: Row(
-                            children: [
-                              if (isSelected)
-                                const Icon(Icons.check, size: 16)
-                              else
-                                const SizedBox(width: 16),
-                              Text(status.label),
-                            ],
-                          ),
-                        );
-                      })
-                      .toList();
-                },
-                child: ApplicationStatusBadge.fromString(application.status),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (canOpenAiReview)
+                    IconButton(
+                      tooltip: 'Revisión IA',
+                      onPressed: onOpenAiReview,
+                      icon: const Icon(Icons.psychology_alt_outlined),
+                    ),
+                  if (canChangeStatus)
+                    PopupMenuButton<String>(
+                      tooltip: 'Actualizar estado',
+                      onSelected: (value) {
+                        if (value == ApplicationStatus.interview.name) {
+                          onStartInterview?.call();
+                        } else {
+                          onStatusChanged?.call(value);
+                        }
+                      },
+                      itemBuilder: (context) {
+                        return ApplicationStatus.values
+                            .where(
+                              (s) =>
+                                  s != ApplicationStatus.pending &&
+                                  s != ApplicationStatus.unknown &&
+                                  s != ApplicationStatus.withdrawn,
+                            )
+                            .map((status) {
+                              final isSelected =
+                                  status.name == application.status;
+                              return PopupMenuItem<String>(
+                                value: status.name,
+                                child: Row(
+                                  children: [
+                                    if (isSelected)
+                                      const Icon(Icons.check, size: 16)
+                                    else
+                                      const SizedBox(width: 16),
+                                    Text(status.label),
+                                  ],
+                                ),
+                              );
+                            })
+                            .toList();
+                      },
+                      child: ApplicationStatusBadge.fromString(
+                        application.status,
+                      ),
+                    ),
+                ],
               ),
       ),
     );

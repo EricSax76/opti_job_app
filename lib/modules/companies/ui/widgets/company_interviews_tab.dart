@@ -16,12 +16,14 @@ class CompanyInterviewsTab extends StatelessWidget {
     );
     if (companyUid == null) return const SizedBox.shrink();
 
-    return const _CompanyInterviewsView();
+    return _CompanyInterviewsView(companyUid: companyUid);
   }
 }
 
 class _CompanyInterviewsView extends StatelessWidget {
-  const _CompanyInterviewsView();
+  const _CompanyInterviewsView({required this.companyUid});
+
+  final String companyUid;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +55,7 @@ class _CompanyInterviewsView extends StatelessWidget {
                 return InterviewListTile(
                   interview: state.interviews[index],
                   isCompany: true,
+                  currentUid: companyUid,
                 );
               },
             ),

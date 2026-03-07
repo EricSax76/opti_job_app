@@ -117,6 +117,18 @@ class InterviewSessionCubit extends Cubit<InterviewSessionState> {
     });
   }
 
+  Future<void> cancelInterview({String? reason}) async {
+    await _runAction(() {
+      return _repository.cancelInterview(_interviewId, reason: reason);
+    });
+  }
+
+  Future<void> completeInterview({String? notes}) async {
+    await _runAction(() {
+      return _repository.completeInterview(_interviewId, notes: notes);
+    });
+  }
+
   Future<void> _runAction(Future<void> Function() action) async {
     try {
       await action();

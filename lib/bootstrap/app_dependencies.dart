@@ -21,6 +21,7 @@ import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dar
 import 'package:opti_job_app/modules/recruiters/repositories/recruiter_repository.dart';
 import 'package:opti_job_app/modules/recruiters/services/invitation_service.dart';
 import 'package:opti_job_app/modules/recruiters/services/rbac_service.dart';
+import 'package:opti_job_app/modules/talent_pool/repositories/talent_pool_repository.dart';
 import 'package:opti_job_app/modules/ats/repositories/pipeline_repository.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,11 +45,13 @@ class AppDependencies {
     required this.interviewRepository,
     required this.dataRequestRepository,
     required this.consentRepository,
+    required this.salaryBenchmarkRepository,
     required this.analyticsRepository,
     required this.firebaseAuth,
     required this.recruiterRepository,
     required this.invitationService,
     required this.rbacService,
+    required this.talentPoolRepository,
     required this.pipelineRepository,
   });
 
@@ -77,11 +80,13 @@ class AppDependencies {
       interviewRepository: getIt<InterviewRepository>(),
       dataRequestRepository: getIt<DataRequestRepository>(),
       consentRepository: getIt<ConsentRepository>(),
+      salaryBenchmarkRepository: getIt<SalaryBenchmarkRepository>(),
       analyticsRepository: getIt<AnalyticsRepository>(),
       firebaseAuth: getIt<FirebaseAuth>(),
       recruiterRepository: getIt<RecruiterRepository>(),
       invitationService: getIt<InvitationService>(),
       rbacService: getIt<RbacService>(),
+      talentPoolRepository: getIt<TalentPoolRepository>(),
       pipelineRepository: getIt<PipelineRepository>(),
     );
   }
@@ -103,6 +108,7 @@ class AppDependencies {
   final InterviewRepository interviewRepository;
   final DataRequestRepository dataRequestRepository;
   final ConsentRepository consentRepository;
+  final SalaryBenchmarkRepository salaryBenchmarkRepository;
   final AnalyticsRepository analyticsRepository;
   final FirebaseAuth firebaseAuth;
 
@@ -110,5 +116,6 @@ class AppDependencies {
   final RecruiterRepository recruiterRepository;
   final InvitationService invitationService;
   final RbacService rbacService;
+  final TalentPoolRepository talentPoolRepository;
   final PipelineRepository pipelineRepository;
 }

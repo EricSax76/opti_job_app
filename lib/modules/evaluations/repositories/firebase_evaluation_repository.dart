@@ -1,33 +1,64 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:opti_job_app/modules/evaluations/models/approval.dart';
 import 'package:opti_job_app/modules/evaluations/models/evaluation.dart';
 import 'package:opti_job_app/modules/evaluations/models/scorecard_template.dart';
 import 'package:opti_job_app/modules/evaluations/repositories/evaluation_repository.dart';
 
 class FirebaseEvaluationRepository implements EvaluationRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseEvaluationRepository({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+    FirebaseFunctions? fallbackFunctions,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
+
+  final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   @override
-  Future<List<ScorecardTemplate>> getScorecardTemplates(String companyId) async {
+  Future<List<ScorecardTemplate>> getScorecardTemplates(
+    String companyId,
+  ) async {
     final snapshot = await _firestore
         .collection('scorecardTemplates')
         .where('companyId', isEqualTo: companyId)
         .get();
     return snapshot.docs
-        .map((doc) => ScorecardTemplate.fromFirestore({...doc.data(), 'id': doc.id}))
+        .map(
+          (doc) =>
+              ScorecardTemplate.fromFirestore({...doc.data(), 'id': doc.id}),
+        )
         .toList();
   }
 
   @override
   Future<void> submitEvaluation(Evaluation evaluation) async {
-    await _firestore.collection('evaluations').doc(evaluation.id.isEmpty ? null : evaluation.id).set(
-          evaluation.toFirestore(),
-          SetOptions(merge: true),
-        );
+    await _callCallableWithFallback(
+      functionName: 'submitEvaluation',
+      payload: {
+        'applicationId': evaluation.applicationId,
+        'jobOfferId': evaluation.jobOfferId,
+        'companyId': evaluation.companyId,
+        'criteria': evaluation.criteria.map((c) => c.toFirestore()).toList(),
+        'overallScore': evaluation.overallScore,
+        'recommendation': evaluation.recommendation.toSnakeCase(),
+        'comments': evaluation.comments,
+        'aiAssisted': evaluation.aiAssisted,
+        'aiOverridden': evaluation.aiOverridden,
+        'aiOriginalScore': evaluation.aiOriginalScore,
+        'aiExplanation': evaluation.aiExplanation,
+      },
+    );
   }
 
   @override
-  Future<List<Evaluation>> getEvaluationsForApplication(String applicationId) async {
+  Future<List<Evaluation>> getEvaluationsForApplication(
+    String applicationId,
+  ) async {
     final snapshot = await _firestore
         .collection('evaluations')
         .where('applicationId', isEqualTo: applicationId)
@@ -40,14 +71,24 @@ class FirebaseEvaluationRepository implements EvaluationRepository {
 
   @override
   Future<void> requestApproval(Approval approval) async {
-    await _firestore.collection('approvals').doc(approval.id.isEmpty ? null : approval.id).set(
-          approval.toFirestore(),
-          SetOptions(merge: true),
-        );
+    await _callCallableWithFallback(
+      functionName: 'requestApproval',
+      payload: {
+        'applicationId': approval.applicationId,
+        'jobOfferId': approval.jobOfferId,
+        'companyId': approval.companyId,
+        'type': approval.type.toSnakeCase(),
+        'approverUids': approval.approvers
+            .map((a) => {'uid': a.uid, 'name': a.name})
+            .toList(),
+      },
+    );
   }
 
   @override
-  Future<List<Approval>> getApprovalsForApplication(String applicationId) async {
+  Future<List<Approval>> getApprovalsForApplication(
+    String applicationId,
+  ) async {
     final snapshot = await _firestore
         .collection('approvals')
         .where('applicationId', isEqualTo: applicationId)
@@ -86,5 +127,19 @@ class FirebaseEvaluationRepository implements EvaluationRepository {
     await docRef.update({
       'approvers': updatedApprovers.map((a) => a.toFirestore()).toList(),
     });
+  }
+
+  Future<void> _callCallableWithFallback({
+    required String functionName,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      await _functions.httpsCallable(functionName).call(payload);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      await _fallbackFunctions.httpsCallable(functionName).call(payload);
+    }
   }
 }

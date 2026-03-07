@@ -6,7 +6,11 @@ import 'package:opti_job_app/modules/compliance/models/data_request.dart';
 import 'package:opti_job_app/modules/compliance/repositories/compliance_repository.dart';
 
 class FirebaseComplianceRepository
-    implements AuditRepository, DataRequestRepository, ConsentRepository {
+    implements
+        AuditRepository,
+        DataRequestRepository,
+        ConsentRepository,
+        SalaryBenchmarkRepository {
   FirebaseComplianceRepository({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
@@ -198,6 +202,28 @@ class FirebaseComplianceRepository
               .map((d) => ConsentRecord.fromJson(d.data(), id: d.id))
               .toList(),
         );
+  }
+
+  @override
+  Future<void> upsertSalaryBenchmark({
+    required String companyId,
+    required String roleKeyOrTitle,
+    double? maleAverageSalary,
+    double? femaleAverageSalary,
+    double? nonBinaryAverageSalary,
+    int sampleSize = 0,
+  }) async {
+    await _callCallableWithFallback(
+      name: 'upsertSalaryBenchmark',
+      payload: {
+        'companyId': companyId,
+        'roleKey': roleKeyOrTitle,
+        'maleAverageSalary': ?maleAverageSalary,
+        'femaleAverageSalary': ?femaleAverageSalary,
+        'nonBinaryAverageSalary': ?nonBinaryAverageSalary,
+        'sampleSize': sampleSize < 0 ? 0 : sampleSize,
+      },
+    );
   }
 
   Future<Map<String, dynamic>> _callCallableWithFallback({

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:opti_job_app/modules/applicants/models/ai_decision_review.dart';
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 
@@ -7,12 +8,15 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
   FirebaseApplicantsRepository({
     required FirebaseFirestore firestore,
     FirebaseFunctions? functions,
-  })  : _firestore = firestore,
-        _functions = functions ??
-            FirebaseFunctions.instanceFor(region: 'europe-west1');
+    FirebaseFunctions? fallbackFunctions,
+  }) : _firestore = firestore,
+       _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   /// Fetches applications for a single offer via the blind-review callable.
   ///
@@ -37,10 +41,10 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
 
     final applications = rawList
         .cast<Map<String, dynamic>>()
-        .map((json) => Application.fromJson(
-              json,
-              id: json['applicationId'] as String?,
-            ))
+        .map(
+          (json) =>
+              Application.fromJson(json, id: json['applicationId'] as String?),
+        )
         .toList();
 
     applications.sort(_sortByMostRecent);
@@ -78,22 +82,22 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     for (final entry in futures.entries) {
       try {
         final result = await entry.value;
-        final rawList =
-            (result.data['applications'] as List<dynamic>?) ?? [];
+        final rawList = (result.data['applications'] as List<dynamic>?) ?? [];
 
         final apps = rawList
             .cast<Map<String, dynamic>>()
-            .map((json) => Application.fromJson(
-                  json,
-                  id: json['applicationId'] as String?,
-                ))
+            .map(
+              (json) => Application.fromJson(
+                json,
+                id: json['applicationId'] as String?,
+              ),
+            )
             .toList();
 
         apps.sort(_sortByMostRecent);
         applicationsByOffer[entry.key] = apps;
-      } catch (e, st) {
-        // Individual offer failure — keep empty list for that offer
-        print('ERROR in getApplicationsForOffers for offer ${entry.key}: $e\n$st');
+      } catch (_) {
+        // Individual offer failure — keep empty list for that offer.
         applicationsByOffer[entry.key] = const [];
       }
     }
@@ -110,6 +114,82 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  @override
+  Future<AiDecisionReview> getAiDecisionReview({
+    required String applicationId,
+    int limit = 20,
+  }) async {
+    final result = await _callWithRegionFallback(
+      'getAiDecisionReview',
+      <String, dynamic>{'applicationId': applicationId, 'limit': limit},
+    );
+    final data = _extractResultMap(result);
+    return AiDecisionReview.fromJson(data);
+  }
+
+  @override
+  Future<AiDecisionOverrideResult> overrideAiDecision({
+    required String applicationId,
+    required String reason,
+    double? overrideScore,
+    double? originalAiScore,
+  }) async {
+    final payload = <String, dynamic>{
+      'applicationId': applicationId,
+      'reason': reason,
+      ...?overrideScore == null
+          ? null
+          : <String, dynamic>{'overrideScore': overrideScore},
+      ...?originalAiScore == null
+          ? null
+          : <String, dynamic>{'originalAiScore': originalAiScore},
+    };
+    final result = await _callWithRegionFallback('overrideAiDecision', payload);
+    final data = _extractResultMap(result);
+    return AiDecisionOverrideResult.fromJson(data);
+  }
+
+  @override
+  Future<void> runAiVectorMatch({
+    required String applicationId,
+    int limit = 8,
+  }) async {
+    await _callWithRegionFallback('matchCandidateVector', <String, dynamic>{
+      'applicationId': applicationId,
+      'limit': limit,
+    });
+  }
+
+  @override
+  Future<void> runAiSkillMatch({
+    required String applicationId,
+    required String jobOfferId,
+  }) async {
+    await _callWithRegionFallback('matchCandidateWithSkills', <String, dynamic>{
+      'applicationId': applicationId,
+      'jobOfferId': jobOfferId,
+    });
+  }
+
+  Future<HttpsCallableResult<dynamic>> _callWithRegionFallback(
+    String functionName,
+    Map<String, dynamic> payload,
+  ) async {
+    try {
+      return await _functions.httpsCallable(functionName).call(payload);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') rethrow;
+      return _fallbackFunctions.httpsCallable(functionName).call(payload);
+    }
+  }
+
+  Map<String, dynamic> _extractResultMap(HttpsCallableResult<dynamic> result) {
+    final data = result.data;
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return const <String, dynamic>{};
   }
 
   static int _sortByMostRecent(Application a, Application b) {

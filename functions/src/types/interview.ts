@@ -9,6 +9,7 @@ export interface Interview {
   participants: string[]; // [companyUid, candidateUid] for security rules
   status: "scheduling" | "scheduled" | "completed" | "cancelled";
   scheduledAt?: FirebaseFirestore.Timestamp;
+  meetingLink?: string;
   timeZone?: string; // e.g. 'Europe/Madrid'
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;

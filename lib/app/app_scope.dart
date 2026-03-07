@@ -41,12 +41,14 @@ class AppScope extends StatelessWidget {
         RepositoryProvider.value(value: dependencies.interviewRepository),
         RepositoryProvider.value(value: dependencies.dataRequestRepository),
         RepositoryProvider.value(value: dependencies.consentRepository),
+        RepositoryProvider.value(value: dependencies.salaryBenchmarkRepository),
         RepositoryProvider.value(value: dependencies.analyticsRepository),
         RepositoryProvider.value(value: dependencies.firebaseAuth),
         // Fase 0 RBAC
         RepositoryProvider.value(value: dependencies.recruiterRepository),
         RepositoryProvider.value(value: dependencies.invitationService),
         RepositoryProvider.value(value: dependencies.rbacService),
+        RepositoryProvider.value(value: dependencies.talentPoolRepository),
         RepositoryProvider.value(value: dependencies.pipelineRepository),
       ],
       child: MultiBlocProvider(

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 enum NoteType {
@@ -38,16 +39,16 @@ class CandidateNote extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        candidateUid,
-        companyId,
-        recruiterUid,
-        recruiterName,
-        content,
-        type,
-        isPrivate,
-        createdAt,
-      ];
+    id,
+    candidateUid,
+    companyId,
+    recruiterUid,
+    recruiterName,
+    content,
+    type,
+    isPrivate,
+    createdAt,
+  ];
 
   factory CandidateNote.fromJson(Map<String, dynamic> json, {String? id}) {
     return CandidateNote(
@@ -78,8 +79,14 @@ class CandidateNote extends Equatable {
 
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
     if (value is DateTime) return value;
     if (value is String) return DateTime.tryParse(value);
+    if (value is Map && value['seconds'] != null) {
+      return DateTime.fromMillisecondsSinceEpoch(
+        (value['seconds'] as num).toInt() * 1000,
+      );
+    }
     return null;
   }
 }

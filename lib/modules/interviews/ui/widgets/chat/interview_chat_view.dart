@@ -7,11 +7,13 @@ class InterviewChatView extends StatelessWidget {
     super.key,
     this.body,
     this.inputArea,
+    this.appBarActions,
     this.title = 'Entrevista',
   });
 
   final Widget? body;
   final Widget? inputArea;
+  final List<Widget>? appBarActions;
   final String title;
 
   @override
@@ -22,7 +24,10 @@ class InterviewChatView extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(title, style: titleStyle)),
+      appBar: AppBar(
+        title: Text(title, style: titleStyle),
+        actions: appBarActions,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

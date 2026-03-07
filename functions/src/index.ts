@@ -54,7 +54,6 @@ export * from './scheduled/complianceJobs';
 // Analytics
 export * from './scheduled/computeMonthlyAnalytics';
 export * from './triggers/firestore/onApplicationStatusChange';
-export * from './callable/analytics/getAnalyticsSummary';
 export * from './callable/performance/webVitalsCallables';
 export * from './scheduled/aggregateWebVitals';
 
@@ -72,6 +71,7 @@ export { respondInterviewSlot } from "./callable/interviews/respondInterviewSlot
 export { markInterviewSeen } from "./callable/interviews/markInterviewSeen";
 export { cancelInterview } from "./callable/interviews/cancelInterview";
 export { completeInterview } from "./callable/interviews/completeInterview";
+export { startMeeting } from "./callable/interviews/startMeeting";
 
 // ats
 export { moveApplicationStage } from "./callable/ats/moveApplicationStage";

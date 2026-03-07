@@ -1,14 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:opti_job_app/modules/talent_pool/models/candidate_note.dart';
 import 'package:opti_job_app/modules/talent_pool/models/pool_member.dart';
 import 'package:opti_job_app/modules/talent_pool/models/talent_pool.dart';
 import 'package:opti_job_app/modules/talent_pool/repositories/talent_pool_repository.dart';
 
 class FirebaseTalentPoolRepository implements TalentPoolRepository {
-  FirebaseTalentPoolRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseTalentPoolRepository({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+    FirebaseFunctions? fallbackFunctions,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1'),
+       _fallbackFunctions = fallbackFunctions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
+  final FirebaseFunctions _fallbackFunctions;
 
   @override
   Future<List<TalentPool>> getTalentPools(String companyId) async {
@@ -29,7 +38,9 @@ class FirebaseTalentPoolRepository implements TalentPoolRepository {
       ...pool.toJson(),
       'createdAt': FieldValue.serverTimestamp(),
     });
-    return pool.toJson().containsKey('id') ? pool : TalentPool.fromJson((await docRef.get()).data()!, id: docRef.id);
+    final snapshot = await docRef.get();
+    final data = snapshot.data() ?? <String, dynamic>{...pool.toJson()};
+    return TalentPool.fromJson(data, id: docRef.id);
   }
 
   @override
@@ -54,29 +65,33 @@ class FirebaseTalentPoolRepository implements TalentPoolRepository {
         .collection('members')
         .orderBy('addedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => PoolMember.fromJson(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => PoolMember.fromJson(doc.data()))
+              .toList(),
+        );
   }
 
   @override
   Future<void> addMemberToPool(String poolId, PoolMember member) async {
-    // This will be mostly handled by a Cloud Function to check consent,
-    // but the repository can also do it directly if permitted.
-    await _firestore
-        .collection('talentPools')
-        .doc(poolId)
-        .collection('members')
-        .doc(member.candidateUid)
-        .set({
-      ...member.toJson(),
-      'addedAt': FieldValue.serverTimestamp(),
-    });
+    final result = await _callCallableWithFallback(
+      functionName: 'addToPool',
+      payload: {
+        'poolId': poolId,
+        'candidateUid': member.candidateUid,
+        'tags': member.tags,
+        'source': member.source,
+        'sourceApplicationId': member.sourceApplicationId,
+      },
+    );
 
-    // Update member count
-    await _firestore.collection('talentPools').doc(poolId).update({
-      'memberCount': FieldValue.increment(1),
-    });
+    final consentRequired = result['consentRequired'] == true;
+    if (!consentRequired) return;
+
+    await _callCallableWithFallback(
+      functionName: 'requestConsent',
+      payload: {'candidateUid': member.candidateUid, 'poolId': poolId},
+    );
   }
 
   @override
@@ -95,7 +110,11 @@ class FirebaseTalentPoolRepository implements TalentPoolRepository {
   }
 
   @override
-  Future<void> updateMemberTags(String poolId, String candidateUid, List<String> tags) async {
+  Future<void> updateMemberTags(
+    String poolId,
+    String candidateUid,
+    List<String> tags,
+  ) async {
     await _firestore
         .collection('talentPools')
         .doc(poolId)
@@ -105,16 +124,21 @@ class FirebaseTalentPoolRepository implements TalentPoolRepository {
   }
 
   @override
-  Stream<List<CandidateNote>> getCandidateNotes(String candidateUid, String companyId) {
+  Stream<List<CandidateNote>> getCandidateNotes(
+    String candidateUid,
+    String companyId,
+  ) {
     return _firestore
         .collection('candidateNotes')
         .where('candidateUid', isEqualTo: candidateUid)
         .where('companyId', isEqualTo: companyId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => CandidateNote.fromJson(doc.data(), id: doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CandidateNote.fromJson(doc.data(), id: doc.id))
+              .toList(),
+        );
   }
 
   @override
@@ -137,5 +161,29 @@ class FirebaseTalentPoolRepository implements TalentPoolRepository {
   @override
   Future<void> deleteNote(String noteId) async {
     await _firestore.collection('candidateNotes').doc(noteId).delete();
+  }
+
+  Future<Map<String, dynamic>> _callCallableWithFallback({
+    required String functionName,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final result = await _functions.httpsCallable(functionName).call(payload);
+      return _asMap(result.data);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'not-found' && error.code != 'unimplemented') {
+        rethrow;
+      }
+      final fallback = await _fallbackFunctions
+          .httpsCallable(functionName)
+          .call(payload);
+      return _asMap(fallback.data);
+    }
+  }
+
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return const <String, dynamic>{};
   }
 }

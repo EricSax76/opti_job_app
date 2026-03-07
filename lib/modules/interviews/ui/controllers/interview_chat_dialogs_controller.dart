@@ -59,4 +59,64 @@ class InterviewChatDialogsController {
       controller.dispose();
     }
   }
+
+  static Future<String?> askForCompletionNotes(BuildContext context) {
+    return _askForOptionalText(
+      context: context,
+      title: 'Completar entrevista',
+      fieldLabel: 'Notas (opcional)',
+      hintText: 'Resumen de la entrevista',
+      confirmLabel: 'Completar',
+    );
+  }
+
+  static Future<String?> askForCancellationReason(BuildContext context) {
+    return _askForOptionalText(
+      context: context,
+      title: 'Cancelar entrevista',
+      fieldLabel: 'Motivo (opcional)',
+      hintText: 'Razón de la cancelación',
+      confirmLabel: 'Confirmar cancelación',
+    );
+  }
+
+  static Future<String?> _askForOptionalText({
+    required BuildContext context,
+    required String title,
+    required String fieldLabel,
+    required String hintText,
+    required String confirmLabel,
+  }) async {
+    final controller = TextEditingController();
+    try {
+      final value = await showDialog<String?>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: controller,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: fieldLabel,
+              hintText: hintText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Volver'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, controller.text),
+              child: Text(confirmLabel),
+            ),
+          ],
+        ),
+      );
+      if (value == null) return null;
+      return value.trim();
+    } finally {
+      controller.dispose();
+    }
+  }
 }

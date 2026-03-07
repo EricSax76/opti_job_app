@@ -137,6 +137,16 @@ class RecruiterDashboardScreen extends StatelessWidget {
                         icon: const Icon(Icons.verified_user_outlined),
                         label: const Text('Consentimientos'),
                       ),
+                      OutlinedButton.icon(
+                        onPressed: (canManageTeam || !hasCompanyAssociation)
+                            ? () =>
+                                  context.go('/recruiter/${recruiter.uid}/team')
+                            : null,
+                        icon: const Icon(Icons.groups_2_outlined),
+                        label: Text(
+                          hasCompanyAssociation ? 'Equipo' : 'Usar invitación',
+                        ),
+                      ),
                     ],
                   ),
                 ],

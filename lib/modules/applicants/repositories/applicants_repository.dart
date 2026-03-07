@@ -1,4 +1,5 @@
 import 'package:opti_job_app/modules/applications/models/application.dart';
+import 'package:opti_job_app/modules/applicants/models/ai_decision_review.dart';
 
 abstract class ApplicantsRepository {
   Future<List<Application>> getApplicationsForOffer({
@@ -14,5 +15,24 @@ abstract class ApplicantsRepository {
   Future<void> updateApplicationStatus({
     required String applicationId,
     required String status,
+  });
+
+  Future<AiDecisionReview> getAiDecisionReview({
+    required String applicationId,
+    int limit = 20,
+  });
+
+  Future<AiDecisionOverrideResult> overrideAiDecision({
+    required String applicationId,
+    required String reason,
+    double? overrideScore,
+    double? originalAiScore,
+  });
+
+  Future<void> runAiVectorMatch({required String applicationId, int limit = 8});
+
+  Future<void> runAiSkillMatch({
+    required String applicationId,
+    required String jobOfferId,
   });
 }

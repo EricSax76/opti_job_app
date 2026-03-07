@@ -7,15 +7,17 @@ abstract class RecruiterRepository {
   /// Obtiene el reclutador asociado a [uid]. Devuelve `null` si no existe.
   Future<Recruiter?> getRecruiter(String uid);
 
-  /// Escribe un documento reclutador nuevo. Solo debe llamarse desde servicios
-  /// internos (ej. al aceptar una invitación client-side en modo emulador).
-  Future<void> createRecruiter(Recruiter recruiter);
+  /// Genera un código de invitación para un nuevo miembro del equipo.
+  Future<String> createInvitation({required RecruiterRole role, String? email});
+
+  /// Acepta un código de invitación para asociar al reclutador actual a empresa.
+  Future<void> acceptInvitation({required String code, required String name});
 
   /// Actualiza el rol de un reclutador existente.
   Future<void> updateRecruiterRole(String uid, RecruiterRole role);
 
   /// Deshabilita un reclutador (status → disabled).
-  Future<void> disableRecruiter(String uid);
+  Future<void> removeRecruiter(String uid);
 
   /// Stream de reclutadores activos/invitados de una empresa.
   Stream<List<Recruiter>> watchCompanyRecruiters(String companyId);

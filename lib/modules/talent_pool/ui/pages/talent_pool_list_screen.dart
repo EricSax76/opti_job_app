@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
@@ -5,8 +6,10 @@ import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/info_pill.dart';
 import 'package:opti_job_app/core/widgets/section_header.dart';
 import 'package:opti_job_app/core/widgets/state_message.dart';
+import 'package:opti_job_app/modules/talent_pool/cubits/talent_pool_detail_cubit.dart';
 import 'package:opti_job_app/modules/talent_pool/cubits/talent_pool_list_cubit.dart';
 import 'package:opti_job_app/modules/talent_pool/models/talent_pool.dart';
+import 'package:opti_job_app/modules/talent_pool/repositories/talent_pool_repository.dart';
 import 'package:opti_job_app/modules/talent_pool/ui/pages/talent_pool_detail_screen.dart';
 
 class TalentPoolListScreen extends StatefulWidget {
@@ -91,6 +94,7 @@ class _TalentPoolListScreenState extends State<TalentPoolListScreen> {
   }
 
   void _showCreatePoolDialog(BuildContext context) {
+    final creatorUid = context.read<FirebaseAuth>().currentUser?.uid ?? '';
     final nameController = TextEditingController();
     final descController = TextEditingController();
 
@@ -125,7 +129,7 @@ class _TalentPoolListScreenState extends State<TalentPoolListScreen> {
                     companyId: widget.companyId,
                     name: nameController.text,
                     description: descController.text,
-                    createdBy: 'user-uid', // Replace with current recruiter UID
+                    createdBy: creatorUid,
                   ),
                 );
                 Navigator.pop(context);
@@ -152,7 +156,12 @@ class _PoolCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TalentPoolDetailScreen(pool: pool),
+            builder: (context) => BlocProvider(
+              create: (_) => TalentPoolDetailCubit(
+                repository: context.read<TalentPoolRepository>(),
+              ),
+              child: TalentPoolDetailScreen(pool: pool),
+            ),
           ),
         );
       },
