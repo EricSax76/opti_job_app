@@ -29,6 +29,8 @@ class DashboardCandidatesCardLogic {
           candidateUid: uid,
           displayName: displayName,
           offerId: application.jobOfferId,
+          applicationId: (application.id ?? '').trim(),
+          isAnonymized: shouldAnonymizeApplication(application),
         );
       }
     }

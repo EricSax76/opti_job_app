@@ -28,17 +28,17 @@ class Curriculum extends Equatable {
 
   @override
   List<Object?> get props => [
-        headline,
-        summary,
-        phone,
-        location,
-        skills,
-        structuredSkills,
-        experiences,
-        education,
-        attachment,
-        updatedAt,
-      ];
+    headline,
+    summary,
+    phone,
+    location,
+    skills,
+    structuredSkills,
+    experiences,
+    education,
+    attachment,
+    updatedAt,
+  ];
 
   bool get hasContent =>
       headline.trim().isNotEmpty ||
@@ -90,6 +90,10 @@ class Curriculum extends Equatable {
   }
 
   factory Curriculum.fromJson(Map<String, dynamic> json) {
+    final structuredSkillsJson = _asMapList(json['structuredSkills']);
+    final experiencesJson = _asMapList(json['experiences']);
+    final educationJson = _asMapList(json['education']);
+
     return Curriculum(
       headline: json['headline'] as String? ?? '',
       summary: json['summary'] as String? ?? '',
@@ -98,20 +102,11 @@ class Curriculum extends Equatable {
       skills: (json['skills'] as List<dynamic>? ?? const [])
           .whereType<String>()
           .toList(),
-      structuredSkills: (json['structuredSkills'] as List<dynamic>? ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(Skill.fromJson)
-          .toList(),
-      experiences: (json['experiences'] as List<dynamic>? ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(CurriculumItem.fromJson)
-          .toList(),
-      education: (json['education'] as List<dynamic>? ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(CurriculumItem.fromJson)
-          .toList(),
+      structuredSkills: structuredSkillsJson.map(Skill.fromJson).toList(),
+      experiences: experiencesJson.map(CurriculumItem.fromJson).toList(),
+      education: educationJson.map(CurriculumItem.fromJson).toList(),
       attachment: CurriculumAttachment.fromJson(
-        json['attachment'] as Map<String, dynamic>?,
+        _asNullableMap(json['attachment']),
       ),
       updatedAt: _parseDateTime(json['updated_at']),
     );
@@ -138,6 +133,24 @@ class Curriculum extends Equatable {
     if (raw is String) return DateTime.tryParse(raw);
     return null;
   }
+
+  static Map<String, dynamic>? _asNullableMap(dynamic raw) {
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return null;
+  }
+
+  static List<Map<String, dynamic>> _asMapList(dynamic raw) {
+    if (raw is! List) return const <Map<String, dynamic>>[];
+    final result = <Map<String, dynamic>>[];
+    for (final entry in raw) {
+      final map = _asNullableMap(entry);
+      if (map != null) {
+        result.add(map);
+      }
+    }
+    return result;
+  }
 }
 
 class CurriculumAttachment extends Equatable {
@@ -156,8 +169,13 @@ class CurriculumAttachment extends Equatable {
   final DateTime? updatedAt;
 
   @override
-  List<Object?> get props =>
-      [fileName, storagePath, contentType, sizeBytes, updatedAt];
+  List<Object?> get props => [
+    fileName,
+    storagePath,
+    contentType,
+    sizeBytes,
+    updatedAt,
+  ];
 
   static CurriculumAttachment? fromJson(Map<String, dynamic>? json) {
     if (json == null) return null;

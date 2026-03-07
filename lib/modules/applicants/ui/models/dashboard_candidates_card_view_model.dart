@@ -3,11 +3,17 @@ class DashboardCandidateSummaryViewModel {
     required this.candidateUid,
     required this.displayName,
     required this.offerId,
+    required this.applicationId,
+    required this.isAnonymized,
   });
 
   final String candidateUid;
   final String displayName;
   final String offerId;
+  final String applicationId;
+  final bool isAnonymized;
+
+  bool get canOpenCv => applicationId.trim().isNotEmpty && !isAnonymized;
 }
 
 class DashboardCandidatesCardViewModel {

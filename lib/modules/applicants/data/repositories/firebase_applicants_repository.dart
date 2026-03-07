@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:opti_job_app/core/utils/callable_with_fallback.dart';
 import 'package:opti_job_app/modules/applicants/models/ai_decision_review.dart';
 import 'package:opti_job_app/modules/applicants/models/applicant_review_profile.dart';
@@ -40,15 +41,7 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
       name: 'getApplicationsForReview',
       payload: {'jobOfferId': normalizedOfferId},
     );
-    final rawList = (data['applications'] as List<dynamic>?) ?? [];
-
-    final applications = rawList
-        .cast<Map<String, dynamic>>()
-        .map(
-          (json) =>
-              Application.fromJson(json, id: json['applicationId'] as String?),
-        )
-        .toList();
+    final applications = _parseApplications(data['applications']);
 
     applications.sort(_sortByMostRecent);
     return applications;
@@ -73,6 +66,8 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     final applicationsByOffer = <String, List<Application>>{
       for (final offerId in normalizedOfferIds) offerId: <Application>[],
     };
+    var successfulLoads = 0;
+    Object? firstError;
 
     // Fire all callable requests in parallel
     final futures = <String, Future<Map<String, dynamic>>>{
@@ -86,24 +81,35 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     for (final entry in futures.entries) {
       try {
         final payload = await entry.value;
-        final rawList = (payload['applications'] as List<dynamic>?) ?? [];
-
-        final apps = rawList
-            .cast<Map<String, dynamic>>()
-            .map(
-              (json) => Application.fromJson(
-                json,
-                id: json['applicationId'] as String?,
-              ),
-            )
-            .toList();
+        final apps = _parseApplications(payload['applications']);
 
         apps.sort(_sortByMostRecent);
         applicationsByOffer[entry.key] = apps;
-      } catch (_) {
+        successfulLoads++;
+      } on FirebaseFunctionsException catch (error) {
+        firstError ??= error;
+        if (kDebugMode) {
+          debugPrint(
+            '[ApplicantsRepository] getApplicationsForReview '
+            'offer=${entry.key} code=${error.code} message=${error.message}',
+          );
+        }
+        applicationsByOffer[entry.key] = const [];
+      } catch (error) {
+        firstError ??= error;
+        if (kDebugMode) {
+          debugPrint(
+            '[ApplicantsRepository] getApplicationsForReview '
+            'offer=${entry.key} error=$error',
+          );
+        }
         // Individual offer failure — keep empty list for that offer.
         applicationsByOffer[entry.key] = const [];
       }
+    }
+
+    if (successfulLoads == 0 && firstError != null) {
+      throw firstError;
     }
 
     return applicationsByOffer;
@@ -212,6 +218,19 @@ class FirebaseApplicantsRepository implements ApplicantsRepository {
     Map<String, dynamic> payload,
   ) async {
     return _callables.call<dynamic>(name: functionName, payload: payload);
+  }
+
+  List<Application> _parseApplications(dynamic rawList) {
+    if (rawList is! List) return const <Application>[];
+
+    final applications = <Application>[];
+    for (final entry in rawList) {
+      final json = CallableWithFallback.asMap(entry);
+      if (json.isEmpty) continue;
+      final applicationId = json['applicationId']?.toString();
+      applications.add(Application.fromJson(json, id: applicationId));
+    }
+    return applications;
   }
 
   static int _sortByMostRecent(Application a, Application b) {

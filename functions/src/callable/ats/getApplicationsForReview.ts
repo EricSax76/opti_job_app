@@ -29,6 +29,13 @@ const PARTIAL_REVEAL_STAGE_TYPES = new Set<string>(["interview"]);
 
 /** Stage types where everything including avatar is shown. */
 const FULL_REVEAL_STAGE_TYPES = new Set<string>(["offer", "hired"]);
+const PARTIAL_REVEAL_STATUSES = new Set<string>(["interview", "interviewing"]);
+const FULL_REVEAL_STATUSES = new Set<string>([
+  "offered",
+  "accepted_pending_signature",
+  "accepted",
+  "hired",
+]);
 
 type RevealLevel = "blind" | "partial" | "full";
 type KnockoutEvaluationStatus = "completed" | "blocked_consent" | "failed";
@@ -128,6 +135,22 @@ function determineRevealLevel(
   return "blind";
 }
 
+function withLegacyStatusFallback({
+  level,
+  status,
+  identityRevealed,
+}: {
+  level: RevealLevel;
+  status: string;
+  identityRevealed: boolean | undefined;
+}): RevealLevel {
+  if (level !== "blind") return level;
+  if (FULL_REVEAL_STATUSES.has(status)) return "full";
+  if (PARTIAL_REVEAL_STATUSES.has(status)) return "partial";
+  if (identityRevealed === true) return "partial";
+  return level;
+}
+
 function extractSkillsMatched(
   aiMatchResult: Record<string, unknown> | undefined
 ): string[] {
@@ -212,10 +235,16 @@ function projectApplication(
     asTrimmedString(data.pipelineStageId) || undefined,
     stages
   );
-  const level = determineRevealLevel(
+  const baseLevel = determineRevealLevel(
     stageType,
     data.identityRevealed as boolean | undefined
   );
+  const normalizedStatus = asTrimmedString(data.status).toLowerCase();
+  const level = withLegacyStatusFallback({
+    level: baseLevel,
+    status: normalizedStatus,
+    identityRevealed: data.identityRevealed as boolean | undefined,
+  });
 
   const aiMatch = data.aiMatchResult as
     | Record<string, unknown>
@@ -251,7 +280,7 @@ function projectApplication(
     hasCurriculum: Boolean(data.curriculum_id ?? data.curriculumId),
     hasVideoCurriculum:
       data.hasVideoCurriculum === true || data.has_video_curriculum === true,
-    canViewVideoCurriculum: level !== "blind",
+    canViewVideoCurriculum: level === "full",
     identityRevealed: data.identityRevealed === true,
     assignedTo: asTrimmedString(data.assignedTo) || null,
   };

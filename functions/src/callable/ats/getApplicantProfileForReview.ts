@@ -8,6 +8,13 @@ type RevealLevel = "blind" | "partial" | "full";
 const BLIND_STAGE_TYPES = new Set<string>(["new", "screening"]);
 const PARTIAL_REVEAL_STAGE_TYPES = new Set<string>(["interview"]);
 const FULL_REVEAL_STAGE_TYPES = new Set<string>(["offer", "hired"]);
+const PARTIAL_REVEAL_STATUSES = new Set<string>(["interview", "interviewing"]);
+const FULL_REVEAL_STATUSES = new Set<string>([
+  "offered",
+  "accepted_pending_signature",
+  "accepted",
+  "hired",
+]);
 const RECRUITER_ALLOWED_ROLES = new Set([
   "admin",
   "recruiter",
@@ -119,6 +126,22 @@ function determineRevealLevel(
     return identityRevealed ? "partial" : "blind";
   }
   return "blind";
+}
+
+function withLegacyStatusFallback({
+  level,
+  status,
+  identityRevealed,
+}: {
+  level: RevealLevel;
+  status: string;
+  identityRevealed: boolean | undefined;
+}): RevealLevel {
+  if (level !== "blind") return level;
+  if (FULL_REVEAL_STATUSES.has(status)) return "full";
+  if (PARTIAL_REVEAL_STATUSES.has(status)) return "partial";
+  if (identityRevealed === true) return "partial";
+  return level;
 }
 
 function isExternalEvaluatorAssigned(
@@ -262,10 +285,15 @@ export const getApplicantProfileForReview = onCall(
       asTrimmedString(applicationData.pipelineStageId) || undefined,
       stages,
     );
-    const revealLevel = determineRevealLevel(
+    const baseRevealLevel = determineRevealLevel(
       stageType,
       applicationData.identityRevealed === true,
     );
+    const revealLevel = withLegacyStatusFallback({
+      level: baseRevealLevel,
+      status: asTrimmedString(applicationData.status).toLowerCase(),
+      identityRevealed: applicationData.identityRevealed === true,
+    });
     if (revealLevel === "blind") {
       throw new HttpsError(
         "permission-denied",
@@ -321,7 +349,7 @@ export const getApplicantProfileForReview = onCall(
     const videoCurriculum = asRecord(candidateData.video_curriculum);
     const hasVideoCurriculum =
       asTrimmedString(videoCurriculum.storage_path).length > 0;
-    const canViewVideoCurriculum = true;
+    const canViewVideoCurriculum = revealLevel === "full";
     if (!hasVideoCurriculum || !canViewVideoCurriculum) {
       delete candidateData.video_curriculum;
     }

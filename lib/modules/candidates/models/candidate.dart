@@ -35,19 +35,19 @@ class Candidate extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        lastName,
-        email,
-        uid,
-        role,
-        onboardingCompleted,
-        onboardingProfile,
-        avatarUrl,
-        token,
-        coverLetter,
-        videoCurriculum,
-      ];
+    id,
+    name,
+    lastName,
+    email,
+    uid,
+    role,
+    onboardingCompleted,
+    onboardingProfile,
+    avatarUrl,
+    token,
+    coverLetter,
+    videoCurriculum,
+  ];
 
   @override
   bool get stringify => true;
@@ -56,7 +56,10 @@ class Candidate extends Equatable {
     final rawCoverLetter = json['cover_letter'];
     final rawVideoCurriculum = json['video_curriculum'];
     final rawOnboardingProfile = json['onboarding_profile'];
-    
+    final onboardingProfileJson = _asNullableMap(rawOnboardingProfile);
+    final coverLetterJson = _asNullableMap(rawCoverLetter);
+    final videoCurriculumJson = _asNullableMap(rawVideoCurriculum);
+
     return Candidate(
       id: FirestoreUtils.parseIntId(json['id']),
       name: json['name'] as String? ?? '',
@@ -65,17 +68,17 @@ class Candidate extends Equatable {
       uid: json['uid'] as String? ?? '',
       role: json['role'] as String? ?? 'candidate',
       onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
-      onboardingProfile: rawOnboardingProfile is Map<String, dynamic>
-          ? CandidateOnboardingProfile.fromJson(rawOnboardingProfile)
-          : null,
+      onboardingProfile: onboardingProfileJson == null
+          ? null
+          : CandidateOnboardingProfile.fromJson(onboardingProfileJson),
       avatarUrl: json['avatar_url'] as String?,
       token: json['token'] as String?,
-      coverLetter: rawCoverLetter is Map<String, dynamic>
-          ? CandidateCoverLetter.fromJson(rawCoverLetter)
-          : null,
-      videoCurriculum: rawVideoCurriculum is Map<String, dynamic>
-          ? CandidateVideoCurriculum.fromJson(rawVideoCurriculum)
-          : null,
+      coverLetter: coverLetterJson == null
+          ? null
+          : CandidateCoverLetter.fromJson(coverLetterJson),
+      videoCurriculum: videoCurriculumJson == null
+          ? null
+          : CandidateVideoCurriculum.fromJson(videoCurriculumJson),
     );
   }
 
@@ -167,16 +170,16 @@ class CandidateOnboardingProfile extends Equatable {
 
   @override
   List<Object?> get props => [
-        targetRole,
-        preferredLocation,
-        preferredModality,
-        preferredSeniority,
-        workStyleSkipped,
-        startOfDayPreference,
-        feedbackPreference,
-        structurePreference,
-        taskPacePreference,
-      ];
+    targetRole,
+    preferredLocation,
+    preferredModality,
+    preferredSeniority,
+    workStyleSkipped,
+    startOfDayPreference,
+    feedbackPreference,
+    structurePreference,
+    taskPacePreference,
+  ];
 
   @override
   bool get stringify => true;
@@ -204,8 +207,7 @@ class CandidateOnboardingProfile extends Equatable {
       'work_style_skipped': workStyleSkipped,
       if (startOfDayPreference != null)
         'start_of_day_preference': startOfDayPreference,
-      if (feedbackPreference != null)
-        'feedback_preference': feedbackPreference,
+      if (feedbackPreference != null) 'feedback_preference': feedbackPreference,
       if (structurePreference != null)
         'structure_preference': structurePreference,
       if (taskPacePreference != null)
@@ -345,5 +347,11 @@ DateTime? _parseDateTime(dynamic raw) {
   if (raw == null) return null;
   if (raw is DateTime) return raw;
   if (raw is String) return DateTime.tryParse(raw);
+  return null;
+}
+
+Map<String, dynamic>? _asNullableMap(dynamic raw) {
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is Map) return Map<String, dynamic>.from(raw);
   return null;
 }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:opti_job_app/features/ai/models/ai_exceptions.dart';
 import 'package:opti_job_app/features/ai/models/ai_match_result.dart';
@@ -78,11 +79,18 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
           canViewVideoCurriculum: applicantProfile.canViewVideoCurriculum,
         ),
       );
-    } catch (e) {
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          '[ApplicantCurriculumCubit] loadData failed '
+          'candidateUid=$candidateUid offerId=$offerId '
+          'applicationId=$_applicationId error=$error',
+        );
+      }
       emit(
         state.copyWith(
           status: ApplicantCurriculumStatus.failure,
-          errorMessage: 'No se pudo cargar la oferta del aplicante.',
+          errorMessage: _resolveLoadErrorMessage(error),
         ),
       );
     }
@@ -142,5 +150,22 @@ class ApplicantCurriculumCubit extends Cubit<ApplicantCurriculumState> {
     final trimmed = input.trim();
     if (trimmed.isEmpty) return 'candidato';
     return trimmed.replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_');
+  }
+
+  String _resolveLoadErrorMessage(Object error) {
+    final normalized = error.toString().toLowerCase();
+    if (normalized.contains('applicationid es obligatorio')) {
+      return 'No se pudo abrir el CV: falta applicationId en la navegación.';
+    }
+    if (normalized.contains('permanece anonimizado')) {
+      return 'El CV permanece anonimizado en esta etapa del pipeline.';
+    }
+    if (normalized.contains('permission-denied')) {
+      return 'No tienes permisos para ver este CV en la etapa actual.';
+    }
+    if (normalized.contains('not-found')) {
+      return 'No se encontró la candidatura u oferta asociada.';
+    }
+    return 'No se pudo cargar el CV del aplicante.';
   }
 }

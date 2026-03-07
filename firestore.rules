@@ -161,24 +161,28 @@ service cloud.firestore {
 
     match /pipelines/{pipelineId} {
       allow read: if (
-          resource.data.isTemplate == true
+          (resource.data.isTemplate == true || resource.data.is_template == true)
           && (isCompany() || isRecruiter())
         )
         || (
           isCompany()
-          && resource.data.companyId == request.auth.uid
+          && (resource.data.companyId == request.auth.uid
+            || resource.data.company_id == request.auth.uid)
         )
         || (
           isRecruiter()
-          && recruiterBelongsToCompany(resource.data.companyId)
+          && (recruiterBelongsToCompany(resource.data.companyId)
+            || recruiterBelongsToCompany(resource.data.company_id))
         );
       allow write: if (
           isCompany()
-          && request.resource.data.companyId == request.auth.uid
+          && (request.resource.data.companyId == request.auth.uid
+            || request.resource.data.company_id == request.auth.uid)
         )
         || (
           isRecruiter()
-          && recruiterCanManageOffers(request.resource.data.companyId)
+          && (recruiterCanManageOffers(request.resource.data.companyId)
+            || recruiterCanManageOffers(request.resource.data.company_id))
         );
     }
 

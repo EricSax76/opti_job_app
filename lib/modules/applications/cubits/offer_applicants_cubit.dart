@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
-
 import 'package:opti_job_app/modules/applications/models/application.dart';
 import 'package:opti_job_app/modules/applicants/repositories/applicants_repository.dart';
 
@@ -101,14 +100,15 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
         nextErrors[offerId] = 'Tiempo de espera agotado al cargar aplicantes.';
       }
       emit(state.copyWith(statuses: nextStatuses, errors: nextErrors));
-    } catch (_) {
+    } catch (error) {
+      final message = _resolveLoadErrorMessage(error);
       final nextStatuses = Map<String, OfferApplicantsStatus>.from(
         state.statuses,
       );
       final nextErrors = Map<String, String?>.from(state.errors);
       for (final offerId in toLoad) {
         nextStatuses[offerId] = OfferApplicantsStatus.failure;
-        nextErrors[offerId] = 'No se pudieron cargar los aplicantes.';
+        nextErrors[offerId] = message;
       }
       emit(state.copyWith(statuses: nextStatuses, errors: nextErrors));
     } finally {
@@ -143,5 +143,24 @@ class OfferApplicantsCubit extends Cubit<OfferApplicantsState> {
         ..[offerId] = 'No se pudo actualizar el estado.';
       emit(state.copyWith(statuses: updatedStatuses, errors: updatedErrors));
     }
+  }
+
+  String _resolveLoadErrorMessage(Object error) {
+    final normalized = error.toString().toLowerCase();
+    if (normalized.contains('permission-denied')) {
+      return 'Sin permisos para leer candidaturas de esta oferta.';
+    }
+    if (normalized.contains('unauthenticated')) {
+      return 'Sesión no válida. Cierra sesión y vuelve a entrar.';
+    }
+    if (normalized.contains('app check')) {
+      return 'App Check bloqueó la solicitud en este dispositivo.';
+    }
+    if (normalized.contains('unavailable') ||
+        normalized.contains('network') ||
+        normalized.contains('timeout')) {
+      return 'No se pudo conectar con el backend de candidaturas.';
+    }
+    return 'No se pudieron cargar los aplicantes.';
   }
 }

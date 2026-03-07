@@ -30,6 +30,17 @@ class DashboardCandidatesCard extends StatelessWidget {
       child: BlocBuilder<OfferApplicantsCubit, OfferApplicantsState>(
         builder: (context, state) {
           final viewModel = DashboardCandidatesCardLogic.buildViewModel(state);
+          final hasFailures = state.statuses.values.any(
+            (status) => status == OfferApplicantsStatus.failure,
+          );
+          final firstFailureMessage = state.errors.values
+              .whereType<String>()
+              .map((message) => message.trim())
+              .firstWhere(
+                (message) => message.isNotEmpty,
+                orElse: () =>
+                    'No se pudieron cargar candidatos en este dispositivo.',
+              );
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +71,9 @@ class DashboardCandidatesCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Todavía no hay candidatos cargados en el resumen.',
+                      hasFailures
+                          ? firstFailureMessage
+                          : 'Todavía no hay candidatos cargados en el resumen.',
                       style: TextStyle(color: muted, height: 1.4),
                     ),
                     const SizedBox(height: 6),
@@ -95,16 +108,20 @@ class _CandidateRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final canOpenCv = candidate.canOpenCv;
     return InkWell(
-      onTap: () {
-        context.pushNamed(
-          'company-applicant-cv',
-          pathParameters: {
-            'offerId': candidate.offerId,
-            'candidateUid': candidate.candidateUid,
-          },
-        );
-      },
+      onTap: !canOpenCv
+          ? null
+          : () {
+              context.pushNamed(
+                'company-applicant-cv',
+                pathParameters: {
+                  'offerId': candidate.offerId,
+                  'candidateUid': candidate.candidateUid,
+                },
+                queryParameters: {'applicationId': candidate.applicationId},
+              );
+            },
       borderRadius: BorderRadius.circular(uiTileRadius),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -121,13 +138,18 @@ class _CandidateRow extends StatelessWidget {
               child: Text(
                 candidate.displayName,
                 style: TextStyle(
-                  color: colorScheme.onSurface,
+                  color: canOpenCv
+                      ? colorScheme.onSurface
+                      : colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
             const SizedBox(width: 10),
-            Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+            Icon(
+              canOpenCv ? Icons.chevron_right : Icons.lock_outline,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),

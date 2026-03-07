@@ -22,19 +22,29 @@ class Pipeline {
   final DateTime? updatedAt;
 
   static Pipeline fromFirestore(Map<String, dynamic> data) {
-    final stagesRaw = data['stages'] as List<dynamic>? ?? [];
+    final stagesRaw =
+        data['stages'] as List<dynamic>? ??
+        data['pipelineStages'] as List<dynamic>? ??
+        const [];
     return Pipeline(
-      id: data['id'] as String? ?? '',
-      companyId: data['companyId'] as String? ?? '',
-      name: data['name'] as String? ?? '',
+      id:
+          data['id'] as String? ??
+          data['pipelineId'] as String? ??
+          data['pipeline_id'] as String? ??
+          '',
+      companyId:
+          data['companyId'] as String? ?? data['company_id'] as String? ?? '',
+      name: data['name'] as String? ?? 'Pipeline',
       stages: stagesRaw
           .whereType<Map<String, dynamic>>()
           .map(PipelineStage.fromFirestore)
           .toList(),
-      isTemplate: data['isTemplate'] as bool? ?? false,
-      createdBy: data['createdBy'] as String? ?? '',
-      createdAt: _parseDate(data['createdAt']),
-      updatedAt: _parseDate(data['updatedAt']),
+      isTemplate:
+          data['isTemplate'] as bool? ?? data['is_template'] as bool? ?? false,
+      createdBy:
+          data['createdBy'] as String? ?? data['created_by'] as String? ?? '',
+      createdAt: _parseDate(data['createdAt'] ?? data['created_at']),
+      updatedAt: _parseDate(data['updatedAt'] ?? data['updated_at']),
     );
   }
 
@@ -54,10 +64,25 @@ class Pipeline {
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
     if (value is String) return DateTime.tryParse(value);
+    if (value is DateTime) return value;
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
     if (value is Map && value['seconds'] != null) {
       return DateTime.fromMillisecondsSinceEpoch(
         (value['seconds'] as int) * 1000,
       );
+    }
+    if (value is Object) {
+      final dynamicObject = value as dynamic;
+      if (dynamicObject.toDate is Function) {
+        try {
+          final parsed = dynamicObject.toDate();
+          if (parsed is DateTime) return parsed;
+        } catch (_) {
+          return null;
+        }
+      }
     }
     return null;
   }

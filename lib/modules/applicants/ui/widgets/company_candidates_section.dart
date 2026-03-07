@@ -43,15 +43,49 @@ class CompanyCandidatesSection extends StatelessWidget {
         return BlocBuilder<CompanyCandidatesCubit, CompanyCandidatesState>(
           builder: (context, candidatesState) {
             final grouped = candidatesState.groupedCandidates;
-            final isLoading = context.select<OfferApplicantsCubit, bool>(
-              (cubit) => cubit.state.statuses.values.any(
-                (status) => status == OfferApplicantsStatus.loading,
-              ),
+            final applicantsState = context.watch<OfferApplicantsCubit>().state;
+            final isLoading = applicantsState.statuses.values.any(
+              (status) => status == OfferApplicantsStatus.loading,
             );
+            final hasFailures = applicantsState.statuses.values.any(
+              (status) => status == OfferApplicantsStatus.failure,
+            );
+            final firstFailureMessage = applicantsState.errors.values
+                .whereType<String>()
+                .map((message) => message.trim())
+                .firstWhere(
+                  (message) => message.isNotEmpty,
+                  orElse: () =>
+                      'No se pudieron cargar candidatos para una o más ofertas.',
+                );
 
             if (isLoading && grouped.isEmpty) {
               return const SliverToBoxAdapter(
                 child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            if (!isLoading && grouped.isEmpty && hasFailures) {
+              return SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionMessage(text: firstFailureMessage),
+                    const SizedBox(height: uiSpacing8 + 2),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          context
+                              .read<CompanyCandidatesCubit>()
+                              .loadApplicantsForAllOffers(force: true);
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar carga'),
+                      ),
+                    ),
+                  ],
+                ),
               );
             }
 
