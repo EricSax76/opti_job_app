@@ -16,7 +16,7 @@ class KnockoutQuestion {
   final dynamic requiredAnswer; // Puede ser bool o String.
 
   static KnockoutQuestion fromFirestore(Map<String, dynamic> data) {
-    final typeStr = (data['type'] as String? ?? '').toLowerCase().trim();
+    final typeStr = (data['type']?.toString() ?? '').toLowerCase().trim();
     final type = switch (typeStr) {
       'boolean' => KnockoutQuestionType.boolean,
       'multiple_choice' => KnockoutQuestionType.multipleChoice,
@@ -27,13 +27,22 @@ class KnockoutQuestion {
     };
 
     return KnockoutQuestion(
-      id: data['id'] as String? ?? '',
-      question: data['question'] as String? ?? '',
+      id: (data['id']?.toString() ?? '').trim(),
+      question: (data['question']?.toString() ?? '').trim(),
       type: type,
-      options: (data['options'] as List<dynamic>?)?.cast<String>(),
+      options: _parseOptions(data['options']),
       // Mantenemos el requiredAnswer tal cual venga parseado por JSON
       requiredAnswer: data['requiredAnswer'],
     );
+  }
+
+  static List<String>? _parseOptions(dynamic value) {
+    if (value is! List) return null;
+    return value
+        .whereType<String>()
+        .map((option) => option.trim())
+        .where((option) => option.isNotEmpty)
+        .toList(growable: false);
   }
 
   Map<String, dynamic> toFirestore() {
