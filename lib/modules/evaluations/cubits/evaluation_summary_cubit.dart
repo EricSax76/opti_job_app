@@ -9,35 +9,46 @@ part 'evaluation_summary_state.dart';
 class EvaluationSummaryCubit extends Cubit<EvaluationSummaryState> {
   final EvaluationRepository _repository;
 
-  EvaluationSummaryCubit({
-    required EvaluationRepository repository,
-  })  : _repository = repository,
-        super(const EvaluationSummaryState());
+  EvaluationSummaryCubit({required EvaluationRepository repository})
+    : _repository = repository,
+      super(const EvaluationSummaryState());
 
   Future<void> loadSummary(String applicationId) async {
     emit(state.copyWith(status: EvaluationSummaryStatus.loading));
 
     try {
-      final evaluations = await _repository.getEvaluationsForApplication(applicationId);
-      final approvals = await _repository.getApprovalsForApplication(applicationId);
+      final evaluations = await _repository.getEvaluationsForApplication(
+        applicationId,
+      );
+      final approvals = await _repository.getApprovalsForApplication(
+        applicationId,
+      );
 
-      emit(state.copyWith(
-        evaluations: evaluations,
-        approvals: approvals,
-        status: EvaluationSummaryStatus.success,
-      ));
+      emit(
+        state.copyWith(
+          evaluations: evaluations,
+          approvals: approvals,
+          status: EvaluationSummaryStatus.success,
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(status: EvaluationSummaryStatus.failure));
     }
   }
 
-  Future<void> updateApproval(String approvalId, String approverUid, ApprovalStatus status, {String? notes}) async {
+  Future<void> updateApproval(
+    String approvalId,
+    String approverUid,
+    ApprovalStatus status, {
+    String? notes,
+  }) async {
     try {
-      await _repository.updateApprovalStatus(approvalId, approverUid, status, notes: notes);
-      // Reload summary to reflect changes
-      if (state.evaluations.isNotEmpty) {
-        await loadSummary(state.evaluations.first.applicationId);
-      }
+      await _repository.updateApprovalStatus(
+        approvalId,
+        approverUid,
+        status,
+        notes: notes,
+      );
     } catch (e) {
       // Handle error
     }

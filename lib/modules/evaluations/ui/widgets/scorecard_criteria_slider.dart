@@ -83,21 +83,9 @@ class ScorecardCriteriaSlider extends StatelessWidget {
           ),
           if (onNotesChanged != null) ...[
             const SizedBox(height: uiSpacing8),
-            TextField(
-              decoration: const InputDecoration(
-                hintText: 'Add notes for this criterion...',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: uiSpacing12,
-                  vertical: uiSpacing8,
-                ),
-              ),
-              maxLines: 2,
-              onChanged: onNotesChanged,
-              controller: TextEditingController(text: notes)
-                ..selection = TextSelection.collapsed(
-                  offset: notes?.length ?? 0,
-                ),
+            _CriteriaNotesField(
+              initialValue: notes ?? '',
+              onChanged: onNotesChanged!,
             ),
           ],
         ],
@@ -121,5 +109,63 @@ class ScorecardCriteriaSlider extends StatelessWidget {
       default:
         return scheme.outline;
     }
+  }
+}
+
+class _CriteriaNotesField extends StatefulWidget {
+  const _CriteriaNotesField({
+    required this.initialValue,
+    required this.onChanged,
+  });
+
+  final String initialValue;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_CriteriaNotesField> createState() => _CriteriaNotesFieldState();
+}
+
+class _CriteriaNotesFieldState extends State<_CriteriaNotesField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void didUpdateWidget(covariant _CriteriaNotesField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialValue == widget.initialValue) return;
+    if (_controller.text == widget.initialValue) return;
+
+    _controller.value = TextEditingValue(
+      text: widget.initialValue,
+      selection: TextSelection.collapsed(offset: widget.initialValue.length),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      decoration: const InputDecoration(
+        hintText: 'Add notes for this criterion...',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: uiSpacing12,
+          vertical: uiSpacing8,
+        ),
+      ),
+      maxLines: 2,
+      onChanged: widget.onChanged,
+    );
   }
 }

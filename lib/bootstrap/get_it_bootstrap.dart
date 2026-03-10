@@ -35,6 +35,8 @@ import 'package:opti_job_app/modules/interviews/repositories/interview_repositor
 import 'package:opti_job_app/modules/job_offers/data/services/job_offer_read_service.dart';
 import 'package:opti_job_app/modules/job_offers/data/services/job_offer_write_service.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
+import 'package:opti_job_app/modules/evaluations/repositories/evaluation_repository.dart';
+import 'package:opti_job_app/modules/evaluations/repositories/firebase_evaluation_repository.dart';
 import 'package:opti_job_app/modules/profiles/models/profile_service.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 import 'package:opti_job_app/modules/recruiters/repositories/firebase_recruiter_repository.dart';
@@ -249,6 +251,18 @@ void setupGetIt({
   // ATS (Fase 2 Pipeline)
   getIt.registerLazySingleton<PipelineRepository>(
     () => FirebasePipelineRepository(firestore: getIt<FirebaseFirestore>()),
+  );
+
+  // Evaluations
+  getIt.registerLazySingleton<FirebaseEvaluationRepository>(
+    () => FirebaseEvaluationRepository(
+      firestore: getIt<FirebaseFirestore>(),
+      functions: functionsInstance,
+      fallbackFunctions: fallbackFunctionsInstance,
+    ),
+  );
+  getIt.registerLazySingleton<EvaluationRepository>(
+    () => getIt<FirebaseEvaluationRepository>(),
   );
 }
 

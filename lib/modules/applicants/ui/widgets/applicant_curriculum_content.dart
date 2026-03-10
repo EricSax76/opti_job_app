@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:opti_job_app/auth/repositories/auth_repository.dart';
 import 'package:opti_job_app/core/theme/ui_tokens.dart';
 import 'package:opti_job_app/core/widgets/app_card.dart';
 import 'package:opti_job_app/core/widgets/inline_state_message.dart';
+import 'package:opti_job_app/features/video_curriculum/widgets/uploaded_video_status_card.dart';
 import 'package:opti_job_app/modules/applicants/ui/widgets/applicant_curriculum_header.dart';
+import 'package:opti_job_app/modules/applicants/ui/widgets/selective_disclosure_verification_panel.dart';
 import 'package:opti_job_app/modules/candidates/models/candidate.dart';
 import 'package:opti_job_app/modules/curriculum/models/curriculum.dart';
 import 'package:opti_job_app/modules/curriculum/ui/widgets/curriculum_read_only_view.dart';
+import 'package:opti_job_app/modules/evaluations/ui/widgets/applicant_evaluation_section.dart';
 
 class ApplicantCurriculumContent extends StatelessWidget {
   const ApplicantCurriculumContent({
@@ -15,6 +16,8 @@ class ApplicantCurriculumContent extends StatelessWidget {
     required this.candidate,
     required this.curriculum,
     required this.offerId,
+    required this.applicationId,
+    required this.companyUid,
     required this.hasVideoCurriculum,
     required this.canViewVideoCurriculum,
     required this.isExporting,
@@ -26,6 +29,8 @@ class ApplicantCurriculumContent extends StatelessWidget {
   final Candidate candidate;
   final Curriculum curriculum;
   final String offerId;
+  final String? applicationId;
+  final String? companyUid;
   final bool hasVideoCurriculum;
   final bool canViewVideoCurriculum;
   final bool isExporting;
@@ -36,6 +41,8 @@ class ApplicantCurriculumContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasCurriculum = curriculum.hasContent;
+    final normalizedApplicationId = applicationId?.trim() ?? '';
+    final resolvedCompanyUid = companyUid?.trim() ?? '';
     final coverLetterText = candidate.coverLetter?.text.trim() ?? '';
     final hasCoverLetter = candidate.hasCoverLetter;
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -93,21 +100,22 @@ class ApplicantCurriculumContent extends StatelessWidget {
                 title: 'Video curriculum',
                 padding: EdgeInsets.zero,
                 child: _DetailPanel(
-                  child: Row(
-                    children: [
-                      Icon(Icons.videocam_outlined, color: muted),
-                      const SizedBox(width: uiSpacing12),
-                      Expanded(
-                        child: Text(
-                          !canViewVideoCurriculum
-                              ? 'Video no visible en esta etapa'
-                              : hasVideoCurriculum
-                              ? 'Video disponible para esta etapa'
-                              : 'No adjuntó video curriculum',
-                          style: TextStyle(color: muted, height: 1.3),
-                        ),
-                      ),
-                    ],
+                  child: _ApplicantVideoCurriculumPanel(
+                    video: candidate.videoCurriculum,
+                    hasVideoCurriculum: hasVideoCurriculum,
+                    canViewVideoCurriculum: canViewVideoCurriculum,
+                  ),
+                ),
+              ),
+              const SizedBox(height: uiSpacing16),
+              SectionCard(
+                title: 'Evaluaciones y aprobaciones',
+                padding: EdgeInsets.zero,
+                child: _DetailPanel(
+                  child: ApplicantEvaluationSection(
+                    applicationId: normalizedApplicationId,
+                    jobOfferId: offerId,
+                    companyUid: resolvedCompanyUid,
                   ),
                 ),
               ),
@@ -116,7 +124,7 @@ class ApplicantCurriculumContent extends StatelessWidget {
                 title: 'Verificación de credenciales (ZKP)',
                 padding: EdgeInsets.zero,
                 child: _DetailPanel(
-                  child: _SelectiveDisclosureVerificationPanel(
+                  child: SelectiveDisclosureVerificationPanel(
                     candidateUid: candidate.uid,
                     offerId: offerId,
                   ),
@@ -148,170 +156,69 @@ class _DetailPanel extends StatelessWidget {
   }
 }
 
-class _SelectiveDisclosureVerificationPanel extends StatefulWidget {
-  const _SelectiveDisclosureVerificationPanel({
-    required this.candidateUid,
-    required this.offerId,
+class _ApplicantVideoCurriculumPanel extends StatelessWidget {
+  const _ApplicantVideoCurriculumPanel({
+    required this.video,
+    required this.hasVideoCurriculum,
+    required this.canViewVideoCurriculum,
   });
 
-  final String candidateUid;
-  final String offerId;
-
-  @override
-  State<_SelectiveDisclosureVerificationPanel> createState() =>
-      _SelectiveDisclosureVerificationPanelState();
-}
-
-class _SelectiveDisclosureVerificationPanelState
-    extends State<_SelectiveDisclosureVerificationPanel> {
-  final TextEditingController _proofIdController = TextEditingController();
-  final TextEditingController _proofTokenController = TextEditingController();
-  bool _isVerifying = false;
-  String? _errorMessage;
-  String? _successMessage;
-
-  @override
-  void dispose() {
-    _proofIdController.dispose();
-    _proofTokenController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _verifyProof() async {
-    if (_isVerifying) return;
-    final proofId = _proofIdController.text.trim();
-    final proofToken = _proofTokenController.text.trim();
-    if (proofId.isEmpty || proofToken.isEmpty) {
-      setState(() {
-        _errorMessage = 'Introduce proofId y proofToken para verificar.';
-        _successMessage = null;
-      });
-      return;
-    }
-
-    setState(() {
-      _isVerifying = true;
-      _errorMessage = null;
-      _successMessage = null;
-    });
-
-    final repository = context.read<AuthRepository>();
-    try {
-      final response = await repository.verifySelectiveDisclosureProof(
-        proofId: proofId,
-        proofToken: proofToken,
-      );
-
-      if (!response.verified) {
-        setState(() {
-          _errorMessage = 'La prueba no pudo verificarse correctamente.';
-          _successMessage = null;
-          _isVerifying = false;
-        });
-        return;
-      }
-
-      final responseCandidateUid = response.candidateUid?.trim() ?? '';
-      final responseOfferId = response.jobOfferId?.trim() ?? '';
-      final statement = response.statement.trim();
-      final claimKey = response.claimKey?.trim() ?? '';
-
-      if (responseCandidateUid.isNotEmpty &&
-          responseCandidateUid != widget.candidateUid) {
-        setState(() {
-          _errorMessage =
-              'La prueba es válida pero pertenece a otra candidatura.';
-          _successMessage = null;
-          _isVerifying = false;
-        });
-        return;
-      }
-      if (responseOfferId.isNotEmpty && responseOfferId != widget.offerId) {
-        setState(() {
-          _errorMessage = 'La prueba no corresponde a esta oferta.';
-          _successMessage = null;
-          _isVerifying = false;
-        });
-        return;
-      }
-
-      setState(() {
-        _successMessage = statement.isNotEmpty
-            ? 'Prueba válida: $statement${claimKey.isNotEmpty ? ' (claim: $claimKey)' : ''}.'
-            : 'Prueba válida y verificada correctamente.';
-      });
-    } catch (error) {
-      final message = repository.mapException(error).message.trim();
-      setState(() {
-        _errorMessage = message.isEmpty
-            ? 'No se pudo verificar la prueba en este momento.'
-            : message;
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isVerifying = false);
-      }
-    }
-  }
+  final CandidateVideoCurriculum? video;
+  final bool hasVideoCurriculum;
+  final bool canViewVideoCurriculum;
 
   @override
   Widget build(BuildContext context) {
+    final storagePath = video?.storagePath.trim() ?? '';
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+
+    if (!canViewVideoCurriculum) {
+      return _buildStatusRow(
+        context,
+        icon: Icons.lock_outline,
+        message: 'Video no visible en esta etapa.',
+        trailing: Text(
+          'Restringido',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: muted),
+        ),
+      );
+    }
+
+    if (!hasVideoCurriculum) {
+      return _buildStatusRow(
+        context,
+        icon: Icons.videocam_off_outlined,
+        message: 'No adjuntó video curriculum.',
+      );
+    }
+
+    if (storagePath.isEmpty) {
+      return _buildStatusRow(
+        context,
+        icon: Icons.warning_amber_outlined,
+        message:
+            'Hay video disponible para esta etapa, pero falta la referencia del archivo.',
+      );
+    }
+
+    return UploadedVideoStatusCard(video: video, embedded: true);
+  }
+
+  Widget _buildStatusRow(
+    BuildContext context, {
+    required IconData icon,
+    required String message,
+    Widget? trailing,
+  }) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
       children: [
-        Text(
-          'Verifica una prueba de posesión sin acceder al documento original. Introduce proofId y proofToken compartidos por la persona candidata.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: muted, height: 1.35),
+        Icon(icon, color: muted),
+        const SizedBox(width: uiSpacing12),
+        Expanded(
+          child: Text(message, style: TextStyle(color: muted, height: 1.3)),
         ),
-        const SizedBox(height: uiSpacing12),
-        TextField(
-          controller: _proofIdController,
-          decoration: const InputDecoration(
-            labelText: 'Proof ID',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: uiSpacing8),
-        TextField(
-          controller: _proofTokenController,
-          decoration: const InputDecoration(
-            labelText: 'Proof Token',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: uiSpacing12),
-        FilledButton.icon(
-          onPressed: _isVerifying ? null : _verifyProof,
-          icon: _isVerifying
-              ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.fact_check_outlined),
-          label: const Text('Verificar prueba'),
-        ),
-        if (_errorMessage != null) ...[
-          const SizedBox(height: uiSpacing8),
-          Text(
-            _errorMessage!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.error,
-            ),
-          ),
-        ],
-        if (_successMessage != null) ...[
-          const SizedBox(height: uiSpacing8),
-          Text(
-            _successMessage!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.tertiary,
-            ),
-          ),
-        ],
+        if (trailing != null) ...[const SizedBox(width: uiSpacing8), trailing],
       ],
     );
   }

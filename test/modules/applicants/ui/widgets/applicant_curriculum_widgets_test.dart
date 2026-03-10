@@ -96,6 +96,8 @@ void main() {
               candidate: candidate,
               curriculum: curriculum,
               offerId: 'offer-1',
+              applicationId: '',
+              companyUid: '',
               hasVideoCurriculum: false,
               canViewVideoCurriculum: false,
               isExporting: false,
@@ -110,6 +112,56 @@ void main() {
       expect(find.text('Curriculum'), findsOneWidget);
       expect(find.text('Carta de presentación'), findsOneWidget);
       expect(find.text('Hello world'), findsOneWidget);
+      expect(find.text('Video no visible en esta etapa.'), findsOneWidget);
+    });
+
+    testWidgets('shows missing video reference warning when access is granted', (
+      tester,
+    ) async {
+      const candidate = Candidate(
+        id: 1,
+        name: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        uid: 'uid123',
+        role: 'candidate',
+      );
+      final curriculum = Curriculum(
+        experiences: [],
+        education: [],
+        skills: [],
+        headline: 'Headline',
+        summary: 'Summary',
+        phone: '123456789',
+        location: 'Location',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ApplicantCurriculumContent(
+              candidate: candidate,
+              curriculum: curriculum,
+              offerId: 'offer-1',
+              applicationId: '',
+              companyUid: '',
+              hasVideoCurriculum: true,
+              canViewVideoCurriculum: true,
+              isExporting: false,
+              isMatching: false,
+              onExport: () {},
+              onMatch: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.text(
+          'Hay video disponible para esta etapa, pero falta la referencia del archivo.',
+        ),
+        findsOneWidget,
+      );
     });
   });
 }

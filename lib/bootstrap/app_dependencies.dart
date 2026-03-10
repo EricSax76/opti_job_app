@@ -16,6 +16,7 @@ import 'package:opti_job_app/modules/companies/repositories/companies_repository
 import 'package:opti_job_app/modules/curriculum/repositories/curriculum_repository.dart';
 import 'package:opti_job_app/modules/interviews/repositories/interview_repository.dart';
 import 'package:opti_job_app/modules/job_offers/repositories/job_offer_repository.dart';
+import 'package:opti_job_app/modules/evaluations/repositories/evaluation_repository.dart';
 import 'package:opti_job_app/modules/profiles/repositories/profile_repository.dart';
 import 'package:opti_job_app/modules/curriculum/services/cv_analysis_service.dart';
 import 'package:opti_job_app/modules/recruiters/repositories/recruiter_repository.dart';
@@ -43,6 +44,7 @@ class AppDependencies {
     required this.coverLetterRepository,
     required this.videoCurriculumRepository,
     required this.interviewRepository,
+    required this.evaluationRepository,
     required this.dataRequestRepository,
     required this.consentRepository,
     required this.salaryBenchmarkRepository,
@@ -78,6 +80,7 @@ class AppDependencies {
       coverLetterRepository: getIt<CoverLetterRepository>(),
       videoCurriculumRepository: getIt<VideoCurriculumRepository>(),
       interviewRepository: getIt<InterviewRepository>(),
+      evaluationRepository: getIt<EvaluationRepository>(),
       dataRequestRepository: getIt<DataRequestRepository>(),
       consentRepository: getIt<ConsentRepository>(),
       salaryBenchmarkRepository: getIt<SalaryBenchmarkRepository>(),
@@ -106,6 +109,7 @@ class AppDependencies {
   final CoverLetterRepository coverLetterRepository;
   final VideoCurriculumRepository videoCurriculumRepository;
   final InterviewRepository interviewRepository;
+  final EvaluationRepository evaluationRepository;
   final DataRequestRepository dataRequestRepository;
   final ConsentRepository consentRepository;
   final SalaryBenchmarkRepository salaryBenchmarkRepository;

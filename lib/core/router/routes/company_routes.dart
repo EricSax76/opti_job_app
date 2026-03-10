@@ -201,6 +201,7 @@ List<RouteBase> buildCompanyRoutes() {
             cubit: cubit,
             candidateUid: uid,
             offerId: offerId,
+            applicationId: applicationId,
           ),
         );
       },

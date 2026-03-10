@@ -23,9 +23,14 @@ class UploadedVideoStatusCardContainer extends StatelessWidget {
 }
 
 class UploadedVideoStatusCard extends StatefulWidget {
-  const UploadedVideoStatusCard({super.key, required this.video});
+  const UploadedVideoStatusCard({
+    super.key,
+    required this.video,
+    this.embedded = false,
+  });
 
   final CandidateVideoCurriculum? video;
+  final bool embedded;
 
   @override
   State<UploadedVideoStatusCard> createState() =>
@@ -68,26 +73,24 @@ class _UploadedVideoStatusCardState extends State<UploadedVideoStatusCard> {
     final viewModel = UploadedVideoStatusLogic.buildViewModel(widget.video);
 
     if (!viewModel.hasUploadedVideo) {
-      return AppCard(
-        padding: const EdgeInsets.all(uiSpacing12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.cloud_off_outlined),
-                const SizedBox(width: uiSpacing8),
-                Text(
-                  viewModel.title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ],
-            ),
-            const SizedBox(height: uiSpacing8),
-            Text(viewModel.description),
-          ],
-        ),
+      final content = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.cloud_off_outlined),
+              const SizedBox(width: uiSpacing8),
+              Text(
+                viewModel.title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: uiSpacing8),
+          Text(viewModel.description),
+        ],
       );
+      return _wrapCard(content);
     }
 
     return FutureBuilder<String?>(
@@ -96,62 +99,65 @@ class _UploadedVideoStatusCardState extends State<UploadedVideoStatusCard> {
         final uri = UploadedVideoStatusLogic.parseDownloadUri(snapshot.data);
         final canPlay = uri != null;
 
-        return AppCard(
-          padding: const EdgeInsets.all(uiSpacing12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.cloud_done_outlined),
-                  const SizedBox(width: uiSpacing8),
-                  Text(
-                    viewModel.title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  if (canPlay)
-                    IconButton(
-                      tooltip: 'Ver',
-                      icon: const Icon(Icons.play_circle_outline),
-                      onPressed: () => openVideoPlayer(
-                        context,
-                        uri,
-                        title: 'Videocurrículum',
-                        allowExternalFallback: true,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: uiSpacing8),
-              Text(viewModel.description),
-              if (snapshot.connectionState == ConnectionState.waiting)
-                const Padding(
-                  padding: EdgeInsets.only(top: uiSpacing12),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (snapshot.hasError)
-                const Padding(
-                  padding: EdgeInsets.only(top: uiSpacing12),
-                  child: Text(
-                    'No se pudo cargar el enlace del vídeo (verifica permisos).',
-                  ),
-                )
-              else if (canPlay) ...[
-                const SizedBox(height: uiSpacing12),
-                InlineVideoPreview(
-                  uri: uri,
-                  onOpen: () => openVideoPlayer(
-                    context,
-                    uri,
-                    title: 'Videocurrículum',
-                    allowExternalFallback: true,
-                  ),
+        final content = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.cloud_done_outlined),
+                const SizedBox(width: uiSpacing8),
+                Text(
+                  viewModel.title,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
+                if (canPlay)
+                  IconButton(
+                    tooltip: 'Ver',
+                    icon: const Icon(Icons.play_circle_outline),
+                    onPressed: () => openVideoPlayer(
+                      context,
+                      uri,
+                      title: 'Videocurrículum',
+                      allowExternalFallback: true,
+                    ),
+                  ),
               ],
+            ),
+            const SizedBox(height: uiSpacing8),
+            Text(viewModel.description),
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Padding(
+                padding: EdgeInsets.only(top: uiSpacing12),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (snapshot.hasError)
+              const Padding(
+                padding: EdgeInsets.only(top: uiSpacing12),
+                child: Text(
+                  'No se pudo cargar el enlace del vídeo (verifica permisos).',
+                ),
+              )
+            else if (canPlay) ...[
+              const SizedBox(height: uiSpacing12),
+              InlineVideoPreview(
+                uri: uri,
+                onOpen: () => openVideoPlayer(
+                  context,
+                  uri,
+                  title: 'Videocurrículum',
+                  allowExternalFallback: true,
+                ),
+              ),
             ],
-          ),
+          ],
         );
+        return _wrapCard(content);
       },
     );
+  }
+
+  Widget _wrapCard(Widget child) {
+    if (widget.embedded) return child;
+    return AppCard(padding: const EdgeInsets.all(uiSpacing12), child: child);
   }
 }

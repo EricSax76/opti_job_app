@@ -11,11 +11,13 @@ class ApplicantCurriculumScreen extends StatelessWidget {
     required this.cubit,
     required this.candidateUid,
     required this.offerId,
+    this.applicationId,
   });
 
   final ApplicantCurriculumCubit cubit;
   final String candidateUid;
   final String offerId;
+  final String? applicationId;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +26,7 @@ class ApplicantCurriculumScreen extends StatelessWidget {
       child: _ApplicantCurriculumView(
         candidateUid: candidateUid,
         offerId: offerId,
+        applicationId: applicationId,
       ),
     );
   }
@@ -33,10 +36,12 @@ class _ApplicantCurriculumView extends StatelessWidget {
   const _ApplicantCurriculumView({
     required this.candidateUid,
     required this.offerId,
+    required this.applicationId,
   });
 
   final String candidateUid;
   final String offerId;
+  final String? applicationId;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +55,7 @@ class _ApplicantCurriculumView extends StatelessWidget {
             state: state,
             candidateUid: candidateUid,
             offerId: offerId,
+            applicationId: applicationId,
           ),
         );
       },
@@ -62,11 +68,13 @@ class _ApplicantCurriculumBody extends StatelessWidget {
     required this.state,
     required this.candidateUid,
     required this.offerId,
+    required this.applicationId,
   });
 
   final ApplicantCurriculumState state;
   final String candidateUid;
   final String offerId;
+  final String? applicationId;
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +105,10 @@ class _ApplicantCurriculumBody extends StatelessWidget {
           candidate: candidate,
           curriculum: curriculum,
           offerId: offerId,
+          applicationId: applicationId,
+          companyUid:
+              state.offer?.companyUid?.trim() ??
+              state.offer?.companyId?.toString(),
           hasVideoCurriculum: state.hasVideoCurriculum,
           canViewVideoCurriculum: state.canViewVideoCurriculum,
           isExporting: state.isExporting,
